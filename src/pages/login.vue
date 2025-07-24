@@ -36,12 +36,12 @@
       <!-- 表單 -->
       <form @submit.prevent="onSubmit" class="form-container">
         <div class="form-field" v-if="activeTab === 'register'">
-          <label class="field-label">姓名*</label>
+          <label class="field-label">使用者名稱*</label>
           <InputText
             v-model="formData.name"
             class="form-input"
             :class="{ 'p-invalid': errors.name }"
-            placeholder="請輸入姓名"
+            placeholder="請輸入使用者名稱"
           />
           <small class="error-message" v-if="errors.name">{{
             errors.name
@@ -49,13 +49,19 @@
         </div>
 
         <div class="form-field">
-          <label class="field-label">電子信箱*</label>
+          <label class="field-label">{{
+            activeTab === 'register' ? '電子信箱*' : '使用者名稱或電子信箱*'
+          }}</label>
           <InputText
             v-model="formData.email"
-            type="email"
+            :type="activeTab === 'register' ? 'email' : 'text'"
             class="form-input"
             :class="{ 'p-invalid': errors.email }"
-            placeholder="請輸入電子信箱"
+            :placeholder="
+              activeTab === 'register'
+                ? '請輸入電子信箱'
+                : '請輸入使用者名稱或電子信箱'
+            "
           />
           <small class="error-message" v-if="errors.email">{{
             errors.email
@@ -93,7 +99,8 @@
 
         <Button
           type="submit"
-          class="submit-button"
+          color="primary"
+          class="btn-block"
           :loading="isSubmitting"
           :disabled="isSubmitting"
         >
@@ -166,24 +173,44 @@ const validateForm = () => {
   errors.password = ''
   errors.confirmPassword = ''
 
-  if (activeTab.value === 'register' && !formData.name.trim()) {
-    errors.name = '姓名必填'
+  if (activeTab.value === 'register') {
+    // 使用者名稱驗證
+    if (!formData.name.trim()) {
+      errors.name = '使用者名稱必填'
+    } else if (formData.name.length < 8) {
+      errors.name = '使用者名稱至少8個字元'
+    } else if (formData.name.length > 20) {
+      errors.name = '使用者名稱最多20個字元'
+    } else if (!/^[A-Za-z0-9]+$/.test(formData.name)) {
+      errors.name = '使用者名稱只能包含英文字母和數字'
+    }
   }
 
+  // 電子信箱/帳號驗證
   if (!formData.email.trim()) {
-    errors.email = '電子信箱必填'
-  } else if (!/^[^\s@]+@[^"]+\.[^\s@]+$/.test(formData.email)) {
+    errors.email =
+      activeTab.value === 'register'
+        ? '電子信箱必填'
+        : '請輸入使用者名稱或電子信箱'
+  } else if (
+    activeTab.value === 'register' &&
+    !/^([a-zA-Z0-9_\-.]+)@([a-zA-Z0-9_\-.]+)\.([a-zA-Z]{2,})$/.test(
+      formData.email,
+    )
+  ) {
     errors.email = '請輸入有效的電子信箱'
   }
 
+  // 密碼驗證
   if (!formData.password) {
     errors.password = '密碼必填'
-  } else if (formData.password.length < 4) {
-    errors.password = '密碼至少4個字元'
+  } else if (formData.password.length < 8) {
+    errors.password = '密碼至少8個字元'
   } else if (formData.password.length > 20) {
     errors.password = '密碼最多20個字元'
   }
 
+  // 註冊時確認密碼
   if (activeTab.value === 'register') {
     if (!formData.confirmPassword) {
       errors.confirmPassword = '請再次輸入密碼'
@@ -196,7 +223,7 @@ const validateForm = () => {
     !errors.name &&
     !errors.email &&
     !errors.password &&
-    (!activeTab.value === 'register' || !errors.confirmPassword)
+    (activeTab.value !== 'register' || !errors.confirmPassword)
   )
 }
 
@@ -367,27 +394,6 @@ const onSubmit = async () => {
   display: block;
 }
 
-.submit-button {
-  width: 100%;
-  background-color: #000 !important;
-  border-color: #000 !important;
-  color: #fff !important;
-  padding: 0.75rem !important;
-  font-size: 1rem !important;
-  font-weight: 500 !important;
-  border-radius: 4px !important;
-  transition: background-color 0.3s ease !important;
-}
-
-.submit-button:hover {
-  background-color: #333 !important;
-}
-
-.submit-button:disabled {
-  background-color: #ccc !important;
-  cursor: not-allowed !important;
-}
-
 .social-login {
   margin-top: 2rem;
 }
@@ -428,6 +434,10 @@ const onSubmit = async () => {
   bottom: 1rem;
   color: #666;
   font-size: 0.9rem;
+}
+
+.btn-block {
+  width: 100%;
 }
 </style>
 

@@ -278,7 +278,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 // 響應式資料
@@ -298,6 +298,12 @@ const isActive = (path) => {
 // 方法
 const toggleSidebar = () => {
   sidebarOpen.value = !sidebarOpen.value
+}
+</script>
+
+<script>
+export default {
+  name: 'AdminLayout',
 }
 </script>
 
