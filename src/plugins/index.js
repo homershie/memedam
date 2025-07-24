@@ -14,6 +14,8 @@ import ToastService from 'primevue/toastservice'
 import Toast from 'primevue/toast'
 import Button from 'primevue/button'
 import Menubar from 'primevue/menubar'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
 
 export function registerPlugins(app) {
   app
@@ -26,4 +28,6 @@ export function registerPlugins(app) {
     .component('Toast', Toast)
     .component('Button', Button)
     .component('Menubar', Menubar)
+    .component('InputText', InputText)
+    .component('Password', Password)
 }

@@ -4,6 +4,9 @@ export default {
   create(data) {
     return apiService.http.post('/users', data)
   },
+  register(data) {
+    return apiService.http.post('/users/register', data)
+  },
   login(data) {
     return apiService.http.post('/users/login', data)
   },
