@@ -38,13 +38,13 @@
         <div class="form-field" v-if="activeTab === 'register'">
           <label class="field-label">使用者名稱*</label>
           <InputText
-            v-model="formData.name"
+            v-model="formData.username"
             class="form-input"
-            :class="{ 'p-invalid': errors.name }"
+            :class="{ 'p-invalid': errors.username }"
             placeholder="請輸入使用者名稱"
           />
-          <small class="error-message" v-if="errors.name">{{
-            errors.name
+          <small class="error-message" v-if="errors.username">{{
+            errors.username
           }}</small>
         </div>
 
@@ -70,12 +70,13 @@
 
         <div class="form-field">
           <label class="field-label">密碼*</label>
-          <InputText
+          <Password
             v-model="formData.password"
             class="form-input"
             :class="{ 'p-invalid': errors.password }"
             placeholder="請輸入密碼"
-            type="password"
+            :feedback="false"
+            toggleMask
           />
           <small class="error-message" v-if="errors.password">{{
             errors.password
@@ -85,12 +86,13 @@
         <!-- 新增確認密碼欄位（僅註冊時顯示） -->
         <div class="form-field" v-if="activeTab === 'register'">
           <label class="field-label">確認密碼*</label>
-          <InputText
+          <Password
             v-model="formData.confirmPassword"
             class="form-input"
             :class="{ 'p-invalid': errors.confirmPassword }"
             placeholder="請再次輸入密碼"
-            type="password"
+            :feedback="false"
+            toggleMask
           />
           <small class="error-message" v-if="errors.confirmPassword">{{
             errors.confirmPassword
@@ -138,29 +140,30 @@ defineOptions({ name: 'LoginPage' })
 
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import Password from 'primevue/password'
 import userService from '@/services/userService'
 import { useUserStore } from '@/stores/userStore'
+import { useToast } from 'primevue/usetoast'
 
 const router = useRouter()
-const toast = useToast()
 const user = useUserStore()
+const toast = useToast()
 
 // 響應式數據
 const activeTab = ref('register')
 const isSubmitting = ref(false)
 
 const formData = reactive({
-  name: '',
+  username: '',
   email: '',
   password: '',
   confirmPassword: '',
 })
 
 const errors = reactive({
-  name: '',
+  username: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -168,21 +171,21 @@ const errors = reactive({
 
 // 驗證函數
 const validateForm = () => {
-  errors.name = ''
+  errors.username = ''
   errors.email = ''
   errors.password = ''
   errors.confirmPassword = ''
 
   if (activeTab.value === 'register') {
     // 使用者名稱驗證
-    if (!formData.name.trim()) {
-      errors.name = '使用者名稱必填'
-    } else if (formData.name.length < 8) {
-      errors.name = '使用者名稱至少8個字元'
-    } else if (formData.name.length > 20) {
-      errors.name = '使用者名稱最多20個字元'
-    } else if (!/^[A-Za-z0-9]+$/.test(formData.name)) {
-      errors.name = '使用者名稱只能包含英文字母和數字'
+    if (!formData.username.trim()) {
+      errors.username = '使用者名稱必填'
+    } else if (formData.username.length < 8) {
+      errors.username = '使用者名稱至少8個字元'
+    } else if (formData.username.length > 20) {
+      errors.username = '使用者名稱最多20個字元'
+    } else if (!/^[A-Za-z0-9]+$/.test(formData.username)) {
+      errors.username = '使用者名稱只能包含英文字母和數字'
     }
   }
 
@@ -220,7 +223,7 @@ const validateForm = () => {
   }
 
   return (
-    !errors.name &&
+    !errors.username &&
     !errors.email &&
     !errors.password &&
     (activeTab.value !== 'register' || !errors.confirmPassword)
@@ -238,8 +241,8 @@ const onSubmit = async () => {
   try {
     if (activeTab.value === 'register') {
       // 註冊邏輯
-      await userService.register({
-        name: formData.name,
+      await userService.create({
+        username: formData.username,
         email: formData.email,
         password: formData.password,
       })
@@ -253,14 +256,14 @@ const onSubmit = async () => {
 
       // 註冊成功後切換到登入
       activeTab.value = 'login'
-      formData.name = ''
+      formData.username = ''
       formData.email = ''
       formData.password = ''
       formData.confirmPassword = ''
     } else {
       // 登入邏輯
       const { data } = await userService.login({
-        account: formData.email,
+        login: formData.email, // 這裡 login 支援帳號或信箱
         password: formData.password,
       })
 
@@ -438,6 +441,23 @@ const onSubmit = async () => {
 
 .btn-block {
   width: 100%;
+}
+
+:deep(.p-password-input) {
+  width: 90%;
+}
+
+:deep(.p-password-input) {
+  padding: 0.1rem;
+  border: none;
+}
+
+:deep(.p-password-input:focus) {
+  outline: none;
+}
+
+:deep(.p-password.p-invalid .p-password-input) {
+  border-color: #dc3545;
 }
 </style>
 

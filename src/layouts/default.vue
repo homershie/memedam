@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col w-full relative">
-    <Toast />
+    <Toast position="bottom-right" />
     <!-- 導覽列：改用 PrimeVue Menubar -->
     <Menubar
       :model="[]"
@@ -123,11 +123,10 @@
           <Button
             v-if="user.isLoggedIn"
             label="登出"
-            class="p-button-text p-button-sm text-white rounded-lg"
+            class="p-button-text rounded-lg"
             @click="logout"
           />
           <Button
-            v-if="!user.isLoggedIn"
             label="成為付費會員"
             class="text-white rounded-lg"
             @click="$router.push('/member')"
