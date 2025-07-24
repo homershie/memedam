@@ -7,4 +7,14 @@ const router = createRouter({
   routes: setupLayouts(routes),
 })
 
+router.afterEach((to) => {
+  if (to.meta && to.meta.title) {
+    document.title = to.meta.title + ' | 迷因典 MemeDex'
+  } else {
+    document.title = '迷因典 MemeDex'
+  }
+})
+
+console.log(routes)
+
 export default router

@@ -102,10 +102,10 @@
           <!-- Menu Items -->
           <Button
             v-if="user.isLoggedIn"
-            label="建立"
+            label="投稿"
             severity="contrast"
             class="p-button-text rounded-lg"
-            @click="$router.push('/cart')"
+            @click="$router.push('/memes/post')"
           />
           <Button
             v-if="!user.isLoggedIn"
@@ -131,7 +131,7 @@
           <Button
             label="成為付費會員"
             class="text-white rounded-lg"
-            @click="$router.push('/member')"
+            @click="$router.push('/premium')"
           />
         </div>
       </template>
@@ -140,7 +140,7 @@
     <div class="flex flex-1 h-screen mt-[80px]">
       <div
         :class="[
-          'h-full bg-white flex flex-col group transition-all duration-300 ease-in-out relative top-20',
+          'h-210 bg-white flex flex-col group transition-all duration-300 ease-in-out relative top-20',
           sidebarVisible
             ? 'w-1/6 opacity-100'
             : 'w-0 opacity-0 overflow-hidden',
@@ -239,7 +239,7 @@
       </div>
       <div
         :class="[
-          'overflow-y-auto transition-all duration-300 relative top-20 flex flex-1 justify-center',
+          'h-210 overflow-y-auto transition-all duration-300 relative top-20 flex flex-1 justify-center',
           sidebarVisible ? 'w-5/6' : 'w-full',
         ]"
       >
@@ -290,7 +290,7 @@ const menuList = [
   { label: '所有迷因', icon: 'pi pi-list', route: '/memes/all' },
   { label: '熱門迷因', icon: 'pi pi-star', route: '/memes/hot' },
   { label: '近期話題', icon: 'pi pi-comments', route: '/memes/trending' },
-  { label: '最新消息', icon: 'pi pi-bell', route: '/news' },
+  { label: '最新迷因', icon: 'pi pi-bell', route: '/memes/new' },
   { label: '最多人喜歡', icon: 'pi pi-thumbs-up', route: '/memes/liked' },
   { separator: true },
   { label: '設定', icon: 'pi pi-cog', route: '/settings' },
