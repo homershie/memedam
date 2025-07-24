@@ -332,3 +332,10 @@ defineOptions({
   padding: 1.5rem;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  title: '管理後台'
+  admin: true
+  layout: 'admin'
+</route>

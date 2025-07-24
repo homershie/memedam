@@ -117,12 +117,14 @@
           <Button
             v-if="user.isLoggedIn && user.isAdmin"
             label="管理"
+            severity="contrast"
             class="p-button-text rounded-lg"
             @click="$router.push('/admin')"
           />
           <Button
             v-if="user.isLoggedIn"
             label="登出"
+            severity="contrast"
             class="p-button-text rounded-lg"
             @click="logout"
           />
@@ -138,7 +140,7 @@
     <div class="flex flex-1 h-screen mt-[80px]">
       <div
         :class="[
-          'h-full bg-white flex flex-col group transition-all duration-300 ease-in-out',
+          'h-full bg-white flex flex-col group transition-all duration-300 ease-in-out relative top-20',
           sidebarVisible
             ? 'w-1/6 opacity-100'
             : 'w-0 opacity-0 overflow-hidden',
@@ -237,7 +239,7 @@
       </div>
       <div
         :class="[
-          'overflow-y-auto transition-all duration-300',
+          'overflow-y-auto transition-all duration-300 relative top-20 flex flex-1 justify-center',
           sidebarVisible ? 'w-5/6' : 'w-full',
         ]"
       >
