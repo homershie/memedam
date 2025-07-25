@@ -9,6 +9,7 @@ export const useUserStore = defineStore(
     const cartTotal = ref(0)
     const role = ref('user')
     const token = ref('')
+    const userId = ref('')
 
     const isLoggedIn = computed(() => token.value.length > 0)
     const isAdmin = computed(() => role.value === 'admin')
@@ -23,6 +24,9 @@ export const useUserStore = defineStore(
       if (data.token) {
         token.value = data.token
       }
+      if (data.userId) {
+        userId.value = data.userId
+      }
     }
 
     const logout = () => {
@@ -30,6 +34,7 @@ export const useUserStore = defineStore(
       cartTotal.value = 0
       role.value = 'user'
       token.value = ''
+      userId.value = ''
     }
 
     return {
@@ -37,6 +42,7 @@ export const useUserStore = defineStore(
       cartTotal,
       role,
       token,
+      userId,
       isLoggedIn,
       isAdmin,
       login,
@@ -45,8 +51,8 @@ export const useUserStore = defineStore(
   },
   {
     persist: {
-      key: 'shop-user',
-      pick: ['token'],
+      key: 'user',
+      pick: ['token', 'userId'],
     },
   },
 )

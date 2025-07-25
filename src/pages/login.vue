@@ -263,11 +263,16 @@ const onSubmit = async () => {
     } else {
       // 登入邏輯
       const { data } = await userService.login({
-        login: formData.email, // 這裡 login 支援帳號或信箱
+        login: formData.email, // 支援帳號或信箱
         password: formData.password,
       })
 
-      user.login({ ...data.user, token: data.token })
+      console.log('登入API回傳:', data)
+      user.login({
+        ...data.user,
+        token: data.token,
+        userId: data.userId || data.user?._id, // 兩種都支援
+      })
 
       toast.add({
         severity: 'success',

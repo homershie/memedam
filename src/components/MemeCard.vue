@@ -29,6 +29,32 @@
           rounded
           @click="showMenu"
         />
+        <OverlayPanel ref="menuRef">
+          <div class="flex flex-col min-w-[120px]">
+            <Button
+              label="檢舉"
+              icon="pi pi-flag"
+              text
+              severity="contrast"
+              class="justify-start w-full"
+            />
+            <Button
+              v-if="isAuthor"
+              label="修改"
+              icon="pi pi-pencil"
+              text
+              severity="contrast"
+              class="justify-start w-full"
+            />
+            <Button
+              v-if="isAuthor"
+              label="刪除"
+              icon="pi pi-trash"
+              text
+              class="justify-start w-full"
+            />
+          </div>
+        </OverlayPanel>
       </div>
     </template>
 
@@ -154,13 +180,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import Card from 'primevue/card'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Image from 'primevue/image'
+import OverlayPanel from 'primevue/overlaypanel'
+import { useUserStore } from '@/stores/userStore'
 import likeService from '@/services/likeService'
 import dislikeService from '@/services/dislikeService'
 import collectionService from '@/services/collectionService'
@@ -193,6 +221,15 @@ const likesCount = ref(props.meme.likes_count || 0)
 const dislikesCount = ref(props.meme.dislikes_count || 0)
 const commentsCount = ref(props.meme.comments_count || 0)
 
+const memeId = computed(() => {
+  // 支援 id、_id，並處理 {$oid: ...} 格式
+  let id = props.meme.id || props.meme._id
+  if (typeof id === 'object' && id.$oid) {
+    id = id.$oid
+  }
+  return id
+})
+
 const publishedTime = computed(() => {
   // 支援 created_at 或 createdAt，並處理 {$date: ...} 格式
   let time = props.meme.created_at || props.meme.createdAt
@@ -203,24 +240,49 @@ const publishedTime = computed(() => {
   return dayjs(time).fromNow()
 })
 
+const userStore = useUserStore()
+const menuRef = ref(null)
+
+function getId(val) {
+  if (!val) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'object' && val.$oid) return val.$oid
+  return val._id || val.id || ''
+}
+
+const isAuthor = computed(() => {
+  const currentUserId = getId(userStore.userId)
+  const authorId = getId(props.meme.author?._id || props.meme.author?.id)
+  return currentUserId && authorId && currentUserId === authorId
+})
+
 // 載入標籤
 const loadTags = async () => {
   try {
-    if (!props.meme?.id) {
+    // 統一取得 memeId
+    let id = props.meme.id || props.meme._id
+    if (typeof id === 'object' && id.$oid) {
+      id = id.$oid
+    }
+    if (!id) {
       console.warn('迷因 ID 不存在，跳過載入標籤')
       return
     }
-    const response = await memeTagService.getTagsByMemeId(props.meme.id)
+    const response = await memeTagService.getTagsByMemeId(id)
     tags.value = response.data || []
   } catch (error) {
     console.error('載入標籤失敗:', error)
   }
 }
 
+onMounted(() => {
+  loadTags()
+})
+
 // 按讚功能
 const toggleLike = async () => {
   try {
-    if (!props.meme?.id) {
+    if (!memeId.value) {
       toast.add({
         severity: 'error',
         summary: '錯誤',
@@ -231,7 +293,7 @@ const toggleLike = async () => {
     }
 
     await likeService.toggle({
-      meme_id: props.meme.id,
+      meme_id: memeId.value,
       type: 'meme',
     })
 
@@ -244,7 +306,7 @@ const toggleLike = async () => {
       // 如果之前按過噓，要取消噓
       if (isDisliked.value) {
         await dislikeService.toggle({
-          meme_id: props.meme.id,
+          meme_id: memeId.value,
           type: 'meme',
         })
         dislikesCount.value--
@@ -265,8 +327,17 @@ const toggleLike = async () => {
 // 按噓功能
 const toggleDislike = async () => {
   try {
+    if (!memeId.value) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '迷因資料不完整',
+        life: 3000,
+      })
+      return
+    }
     await dislikeService.toggle({
-      meme_id: props.meme.id,
+      meme_id: memeId.value,
       type: 'meme',
     })
 
@@ -279,7 +350,7 @@ const toggleDislike = async () => {
       // 如果之前按過讚，要取消讚
       if (isLiked.value) {
         await likeService.toggle({
-          meme_id: props.meme.id,
+          meme_id: memeId.value,
           type: 'meme',
         })
         likesCount.value--
@@ -299,8 +370,17 @@ const toggleDislike = async () => {
 // 收藏功能
 const toggleCollection = async () => {
   try {
+    if (!memeId.value) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '迷因資料不完整',
+        life: 3000,
+      })
+      return
+    }
     await collectionService.toggle({
-      meme_id: props.meme.id,
+      meme_id: memeId.value,
       type: 'meme',
     })
 
@@ -325,6 +405,15 @@ const toggleCollection = async () => {
 // 分享功能
 const shareContent = async () => {
   try {
+    if (!memeId.value) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '迷因資料不完整',
+        life: 3000,
+      })
+      return
+    }
     if (navigator.share) {
       await navigator.share({
         title: props.meme.title,
@@ -344,7 +433,7 @@ const shareContent = async () => {
 
     // 記錄分享
     await shareService.create({
-      meme_id: props.meme.id,
+      meme_id: memeId.value,
       platform: 'web',
     })
   } catch {
@@ -368,13 +457,9 @@ const showComments = () => {
 }
 
 // 顯示選單
-const showMenu = () => {
-  // 可以實作更多選項，如檢舉、編輯等
+const showMenu = (event) => {
+  menuRef.value.toggle(event)
 }
-
-onMounted(() => {
-  loadTags()
-})
 </script>
 
 <style scoped>
