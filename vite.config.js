@@ -24,4 +24,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000', // 你的後端伺服器位址
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

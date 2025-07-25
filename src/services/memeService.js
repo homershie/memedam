@@ -4,8 +4,8 @@ export default {
   create(data) {
     return apiService.httpAuth.post('/memes', data)
   },
-  getAll() {
-    return apiService.http.get('/memes')
+  getAll(params = {}) {
+    return apiService.http.get('/memes', { params })
   },
   get(id) {
     return apiService.http.get(`/memes/${id}`)

@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto">
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div class="text-center py-6 bg-gray-50 border-b">
+    <div class="bg-white overflow-hidden">
+      <div class="text-center py-6">
         <h1 class="text-3xl font-bold text-gray-800">投稿迷因</h1>
         <p class="text-gray-600 mt-2">分享你的創意，讓大家一起歡樂！</p>
       </div>
@@ -99,8 +99,8 @@
                   </small>
                 </div>
 
-                <!-- 或是連結 -->
-                <div>
+                <!-- 或是連結（只有沒選檔案時才顯示） -->
+                <div v-if="!uploadedImageFile">
                   <label class="block text-sm font-medium mb-2"
                     >或提供圖片連結</label
                   >
@@ -259,7 +259,7 @@
           <!-- 詳細介紹編輯器 -->
           <div class="field">
             <label class="block font-semibold mb-2">詳細介紹</label>
-            <div class="border rounded-lg overflow-hidden">
+            <div class="overflow-hidden">
               <QuillEditor
                 v-model:content="detailMarkdown"
                 content-type="html"
@@ -353,6 +353,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useRouter } from 'vue-router'
 
 // PrimeVue 組件
 import InputText from 'primevue/inputtext'
@@ -378,6 +379,7 @@ import memeTagService from '@/services/memeTagService'
 defineOptions({ name: 'PostMemePage' })
 
 const toast = useToast()
+const router = useRouter()
 
 // 表單資料
 const form = reactive({
@@ -410,6 +412,7 @@ const allTags = ref([])
 const detailMarkdown = ref('')
 const loading = ref(false)
 const submitError = ref('')
+const uploadedImageFile = ref(null)
 
 // 編輯器選項
 const editorOptions = {
@@ -475,13 +478,15 @@ const getMediaLabel = (type) => {
 const onImageSelect = (event) => {
   const file = event.files[0]
   if (file) {
-    // 創建本地預覽 (實際項目中可以上傳到圖床服務)
+    uploadedImageFile.value = file
+    // 本地預覽
     const reader = new FileReader()
     reader.onload = (e) => {
       uploadedImageUrl.value = e.target.result
-      form.image_url = '' // 清空連結輸入
+      form.image_url = ''
     }
     reader.readAsDataURL(file)
+    // 不上傳，僅預覽
   }
 }
 
@@ -596,10 +601,12 @@ const validateForm = () => {
   // 檢查媒體內容
   if (form.type !== 'text') {
     if (form.type === 'image') {
-      if (!form.image_url && !uploadedImageUrl.value) {
-        errors.mediaUrl = '請上傳圖片檔案或提供圖片連結'
+      // 沒選檔案也沒填連結才報錯
+      if (!uploadedImageFile.value && !form.image_url) {
+        errors.mediaUrl = '請上傳圖片或提供圖片連結'
         isValid = false
       }
+      // 如果有填連結，可加強合法性檢查（可選）
     } else {
       const urlField = `${form.type}_url`
       if (!form[urlField]) {
@@ -644,16 +651,53 @@ const handleSubmit = async () => {
   submitError.value = ''
 
   try {
-    // 如果有上傳的圖片，這裡可以先上傳到圖床服務並獲取 URL
-    // 目前暫時使用本地預覽 URL (實際上應該要上傳到雲端)
-    if (uploadedImageUrl.value && form.type === 'image') {
-      // TODO: 實際上傳圖片到圖床服務
-      // form.image_url = await uploadToImageHost(uploadedImageFile)
-      console.log('需要實作圖片上傳功能')
+    // 送出時才上傳圖片
+    if (form.type === 'image' && uploadedImageFile.value) {
+      const formData = new FormData()
+      formData.append('image', uploadedImageFile.value) // key 必須是 'image'
+
+      const res = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+        // 不要加 headers: Content-Type
+      })
+      const data = await res.json()
+      if (
+        data.success &&
+        data.url &&
+        data.url.startsWith('https://res.cloudinary.com/')
+      ) {
+        form.image_url = data.url
+      } else {
+        throw new Error(data.message || '圖片上傳失敗')
+      }
+    }
+
+    // 先檢查 isNew: true 的標籤是否已存在於 allTags
+    for (let i = 0; i < selectedTags.value.length; i++) {
+      const tag = selectedTags.value[i]
+      if (tag.isNew) {
+        const exist = Array.isArray(allTags.value)
+          ? allTags.value.find(
+              (t) =>
+                t.name.trim().toLowerCase() === tag.name.trim().toLowerCase(),
+            )
+          : null
+        if (exist) {
+          // 用現有標籤取代 selectedTags 裡的 isNew 標籤
+          selectedTags.value[i] = exist
+        }
+      }
     }
 
     // 準備新標籤
-    const newTags = selectedTags.value.filter((tag) => tag.isNew)
+    const newTags = selectedTags.value.filter(
+      (tag) =>
+        tag.isNew &&
+        !allTags.value.some(
+          (t) => t.name.trim().toLowerCase() === tag.name.trim().toLowerCase(),
+        ),
+    )
     const createdTags = []
 
     // 建立新標籤
@@ -736,8 +780,11 @@ const handleSubmit = async () => {
       life: 5000,
     })
 
-    // 重設表單
-    resetForm()
+    // 清空詳細介紹欄位
+    detailMarkdown.value = ''
+
+    // 跳轉到所有迷因頁面
+    router.push('/memes/all')
   } catch (error) {
     console.error('投稿失敗:', error)
     submitError.value =
@@ -757,11 +804,13 @@ const handleSubmit = async () => {
 
 <style scoped>
 .field {
-  @apply mb-6;
+  margin-bottom: 1.5rem;
 }
 
 .p-error {
-  @apply text-red-500 text-sm mt-1;
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 /* VueQuill 編輯器樣式 */

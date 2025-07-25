@@ -1,8 +1,6 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
 @import './base.css';
-@tailwind base;
-@tailwind components;
 
 html,
 body,
