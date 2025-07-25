@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
-@import './base.css';
 
 html,
 body,
@@ -8,6 +7,26 @@ body,
   height: 100%;
   min-height: 100vh;
   overflow: hidden;
+}
+
+body {
+  font-family:
+    'Noto Sans TC',
+    'Jost',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {

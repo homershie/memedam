@@ -31,6 +31,10 @@ app.use(PrimeVue, {
     preset: Aura,
     options: {
       darkModeSelector: false, // 強制只用淺色
+      cssLayer: {
+        name: 'primevue',
+        order: 'theme, base, primevue',
+      },
     },
   },
 })

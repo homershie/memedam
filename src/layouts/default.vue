@@ -4,14 +4,14 @@
     <!-- 導覽列：改用 PrimeVue Menubar -->
     <Menubar
       :model="[]"
-      class="px-4! w-full h-[80px] top-0 fixed right-0 left-0 z-50"
+      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50"
     >
       <template #start>
         <div class="flex items-center gap-6">
           <Button
             icon="pi pi-bars"
             severity="contrast"
-            class="p-button-text rounded-full!"
+            class="p-button-text rounded-full"
             @click="toggleSidebar"
           />
           <router-link to="/">
@@ -103,28 +103,28 @@
           <Button
             v-if="user.isLoggedIn"
             label="投稿"
-            severity="contrast"
+            severity="secondary"
             class="p-button-text rounded-lg"
             @click="$router.push('/memes/post')"
           />
           <Button
             v-if="!user.isLoggedIn"
             label="登入"
-            severity="contrast"
+            severity="secondary"
             class="p-button-text rounded-lg"
             @click="$router.push('/login')"
           />
           <Button
             v-if="user.isLoggedIn && user.isAdmin"
             label="管理"
-            severity="contrast"
+            severity="secondary"
             class="p-button-text rounded-lg"
             @click="$router.push('/admin')"
           />
           <Button
             v-if="user.isLoggedIn"
             label="登出"
-            severity="contrast"
+            severity="secondary"
             class="p-button-text rounded-lg"
             @click="logout"
           />
@@ -140,7 +140,7 @@
     <div class="flex flex-1 h-screen mt-[80px]">
       <div
         :class="[
-          'h-210 bg-white flex flex-col group transition-all duration-300 ease-in-out relative top-20',
+          'h-[calc(100vh-80px)] flex flex-col group transition-all duration-300 ease-in-out relative',
           sidebarVisible
             ? 'w-1/6 opacity-100'
             : 'w-0 opacity-0 overflow-hidden',
@@ -158,12 +158,9 @@
             overflow-overlay: auto;
           "
         >
-          <Menu :model="menuList">
+          <Menu :model="menuList" class="border-none px-4">
             <template #item="{ item, props }">
-              <div
-                v-if="item.separator"
-                class="my-2 border-t border-gray-200"
-              ></div>
+              <div v-if="item.separator" class="my-2 border-t"></div>
               <template v-else>
                 <router-link
                   v-if="item.route"
@@ -218,7 +215,7 @@
                 </div>
               </div>
               <Divider />
-              <div class="p-4 text-s">
+              <div class="text-s mb-10">
                 <div class="mb-2">© 2025 迷因典 MemeDex ®</div>
                 <div>
                   <a href="#" class="hover:underline">privacy</a> |
@@ -239,7 +236,7 @@
       </div>
       <div
         :class="[
-          'h-210 overflow-y-auto transition-all duration-300 relative top-20 flex flex-1 justify-center',
+          'h-[calc(100vh-80px)] overflow-y-auto transition-all duration-300 relative flex flex-1 justify-center',
           sidebarVisible ? 'w-5/6' : 'w-full',
         ]"
       >
@@ -320,3 +317,10 @@ export default {
   name: 'DefaultLayout',
 }
 </script>
+
+<style scoped>
+:deep(.p-menu-item-content) {
+  padding-top: 0.2rem !important;
+  padding-bottom: 0.2rem !important;
+}
+</style>
