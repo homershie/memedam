@@ -2,32 +2,20 @@
 <template>
   <div class="container mx-auto p-4 space-y-6">
     <!-- 頁面標題 -->
-    <div class="mb-6">
+    <div class="mb-6 text-center">
       <h1 class="text-3xl font-bold text-gray-800">所有迷因</h1>
       <p class="text-gray-600 mt-2">探索最新、最熱門的迷因內容</p>
     </div>
 
     <!-- 篩選和排序 -->
-    <div class="flex flex-wrap gap-4 mb-6">
-      <Dropdown
-        v-model="sortBy"
-        :options="sortOptions"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="排序方式"
-        class="w-48"
-        @change="loadMemes"
-      />
-      <MultiSelect
-        v-model="selectedTags"
-        :options="availableTags"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="選擇標籤篩選"
-        class="w-64"
-        @change="loadMemes"
-        :showToggleAll="false"
-        :maxSelectedLabels="3"
+    <div class="flex flex-wrap gap-2 mb-6 justify-center">
+      <Tag
+        v-for="tag in topTags"
+        :key="tag._id"
+        :value="`#${tag.name}`"
+        severity="primary"
+        class="cursor-pointer hover:bg-primary-50"
+        @click="onTagClick(tag)"
       />
     </div>
 
@@ -95,14 +83,13 @@
 import { ref, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import MemeCard from '@/components/MemeCard.vue'
-import Dropdown from 'primevue/dropdown'
-import MultiSelect from 'primevue/multiselect'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
 import memeService from '@/services/memeService'
 import userService from '@/services/userService'
 import tagService from '@/services/tagService'
+import Tag from 'primevue/tag'
 
 const toast = useToast()
 
@@ -118,15 +105,6 @@ const pageSize = ref(10)
 const sortBy = ref('created_at_desc')
 const selectedTags = ref([])
 const availableTags = ref([])
-
-const sortOptions = [
-  { label: '最新發布', value: 'created_at_desc' },
-  { label: '最舊發布', value: 'created_at_asc' },
-  { label: '最多按讚', value: 'likes_desc' },
-  { label: '最多評論', value: 'comments_desc' },
-  { label: '標題 A-Z', value: 'title_asc' },
-  { label: '標題 Z-A', value: 'title_desc' },
-]
 
 // 評論對話框
 const showCommentsDialog = ref(false)
@@ -228,13 +206,31 @@ const loadAvailableTags = async () => {
   }
 }
 
+// 載入特定標籤的迷因
+const loadMemesByTag = async (tagId) => {
+  try {
+    loading.value = true
+    currentPage.value = 1
+    memes.value = []
+    selectedTags.value = [tagId]
+    await loadMemes()
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: '載入失敗',
+      detail: '無法載入標籤迷因，請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
 // 標籤點擊處理
 const onTagClick = (tag) => {
-  // 導航到標籤頁面或添加到篩選
-  if (!selectedTags.value.includes(tag.id)) {
-    selectedTags.value.push(tag.id)
-    loadMemes()
-  }
+  // 這裡根據 tag 查詢迷因
+  // 你原本的 loadMemesByTag 或其他查詢邏輯
+  loadMemesByTag(tag.id)
 }
 
 // 顯示評論
@@ -248,9 +244,23 @@ watch(sortBy, () => {
   loadMemes()
 })
 
+const topTags = ref([])
+
+const loadTopTags = async () => {
+  try {
+    const res = await tagService.getPopular(10)
+    // 修正：正確取用 popularTags 陣列
+    topTags.value = res.data.popularTags || []
+    console.log('topTags', topTags.value)
+  } catch {
+    topTags.value = []
+  }
+}
+
 // 初始化
 onMounted(async () => {
   await Promise.all([loadMemes(), loadAvailableTags()])
+  loadTopTags()
 })
 </script>
 
