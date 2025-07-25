@@ -1,5 +1,6 @@
 <template>
   <Card class="mb-6 max-w-2xl mx-auto!">
+    <ConfirmPopup />
     <template #header>
       <div class="flex items-center justify-between p-4 pb-0">
         <div class="flex items-center space-x-3">
@@ -39,19 +40,21 @@
               class="justify-start w-full"
             />
             <Button
-              v-if="isAuthor"
+              v-if="canDelete"
               label="修改"
               icon="pi pi-pencil"
               text
               severity="contrast"
               class="justify-start w-full"
+              @click="onEdit"
             />
             <Button
-              v-if="isAuthor"
+              v-if="canDelete"
               label="刪除"
               icon="pi pi-trash"
               text
               class="justify-start w-full"
+              @click="showDeleteConfirm"
             />
           </div>
         </OverlayPanel>
@@ -182,18 +185,21 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import Card from 'primevue/card'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Image from 'primevue/image'
 import OverlayPanel from 'primevue/overlaypanel'
+import ConfirmPopup from 'primevue/confirmpopup'
 import { useUserStore } from '@/stores/userStore'
 import likeService from '@/services/likeService'
 import dislikeService from '@/services/dislikeService'
 import collectionService from '@/services/collectionService'
 import shareService from '@/services/shareService'
 import memeTagService from '@/services/memeTagService'
+import memeService from '@/services/memeService'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-tw'
@@ -208,9 +214,10 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['tag-click', 'show-comments'])
+const emit = defineEmits(['tag-click', 'show-comments', 'deleted'])
 
 const toast = useToast()
+const confirm = useConfirm()
 
 // 響應式數據
 const tags = ref([])
@@ -250,10 +257,14 @@ function getId(val) {
   return val._id || val.id || ''
 }
 
-const isAuthor = computed(() => {
+const canDelete = computed(() => {
   const currentUserId = getId(userStore.userId)
   const authorId = getId(props.meme.author?._id || props.meme.author?.id)
-  return currentUserId && authorId && currentUserId === authorId
+  const role = userStore.role
+  return (
+    role === 'admin' ||
+    (currentUserId && authorId && currentUserId === authorId)
+  )
 })
 
 // 載入標籤
@@ -459,6 +470,39 @@ const showComments = () => {
 // 顯示選單
 const showMenu = (event) => {
   menuRef.value.toggle(event)
+}
+
+const onEdit = () => {
+  window.location.href = `/memes/edit/${memeId.value}`
+}
+const showDeleteConfirm = (event) => {
+  confirm.require({
+    target: event?.currentTarget || undefined,
+    message: '確定要刪除這則迷因嗎？',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: '刪除',
+    rejectLabel: '取消',
+    acceptClass: 'p-button-contrast',
+    accept: async () => {
+      try {
+        await memeService.remove(memeId.value)
+        toast.add({
+          severity: 'success',
+          summary: '刪除成功',
+          detail: '迷因已刪除',
+          life: 2000,
+        })
+        emit('deleted')
+      } catch {
+        toast.add({
+          severity: 'error',
+          summary: '刪除失敗',
+          detail: '無法刪除迷因',
+          life: 3000,
+        })
+      }
+    },
+  })
 }
 </script>
 

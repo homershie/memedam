@@ -1,5 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
+  <ConfirmPopup />
   <div class="container mx-auto p-4 space-y-6">
     <!-- 頁面標題 -->
     <div class="mb-6 text-center">
@@ -32,6 +33,7 @@
         :meme="meme"
         @tag-click="onTagClick"
         @show-comments="onShowComments"
+        @deleted="loadMemes"
       />
     </div>
 

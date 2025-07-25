@@ -16,6 +16,7 @@ import ToastService from 'primevue/toastservice'
 import Menubar from 'primevue/menubar'
 import Aura from '@primeuix/themes/aura'
 import { updatePreset } from '@primeuix/themes'
+import ConfirmationService from 'primevue/confirmationservice'
 
 // 引入 PrimeVue 基本樣式
 import 'primeicons/primeicons.css'
@@ -26,6 +27,7 @@ app.use(createPinia())
 app.use(router)
 app.use(ToastService)
 app.use(Menubar)
+app.use(ConfirmationService)
 app.use(PrimeVue, {
   theme: {
     preset: Aura,
