@@ -10,13 +10,15 @@
             class="border-2 border-gray-200"
           />
           <div>
-            <div class="font-semibold text-gray-800">
-              {{
-                meme.author?.display_name || meme.author?.username || '匿名用戶'
-              }}
-            </div>
-            <div class="text-sm text-gray-500">
-              {{ formatDate(meme.created_at) }}
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-gray-800">
+                {{
+                  meme.author?.display_name ||
+                  meme.author?.username ||
+                  '匿名用戶'
+                }}
+              </span>
+              <span class="text-xs text-gray-400">· {{ publishedTime }}</span>
             </div>
           </div>
         </div>
@@ -152,7 +154,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import Card from 'primevue/card'
 import Avatar from 'primevue/avatar'
@@ -164,6 +166,12 @@ import dislikeService from '@/services/dislikeService'
 import collectionService from '@/services/collectionService'
 import shareService from '@/services/shareService'
 import memeTagService from '@/services/memeTagService'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-tw'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-tw')
 
 const props = defineProps({
   meme: {
@@ -185,6 +193,16 @@ const likesCount = ref(props.meme.likes_count || 0)
 const dislikesCount = ref(props.meme.dislikes_count || 0)
 const commentsCount = ref(props.meme.comments_count || 0)
 
+const publishedTime = computed(() => {
+  // 支援 created_at 或 createdAt，並處理 {$date: ...} 格式
+  let time = props.meme.created_at || props.meme.createdAt
+  if (typeof time === 'object' && time.$date) {
+    time = time.$date
+  }
+  if (!time) return ''
+  return dayjs(time).fromNow()
+})
+
 // 載入標籤
 const loadTags = async () => {
   try {
@@ -197,19 +215,6 @@ const loadTags = async () => {
   } catch (error) {
     console.error('載入標籤失敗:', error)
   }
-}
-
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffTime = Math.abs(now - date)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 1) return '昨天'
-  if (diffDays < 7) return `${diffDays} 天前`
-  return date.toLocaleDateString('zh-TW')
 }
 
 // 按讚功能
