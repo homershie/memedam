@@ -156,7 +156,7 @@
 
           <div class="w-full lg:w-3/4">
             <!-- 標題 - 只在非文字類型時顯示 -->
-            <div class="mb-4" v-if="meme.type !== 'text'">
+            <div class="mb-4">
               <h3 class="text-xl font-bold text-gray-800">{{ meme.title }}</h3>
             </div>
 
@@ -164,19 +164,19 @@
             <p class="text-gray-600 mb-4" v-if="meme.content">
               {{ meme.content }}
             </p>
-          </div>
-        </div>
 
-        <!-- 標籤 -->
-        <div class="flex flex-wrap gap-2 mb-4" v-if="tags.length > 0">
-          <Tag
-            v-for="tag in tags"
-            :key="tag.id"
-            :value="`#${tag.name}`"
-            severity="info"
-            class="cursor-pointer hover:bg-blue-100 transition-colors"
-            @click="onTagClick(tag)"
-          />
+            <!-- 標籤 -->
+            <div class="flex flex-wrap gap-2 mb-4" v-if="tags.length > 0">
+              <Tag
+                v-for="tag in tags"
+                :key="tag._id"
+                :value="`#${tag.name}`"
+                severity="secondary"
+                class="cursor-pointer"
+                @click="onTagClick(tag)"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- 互動按鈕 -->
@@ -331,7 +331,22 @@ const loadTags = async () => {
       return
     }
     const response = await memeTagService.getTagsByMemeId(id)
-    tags.value = response.data || []
+
+    // 檢查資料結構
+    if (response.data && Array.isArray(response.data)) {
+      tags.value = response.data
+    } else if (response.data && Array.isArray(response.data.tags)) {
+      tags.value = response.data.tags
+    } else if (
+      response.data &&
+      response.data.data &&
+      Array.isArray(response.data.data)
+    ) {
+      tags.value = response.data.data
+    } else {
+      console.warn('標籤資料格式不正確:', response.data)
+      tags.value = []
+    }
   } catch (error) {
     console.error('載入標籤失敗:', error)
   }
