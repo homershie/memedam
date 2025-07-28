@@ -73,6 +73,31 @@ export default {
     }
     return apiService.http.get('/memes/by-tags', { params: queryParams })
   },
+  // 新增：搜尋功能
+  search(searchTerm, params = {}) {
+    const processedParams = processParams(params)
+    const queryParams = {
+      ...processedParams,
+      search: searchTerm,
+      useFuzzySearch: params.useFuzzySearch ?? true,
+    }
+    return apiService.http.get('/memes', { params: queryParams })
+  },
+  // 新增：根據標籤搜尋
+  searchByTags(searchTerm, tagNames, params = {}) {
+    const processedParams = processParams(params)
+    const queryParams = {
+      ...processedParams,
+      search: searchTerm,
+      tags: Array.isArray(tagNames) ? tagNames.join(',') : tagNames,
+      useFuzzySearch: params.useFuzzySearch ?? true,
+    }
+    return apiService.http.get('/memes', { params: queryParams })
+  },
+  // 新增：取得搜尋建議/推薦關鍵字
+  getSearchSuggestions() {
+    return apiService.http.get('/memes/search-suggestions')
+  },
   get(id) {
     return apiService.http.get(`/memes/${id}`)
   },

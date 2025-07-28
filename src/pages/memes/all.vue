@@ -1,11 +1,15 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <ConfirmPopup />
-  <div class="container mx-auto space-y-6">
+  <div class="container p-8 mx-auto space-y-6">
     <!-- 頁面標題 -->
     <div class="mb-6 text-center">
       <h1 class="text-3xl font-bold text-gray-800">所有迷因</h1>
       <p class="text-gray-600 mt-2">探索最新、最熱門的迷因內容</p>
+    </div>
+
+    <div class="flex justify-center w-full lg:w-1/2 mx-auto">
+      <SearchBox ref="searchBoxRef" @search="handleSearch" class="w-full" />
     </div>
 
     <!-- 篩選狀態顯示 -->
@@ -67,9 +71,11 @@
       <h3 class="text-xl font-semibold text-gray-600 mb-2">暫無迷因內容</h3>
       <p class="text-gray-500">
         {{
-          selectedTags.length > 0
-            ? '沒有符合篩選條件的迷因'
-            : '目前沒有符合條件的迷因，請稍後再試或調整篩選條件'
+          searchQuery.trim()
+            ? `找不到包含「${searchQuery}」的迷因`
+            : selectedTags.length > 0
+              ? '沒有符合篩選條件的迷因'
+              : '目前沒有符合條件的迷因，請稍後再試或調整篩選條件'
         }}
       </p>
       <Button
@@ -111,8 +117,10 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import MemeCard from '@/components/MemeCard.vue'
+import SearchBox from '@/components/SearchBox.vue'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
@@ -121,6 +129,8 @@ import userService from '@/services/userService'
 import tagService from '@/services/tagService'
 import Tag from 'primevue/tag'
 
+const route = useRoute()
+const router = useRouter()
 const toast = useToast()
 
 // 響應式數據
@@ -130,6 +140,10 @@ const loadingMore = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(50)
+
+// 搜尋相關
+const searchQuery = ref('')
+const searchBoxRef = ref(null)
 
 // 篩選和排序
 const sortBy = ref('created_at_desc')
@@ -159,8 +173,28 @@ const loadMemes = async (reset = true) => {
 
     let response
 
-    // 如果有選擇標籤，使用標籤篩選 API
-    if (selectedTags.value.length > 0) {
+    // 如果有搜尋關鍵字
+    if (searchQuery.value.trim()) {
+      // 搜尋時使用傳統搜尋保持時間排序
+      const searchParams = {
+        ...params,
+        useFuzzySearch: false,
+      }
+
+      if (selectedTags.value.length > 0) {
+        // 有搜尋關鍵字 + 標籤篩選
+        const tagNames = selectedTags.value.map((tag) => tag.name)
+        response = await memeService.searchByTags(
+          searchQuery.value,
+          tagNames,
+          searchParams,
+        )
+      } else {
+        // 只有搜尋關鍵字
+        response = await memeService.search(searchQuery.value, searchParams)
+      }
+    } else if (selectedTags.value.length > 0) {
+      // 只有標籤篩選
       const tagNames = selectedTags.value.map((tag) => tag.name)
       response = await memeService.getByTags(tagNames, params)
     } else {
@@ -230,6 +264,31 @@ const loadMemes = async (reset = true) => {
 const loadMore = async () => {
   currentPage.value++
   await loadMemes(false)
+}
+
+// 處理搜尋
+const handleSearch = (searchTerm) => {
+  searchQuery.value = searchTerm
+
+  // 更新 URL 查詢參數
+  if (searchTerm.trim()) {
+    router.push({
+      path: '/memes/all',
+      query: {
+        ...route.query,
+        search: searchTerm,
+      },
+    })
+  } else {
+    // 清除搜尋時移除 search 參數
+    const newQuery = { ...route.query }
+    delete newQuery.search
+    router.push({
+      path: '/memes/all',
+      query: newQuery,
+    })
+  }
+  loadMemes()
 }
 
 // 載入可用標籤
@@ -304,6 +363,15 @@ const loadTopTags = async () => {
 
 // 初始化
 onMounted(async () => {
+  // 檢查路由查詢參數
+  if (route.query.search) {
+    searchQuery.value = route.query.search
+    // 設定搜尋框的值
+    if (searchBoxRef.value) {
+      searchBoxRef.value.setQuery(route.query.search)
+    }
+  }
+
   await Promise.all([loadMemes(), loadAvailableTags()])
   loadTopTags()
 })

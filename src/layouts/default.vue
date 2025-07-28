@@ -86,17 +86,7 @@
         <div class="flex items-center gap-6">
           <!-- 搜尋列 -->
           <div class="relative">
-            <InputGroup>
-              <InputText v-model="searchQuery" placeholder="搜尋迷因" />
-              <InputGroupAddon>
-                <Button
-                  icon="pi pi-search"
-                  severity="secondary"
-                  variant="text"
-                  @click="handleSearch"
-                />
-              </InputGroupAddon>
-            </InputGroup>
+            <SearchBox @search="handleSearch" />
           </div>
 
           <!-- Menu Items -->
@@ -256,25 +246,20 @@ import userService from '@/services/userService'
 import Menu from 'primevue/menu'
 import Menubar from 'primevue/menubar'
 import Divider from 'primevue/divider'
-import InputText from 'primevue/inputtext'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
+import SearchBox from '@/components/SearchBox.vue'
 
 const user = useUserStore()
 const router = useRouter()
 const toast = useToast()
-const searchQuery = ref('')
 const sidebarVisible = ref(true)
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value
 }
 
-const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    // 這裡可以實作搜尋邏輯
-    console.log('搜尋:', searchQuery.value)
-  }
+const handleSearch = (searchTerm) => {
+  // SearchBox 元件會處理頁面跳轉，這裡可以加入額外的搜尋邏輯
+  console.log('從 default.vue 搜尋:', searchTerm)
 }
 
 const menuList = [
