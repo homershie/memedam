@@ -1,11 +1,12 @@
 <template>
-  <Card class="mb-6 max-w-5xl mx-auto!">
+  <Card class="mb-8 max-w-5xl mx-auto!">
     <ConfirmPopup />
     <template #header>
       <div class="flex items-center justify-between p-4 pb-0">
         <div class="flex items-center space-x-3">
           <Avatar
-            :image="meme.author?.avatar || '/default-avatar.png'"
+            :image="meme.author?.avatar"
+            :icon="!meme.author?.avatar ? 'pi pi-user' : undefined"
             shape="circle"
             size="large"
             class="border-2 border-gray-200"
@@ -908,7 +909,7 @@ const showDeleteConfirm = (event) => {
 }
 
 .p-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 處理 PrimeVue Image 組件的內部結構 */

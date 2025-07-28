@@ -1,11 +1,77 @@
 import apiService from './apiService'
 
+// 解析排序參數的輔助函數
+const parseSortParam = (sortValue) => {
+  // 預設值
+  let field = 'createdAt'
+  let order = 'desc'
+
+  if (sortValue && sortValue.includes('_')) {
+    const parts = sortValue.split('_')
+    const fieldPart = parts.slice(0, -1).join('_') // 處理可能包含多個下劃線的欄位名
+    const orderPart = parts[parts.length - 1]
+
+    // 欄位名稱轉換：created_at -> createdAt
+    if (fieldPart === 'created_at') {
+      field = 'createdAt'
+    } else if (fieldPart === 'updated_at') {
+      field = 'updatedAt'
+    } else {
+      field = fieldPart
+    }
+
+    // 排序方向
+    if (orderPart === 'asc' || orderPart === 'desc') {
+      order = orderPart
+    }
+  }
+
+  return { field, order }
+}
+
+// 處理參數中的排序設定
+const processParams = (params = {}) => {
+  const processedParams = { ...params }
+
+  // 如果有 sort 參數且包含下劃線，則進行轉換
+  if (
+    processedParams.sort &&
+    typeof processedParams.sort === 'string' &&
+    processedParams.sort.includes('_')
+  ) {
+    const { field, order } = parseSortParam(processedParams.sort)
+    processedParams.sort = field
+    processedParams.order = order
+  }
+
+  return processedParams
+}
+
 export default {
   create(data) {
     return apiService.httpAuth.post('/memes', data)
   },
   getAll(params = {}) {
-    return apiService.http.get('/memes', { params })
+    const processedParams = processParams(params)
+    return apiService.http.get('/memes', { params: processedParams })
+  },
+  // 新增：使用標籤名稱進行基本篩選
+  getByTags(tagNames, params = {}) {
+    const processedParams = processParams(params)
+    const queryParams = {
+      ...processedParams,
+      tags: Array.isArray(tagNames) ? tagNames.join(',') : tagNames,
+    }
+    return apiService.http.get('/memes', { params: queryParams })
+  },
+  // 新增：使用標籤ID進行進階篩選
+  getByTagIds(tagIds, params = {}) {
+    const processedParams = processParams(params)
+    const queryParams = {
+      ...processedParams,
+      tagIds: Array.isArray(tagIds) ? tagIds.join(',') : tagIds,
+    }
+    return apiService.http.get('/memes/by-tags', { params: queryParams })
   },
   get(id) {
     return apiService.http.get(`/memes/${id}`)

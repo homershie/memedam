@@ -1,20 +1,44 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <ConfirmPopup />
-  <div class="container mx-auto p-4 space-y-6">
+  <div class="container mx-auto space-y-6">
     <!-- 頁面標題 -->
     <div class="mb-6 text-center">
       <h1 class="text-3xl font-bold text-gray-800">所有迷因</h1>
       <p class="text-gray-600 mt-2">探索最新、最熱門的迷因內容</p>
     </div>
 
-    <!-- 篩選和排序 -->
+    <!-- 篩選狀態顯示 -->
+    <div
+      v-if="selectedTags.length > 0"
+      class="flex items-center justify-center gap-2 mb-4"
+    >
+      <span class="text-sm text-gray-600">已篩選：</span>
+      <Tag
+        v-for="tag in selectedTags"
+        :key="tag._id"
+        :value="`#${tag.name}`"
+        severity="success"
+        class="cursor-pointer"
+        @click="removeTag(tag)"
+      />
+      <Button
+        label="清除篩選"
+        icon="pi pi-times"
+        size="small"
+        severity="secondary"
+        text
+        @click="clearFilters"
+      />
+    </div>
+
+    <!-- 熱門標籤 -->
     <div class="flex flex-wrap gap-2 mb-6 justify-center">
       <Tag
         v-for="tag in topTags"
         :key="tag._id"
         :value="`#${tag.name}`"
-        severity="primary"
+        :severity="isTagSelected(tag) ? 'success' : 'primary'"
         class="cursor-pointer hover:bg-primary-50"
         @click="onTagClick(tag)"
       />
@@ -26,7 +50,7 @@
     </div>
 
     <!-- 迷因列表 -->
-    <div v-else-if="memes.length > 0" class="space-y-6">
+    <div v-else-if="memes.length > 0" class="space-y-6 pb-10">
       <MemeCard
         v-for="meme in memes"
         :key="meme.id"
@@ -42,7 +66,11 @@
       <i class="pi pi-image text-6xl text-gray-300 mb-4"></i>
       <h3 class="text-xl font-semibold text-gray-600 mb-2">暫無迷因內容</h3>
       <p class="text-gray-500">
-        目前沒有符合條件的迷因，請稍後再試或調整篩選條件
+        {{
+          selectedTags.length > 0
+            ? '沒有符合篩選條件的迷因'
+            : '目前沒有符合條件的迷因，請稍後再試或調整篩選條件'
+        }}
       </p>
       <Button
         label="重新載入"
@@ -101,7 +129,7 @@ const loading = ref(false)
 const loadingMore = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(50)
 
 // 篩選和排序
 const sortBy = ref('created_at_desc')
@@ -129,12 +157,17 @@ const loadMemes = async (reset = true) => {
       sort: sortBy.value,
     }
 
-    // 如果有選擇標籤，加入篩選參數
+    let response
+
+    // 如果有選擇標籤，使用標籤篩選 API
     if (selectedTags.value.length > 0) {
-      params.tags = selectedTags.value.join(',')
+      const tagNames = selectedTags.value.map((tag) => tag.name)
+      response = await memeService.getByTags(tagNames, params)
+    } else {
+      // 沒有篩選條件，使用一般 API
+      response = await memeService.getAll(params)
     }
 
-    const response = await memeService.getAll(params)
     const newMemes = response.data.memes || response.data || []
 
     // 為每個迷因載入作者資訊
@@ -179,7 +212,8 @@ const loadMemes = async (reset = true) => {
 
     // 檢查是否還有更多資料
     hasMore.value = newMemes.length === pageSize.value
-  } catch {
+  } catch (error) {
+    console.error('載入迷因失敗:', error)
     toast.add({
       severity: 'error',
       summary: '載入失敗',
@@ -208,31 +242,40 @@ const loadAvailableTags = async () => {
   }
 }
 
-// 載入特定標籤的迷因
-const loadMemesByTag = async (tagId) => {
-  try {
-    loading.value = true
-    currentPage.value = 1
-    memes.value = []
-    selectedTags.value = [tagId]
-    await loadMemes()
-  } catch {
-    toast.add({
-      severity: 'error',
-      summary: '載入失敗',
-      detail: '無法載入標籤迷因，請稍後再試',
-      life: 3000,
-    })
-  } finally {
-    loading.value = false
-  }
+// 檢查標籤是否已選擇
+const isTagSelected = (tag) => {
+  return selectedTags.value.some((selectedTag) => selectedTag._id === tag._id)
 }
 
 // 標籤點擊處理
 const onTagClick = (tag) => {
-  // 這裡根據 tag 查詢迷因
-  // 你原本的 loadMemesByTag 或其他查詢邏輯
-  loadMemesByTag(tag.id)
+  if (isTagSelected(tag)) {
+    // 如果標籤已選擇，則移除
+    removeTag(tag)
+  } else {
+    // 如果標籤未選擇，則加入
+    addTag(tag)
+  }
+}
+
+// 新增標籤到篩選
+const addTag = (tag) => {
+  if (!isTagSelected(tag)) {
+    selectedTags.value.push(tag)
+    loadMemes()
+  }
+}
+
+// 移除標籤篩選
+const removeTag = (tag) => {
+  selectedTags.value = selectedTags.value.filter((t) => t._id !== tag._id)
+  loadMemes()
+}
+
+// 清除所有篩選
+const clearFilters = () => {
+  selectedTags.value = []
+  loadMemes()
 }
 
 // 顯示評論

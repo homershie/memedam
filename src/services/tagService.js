@@ -7,8 +7,9 @@ export default {
   getAll() {
     return apiService.http.get('/tags')
   },
-  getPopular() {
-    return apiService.http.get('/tags/popular')
+  getPopular(limit = null) {
+    const params = limit ? { limit } : {}
+    return apiService.http.get('/tags/popular', { params })
   },
   get(id) {
     return apiService.http.get(`/tags/${id}`)
