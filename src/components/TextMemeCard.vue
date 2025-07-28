@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'p-6 h-90 flex items-center justify-center rounded-lg shadow-lg text-center transition-all duration-300',
+      'p-6 aspect-square flex items-center justify-center rounded-lg shadow-lg text-center transition-all duration-300',
       gradientClass,
       hoverEffect,
     ]"

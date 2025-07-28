@@ -56,7 +56,7 @@
               v-model="form.content"
               placeholder="簡單描述這個迷因的內容或梗點..."
               rows="4"
-              maxlength="5000"
+              maxlength="350"
               required
               class="w-full"
               :class="{ 'p-invalid': errors.content }"
@@ -64,7 +64,12 @@
             <small v-if="errors.content" class="p-error">{{
               errors.content
             }}</small>
-            <small class="text-gray-500">{{ form.content.length }}/5000</small>
+            <small
+              class="text-gray-500"
+              :class="{ 'text-red-500': getCharCount(form.content) > 350 }"
+            >
+              {{ getCharCount(form.content) }}/350
+            </small>
           </div>
 
           <!-- 媒體內容 (根據類型顯示不同輸入方式) -->
@@ -474,6 +479,16 @@ const getMediaLabel = (type) => {
   return labelMap[type] || '媒體內容'
 }
 
+// 字元計數函數 - 適合中文字元計算
+const getCharCount = (text) => {
+  if (!text) return 0
+
+  // 計算字元數，中文字元算 1 個字元
+  // 這裡使用簡單的長度計算，因為中文字元在 JavaScript 中也是 1 個字元
+  // 如果需要更複雜的計算（如考慮全形字元），可以進一步修改
+  return text.length
+}
+
 // 圖片上傳處理
 const onImageSelect = (event) => {
   const file = event.files[0]
@@ -595,6 +610,9 @@ const validateForm = () => {
 
   if (!form.content.trim()) {
     errors.content = '請輸入迷因內容簡介'
+    isValid = false
+  } else if (getCharCount(form.content) > 350) {
+    errors.content = '內容簡介不能超過 350 個字元'
     isValid = false
   }
 

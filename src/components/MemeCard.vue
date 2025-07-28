@@ -1,5 +1,5 @@
 <template>
-  <Card class="mb-6 max-w-2xl mx-auto!">
+  <Card class="mb-6 max-w-5xl mx-auto!">
     <ConfirmPopup />
     <template #header>
       <div class="flex items-center justify-between p-4 pb-0">
@@ -63,85 +63,109 @@
 
     <template #content>
       <div class="px-4">
-        <!-- 根據類型顯示不同內容 -->
-        <div class="mb-4">
-          <div v-if="meme.type === 'image' && meme.image_url" class="relative">
-            <Image
-              :src="meme.image_url"
-              :alt="meme.title"
-              class="w-full rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
-              preview
-            />
-          </div>
-          <div
-            v-else-if="meme.type === 'video' && meme.video_url"
-            class="relative"
-          >
-            <!-- 外部影片平台 -->
+        <div class="flex justify-center gap-4 flex-col lg:flex-row items-start">
+          <!-- 根據類型顯示不同內容 -->
+          <div class="mb-4 w-full lg:w-1/4">
             <div
-              v-if="isExternalVideoUrl(meme.video_url)"
-              class="relative w-full"
+              v-if="meme.type === 'image' && meme.image_url"
+              class="relative aspect-square overflow-hidden rounded-lg"
             >
-              <iframe
-                :src="getEmbedUrl(meme.video_url)"
-                class="w-full h-90 rounded-lg"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-              ></iframe>
+              <Image
+                :src="meme.image_url"
+                :alt="meme.title"
+                class="w-full object-none rounded-lg"
+              />
             </div>
-            <!-- 一般影片 -->
-            <video
-              v-else
-              controls
-              class="w-full rounded-lg"
-              :poster="meme.image_url"
+            <div
+              v-else-if="meme.type === 'video' && meme.video_url"
+              class="relative"
             >
-              <source :src="meme.video_url" type="video/mp4" />
-              您的瀏覽器不支援影片播放
-            </video>
+              <!-- 外部影片平台 -->
+              <div
+                v-if="isExternalVideoUrl(meme.video_url)"
+                class="relative w-full"
+              >
+                <iframe
+                  :src="getEmbedUrl(meme.video_url)"
+                  class="w-full aspect-square rounded-lg"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <!-- 一般影片 -->
+              <video
+                v-else
+                controls
+                class="w-full rounded-lg"
+                :poster="meme.image_url"
+              >
+                <source :src="meme.video_url" type="video/mp4" />
+                您的瀏覽器不支援影片播放
+              </video>
+            </div>
+            <div
+              v-else-if="meme.type === 'audio' && meme.audio_url"
+              class="relative aspect-square overflow-hidden rounded-lg"
+            >
+              <!-- 外部音訊平台 -->
+              <div
+                v-if="isExternalAudioUrl(meme.audio_url)"
+                class="relative w-full h-full"
+              >
+                <iframe
+                  :src="getAudioEmbedUrl(meme.audio_url)"
+                  class="w-full h-full rounded-lg"
+                  frameborder="0"
+                  allow="autoplay"
+                ></iframe>
+              </div>
+              <!-- 一般音訊檔案 -->
+              <audio
+                v-else
+                controls
+                class="w-full h-full object-cover rounded-lg"
+                preload="metadata"
+              >
+                <source :src="meme.audio_url" type="audio/mpeg" />
+                <source :src="meme.audio_url" type="audio/ogg" />
+                <source :src="meme.audio_url" type="audio/wav" />
+                您的瀏覽器不支援音訊播放
+              </audio>
+            </div>
+            <div
+              v-else-if="meme.type === 'gif' && meme.image_url"
+              class="relative aspect-square overflow-hidden rounded-lg"
+            >
+              <img
+                :src="meme.image_url"
+                :alt="meme.title"
+                class="w-full rounded-lg"
+              />
+            </div>
+            <div v-else-if="meme.type === 'text'" class="relative">
+              <!-- 裝飾性標題 -->
+              <TextMemeCard
+                :title="meme.title"
+                variant="random"
+                size="medium"
+                :hover-effect="true"
+              />
+            </div>
           </div>
-          <div
-            v-else-if="meme.type === 'audio' && meme.audio_url"
-            class="relative"
-          >
-            <audio controls class="w-full rounded-lg" preload="metadata">
-              <source :src="meme.audio_url" type="audio/mpeg" />
-              <source :src="meme.audio_url" type="audio/ogg" />
-              <source :src="meme.audio_url" type="audio/wav" />
-              您的瀏覽器不支援音訊播放
-            </audio>
-          </div>
-          <div
-            v-else-if="meme.type === 'gif' && meme.image_url"
-            class="relative"
-          >
-            <img
-              :src="meme.image_url"
-              :alt="meme.title"
-              class="w-full rounded-lg"
-            />
-          </div>
-          <div v-else-if="meme.type === 'text'" class="relative">
-            <!-- 裝飾性標題 -->
-            <TextMemeCard
-              :title="meme.title"
-              variant="random"
-              size="medium"
-              :hover-effect="true"
-            />
+
+          <div class="w-full lg:w-3/4">
+            <!-- 標題 - 只在非文字類型時顯示 -->
+            <div class="mb-4" v-if="meme.type !== 'text'">
+              <h3 class="text-xl font-bold text-gray-800">{{ meme.title }}</h3>
+            </div>
+
+            <!-- 內容預覽 -->
+            <p class="text-gray-600 mb-4" v-if="meme.content">
+              {{ meme.content }}
+            </p>
           </div>
         </div>
-
-        <!-- 標題 - 只在非文字類型時顯示 -->
-        <div class="mb-4" v-if="meme.type !== 'text'">
-          <h3 class="text-xl font-bold text-gray-800">{{ meme.title }}</h3>
-        </div>
-
-        <!-- 內容預覽 -->
-        <p class="text-gray-600 mb-4" v-if="meme.content">
-          {{ meme.content }}
-        </p>
 
         <!-- 標籤 -->
         <div class="flex flex-wrap gap-2 mb-4" v-if="tags.length > 0">
@@ -716,6 +740,121 @@ const getEmbedUrl = (url) => {
   return url
 }
 
+// 外部音訊平台 URL 處理函數
+const isExternalAudioUrl = (url) => {
+  if (!url) return false
+  return (
+    url.includes('youtube.com') ||
+    url.includes('youtu.be') ||
+    url.includes('soundcloud.com') ||
+    url.includes('spotify.com') ||
+    url.includes('open.spotify.com') ||
+    url.includes('anchor.fm') ||
+    url.includes('podbean.com') ||
+    url.includes('buzzsprout.com') ||
+    url.includes('libsyn.com') ||
+    url.includes('transistor.fm')
+  )
+}
+
+const getAudioEmbedUrl = (url) => {
+  if (!url) return ''
+
+  // YouTube (音訊)
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    let videoId = ''
+    if (url.includes('youtu.be')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0]
+    } else if (url.includes('youtube.com')) {
+      videoId =
+        url.match(/[?&]v=([^&]+)/)?.[1] || url.match(/embed\/([^?]+)/)?.[1]
+    }
+    return `https://www.youtube.com/embed/${videoId}`
+  }
+
+  // SoundCloud
+  if (url.includes('soundcloud.com')) {
+    // SoundCloud 需要特殊處理，因為它需要 oEmbed API
+    const trackId = url.match(/tracks\/(\d+)/)?.[1]
+    if (trackId) {
+      return `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/${trackId}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`
+    }
+  }
+
+  // Spotify
+  if (url.includes('spotify.com') || url.includes('open.spotify.com')) {
+    // 支援 Spotify 的各種音訊類型
+    if (url.includes('/track/')) {
+      const trackId = url.match(/track\/([a-zA-Z0-9]+)/)?.[1]
+      if (trackId) {
+        return `https://open.spotify.com/embed/track/${trackId}`
+      }
+    } else if (url.includes('/album/')) {
+      const albumId = url.match(/album\/([a-zA-Z0-9]+)/)?.[1]
+      if (albumId) {
+        return `https://open.spotify.com/embed/album/${albumId}`
+      }
+    } else if (url.includes('/playlist/')) {
+      const playlistId = url.match(/playlist\/([a-zA-Z0-9]+)/)?.[1]
+      if (playlistId) {
+        return `https://open.spotify.com/embed/playlist/${playlistId}`
+      }
+    } else if (url.includes('/episode/')) {
+      const episodeId = url.match(/episode\/([a-zA-Z0-9]+)/)?.[1]
+      if (episodeId) {
+        return `https://open.spotify.com/embed/episode/${episodeId}`
+      }
+    } else if (url.includes('/show/')) {
+      const showId = url.match(/show\/([a-zA-Z0-9]+)/)?.[1]
+      if (showId) {
+        return `https://open.spotify.com/embed/show/${showId}`
+      }
+    }
+  }
+
+  // Anchor.fm (Spotify for Podcasters)
+  if (url.includes('anchor.fm')) {
+    const episodeId = url.match(/episodes\/([^/?]+)/)?.[1]
+    if (episodeId) {
+      return `https://anchor.fm/embed/episodes/${episodeId}`
+    }
+  }
+
+  // Podbean
+  if (url.includes('podbean.com')) {
+    const episodeId = url.match(/e\/([^/?]+)/)?.[1]
+    if (episodeId) {
+      return `https://www.podbean.com/player-v2/?i=${episodeId}`
+    }
+  }
+
+  // Buzzsprout
+  if (url.includes('buzzsprout.com')) {
+    const episodeId = url.match(/episodes\/(\d+)/)?.[1]
+    if (episodeId) {
+      return `https://www.buzzsprout.com/embed/${episodeId}`
+    }
+  }
+
+  // Libsyn
+  if (url.includes('libsyn.com')) {
+    const episodeId = url.match(/episode\/([^/?]+)/)?.[1]
+    if (episodeId) {
+      return `https://html5-player.libsyn.com/embed/episode/id/${episodeId}`
+    }
+  }
+
+  // Transistor.fm
+  if (url.includes('transistor.fm')) {
+    const episodeId = url.match(/episodes\/([^/?]+)/)?.[1]
+    if (episodeId) {
+      return `https://share.transistor.fm/e/${episodeId}`
+    }
+  }
+
+  return url
+}
+
 const showDeleteConfirm = (event) => {
   confirm.require({
     target: event?.currentTarget || undefined,
@@ -755,5 +894,28 @@ const showDeleteConfirm = (event) => {
 
 .p-card:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 處理 PrimeVue Image 組件的內部結構 */
+:deep(.p-image) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:deep(.p-image img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+:deep(.p-image .p-image-preview) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:deep(.p-image .p-image-preview img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 </style>
