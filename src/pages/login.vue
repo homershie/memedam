@@ -39,6 +39,8 @@
           <label class="field-label">使用者名稱*</label>
           <InputText
             v-model="formData.username"
+            name="username"
+            autocomplete="username"
             class="form-input"
             :class="{ 'p-invalid': errors.username }"
             placeholder="請輸入使用者名稱"
@@ -55,6 +57,8 @@
           <InputText
             v-model="formData.email"
             :type="activeTab === 'register' ? 'email' : 'text'"
+            name="email"
+            :autocomplete="activeTab === 'register' ? 'email' : 'username'"
             class="form-input"
             :class="{ 'p-invalid': errors.email }"
             :placeholder="
@@ -72,6 +76,10 @@
           <label class="field-label">密碼*</label>
           <Password
             v-model="formData.password"
+            name="password"
+            :autocomplete="
+              activeTab === 'register' ? 'new-password' : 'current-password'
+            "
             class="form-input"
             :class="{ 'p-invalid': errors.password }"
             placeholder="請輸入密碼"
@@ -88,6 +96,8 @@
           <label class="field-label">確認密碼*</label>
           <Password
             v-model="formData.confirmPassword"
+            name="confirmPassword"
+            autocomplete="new-password"
             class="form-input"
             :class="{ 'p-invalid': errors.confirmPassword }"
             placeholder="請再次輸入密碼"
