@@ -313,13 +313,93 @@ const loadTags = async () => {
   }
 }
 
+// 載入用戶互動狀態和統計資料
+const loadUserInteractionStatus = async () => {
+  try {
+    if (!memeId.value || !userStore.userId) {
+      return
+    }
+
+    // 檢查當前用戶是否已按讚
+    try {
+      const likeResponse = await likeService.getAll()
+      const userLikes = likeResponse.data.filter(
+        (like) =>
+          like.meme_id === memeId.value && like.user_id === userStore.userId,
+      )
+      isLiked.value = userLikes.length > 0
+    } catch (error) {
+      console.error('檢查按讚狀態失敗:', error)
+    }
+
+    // 檢查當前用戶是否已按噓
+    try {
+      const dislikeResponse = await dislikeService.getAll()
+      const userDislikes = dislikeResponse.data.filter(
+        (dislike) =>
+          dislike.meme_id === memeId.value &&
+          dislike.user_id === userStore.userId,
+      )
+      isDisliked.value = userDislikes.length > 0
+    } catch (error) {
+      console.error('檢查按噓狀態失敗:', error)
+    }
+
+    // 獲取最新的統計資料
+    try {
+      const memeResponse = await memeService.get(memeId.value)
+      console.log('獲取迷因資料響應:', memeResponse)
+      if (memeResponse.data) {
+        // 修正欄位名稱以匹配後端模型
+        const newLikesCount =
+          memeResponse.data.like_count || memeResponse.data.likes_count || 0
+        const newDislikesCount =
+          memeResponse.data.dislike_count ||
+          memeResponse.data.dislikes_count ||
+          0
+        const newCommentsCount =
+          memeResponse.data.comment_count ||
+          memeResponse.data.comments_count ||
+          0
+
+        console.log('更新統計資料:', {
+          likes: newLikesCount,
+          dislikes: newDislikesCount,
+          comments: newCommentsCount,
+        })
+
+        likesCount.value = newLikesCount
+        dislikesCount.value = newDislikesCount
+        commentsCount.value = newCommentsCount
+      }
+    } catch (error) {
+      console.error('獲取統計資料失敗:', error)
+    }
+  } catch (error) {
+    console.error('載入用戶互動狀態失敗:', error)
+  }
+}
+
 onMounted(() => {
   loadTags()
+  loadUserInteractionStatus()
 })
 
 // 按讚功能
 const toggleLike = async () => {
   try {
+    if (!userStore.isLoggedIn) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '請先登入',
+        life: 3000,
+      })
+      // 跳轉到登入頁面
+      window.location.href = '/login'
+      return
+    }
+
     if (!memeId.value) {
       toast.add({
         severity: 'error',
@@ -330,26 +410,35 @@ const toggleLike = async () => {
       return
     }
 
-    await likeService.toggle({
+    console.log('按讚資料:', {
       meme_id: memeId.value,
       type: 'meme',
+      user_id: userStore.userId,
     })
 
-    if (isLiked.value) {
-      likesCount.value--
-      isLiked.value = false
-    } else {
-      likesCount.value++
-      isLiked.value = true
-      // 如果之前按過噓，要取消噓
-      if (isDisliked.value) {
-        await dislikeService.toggle({
-          meme_id: memeId.value,
-          type: 'meme',
-        })
-        dislikesCount.value--
+    const response = await likeService.toggle({
+      meme_id: memeId.value,
+      type: 'meme',
+      user_id: userStore.userId,
+    })
+
+    console.log('按讚 API 響應:', response)
+
+    // 檢查 API 響應並即時更新統計
+    if (response && response.data && response.data.success) {
+      // 後端返回成功，但沒有統計資料，需要重新獲取
+      console.log('按讚成功，重新獲取統計資料')
+
+      // 立即更新用戶狀態（樂觀更新）
+      isLiked.value = !isLiked.value
+      if (isLiked.value && isDisliked.value) {
         isDisliked.value = false
       }
+
+      // 重新獲取統計資料
+      await loadUserInteractionStatus()
+    } else {
+      console.error('按讚失敗或響應格式異常')
     }
   } catch (error) {
     console.error('按讚操作失敗:', error)
@@ -365,6 +454,18 @@ const toggleLike = async () => {
 // 按噓功能
 const toggleDislike = async () => {
   try {
+    if (!userStore.isLoggedIn) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '請先登入',
+        life: 3000,
+      })
+      // 跳轉到登入頁面
+      window.location.href = '/login'
+      return
+    }
+
     if (!memeId.value) {
       toast.add({
         severity: 'error',
@@ -374,26 +475,36 @@ const toggleDislike = async () => {
       })
       return
     }
-    await dislikeService.toggle({
+
+    console.log('按噓資料:', {
       meme_id: memeId.value,
       type: 'meme',
+      user_id: userStore.userId,
     })
 
-    if (isDisliked.value) {
-      dislikesCount.value--
-      isDisliked.value = false
-    } else {
-      dislikesCount.value++
-      isDisliked.value = true
-      // 如果之前按過讚，要取消讚
-      if (isLiked.value) {
-        await likeService.toggle({
-          meme_id: memeId.value,
-          type: 'meme',
-        })
-        likesCount.value--
+    const response = await dislikeService.toggle({
+      meme_id: memeId.value,
+      type: 'meme',
+      user_id: userStore.userId,
+    })
+
+    console.log('按噓 API 響應:', response)
+
+    // 檢查 API 響應並即時更新統計
+    if (response && response.data && response.data.success) {
+      // 後端返回成功，但沒有統計資料，需要重新獲取
+      console.log('按噓成功，重新獲取統計資料')
+
+      // 立即更新用戶狀態（樂觀更新）
+      isDisliked.value = !isDisliked.value
+      if (isDisliked.value && isLiked.value) {
         isLiked.value = false
       }
+
+      // 重新獲取統計資料
+      await loadUserInteractionStatus()
+    } else {
+      console.error('按噓失敗或響應格式異常')
     }
   } catch {
     toast.add({
@@ -408,6 +519,18 @@ const toggleDislike = async () => {
 // 收藏功能
 const toggleCollection = async () => {
   try {
+    if (!userStore.isLoggedIn) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '請先登入',
+        life: 3000,
+      })
+      // 跳轉到登入頁面
+      window.location.href = '/login'
+      return
+    }
+
     if (!memeId.value) {
       toast.add({
         severity: 'error',
@@ -420,6 +543,7 @@ const toggleCollection = async () => {
     await collectionService.toggle({
       meme_id: memeId.value,
       type: 'meme',
+      user_id: userStore.userId,
     })
 
     isCollected.value = !isCollected.value
@@ -491,6 +615,17 @@ const onTagClick = (tag) => {
 
 // 顯示評論
 const showComments = () => {
+  if (!userStore.isLoggedIn) {
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '請先登入',
+      life: 3000,
+    })
+    // 跳轉到登入頁面
+    window.location.href = '/login'
+    return
+  }
   emit('show-comments', props.meme)
 }
 
