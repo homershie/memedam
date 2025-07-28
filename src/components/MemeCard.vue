@@ -61,19 +61,8 @@
       </div>
     </template>
 
-    <template #title>
-      <div class="px-4 pb-2">
-        <h3 class="text-xl font-bold text-gray-800">{{ meme.title }}</h3>
-      </div>
-    </template>
-
     <template #content>
       <div class="px-4">
-        <!-- 內容預覽 -->
-        <p class="text-gray-600 mb-4" v-if="meme.content">
-          {{ meme.content }}
-        </p>
-
         <!-- 根據類型顯示不同內容 -->
         <div class="mb-4">
           <div v-if="meme.type === 'image' && meme.image_url" class="relative">
@@ -85,17 +74,43 @@
             />
           </div>
           <div
-            v-else-if="meme.type === 'video' && meme.image_url"
+            v-else-if="meme.type === 'video' && meme.video_url"
             class="relative"
           >
+            <!-- 外部影片平台 -->
+            <div
+              v-if="isExternalVideoUrl(meme.video_url)"
+              class="relative w-full"
+            >
+              <iframe
+                :src="getEmbedUrl(meme.video_url)"
+                class="w-full h-90 rounded-lg"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <!-- 一般影片 -->
             <video
+              v-else
               controls
               class="w-full rounded-lg"
-              :poster="meme.thumbnail_url"
+              :poster="meme.image_url"
             >
-              <source :src="meme.image_url" type="video/mp4" />
+              <source :src="meme.video_url" type="video/mp4" />
               您的瀏覽器不支援影片播放
             </video>
+          </div>
+          <div
+            v-else-if="meme.type === 'audio' && meme.audio_url"
+            class="relative"
+          >
+            <audio controls class="w-full rounded-lg" preload="metadata">
+              <source :src="meme.audio_url" type="audio/mpeg" />
+              <source :src="meme.audio_url" type="audio/ogg" />
+              <source :src="meme.audio_url" type="audio/wav" />
+              您的瀏覽器不支援音訊播放
+            </audio>
           </div>
           <div
             v-else-if="meme.type === 'gif' && meme.image_url"
@@ -116,6 +131,16 @@
             </div>
           </div>
         </div>
+
+        <!-- 標題 -->
+        <div class="mb-4">
+          <h3 class="text-xl font-bold text-gray-800">{{ meme.title }}</h3>
+        </div>
+
+        <!-- 內容預覽 -->
+        <p class="text-gray-600 mb-4" v-if="meme.content">
+          {{ meme.content }}
+        </p>
 
         <!-- 標籤 -->
         <div class="flex flex-wrap gap-2 mb-4" v-if="tags.length > 0">
@@ -475,6 +500,85 @@ const showMenu = (event) => {
 const onEdit = () => {
   window.location.href = `/memes/edit/${memeId.value}`
 }
+// 外部影片平台 URL 處理函數
+const isExternalVideoUrl = (url) => {
+  if (!url) return false
+  return (
+    url.includes('youtube.com') ||
+    url.includes('youtu.be') ||
+    url.includes('vimeo.com') ||
+    url.includes('tiktok.com') ||
+    url.includes('twitch.tv') ||
+    url.includes('dailymotion.com') ||
+    url.includes('bilibili.com')
+  )
+}
+
+const getEmbedUrl = (url) => {
+  if (!url) return ''
+
+  // YouTube
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    let videoId = ''
+    if (url.includes('youtu.be')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0]
+    } else if (url.includes('youtube.com')) {
+      videoId =
+        url.match(/[?&]v=([^&]+)/)?.[1] || url.match(/embed\/([^?]+)/)?.[1]
+    }
+    return `https://www.youtube.com/embed/${videoId}`
+  }
+
+  // Vimeo
+  if (url.includes('vimeo.com')) {
+    const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1]
+    return `https://player.vimeo.com/video/${videoId}`
+  }
+
+  // TikTok
+  if (url.includes('tiktok.com')) {
+    // TikTok 需要特殊處理，因為它不直接支援嵌入
+    // 這裡使用 TikTok 的嵌入 API
+    const videoId = url.match(/video\/(\d+)/)?.[1]
+    if (videoId) {
+      return `https://www.tiktok.com/embed/${videoId}`
+    }
+  }
+
+  // Twitch
+  if (url.includes('twitch.tv')) {
+    if (url.includes('/videos/')) {
+      // 影片
+      const videoId = url.match(/\/videos\/(\d+)/)?.[1]
+      return `https://player.twitch.tv/?video=v${videoId}&parent=${window.location.hostname}`
+    } else if (url.includes('/clip/')) {
+      // 剪輯
+      const clipId = url.match(/\/clip\/([^?]+)/)?.[1]
+      return `https://clips.twitch.tv/embed?clip=${clipId}&parent=${window.location.hostname}`
+    } else {
+      // 直播
+      const channel = url.match(/twitch\.tv\/([^/?]+)/)?.[1]
+      return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}`
+    }
+  }
+
+  // Dailymotion
+  if (url.includes('dailymotion.com')) {
+    const videoId = url.match(/video\/([^?]+)/)?.[1]
+    return `https://www.dailymotion.com/embed/video/${videoId}`
+  }
+
+  // Bilibili
+  if (url.includes('bilibili.com')) {
+    const videoId = url.match(/BV([a-zA-Z0-9]+)/)?.[0]
+    if (videoId) {
+      return `https://player.bilibili.com/player.html?bvid=${videoId}`
+    }
+  }
+
+  return url
+}
+
 const showDeleteConfirm = (event) => {
   confirm.require({
     target: event?.currentTarget || undefined,

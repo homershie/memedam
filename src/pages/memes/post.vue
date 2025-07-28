@@ -609,7 +609,7 @@ const validateForm = () => {
       // 如果有填連結，可加強合法性檢查（可選）
     } else {
       const urlField = `${form.type}_url`
-      if (!form[urlField]) {
+      if (!form[urlField] || form[urlField].trim() === '') {
         errors.mediaUrl = `請提供${getTypeName(form.type)}連結`
         isValid = false
       }
@@ -729,6 +729,12 @@ const handleSubmit = async () => {
       detail_markdown: detailMarkdown.value,
       tags_cache: tagNames,
     }
+
+    // 清理空字串欄位，避免後端驗證問題
+    if (memeData.image_url === '') memeData.image_url = undefined
+    if (memeData.video_url === '') memeData.video_url = undefined
+    if (memeData.audio_url === '') memeData.audio_url = undefined
+    if (memeData.source_url === '') memeData.source_url = undefined
 
     const memeResponse = await memeService.create(memeData)
 
