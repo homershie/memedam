@@ -122,18 +122,19 @@
               class="w-full rounded-lg"
             />
           </div>
-          <div
-            v-else-if="meme.type === 'text'"
-            class="bg-gray-50 p-4 rounded-lg"
-          >
-            <div class="text-lg text-center">
-              {{ meme.text_content || meme.content }}
-            </div>
+          <div v-else-if="meme.type === 'text'" class="relative">
+            <!-- 裝飾性標題 -->
+            <TextMemeCard
+              :title="meme.title"
+              variant="random"
+              size="medium"
+              :hover-effect="true"
+            />
           </div>
         </div>
 
-        <!-- 標題 -->
-        <div class="mb-4">
+        <!-- 標題 - 只在非文字類型時顯示 -->
+        <div class="mb-4" v-if="meme.type !== 'text'">
           <h3 class="text-xl font-bold text-gray-800">{{ meme.title }}</h3>
         </div>
 
@@ -218,6 +219,7 @@ import Tag from 'primevue/tag'
 import Image from 'primevue/image'
 import OverlayPanel from 'primevue/overlaypanel'
 import ConfirmPopup from 'primevue/confirmpopup'
+import TextMemeCard from './TextMemeCard.vue'
 import { useUserStore } from '@/stores/userStore'
 import likeService from '@/services/likeService'
 import dislikeService from '@/services/dislikeService'
