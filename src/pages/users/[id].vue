@@ -145,15 +145,25 @@
           @tag-click="handleTagClick"
         />
 
-        <!-- 載入更多按鈕 -->
-        <div v-if="hasMore && !loading" class="flex justify-center mt-8">
-          <Button
-            label="載入更多"
-            icon="pi pi-plus"
-            @click="loadMoreMemes"
-            :loading="loadingMore"
-            outlined
-          />
+        <!-- 無限滾動觸發元素 -->
+        <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
+          <div v-if="infiniteLoading" class="flex justify-center mt-8">
+            <div class="flex items-center text-gray-500">
+              <ProgressSpinner style="width: 20px; height: 20px" />
+              <span class="ml-2">載入更多內容...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 沒有更多內容提示 -->
+        <div
+          v-if="!hasMore && memes.length > 0"
+          class="flex justify-center mt-8"
+        >
+          <div class="text-gray-500 text-center">
+            <i class="pi pi-check-circle text-green-500 mr-2"></i>
+            已載入全部內容
+          </div>
         </div>
       </div>
 
@@ -178,7 +188,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import Avatar from 'primevue/avatar'
-import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -190,6 +199,7 @@ import userService from '@/services/userService'
 import memeService from '@/services/memeService'
 import collectionService from '@/services/collectionService'
 import likeService from '@/services/likeService'
+import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 
 // 組件名稱 (修復linter錯誤)
 defineOptions({
@@ -205,7 +215,6 @@ const userProfile = ref(null)
 const userStats = ref({})
 const memes = ref([])
 const loading = ref(true)
-const loadingMore = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const searchQuery = ref('')
@@ -422,12 +431,8 @@ const loadUserMemes = async (reset = false) => {
   }
 }
 
-// 載入更多迷因
-const loadMoreMemes = async () => {
-  if (loadingMore.value || !hasMore.value) return
-
-  loadingMore.value = true
-
+// 無限滾動載入函數
+const loadMoreContent = async () => {
   try {
     // 根據當前標籤頁調用對應的載入函數
     switch (activeTab.value) {
@@ -443,6 +448,9 @@ const loadMoreMemes = async () => {
       default:
         await loadUserMemes(false)
     }
+
+    // 更新無限滾動狀態
+    updateLoadingState(false, hasMore.value)
   } catch (error) {
     console.error('載入更多內容失敗:', error)
     toast.add({
@@ -451,8 +459,35 @@ const loadMoreMemes = async () => {
       detail: '載入更多內容失敗',
       life: 3000,
     })
+    updateLoadingState(false, false)
+  }
+}
+
+// 使用無限滾動組合式函數
+const {
+  triggerRef,
+  isLoading: infiniteLoading,
+  hasMore: infiniteHasMore,
+  updateLoadingState,
+  resetState,
+} = useInfiniteScroll(loadMoreContent, {
+  threshold: 0.1,
+  rootMargin: '100px',
+})
+
+// 組件掛載時載入初始數據
+onMounted(() => {
+  loadInitialData()
+})
+
+// 載入初始數據
+const loadInitialData = async () => {
+  try {
+    await Promise.all([loadUserProfile(), loadUserStats(), loadUserMemes(true)])
+  } catch (error) {
+    console.error('載入初始數據失敗:', error)
   } finally {
-    loadingMore.value = false
+    loading.value = false
   }
 }
 
@@ -671,6 +706,7 @@ watch(activeTab, (newTab) => {
   // 重置分頁狀態
   currentPage.value = 1
   hasMore.value = true
+  resetState()
 
   if (newTab === 'posts') {
     loadUserMemes(true)
@@ -696,17 +732,6 @@ watch(
   },
   { immediate: true },
 )
-
-// 組件掛載
-onMounted(async () => {
-  loading.value = true
-
-  try {
-    await Promise.all([loadUserProfile(), loadUserStats(), loadUserMemes(true)])
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>

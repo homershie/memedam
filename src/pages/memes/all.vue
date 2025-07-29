@@ -86,16 +86,14 @@
       />
     </div>
 
-    <!-- 載入更多按鈕 -->
-    <div v-if="hasMore && !loading" class="text-center py-6">
-      <Button
-        label="載入更多"
-        icon="pi pi-chevron-down"
-        @click="loadMore"
-        :loading="loadingMore"
-        severity="secondary"
-        outlined
-      />
+    <!-- 無限滾動觸發元素 -->
+    <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
+      <div v-if="infiniteLoading" class="flex justify-center py-6">
+        <div class="flex items-center text-gray-500">
+          <ProgressSpinner style="width: 20px; height: 20px" />
+          <span class="ml-2">載入更多內容...</span>
+        </div>
+      </div>
     </div>
 
     <!-- 評論對話框 -->
@@ -128,6 +126,7 @@ import memeService from '@/services/memeService'
 import userService from '@/services/userService'
 import tagService from '@/services/tagService'
 import Tag from 'primevue/tag'
+import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 
 const route = useRoute()
 const router = useRouter()
@@ -136,7 +135,6 @@ const toast = useToast()
 // 響應式數據
 const memes = ref([])
 const loading = ref(false)
-const loadingMore = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(50)
@@ -161,8 +159,6 @@ const loadMemes = async (reset = true) => {
       loading.value = true
       currentPage.value = 1
       memes.value = []
-    } else {
-      loadingMore.value = true
     }
 
     const params = {
@@ -246,6 +242,9 @@ const loadMemes = async (reset = true) => {
 
     // 檢查是否還有更多資料
     hasMore.value = newMemes.length === pageSize.value
+
+    // 更新無限滾動狀態
+    updateLoadingState(false, hasMore.value)
   } catch (error) {
     console.error('載入迷因失敗:', error)
     toast.add({
@@ -254,17 +253,28 @@ const loadMemes = async (reset = true) => {
       detail: '無法載入迷因列表，請稍後再試',
       life: 3000,
     })
+    updateLoadingState(false, false)
   } finally {
     loading.value = false
-    loadingMore.value = false
   }
 }
 
-// 載入更多
-const loadMore = async () => {
+// 無限滾動載入函數
+const loadMoreContent = async () => {
   currentPage.value++
   await loadMemes(false)
 }
+
+// 使用無限滾動組合式函數
+const {
+  triggerRef,
+  isLoading: infiniteLoading,
+  hasMore: infiniteHasMore,
+  updateLoadingState,
+} = useInfiniteScroll(loadMoreContent, {
+  threshold: 0.1,
+  rootMargin: '100px',
+})
 
 // 處理搜尋
 const handleSearch = (searchTerm) => {
