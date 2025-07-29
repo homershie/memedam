@@ -273,6 +273,41 @@
               </div>
             </div>
 
+            <!-- 瀏覽統計詳情 -->
+            <div v-if="viewStats.total_views > 0" class="mt-6">
+              <h3 class="font-semibold text-gray-700 mb-2">瀏覽統計詳情</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="space-y-2">
+                  <div>
+                    <span class="font-medium">總瀏覽數：</span
+                    >{{ viewStats.total_views }}
+                  </div>
+                  <div>
+                    <span class="font-medium">有效瀏覽：</span
+                    >{{ viewStats.effective_views }}
+                  </div>
+                  <div>
+                    <span class="font-medium">重複瀏覽：</span
+                    >{{ viewStats.duplicate_views }}
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div>
+                    <span class="font-medium">獨立用戶：</span
+                    >{{ viewStats.unique_users }}
+                  </div>
+                  <div>
+                    <span class="font-medium">平均瀏覽時間：</span
+                    >{{ Math.round(viewStats.avg_duration) }}秒
+                  </div>
+                  <div>
+                    <span class="font-medium">總瀏覽時間：</span
+                    >{{ Math.round(viewStats.total_duration / 60) }}分鐘
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- 標籤 -->
             <div v-if="tags.length > 0" class="mt-6">
               <h3 class="font-semibold text-gray-700 mb-2">標籤</h3>
@@ -430,6 +465,30 @@
                     </tr>
                   </tbody>
                 </table>
+
+                <!-- 瀏覽統計詳情 -->
+                <div
+                  v-if="viewStats.total_views > 0"
+                  class="mt-4 pt-4 border-t"
+                >
+                  <h4 class="font-semibold text-gray-700 mb-2 text-sm">
+                    瀏覽統計
+                  </h4>
+                  <div class="space-y-1 text-xs">
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">有效瀏覽：</span>
+                      <span>{{ viewStats.effective_views }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">獨立用戶：</span>
+                      <span>{{ viewStats.unique_users }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">平均時間：</span>
+                      <span>{{ Math.round(viewStats.avg_duration) }}秒</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </template>
           </Card>
@@ -511,6 +570,15 @@
                   size="small"
                   @click="editMeme"
                 />
+                <Button
+                  v-if="isDev"
+                  label="測試瀏覽統計"
+                  icon="pi pi-chart-bar"
+                  severity="contrast"
+                  class="w-full justify-start"
+                  size="small"
+                  @click="testViewStats"
+                />
               </div>
             </template>
           </Card>
@@ -552,7 +620,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
@@ -583,6 +651,7 @@ import collectionService from '@/services/collectionService'
 import shareService from '@/services/shareService'
 import memeVersionService from '@/services/memeVersionService'
 import userService from '@/services/userService'
+import viewService from '@/services/viewService'
 
 // 工具函數
 import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
@@ -594,6 +663,7 @@ import {
 } from '@/utils/mediaUtils'
 import { getShareOptions, handlePlatformShare } from '@/utils/shareUtils'
 import { requireLogin } from '@/utils/authUtils'
+import { isDevelopment } from '@/utils/envUtils'
 
 // 路由和狀態
 const route = useRoute()
@@ -625,9 +695,20 @@ const totalComments = ref(0)
 const showCommentDialog = ref(false)
 const replyToComment = ref(null)
 
+// 瀏覽統計
+const viewCount = ref(0)
+const viewStats = ref({
+  total_views: 0,
+  unique_users: 0,
+  avg_duration: 0,
+  total_duration: 0,
+  duplicate_views: 0,
+  effective_views: 0,
+})
+
 // 其他
 const shareMenuRef = ref(null)
-const viewCount = ref(0)
+const isDev = isDevelopment()
 
 // 計算屬性
 const memeId = computed(() => route.params.id)
@@ -746,6 +827,9 @@ const loadMeme = async () => {
         memeData.comments_count || memeData.comment_count || 0
       viewCount.value = memeData.view_count || memeData.views || 0
 
+      // 記錄瀏覽
+      await recordView()
+
       // 載入相關數據
       await Promise.all([
         loadTags(),
@@ -753,6 +837,7 @@ const loadMeme = async () => {
         loadComments(),
         loadRelatedMemes(),
         loadVersions(),
+        loadViewStats(),
       ])
     } else {
       error.value = '找不到該迷因'
@@ -923,6 +1008,56 @@ const loadVersions = async () => {
   } catch (error) {
     console.error('載入版本歷史失敗:', error)
     versions.value = []
+  }
+}
+
+// 記錄瀏覽
+const recordView = async () => {
+  try {
+    const viewData = {
+      duration: 0, // 初始瀏覽時間，後續可以根據實際瀏覽時間更新
+      referrer: document.referrer || '',
+    }
+
+    const response = await viewService.recordView(memeId.value, viewData)
+
+    if (response.data && response.data.data) {
+      const { isDuplicate } = response.data.data
+      if (isDuplicate) {
+        console.log('重複瀏覽，不計入統計')
+      } else {
+        console.log('瀏覽記錄已保存')
+        // 更新瀏覽次數
+        viewCount.value += 1
+      }
+    }
+  } catch (error) {
+    console.error('記錄瀏覽失敗:', error)
+  }
+}
+
+// 載入瀏覽統計
+const loadViewStats = async () => {
+  try {
+    const response = await viewService.getStats(memeId.value, 'all')
+    if (response.data && response.data.data) {
+      const stats = response.data.data
+      // 更新統計數據
+      viewCount.value =
+        stats.effective_views || stats.total_views || viewCount.value
+
+      // 更新詳細統計數據
+      viewStats.value = {
+        total_views: stats.total_views || 0,
+        unique_users: stats.unique_users || 0,
+        avg_duration: stats.avg_duration || 0,
+        total_duration: stats.total_duration || 0,
+        duplicate_views: stats.duplicate_views || 0,
+        effective_views: stats.effective_views || 0,
+      }
+    }
+  } catch (error) {
+    console.error('載入瀏覽統計失敗:', error)
   }
 }
 
@@ -1156,6 +1291,47 @@ const formatDate = (dateString) => {
   return new Date(time).toLocaleString('zh-TW')
 }
 
+// 測試瀏覽統計功能
+const testViewStats = async () => {
+  try {
+    toast.add({
+      severity: 'info',
+      summary: '測試中',
+      detail: '正在測試瀏覽統計功能...',
+      life: 2000,
+    })
+
+    // 測試記錄瀏覽
+    const viewResponse = await viewService.recordView(memeId.value, {
+      duration: 30,
+      referrer: 'test',
+    })
+    console.log('記錄瀏覽結果:', viewResponse.data)
+
+    // 測試取得統計
+    const statsResponse = await viewService.getStats(memeId.value, 'all')
+    console.log('瀏覽統計結果:', statsResponse.data)
+
+    // 更新統計數據
+    await loadViewStats()
+
+    toast.add({
+      severity: 'success',
+      summary: '測試完成',
+      detail: '瀏覽統計功能測試完成，請查看控制台',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('測試瀏覽統計失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '測試失敗',
+      detail: '瀏覽統計功能測試失敗',
+      life: 3000,
+    })
+  }
+}
+
 // 監聽路由變化
 watch(
   () => route.params.id,
@@ -1173,9 +1349,42 @@ watch(meme, (newMeme) => {
   }
 })
 
+// 瀏覽時間追蹤
+const pageEnterTime = ref(null)
+
+// 記錄頁面離開時的瀏覽時間
+const recordPageLeave = () => {
+  if (pageEnterTime.value && memeId.value) {
+    const duration = Math.floor((Date.now() - pageEnterTime.value) / 1000)
+    if (duration > 0) {
+      // 異步記錄瀏覽時間，不等待回應
+      viewService
+        .recordView(memeId.value, {
+          duration,
+          referrer: document.referrer || '',
+        })
+        .catch((error) => {
+          console.error('記錄瀏覽時間失敗:', error)
+        })
+    }
+  }
+}
+
 // 初始化
 onMounted(() => {
+  pageEnterTime.value = Date.now()
   loadMeme()
+
+  // 監聽頁面離開事件
+  window.addEventListener('beforeunload', recordPageLeave)
+  window.addEventListener('pagehide', recordPageLeave)
+})
+
+// 清理事件監聽器
+onUnmounted(() => {
+  recordPageLeave()
+  window.removeEventListener('beforeunload', recordPageLeave)
+  window.removeEventListener('pagehide', recordPageLeave)
 })
 </script>
 
