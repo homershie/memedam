@@ -199,7 +199,7 @@ import userService from '@/services/userService'
 import memeService from '@/services/memeService'
 import collectionService from '@/services/collectionService'
 import likeService from '@/services/likeService'
-import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
+import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 
 // 組件名稱 (修復linter錯誤)
 defineOptions({
@@ -470,9 +470,9 @@ const {
   hasMore: infiniteHasMore,
   updateLoadingState,
   resetState,
-} = useInfiniteScroll(loadMoreContent, {
-  threshold: 0.1,
-  rootMargin: '100px',
+} = useInfiniteScrollWrapper(loadMoreContent, {
+  distance: 10,
+  interval: 100,
 })
 
 // 組件掛載時載入初始數據

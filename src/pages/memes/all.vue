@@ -126,7 +126,7 @@ import memeService from '@/services/memeService'
 import userService from '@/services/userService'
 import tagService from '@/services/tagService'
 import Tag from 'primevue/tag'
-import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
+import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 
 const route = useRoute()
 const router = useRouter()
@@ -271,9 +271,9 @@ const {
   isLoading: infiniteLoading,
   hasMore: infiniteHasMore,
   updateLoadingState,
-} = useInfiniteScroll(loadMoreContent, {
-  threshold: 0.1,
-  rootMargin: '100px',
+} = useInfiniteScrollWrapper(loadMoreContent, {
+  distance: 10,
+  interval: 100,
 })
 
 // 處理搜尋
