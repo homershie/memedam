@@ -223,9 +223,23 @@
               icon="pi pi-share-alt"
               severity="secondary"
               text
-              @click="shareContent"
+              @click="showShareOptions"
               v-tooltip.top="'分享'"
             />
+            <OverlayPanel ref="shareMenuRef">
+              <div class="flex flex-col min-w-[160px]">
+                <Button
+                  v-for="option in shareOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :icon="option.icon"
+                  text
+                  severity="contrast"
+                  class="justify-start w-full"
+                  @click="handleShare(option.value)"
+                />
+              </div>
+            </OverlayPanel>
           </div>
         </div>
       </div>
@@ -252,12 +266,17 @@ import collectionService from '@/services/collectionService'
 import shareService from '@/services/shareService'
 import memeTagService from '@/services/memeTagService'
 import memeService from '@/services/memeService'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import 'dayjs/locale/zh-tw'
 
-dayjs.extend(relativeTime)
-dayjs.locale('zh-tw')
+// 工具函數
+import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
+import {
+  isExternalVideoUrl,
+  getEmbedUrl,
+  isExternalAudioUrl,
+  getAudioEmbedUrl,
+} from '@/utils/mediaUtils'
+import { getShareOptions, handlePlatformShare } from '@/utils/shareUtils'
+import { requireLogin } from '@/utils/authUtils'
 
 const props = defineProps({
   meme: {
@@ -280,34 +299,16 @@ const likesCount = ref(props.meme.likes_count || 0)
 const dislikesCount = ref(props.meme.dislikes_count || 0)
 const commentsCount = ref(props.meme.comments_count || 0)
 
-const memeId = computed(() => {
-  // 支援 id、_id，並處理 {$oid: ...} 格式
-  let id = props.meme.id || props.meme._id
-  if (typeof id === 'object' && id.$oid) {
-    id = id.$oid
-  }
-  return id
-})
+const memeId = computed(() => getMemeId(props.meme))
 
-const publishedTime = computed(() => {
-  // 支援 created_at 或 createdAt，並處理 {$date: ...} 格式
-  let time = props.meme.created_at || props.meme.createdAt
-  if (typeof time === 'object' && time.$date) {
-    time = time.$date
-  }
-  if (!time) return ''
-  return dayjs(time).fromNow()
-})
+const publishedTime = computed(() => formatPublishedTime(props.meme))
 
 const userStore = useUserStore()
 const menuRef = ref(null)
+const shareMenuRef = ref(null)
 
-function getId(val) {
-  if (!val) return ''
-  if (typeof val === 'string') return val
-  if (typeof val === 'object' && val.$oid) return val.$oid
-  return val._id || val.id || ''
-}
+// 分享選項配置
+const shareOptions = computed(() => getShareOptions())
 
 const canDelete = computed(() => {
   const currentUserId = getId(userStore.userId)
@@ -421,15 +422,7 @@ onMounted(() => {
 // 按讚功能
 const toggleLike = async () => {
   try {
-    if (!userStore.isLoggedIn) {
-      toast.add({
-        severity: 'error',
-        summary: '錯誤',
-        detail: '請先登入',
-        life: 3000,
-      })
-      // 跳轉到登入頁面
-      window.location.href = '/login'
+    if (!requireLogin(userStore, toast)) {
       return
     }
 
@@ -487,15 +480,7 @@ const toggleLike = async () => {
 // 按噓功能
 const toggleDislike = async () => {
   try {
-    if (!userStore.isLoggedIn) {
-      toast.add({
-        severity: 'error',
-        summary: '錯誤',
-        detail: '請先登入',
-        life: 3000,
-      })
-      // 跳轉到登入頁面
-      window.location.href = '/login'
+    if (!requireLogin(userStore, toast)) {
       return
     }
 
@@ -552,15 +537,7 @@ const toggleDislike = async () => {
 // 收藏功能
 const toggleCollection = async () => {
   try {
-    if (!userStore.isLoggedIn) {
-      toast.add({
-        severity: 'error',
-        summary: '錯誤',
-        detail: '請先登入',
-        life: 3000,
-      })
-      // 跳轉到登入頁面
-      window.location.href = '/login'
+    if (!requireLogin(userStore, toast)) {
       return
     }
 
@@ -597,8 +574,13 @@ const toggleCollection = async () => {
   }
 }
 
-// 分享功能
-const shareContent = async () => {
+// 顯示分享選單
+const showShareOptions = (event) => {
+  shareMenuRef.value.toggle(event)
+}
+
+// 處理特定平台分享
+const handleShare = async (platform) => {
   try {
     if (!memeId.value) {
       toast.add({
@@ -609,35 +591,57 @@ const shareContent = async () => {
       })
       return
     }
-    if (navigator.share) {
-      await navigator.share({
-        title: props.meme.title,
-        text: props.meme.content,
-        url: window.location.href,
-      })
-    } else {
-      // 回退到複製連結
-      await navigator.clipboard.writeText(window.location.href)
+
+    const shareData = {
+      shareUrl: `${window.location.origin}/memes/${memeId.value}`,
+      shareTitle: props.meme.title || '有趣的迷因',
+      shareText: props.meme.content || '',
+    }
+
+    const result = await handlePlatformShare(platform, shareData)
+
+    if (result) {
       toast.add({
-        severity: 'success',
-        summary: '成功',
-        detail: '連結已複製到剪貼簿',
-        life: 3000,
+        severity: result.type,
+        summary:
+          result.type === 'success'
+            ? '成功'
+            : result.type === 'info'
+              ? '提示'
+              : '錯誤',
+        detail: result.message,
+        life: result.type === 'info' ? 5000 : 3000,
       })
     }
 
-    // 記錄分享
-    await shareService.create({
-      meme_id: memeId.value,
-      platform: 'web',
-    })
-  } catch {
+    // 記錄分享行為
+    await recordShare(platform)
+  } catch (error) {
+    console.error('分享失敗:', error)
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '分享失敗',
+      detail: '分享失敗，請稍後再試',
       life: 3000,
     })
+  }
+}
+
+// 記錄分享行為
+const recordShare = async (platform) => {
+  try {
+    if (!userStore.isLoggedIn) {
+      console.warn('用戶未登入，無法記錄分享')
+      return
+    }
+
+    await shareService.create({
+      meme_id: memeId.value,
+      platform_detail: platform,
+    })
+  } catch (error) {
+    console.error('記錄分享失敗:', error)
+    // 不影響用戶分享體驗，只記錄錯誤
   }
 }
 
@@ -648,15 +652,7 @@ const onTagClick = (tag) => {
 
 // 顯示評論
 const showComments = () => {
-  if (!userStore.isLoggedIn) {
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: '請先登入',
-      life: 3000,
-    })
-    // 跳轉到登入頁面
-    window.location.href = '/login'
+  if (!requireLogin(userStore, toast)) {
     return
   }
   emit('show-comments', props.meme)
@@ -669,199 +665,6 @@ const showMenu = (event) => {
 
 const onEdit = () => {
   window.location.href = `/memes/edit/${memeId.value}`
-}
-// 外部影片平台 URL 處理函數
-const isExternalVideoUrl = (url) => {
-  if (!url) return false
-  return (
-    url.includes('youtube.com') ||
-    url.includes('youtu.be') ||
-    url.includes('vimeo.com') ||
-    url.includes('tiktok.com') ||
-    url.includes('twitch.tv') ||
-    url.includes('dailymotion.com') ||
-    url.includes('bilibili.com')
-  )
-}
-
-const getEmbedUrl = (url) => {
-  if (!url) return ''
-
-  // YouTube
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    let videoId = ''
-    if (url.includes('youtu.be')) {
-      videoId = url.split('youtu.be/')[1]?.split('?')[0]
-    } else if (url.includes('youtube.com')) {
-      videoId =
-        url.match(/[?&]v=([^&]+)/)?.[1] || url.match(/embed\/([^?]+)/)?.[1]
-    }
-    return `https://www.youtube.com/embed/${videoId}`
-  }
-
-  // Vimeo
-  if (url.includes('vimeo.com')) {
-    const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1]
-    return `https://player.vimeo.com/video/${videoId}`
-  }
-
-  // TikTok
-  if (url.includes('tiktok.com')) {
-    // TikTok 需要特殊處理，因為它不直接支援嵌入
-    // 這裡使用 TikTok 的嵌入 API
-    const videoId = url.match(/video\/(\d+)/)?.[1]
-    if (videoId) {
-      return `https://www.tiktok.com/embed/${videoId}`
-    }
-  }
-
-  // Twitch
-  if (url.includes('twitch.tv')) {
-    if (url.includes('/videos/')) {
-      // 影片
-      const videoId = url.match(/\/videos\/(\d+)/)?.[1]
-      return `https://player.twitch.tv/?video=v${videoId}&parent=${window.location.hostname}`
-    } else if (url.includes('/clip/')) {
-      // 剪輯
-      const clipId = url.match(/\/clip\/([^?]+)/)?.[1]
-      return `https://clips.twitch.tv/embed?clip=${clipId}&parent=${window.location.hostname}`
-    } else {
-      // 直播
-      const channel = url.match(/twitch\.tv\/([^/?]+)/)?.[1]
-      return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}`
-    }
-  }
-
-  // Dailymotion
-  if (url.includes('dailymotion.com')) {
-    const videoId = url.match(/video\/([^?]+)/)?.[1]
-    return `https://www.dailymotion.com/embed/video/${videoId}`
-  }
-
-  // Bilibili
-  if (url.includes('bilibili.com')) {
-    const videoId = url.match(/BV([a-zA-Z0-9]+)/)?.[0]
-    if (videoId) {
-      return `https://player.bilibili.com/player.html?bvid=${videoId}`
-    }
-  }
-
-  return url
-}
-
-// 外部音訊平台 URL 處理函數
-const isExternalAudioUrl = (url) => {
-  if (!url) return false
-  return (
-    url.includes('youtube.com') ||
-    url.includes('youtu.be') ||
-    url.includes('soundcloud.com') ||
-    url.includes('spotify.com') ||
-    url.includes('open.spotify.com') ||
-    url.includes('anchor.fm') ||
-    url.includes('podbean.com') ||
-    url.includes('buzzsprout.com') ||
-    url.includes('libsyn.com') ||
-    url.includes('transistor.fm')
-  )
-}
-
-const getAudioEmbedUrl = (url) => {
-  if (!url) return ''
-
-  // YouTube (音訊)
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    let videoId = ''
-    if (url.includes('youtu.be')) {
-      videoId = url.split('youtu.be/')[1]?.split('?')[0]
-    } else if (url.includes('youtube.com')) {
-      videoId =
-        url.match(/[?&]v=([^&]+)/)?.[1] || url.match(/embed\/([^?]+)/)?.[1]
-    }
-    return `https://www.youtube.com/embed/${videoId}`
-  }
-
-  // SoundCloud
-  if (url.includes('soundcloud.com')) {
-    // SoundCloud 需要特殊處理，因為它需要 oEmbed API
-    const trackId = url.match(/tracks\/(\d+)/)?.[1]
-    if (trackId) {
-      return `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/${trackId}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`
-    }
-  }
-
-  // Spotify
-  if (url.includes('spotify.com') || url.includes('open.spotify.com')) {
-    // 支援 Spotify 的各種音訊類型
-    if (url.includes('/track/')) {
-      const trackId = url.match(/track\/([a-zA-Z0-9]+)/)?.[1]
-      if (trackId) {
-        return `https://open.spotify.com/embed/track/${trackId}`
-      }
-    } else if (url.includes('/album/')) {
-      const albumId = url.match(/album\/([a-zA-Z0-9]+)/)?.[1]
-      if (albumId) {
-        return `https://open.spotify.com/embed/album/${albumId}`
-      }
-    } else if (url.includes('/playlist/')) {
-      const playlistId = url.match(/playlist\/([a-zA-Z0-9]+)/)?.[1]
-      if (playlistId) {
-        return `https://open.spotify.com/embed/playlist/${playlistId}`
-      }
-    } else if (url.includes('/episode/')) {
-      const episodeId = url.match(/episode\/([a-zA-Z0-9]+)/)?.[1]
-      if (episodeId) {
-        return `https://open.spotify.com/embed/episode/${episodeId}`
-      }
-    } else if (url.includes('/show/')) {
-      const showId = url.match(/show\/([a-zA-Z0-9]+)/)?.[1]
-      if (showId) {
-        return `https://open.spotify.com/embed/show/${showId}`
-      }
-    }
-  }
-
-  // Anchor.fm (Spotify for Podcasters)
-  if (url.includes('anchor.fm')) {
-    const episodeId = url.match(/episodes\/([^/?]+)/)?.[1]
-    if (episodeId) {
-      return `https://anchor.fm/embed/episodes/${episodeId}`
-    }
-  }
-
-  // Podbean
-  if (url.includes('podbean.com')) {
-    const episodeId = url.match(/e\/([^/?]+)/)?.[1]
-    if (episodeId) {
-      return `https://www.podbean.com/player-v2/?i=${episodeId}`
-    }
-  }
-
-  // Buzzsprout
-  if (url.includes('buzzsprout.com')) {
-    const episodeId = url.match(/episodes\/(\d+)/)?.[1]
-    if (episodeId) {
-      return `https://www.buzzsprout.com/embed/${episodeId}`
-    }
-  }
-
-  // Libsyn
-  if (url.includes('libsyn.com')) {
-    const episodeId = url.match(/episode\/([^/?]+)/)?.[1]
-    if (episodeId) {
-      return `https://html5-player.libsyn.com/embed/episode/id/${episodeId}`
-    }
-  }
-
-  // Transistor.fm
-  if (url.includes('transistor.fm')) {
-    const episodeId = url.match(/episodes\/([^/?]+)/)?.[1]
-    if (episodeId) {
-      return `https://share.transistor.fm/e/${episodeId}`
-    }
-  }
-
-  return url
 }
 
 const showDeleteConfirm = (event) => {
