@@ -386,6 +386,7 @@ import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import memeService from '@/services/memeService'
 import tagService from '@/services/tagService'
+import memeTagService from '@/services/memeTagService'
 
 defineOptions({ name: 'EditMemePage' })
 
@@ -460,7 +461,6 @@ const languageOptions = [
 onMounted(async () => {
   try {
     loading.value = true
-    console.log('開始載入迷因數據，ID:', memeId)
 
     // 確保 memeId 存在
     if (!memeId) {
@@ -471,21 +471,16 @@ onMounted(async () => {
     try {
       const { data: tagData } = await tagService.getAll()
       allTags.value = Array.isArray(tagData) ? tagData : []
-      console.log('標籤載入成功:', allTags.value.length)
     } catch (tagError) {
       console.error('載入標籤失敗:', tagError)
-      // 標籤載入失敗不應該阻止頁面載入
       allTags.value = []
     }
 
     // 載入迷因數據
-    console.log('開始載入迷因數據...')
     const { data } = await memeService.get(memeId)
-    console.log('API 響應:', data)
 
     // 更靈活的數據解析
     const meme = data.data || data.meme || data || {}
-    console.log('解析的迷因數據:', meme)
 
     // 檢查迷因數據是否有效
     if (!meme || !meme.title) {
@@ -509,7 +504,18 @@ onMounted(async () => {
     if (meme.tags && Array.isArray(meme.tags)) {
       selectedTags.value = meme.tags
     } else if (meme.tags_cache && Array.isArray(meme.tags_cache)) {
-      selectedTags.value = meme.tags_cache.map((name) => ({ name }))
+      // 從 tags_cache 名稱找到對應的完整標籤對象
+      const tagObjects = []
+      for (const tagName of meme.tags_cache) {
+        const fullTag = allTags.value.find((tag) => tag.name === tagName)
+        if (fullTag) {
+          tagObjects.push(fullTag)
+        } else {
+          console.warn(`未找到標籤: ${tagName}`)
+          tagObjects.push({ name: tagName })
+        }
+      }
+      selectedTags.value = tagObjects
     }
 
     // 重置其他狀態
@@ -517,8 +523,6 @@ onMounted(async () => {
     imagePreviewError.value = false
     tagInput.value = ''
     tagSuggestions.value = []
-
-    console.log('迷因數據載入完成')
   } catch (error) {
     console.error('載入迷因失敗:', error)
     loadError.value = error.message || '無法載入迷因資料'
@@ -781,8 +785,137 @@ const handleSubmit = async () => {
     if (memeData.audio_url === '') memeData.audio_url = undefined
     if (memeData.source_url === '') memeData.source_url = undefined
 
-    console.log('使用 JSON 數據更新')
     await memeService.update(memeId, memeData)
+
+    // 更新標籤關聯 - 使用安全的差異更新
+    try {
+      // 檢查標籤對象結構並獲取 ID
+      const newTagIds = []
+      for (const tag of allSelectedTags) {
+        if (tag._id) {
+          newTagIds.push(tag._id)
+        } else {
+          console.warn('標籤缺少 _id:', tag)
+        }
+      }
+
+      // 1. 獲取當前的 meme_tags 關聯記錄
+      let currentMemeTagRecords = []
+
+      try {
+        const response = await memeTagService.getTagsByMemeId(memeId)
+
+        // 解析響應數據
+        const responseData = response.data || response || []
+
+        // 修復：正確解析 response.data.tags
+        if (responseData.tags && Array.isArray(responseData.tags)) {
+          currentMemeTagRecords = responseData.tags.map((tag) => ({
+            _id: `${memeId}_${tag._id}`, // 臨時 ID，用於識別
+            meme_id: memeId,
+            tag_id: tag._id,
+          }))
+        } else if (Array.isArray(responseData)) {
+          currentMemeTagRecords = responseData.map((tag) => ({
+            _id: `${memeId}_${tag._id}`, // 臨時 ID，用於識別
+            meme_id: memeId,
+            tag_id: tag._id,
+          }))
+        }
+      } catch (error) {
+        console.error('獲取當前標籤關聯失敗:', error)
+        console.error('錯誤詳情:', error.response?.data || error.message)
+
+        // 如果專用 API 失敗，嘗試使用 getAll 方法
+        try {
+          const fallbackResponse = await memeTagService.getAll()
+
+          const allMemeTagsResponse =
+            fallbackResponse.data?.memeTags ||
+            fallbackResponse.data ||
+            fallbackResponse ||
+            []
+
+          if (allMemeTagsResponse.length > 0) {
+            currentMemeTagRecords = allMemeTagsResponse.filter(
+              (record) => record.meme_id === memeId,
+            )
+          }
+        } catch (fallbackError) {
+          console.error('備用方法也失敗:', fallbackError)
+          currentMemeTagRecords = []
+        }
+      }
+
+      const currentTagIds = currentMemeTagRecords.map((record) => record.tag_id)
+
+      // 2. 計算需要刪除和新增的標籤
+      const toRemove = currentMemeTagRecords.filter((record) => {
+        const shouldRemove = !newTagIds.includes(record.tag_id)
+        return shouldRemove
+      })
+      const toAdd = newTagIds.filter((tagId) => {
+        const shouldAdd = !currentTagIds.includes(tagId)
+        return shouldAdd
+      })
+
+      // 3. 安全的標籤關聯更新策略
+      // 由於我們沒有真實的關聯記錄 ID，使用先清空再重建的方式
+      if (toRemove.length > 0 || toAdd.length > 0) {
+        try {
+          // 先清空所有現有關聯
+          await memeTagService.removeAllTagsByMeme(memeId)
+
+          // 重建需要保留的關聯
+          const allTargetTagIds = newTagIds // 這已經是我們想要保留的標籤
+
+          const rebuildErrors = []
+
+          for (const tagId of allTargetTagIds) {
+            try {
+              const relationData = { meme_id: memeId, tag_id: tagId }
+              await memeTagService.create(relationData)
+            } catch (error) {
+              console.error(`重建關聯失敗 (tagId: ${tagId}):`, error)
+              console.error(`錯誤詳情:`, error.response?.data || error.message)
+              console.error(`錯誤狀態:`, error.response?.status)
+              rebuildErrors.push({ tagId, error: error.message })
+            }
+          }
+
+          if (rebuildErrors.length > 0) {
+            console.error('重建錯誤:', rebuildErrors)
+            toast.add({
+              severity: 'warn',
+              summary: '標籤關聯部分更新',
+              detail: `標籤關聯已清空，但重建時 ${rebuildErrors.length}/${allTargetTagIds.length} 個失敗`,
+              life: 6000,
+            })
+          }
+        } catch (error) {
+          console.error('重建策略失敗:', error)
+          console.error('錯誤詳情:', error.response?.data || error.message)
+          toast.add({
+            severity: 'error',
+            summary: '標籤關聯更新失敗',
+            detail: '清空或重建標籤關聯時發生錯誤',
+            life: 8000,
+          })
+        }
+      } else {
+        console.log('ℹ️ 標籤沒有變化，無需更新關聯')
+      }
+    } catch (error) {
+      console.error('標籤關聯處理失敗:', error)
+      console.error('錯誤詳情:', error.response?.data || error.message)
+      toast.add({
+        severity: 'error',
+        summary: '標籤關聯處理失敗',
+        detail:
+          '迷因內容已更新，但標籤關聯處理時發生錯誤。現有標籤關聯保持不變。',
+        life: 8000,
+      })
+    }
 
     toast.add({
       severity: 'success',
@@ -831,7 +964,7 @@ const handleSubmit = async () => {
 
 <route lang="yaml">
 meta:
-  title: '編輯迷因'
+  title: '修改迷因'
   login: required
   layout: default
   admin: false
