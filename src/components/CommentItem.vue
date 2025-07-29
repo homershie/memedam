@@ -1,5 +1,21 @@
 <template>
-  <div class="comment-item border border-gray-200 rounded-lg p-4 bg-white">
+  <div
+    :class="[
+      'comment-item border rounded-lg p-4 transition-all duration-200',
+      isReply
+        ? 'border-blue-100 bg-blue-50/30 hover:bg-blue-50/50'
+        : 'border-gray-200 bg-white hover:shadow-md',
+    ]"
+  >
+    <!-- 回復標示 -->
+    <div
+      v-if="isReply"
+      class="flex items-center gap-2 mb-2 text-xs text-blue-600"
+    >
+      <i class="pi pi-reply text-xs"></i>
+      <span>回復留言</span>
+    </div>
+
     <!-- 留言頭部 -->
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-3">
@@ -100,17 +116,66 @@
         </div>
       </div>
     </div>
+
+    <!-- 回復和點讚區域 -->
+    <div v-if="!isEditing && !isReply" class="mt-3 flex items-center gap-4">
+      <!-- 回復按鈕 -->
+      <Button
+        label="回復"
+        icon="pi pi-reply"
+        size="small"
+        severity="secondary"
+        text
+        @click="toggleReplyForm"
+      />
+
+      <!-- 顯示回復數量 -->
+      <span v-if="comment.reply_count > 0" class="text-sm text-gray-500">
+        {{ comment.reply_count }} 則回復
+      </span>
+    </div>
+
+    <!-- 回復表單 -->
+    <div v-if="showReplyForm && !isEditing" class="mt-4 pl-12">
+      <CommentForm
+        :meme-id="memeId"
+        :parent-id="comment._id || comment.id"
+        :max-length="500"
+        :show-tip="false"
+        placeholder="回復這則留言..."
+        @submitted="onReplySubmitted"
+        @cancel="cancelReply"
+        ref="replyFormRef"
+      />
+    </div>
+
+    <!-- 回復列表 -->
+    <div v-if="replies && replies.length > 0" class="mt-4 pl-4 space-y-3">
+      <div class="border-l-2 border-blue-200 pl-4 space-y-3">
+        <CommentItem
+          v-for="reply in replies"
+          :key="reply._id || reply.id"
+          :comment="reply"
+          :meme-id="memeId"
+          :is-reply="true"
+          @delete="$emit('delete', $event)"
+          @edit="$emit('edit', $event)"
+          @reply-submitted="$emit('reply-submitted', $event)"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import { useUserStore } from '@/stores/userStore'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
 import OverlayPanel from 'primevue/overlaypanel'
+import CommentForm from './CommentForm.vue'
 import { getId, formatPublishedTime } from '@/utils/dataUtils'
 
 const props = defineProps({
@@ -118,9 +183,21 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  memeId: {
+    type: [String, Object],
+    required: true,
+  },
+  replies: {
+    type: Array,
+    default: () => [],
+  },
+  isReply: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits(['delete', 'edit'])
+const emit = defineEmits(['delete', 'edit', 'reply-submitted'])
 
 const confirm = useConfirm()
 const userStore = useUserStore()
@@ -129,6 +206,8 @@ const userStore = useUserStore()
 const isEditing = ref(false)
 const editContent = ref('')
 const menuRef = ref(null)
+const showReplyForm = ref(false)
+const replyFormRef = ref(null)
 
 // 獲取用戶資訊的統一方法
 const getUserInfo = (comment) => {
@@ -214,6 +293,33 @@ const saveEdit = () => {
   editContent.value = ''
 }
 
+// 切換回復表單
+const toggleReplyForm = () => {
+  showReplyForm.value = !showReplyForm.value
+  if (showReplyForm.value) {
+    // 使用 nextTick 確保 DOM 更新後再聚焦
+    nextTick(() => {
+      if (replyFormRef.value) {
+        replyFormRef.value.focus()
+      }
+    })
+  }
+}
+
+// 取消回復
+const cancelReply = () => {
+  showReplyForm.value = false
+}
+
+// 回復提交成功
+const onReplySubmitted = (reply) => {
+  showReplyForm.value = false
+  emit('reply-submitted', {
+    parentComment: props.comment,
+    reply: reply,
+  })
+}
+
 // 確認刪除
 const confirmDelete = (event) => {
   menuRef.value.hide()
@@ -233,11 +339,5 @@ const confirmDelete = (event) => {
 </script>
 
 <style scoped>
-.comment-item {
-  transition: box-shadow 0.2s ease;
-}
-
-.comment-item:hover {
-  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.05);
-}
+/* 自定義樣式可以在這裡添加 */
 </style>

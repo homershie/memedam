@@ -1,15 +1,17 @@
 <template>
   <div class="comment-form">
-    <h3 class="text-lg font-semibold mb-3">新增留言</h3>
+    <h3 v-if="!parentId" class="text-lg font-semibold mb-3">新增留言</h3>
     <div class="flex flex-col gap-3">
       <Textarea
         v-model="content"
-        placeholder="寫下您的留言..."
+        :placeholder="placeholder"
         rows="3"
         class="w-full"
         :maxlength="maxLength"
         @keydown.ctrl.enter="handleSubmit"
         @keydown.meta.enter="handleSubmit"
+        @keydown.esc="handleCancel"
+        ref="textareaRef"
       />
       <div class="flex justify-between items-center">
         <div class="flex items-center gap-4">
@@ -20,13 +22,22 @@
             提示：Ctrl + Enter 快速發表
           </small>
         </div>
-        <Button
-          label="發表留言"
-          icon="pi pi-send"
-          :disabled="!content.trim() || isSubmitting"
-          :loading="isSubmitting"
-          @click="handleSubmit"
-        />
+        <div class="flex gap-2">
+          <Button
+            v-if="parentId"
+            label="取消"
+            severity="secondary"
+            size="small"
+            @click="handleCancel"
+          />
+          <Button
+            :label="parentId ? '發表回復' : '發表留言'"
+            icon="pi pi-send"
+            :disabled="!content.trim() || isSubmitting"
+            :loading="isSubmitting"
+            @click="handleSubmit"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -45,6 +56,10 @@ const props = defineProps({
     type: [String, Object],
     required: true,
   },
+  parentId: {
+    type: [String, Object],
+    default: null,
+  },
   maxLength: {
     type: Number,
     default: 500,
@@ -53,9 +68,13 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  placeholder: {
+    type: String,
+    default: '寫下您的留言...',
+  },
 })
 
-const emit = defineEmits(['submitted', 'error'])
+const emit = defineEmits(['submitted', 'error', 'cancel'])
 
 const toast = useToast()
 const userStore = useUserStore()
@@ -63,11 +82,18 @@ const userStore = useUserStore()
 // 響應式數據
 const content = ref('')
 const isSubmitting = ref(false)
+const textareaRef = ref(null)
 
 // 監聽內容變化，自動調整高度
 watch(content, () => {
   // 可以在這裡添加自動調整 textarea 高度的邏輯
 })
+
+// 處理取消
+const handleCancel = () => {
+  content.value = ''
+  emit('cancel')
+}
 
 // 提交留言
 const handleSubmit = async () => {
@@ -101,6 +127,11 @@ const handleSubmit = async () => {
       type: 'meme',
     }
 
+    // 如果是回復，加入 parent_id
+    if (props.parentId) {
+      commentData.parent_id = props.parentId
+    }
+
     console.log('提交留言資料:', commentData)
 
     const response = await commentService.create(commentData)
@@ -109,7 +140,7 @@ const handleSubmit = async () => {
       toast.add({
         severity: 'success',
         summary: '成功',
-        detail: '留言發表成功',
+        detail: props.parentId ? '回復發表成功' : '留言發表成功',
         life: 3000,
       })
 
@@ -146,7 +177,9 @@ const clearForm = () => {
 
 // 聚焦到輸入框
 const focus = () => {
-  // 可以通過 ref 來聚焦到 textarea
+  if (textareaRef.value) {
+    textareaRef.value.$el.focus()
+  }
 }
 
 // 暴露方法給父組件

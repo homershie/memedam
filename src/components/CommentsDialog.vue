@@ -14,7 +14,7 @@
     <!-- 留言列表 -->
     <div class="mt-4">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold">留言 ({{ comments.length }})</h3>
+        <h3 class="text-lg font-semibold">留言 ({{ totalCommentsCount }})</h3>
         <Button
           icon="pi pi-refresh"
           severity="secondary"
@@ -31,7 +31,7 @@
 
       <!-- 無留言 -->
       <div
-        v-else-if="comments.length === 0"
+        v-else-if="mainComments.length === 0"
         class="text-center py-8 text-gray-500"
       >
         <i class="pi pi-comment text-3xl mb-2"></i>
@@ -41,11 +41,14 @@
       <!-- 留言列表 -->
       <div v-else class="space-y-4">
         <CommentItem
-          v-for="comment in comments"
+          v-for="comment in mainComments"
           :key="comment._id || comment.id"
           :comment="comment"
+          :meme-id="memeId"
+          :replies="getRepliesForComment(comment._id || comment.id)"
           @delete="deleteComment"
           @edit="editComment"
+          @reply-submitted="onReplySubmitted"
         />
       </div>
     </div>
@@ -53,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
 import Divider from 'primevue/divider'
@@ -67,38 +70,59 @@ const dialogRef = inject('dialogRef')
 const toast = useToast()
 
 // 響應式數據
-const comments = ref([])
+const allComments = ref([])
 const isLoading = ref(false)
 
 // 從 dialog data 獲取 meme 資訊
 const memeData = dialogRef.value.data
 const memeId = memeData.memeId
 
+// 計算屬性 - 主留言（沒有 parent_id 的留言）
+const mainComments = computed(() => {
+  return allComments.value
+    .filter((comment) => !comment.parent_id)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || b.created_at) -
+        new Date(a.createdAt || a.created_at),
+    )
+})
+
+// 計算屬性 - 總留言數（包含回復）
+const totalCommentsCount = computed(() => {
+  return allComments.value.length
+})
+
+// 獲取指定留言的回復
+const getRepliesForComment = (commentId) => {
+  return allComments.value
+    .filter((comment) => {
+      const parentId = getId(comment.parent_id)
+      const targetId = getId(commentId)
+      return parentId === targetId
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt || a.created_at) -
+        new Date(b.createdAt || b.created_at),
+    )
+}
+
 // 載入留言
 const loadComments = async () => {
   try {
     isLoading.value = true
-    const response = await commentService.getAll()
+    const response = await commentService.getByMemeId(memeId)
 
-    // 過濾出屬於當前迷因的留言
+    // 處理響應數據
     if (
       response.data &&
       response.data.data &&
       Array.isArray(response.data.data)
     ) {
-      const filteredComments = response.data.data.filter((comment) => {
-        const commentMemeId = getId(comment.meme_id)
-        const currentMemeId = getId(memeId)
-        return commentMemeId === currentMemeId
-      })
-
-      comments.value = filteredComments.sort(
-        (a, b) =>
-          new Date(b.createdAt || b.created_at) -
-          new Date(a.createdAt || a.created_at),
-      )
+      allComments.value = response.data.data
     } else {
-      comments.value = []
+      allComments.value = []
     }
   } catch (error) {
     console.error('載入留言失敗:', error)
@@ -118,7 +142,7 @@ const onCommentSubmitted = async () => {
   await loadComments() // 重新載入留言列表
 
   // 通知父組件留言計數已更新
-  const newCount = comments.value.length
+  const newCount = totalCommentsCount.value
 
   // 設置到 dialogRef.data（備選方案）
   if (dialogRef.value) {
@@ -130,6 +154,32 @@ const onCommentSubmitted = async () => {
   if (window.updateCommentsCount) {
     window.updateCommentsCount(newCount)
   }
+}
+
+// 處理回復提交成功
+const onReplySubmitted = async () => {
+  await loadComments() // 重新載入留言列表
+
+  // 通知父組件留言計數已更新
+  const newCount = totalCommentsCount.value
+
+  // 設置到 dialogRef.data（備選方案）
+  if (dialogRef.value) {
+    dialogRef.value.data.hasUpdates = true
+    dialogRef.value.data.newCommentsCount = newCount
+  }
+
+  // 使用全局回調函數直接更新（主要方案）
+  if (window.updateCommentsCount) {
+    window.updateCommentsCount(newCount)
+  }
+
+  toast.add({
+    severity: 'success',
+    summary: '成功',
+    detail: '回復發表成功',
+    life: 3000,
+  })
 }
 
 // 處理留言提交錯誤
@@ -151,7 +201,7 @@ const deleteComment = async (commentId) => {
     await loadComments()
 
     // 通知父組件留言計數已更新
-    const newCount = comments.value.length
+    const newCount = totalCommentsCount.value
 
     // 設置到 dialogRef.data（備選方案）
     if (dialogRef.value) {
