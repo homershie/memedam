@@ -1,6 +1,38 @@
 <template>
   <div class="container mx-auto">
-    <div class="bg-white overflow-hidden">
+    <!-- Loading 狀態 -->
+    <div
+      v-if="loading && !form.title"
+      class="flex justify-center items-center min-h-[400px]"
+    >
+      <div class="text-center">
+        <i class="pi pi-spinner pi-spin text-4xl text-blue-500 mb-4"></i>
+        <p class="text-gray-600">載入中...</p>
+      </div>
+    </div>
+
+    <!-- 載入錯誤訊息 -->
+    <div v-else-if="loadError" class="max-w-2xl mx-auto p-6">
+      <Message severity="error" :closable="false">
+        載入錯誤：{{ loadError }}
+      </Message>
+      <div class="mt-4 text-center">
+        <Button
+          label="返回迷因列表"
+          icon="pi pi-arrow-left"
+          @click="router.push('/memes/all')"
+        />
+        <Button
+          label="重新載入"
+          icon="pi pi-refresh"
+          class="ml-2"
+          @click="window.location.reload()"
+        />
+      </div>
+    </div>
+
+    <!-- 主要內容 -->
+    <div v-else class="bg-white overflow-hidden">
       <div class="text-center py-6">
         <h1 class="text-3xl font-bold text-gray-800">編輯迷因</h1>
         <p class="text-gray-600 mt-2">修改你的迷因內容</p>
@@ -56,7 +88,7 @@
               v-model="form.content"
               placeholder="簡單描述這個迷因的內容或梗點..."
               rows="4"
-              maxlength="5000"
+              maxlength="350"
               required
               class="w-full"
               :class="{ 'p-invalid': errors.content }"
@@ -64,7 +96,12 @@
             <small v-if="errors.content" class="p-error">{{
               errors.content
             }}</small>
-            <small class="text-gray-500">{{ form.content.length }}/5000</small>
+            <small
+              class="text-gray-500"
+              :class="{ 'text-red-500': getCharCount(form.content) > 350 }"
+            >
+              {{ getCharCount(form.content) }}/350
+            </small>
           </div>
 
           <!-- 媒體內容 (根據類型顯示不同輸入方式) -->
@@ -383,6 +420,7 @@ const allTags = ref([])
 const detailMarkdown = ref('')
 const loading = ref(false)
 const submitError = ref('')
+const loadError = ref('')
 const uploadedImageFile = ref(null)
 const editorOptions = {
   modules: {
@@ -422,10 +460,39 @@ const languageOptions = [
 onMounted(async () => {
   try {
     loading.value = true
-    const { data: tagData } = await tagService.getAll()
-    allTags.value = Array.isArray(tagData) ? tagData : []
+    console.log('開始載入迷因數據，ID:', memeId)
+
+    // 確保 memeId 存在
+    if (!memeId) {
+      throw new Error('未提供迷因 ID')
+    }
+
+    // 載入標籤數據
+    try {
+      const { data: tagData } = await tagService.getAll()
+      allTags.value = Array.isArray(tagData) ? tagData : []
+      console.log('標籤載入成功:', allTags.value.length)
+    } catch (tagError) {
+      console.error('載入標籤失敗:', tagError)
+      // 標籤載入失敗不應該阻止頁面載入
+      allTags.value = []
+    }
+
+    // 載入迷因數據
+    console.log('開始載入迷因數據...')
     const { data } = await memeService.get(memeId)
-    const meme = data.data || data.meme || data
+    console.log('API 響應:', data)
+
+    // 更靈活的數據解析
+    const meme = data.data || data.meme || data || {}
+    console.log('解析的迷因數據:', meme)
+
+    // 檢查迷因數據是否有效
+    if (!meme || !meme.title) {
+      throw new Error('迷因數據無效或不存在')
+    }
+
+    // 設置表單數據
     form.title = meme.title || ''
     form.type = meme.type || 'text'
     form.content = meme.content || ''
@@ -436,20 +503,35 @@ onMounted(async () => {
     form.language = meme.language || 'zh'
     form.source_url = meme.source_url || ''
     detailMarkdown.value = meme.detail_markdown || ''
-    selectedTags.value =
-      meme.tags || meme.tags_cache?.map((name) => ({ name })) || []
+
+    // 設置標籤
+    selectedTags.value = []
+    if (meme.tags && Array.isArray(meme.tags)) {
+      selectedTags.value = meme.tags
+    } else if (meme.tags_cache && Array.isArray(meme.tags_cache)) {
+      selectedTags.value = meme.tags_cache.map((name) => ({ name }))
+    }
+
+    // 重置其他狀態
     uploadedImageUrl.value = ''
     imagePreviewError.value = false
     tagInput.value = ''
     tagSuggestions.value = []
-  } catch {
+
+    console.log('迷因數據載入完成')
+  } catch (error) {
+    console.error('載入迷因失敗:', error)
+    loadError.value = error.message || '無法載入迷因資料'
     toast.add({
       severity: 'error',
       summary: '載入失敗',
-      detail: '無法載入迷因資料',
+      detail: loadError.value,
       life: 5000,
     })
-    router.push('/memes/all')
+    // 延遲跳轉，讓用戶看到錯誤訊息
+    setTimeout(() => {
+      router.push('/memes/all')
+    }, 2000)
   } finally {
     loading.value = false
   }
@@ -478,6 +560,7 @@ const onImageSelect = (event) => {
 }
 const onImageClear = () => {
   uploadedImageUrl.value = ''
+  uploadedImageFile.value = null
 }
 const onImageError = () => {
   imagePreviewError.value = true
@@ -548,6 +631,16 @@ const getTypeName = (type) => {
   }
   return nameMap[type] || '未知'
 }
+// 字元計數函數 - 適合中文字元計算
+const getCharCount = (text) => {
+  if (!text) return 0
+
+  // 計算字元數，中文字元算 1 個字元
+  // 這裡使用簡單的長度計算，因為中文字元在 JavaScript 中也是 1 個字元
+  // 如果需要更複雜的計算（如考慮全形字元），可以進一步修改
+  return text.length
+}
+
 const validateForm = () => {
   Object.keys(errors).forEach((key) => (errors[key] = ''))
   let isValid = true
@@ -558,16 +651,21 @@ const validateForm = () => {
   if (!form.content.trim()) {
     errors.content = '請輸入迷因內容簡介'
     isValid = false
+  } else if (getCharCount(form.content) > 350) {
+    errors.content = '內容簡介不能超過 350 個字元'
+    isValid = false
   }
   if (form.type !== 'text') {
     if (form.type === 'image') {
+      // 沒選檔案也沒填連結才報錯
       if (!uploadedImageFile.value && !form.image_url) {
         errors.mediaUrl = '請上傳圖片或提供圖片連結'
         isValid = false
       }
+      // 如果有填連結，可加強合法性檢查（可選）
     } else {
       const urlField = `${form.type}_url`
-      if (!form[urlField]) {
+      if (!form[urlField] || form[urlField].trim() === '') {
         errors.mediaUrl = `請提供${getTypeName(form.type)}連結`
         isValid = false
       }
@@ -587,25 +685,33 @@ const resetForm = () => {
     language: 'zh',
     source_url: '',
   })
+
   uploadedImageUrl.value = ''
+  uploadedImageFile.value = null
   imagePreviewError.value = false
   selectedTags.value = []
   tagInput.value = ''
   detailMarkdown.value = ''
   submitError.value = ''
+  loadError.value = ''
+
   Object.keys(errors).forEach((key) => (errors[key] = ''))
 }
 const handleSubmit = async () => {
   if (!validateForm()) return
   loading.value = true
   submitError.value = ''
+
   try {
+    // 先上傳圖片（如果有的話）
     if (form.type === 'image' && uploadedImageFile.value) {
       const formData = new FormData()
-      formData.append('image', uploadedImageFile.value)
+      formData.append('image', uploadedImageFile.value) // key 必須是 'image'
+
       const res = await fetch('/api/upload/image', {
         method: 'POST',
         body: formData,
+        // 不要加 headers: Content-Type
       })
       const data = await res.json()
       if (
@@ -618,6 +724,8 @@ const handleSubmit = async () => {
         throw new Error(data.message || '圖片上傳失敗')
       }
     }
+
+    // 處理新標籤創建
     for (let i = 0; i < selectedTags.value.length; i++) {
       const tag = selectedTags.value[i]
       if (tag.isNew) {
@@ -632,6 +740,7 @@ const handleSubmit = async () => {
         }
       }
     }
+
     const newTags = selectedTags.value.filter(
       (tag) =>
         tag.isNew &&
@@ -639,6 +748,7 @@ const handleSubmit = async () => {
           (t) => t.name.trim().toLowerCase() === tag.name.trim().toLowerCase(),
         ),
     )
+
     const createdTags = []
     for (const newTag of newTags) {
       try {
@@ -651,17 +761,29 @@ const handleSubmit = async () => {
         console.error(`建立標籤 "${newTag.name}" 失敗:`, error)
       }
     }
+
     const allSelectedTags = [
       ...selectedTags.value.filter((tag) => !tag.isNew),
       ...createdTags,
     ]
     const tagNames = allSelectedTags.map((tag) => tag.name)
+
+    // 準備迷因數據
     const memeData = {
       ...form,
       detail_markdown: detailMarkdown.value,
       tags_cache: tagNames,
     }
+
+    // 清理空字串欄位，避免後端驗證問題
+    if (memeData.image_url === '') memeData.image_url = undefined
+    if (memeData.video_url === '') memeData.video_url = undefined
+    if (memeData.audio_url === '') memeData.audio_url = undefined
+    if (memeData.source_url === '') memeData.source_url = undefined
+
+    console.log('使用 JSON 數據更新')
     await memeService.update(memeId, memeData)
+
     toast.add({
       severity: 'success',
       summary: '儲存成功',
@@ -670,6 +792,7 @@ const handleSubmit = async () => {
     })
     router.push('/memes/all')
   } catch (error) {
+    console.error('更新迷因失敗:', error)
     submitError.value =
       error?.response?.data?.message || error.message || '儲存失敗，請稍後再試'
     toast.add({
@@ -710,5 +833,6 @@ const handleSubmit = async () => {
 meta:
   title: '編輯迷因'
   login: required
+  layout: default
   admin: false
 </route>

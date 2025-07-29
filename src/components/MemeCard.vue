@@ -388,7 +388,6 @@ const loadUserInteractionStatus = async () => {
     // 獲取最新的統計資料
     try {
       const memeResponse = await memeService.get(memeId.value)
-      console.log('獲取迷因資料響應:', memeResponse)
       if (memeResponse.data) {
         // 修正欄位名稱以匹配後端模型
         const newLikesCount =
@@ -401,12 +400,6 @@ const loadUserInteractionStatus = async () => {
           memeResponse.data.comment_count ||
           memeResponse.data.comments_count ||
           0
-
-        console.log('更新統計資料:', {
-          likes: newLikesCount,
-          dislikes: newDislikesCount,
-          comments: newCommentsCount,
-        })
 
         likesCount.value = newLikesCount
         dislikesCount.value = newDislikesCount
