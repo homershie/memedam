@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col w-full relative">
     <Toast position="bottom-right" />
+    <DynamicDialog />
     <!-- 導覽列：改用 PrimeVue Menubar -->
     <Menubar
       :model="[]"
@@ -242,6 +243,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
+import DynamicDialog from 'primevue/dynamicdialog'
 import userService from '@/services/userService'
 import Menu from 'primevue/menu'
 import Menubar from 'primevue/menubar'

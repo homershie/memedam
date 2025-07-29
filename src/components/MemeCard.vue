@@ -251,6 +251,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useDialog } from 'primevue/usedialog'
 import Card from 'primevue/card'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
@@ -259,6 +260,7 @@ import Image from 'primevue/image'
 import OverlayPanel from 'primevue/overlaypanel'
 import ConfirmPopup from 'primevue/confirmpopup'
 import TextMemeCard from './TextMemeCard.vue'
+import CommentsDialog from './CommentsDialog.vue'
 import { useUserStore } from '@/stores/userStore'
 import likeService from '@/services/likeService'
 import dislikeService from '@/services/dislikeService'
@@ -289,6 +291,7 @@ const emit = defineEmits(['tag-click', 'show-comments', 'deleted'])
 
 const toast = useToast()
 const confirm = useConfirm()
+const dialog = useDialog()
 
 // 響應式數據
 const tags = ref([])
@@ -655,7 +658,32 @@ const showComments = () => {
   if (!requireLogin(userStore, toast)) {
     return
   }
-  emit('show-comments', props.meme)
+
+  dialog.open(CommentsDialog, {
+    props: {
+      header: `${props.meme.title} - 留言`,
+      style: {
+        width: '90vw',
+        maxWidth: '800px',
+        height: '80vh',
+      },
+      modal: true,
+      closable: true,
+      draggable: false,
+      resizable: false,
+    },
+    data: {
+      meme: props.meme,
+      memeId: memeId.value,
+    },
+    onClose: (data) => {
+      // 可以在這裡處理對話框關閉後的回調
+      if (data?.data?.updated) {
+        // 如果留言有更新，重新載入統計資料
+        loadUserInteractionStatus()
+      }
+    },
+  })
 }
 
 // 顯示選單

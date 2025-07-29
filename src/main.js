@@ -13,6 +13,7 @@ import router from './router'
 // PrimeVue
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
+import DialogService from 'primevue/dialogservice'
 import Aura from '@primeuix/themes/aura'
 import { updatePreset } from '@primeuix/themes'
 import ConfirmationService from 'primevue/confirmationservice'
@@ -25,6 +26,7 @@ const app = createApp(App)
 app.use(pinia)
 app.use(router)
 app.use(ToastService)
+app.use(DialogService)
 app.use(ConfirmationService)
 app.use(PrimeVue, {
   theme: {
