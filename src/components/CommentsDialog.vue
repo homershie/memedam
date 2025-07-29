@@ -114,9 +114,22 @@ const loadComments = async () => {
 }
 
 // 處理留言提交成功
-const onCommentSubmitted = async (commentData) => {
-  console.log('留言提交成功:', commentData)
+const onCommentSubmitted = async () => {
   await loadComments() // 重新載入留言列表
+
+  // 通知父組件留言計數已更新
+  const newCount = comments.value.length
+
+  // 設置到 dialogRef.data（備選方案）
+  if (dialogRef.value) {
+    dialogRef.value.data.hasUpdates = true
+    dialogRef.value.data.newCommentsCount = newCount
+  }
+
+  // 使用全局回調函數直接更新（主要方案）
+  if (window.updateCommentsCount) {
+    window.updateCommentsCount(newCount)
+  }
 }
 
 // 處理留言提交錯誤
@@ -136,6 +149,20 @@ const deleteComment = async (commentId) => {
       life: 3000,
     })
     await loadComments()
+
+    // 通知父組件留言計數已更新
+    const newCount = comments.value.length
+
+    // 設置到 dialogRef.data（備選方案）
+    if (dialogRef.value) {
+      dialogRef.value.data.hasUpdates = true
+      dialogRef.value.data.newCommentsCount = newCount
+    }
+
+    // 使用全局回調函數直接更新（主要方案）
+    if (window.updateCommentsCount) {
+      window.updateCommentsCount(newCount)
+    }
   } catch (error) {
     console.error('刪除留言失敗:', error)
     toast.add({
@@ -160,6 +187,12 @@ const editComment = async (commentData) => {
       life: 3000,
     })
     await loadComments()
+
+    // 編輯不會改變留言數量，但仍標記有更新
+    if (dialogRef.value) {
+      dialogRef.value.data.hasUpdates = true
+      // 編輯不改變計數，所以不需要更新 newCommentsCount
+    }
   } catch (error) {
     console.error('編輯留言失敗:', error)
     toast.add({

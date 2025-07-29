@@ -252,6 +252,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useDialog } from 'primevue/usedialog'
+import { useRouter } from 'vue-router'
 import Card from 'primevue/card'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
@@ -292,6 +293,7 @@ const emit = defineEmits(['tag-click', 'show-comments', 'deleted'])
 const toast = useToast()
 const confirm = useConfirm()
 const dialog = useDialog()
+const router = useRouter()
 
 // 響應式數據
 const tags = ref([])
@@ -439,26 +441,15 @@ const toggleLike = async () => {
       return
     }
 
-    console.log('按讚資料:', {
-      meme_id: memeId.value,
-      type: 'meme',
-      user_id: userStore.userId,
-    })
-
     const response = await likeService.toggle({
       meme_id: memeId.value,
       type: 'meme',
       user_id: userStore.userId,
     })
 
-    console.log('按讚 API 響應:', response)
-
     // 檢查 API 響應並即時更新統計
     if (response && response.data && response.data.success) {
       // 後端返回成功，但沒有統計資料，需要重新獲取
-      console.log('按讚成功，重新獲取統計資料')
-
-      // 立即更新用戶狀態（樂觀更新）
       isLiked.value = !isLiked.value
       if (isLiked.value && isDisliked.value) {
         isDisliked.value = false
@@ -497,26 +488,15 @@ const toggleDislike = async () => {
       return
     }
 
-    console.log('按噓資料:', {
-      meme_id: memeId.value,
-      type: 'meme',
-      user_id: userStore.userId,
-    })
-
     const response = await dislikeService.toggle({
       meme_id: memeId.value,
       type: 'meme',
       user_id: userStore.userId,
     })
 
-    console.log('按噓 API 響應:', response)
-
     // 檢查 API 響應並即時更新統計
     if (response && response.data && response.data.success) {
       // 後端返回成功，但沒有統計資料，需要重新獲取
-      console.log('按噓成功，重新獲取統計資料')
-
-      // 立即更新用戶狀態（樂觀更新）
       isDisliked.value = !isDisliked.value
       if (isDisliked.value && isLiked.value) {
         isLiked.value = false
@@ -656,7 +636,16 @@ const onTagClick = (tag) => {
 // 顯示評論
 const showComments = () => {
   if (!requireLogin(userStore, toast)) {
-    return
+    return router.push('/login')
+  }
+
+  // 追蹤是否已通過全局回調更新過計數
+  let hasUpdatedViaCallback = false
+
+  // 設置全局回調函數，讓 CommentsDialog 可以直接更新計數
+  window.updateCommentsCount = (newCount) => {
+    commentsCount.value = newCount
+    hasUpdatedViaCallback = true // 標記已更新
   }
 
   dialog.open(CommentsDialog, {
@@ -676,12 +665,38 @@ const showComments = () => {
       meme: props.meme,
       memeId: memeId.value,
     },
-    onClose: (data) => {
-      // 可以在這裡處理對話框關閉後的回調
-      if (data?.data?.updated) {
-        // 如果留言有更新，重新載入統計資料
-        loadUserInteractionStatus()
+    onClose: (closeData) => {
+      // 清理全局回調函數
+      if (window.updateCommentsCount) {
+        delete window.updateCommentsCount
       }
+
+      // 如果已經通過全局回調更新過，就不需要再處理
+      if (hasUpdatedViaCallback) {
+        return
+      }
+
+      // 檢查回調參數
+      if (
+        closeData?.hasUpdates &&
+        typeof closeData.newCommentsCount === 'number'
+      ) {
+        commentsCount.value = closeData.newCommentsCount
+        return
+      }
+
+      // 檢查 dialog.data
+      const dialogInstance = dialog.dialogRef
+      if (
+        dialogInstance?.data?.hasUpdates &&
+        typeof dialogInstance.data.newCommentsCount === 'number'
+      ) {
+        commentsCount.value = dialogInstance.data.newCommentsCount
+        return
+      }
+
+      // 如果都沒有檢測到更新，重新載入統計資料作為備選
+      loadUserInteractionStatus()
     },
   })
 }
