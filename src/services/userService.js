@@ -54,4 +54,27 @@ export default {
   twitterAuth() {
     return apiService.http.get('/users/auth/twitter')
   },
+  // 用戶統計相關
+  getStats(userId) {
+    return apiService.http.get(`/follows/stats/${userId}`)
+  },
+  // 追隨相關
+  follow(userId) {
+    return apiService.httpAuth.post('/follows/follow', { user_id: userId })
+  },
+  unfollow(userId) {
+    return apiService.httpAuth.post('/follows/unfollow', { user_id: userId })
+  },
+  toggleFollow(userId) {
+    return apiService.httpAuth.post('/follows/toggle', { user_id: userId })
+  },
+  getFollowStatus(userId) {
+    return apiService.httpAuth.get(`/follows/status/${userId}`)
+  },
+  getFollowing(userId, params = {}) {
+    return apiService.http.get(`/follows/following/${userId}`, { params })
+  },
+  getFollowers(userId, params = {}) {
+    return apiService.http.get(`/follows/followers/${userId}`, { params })
+  },
 }

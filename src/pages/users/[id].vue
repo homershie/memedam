@@ -45,13 +45,13 @@
                 <div class="flex flex-col">
                   <span class="text-sm text-gray-300">關注數</span>
                   <span class="text-xl font-bold">{{
-                    userStats.following || 8
+                    userStats.following_count || 0
                   }}</span>
                 </div>
                 <div class="flex flex-col">
                   <span class="text-sm text-gray-300">粉絲數</span>
                   <span class="text-xl font-bold">{{
-                    userStats.followers || 113
+                    userStats.follower_count || 0
                   }}</span>
                 </div>
                 <div class="flex flex-col items-center">
@@ -64,13 +64,13 @@
                 <div class="flex flex-col">
                   <span class="text-sm text-gray-300">貼文數</span>
                   <span class="text-xl font-bold">{{
-                    userStats.posts || memes.length
+                    userStats.meme_count || memes.length
                   }}</span>
                 </div>
                 <div class="flex flex-col">
                   <span class="text-sm text-gray-300">收藏數</span>
                   <span class="text-xl font-bold">{{
-                    userStats.collections || 54
+                    userStats.collection_count || 0
                   }}</span>
                 </div>
               </div>
@@ -146,7 +146,7 @@
         />
 
         <!-- 載入更多按鈕 -->
-        <div v-if="hasMore" class="flex justify-center mt-8">
+        <div v-if="hasMore && !loading" class="flex justify-center mt-8">
           <Button
             label="載入更多"
             icon="pi pi-plus"
@@ -188,6 +188,8 @@ import Tab from 'primevue/tab'
 import SimpleMemeCard from '@/components/SimpleMemeCard.vue'
 import userService from '@/services/userService'
 import memeService from '@/services/memeService'
+import collectionService from '@/services/collectionService'
+import likeService from '@/services/likeService'
 
 // 組件名稱 (修復linter錯誤)
 defineOptions({
@@ -302,6 +304,28 @@ const loadUserProfile = async () => {
   }
 }
 
+// 載入用戶統計資料
+const loadUserStats = async () => {
+  try {
+    const response = await userService.getStats(userId.value)
+    if (response.data && response.data.success) {
+      userStats.value = response.data.data
+    }
+  } catch (error) {
+    console.error('載入用戶統計失敗:', error)
+    // 設定預設值
+    userStats.value = {
+      follower_count: 0,
+      following_count: 0,
+      meme_count: 0,
+      collection_count: 0,
+      total_likes_received: 0,
+      comment_count: 0,
+      share_count: 0,
+    }
+  }
+}
+
 // 載入用戶迷因
 const loadUserMemes = async (reset = false) => {
   try {
@@ -372,11 +396,16 @@ const loadUserMemes = async (reset = false) => {
       if (reset) {
         memes.value = userMemes
       } else {
-        memes.value.push(...userMemes)
+        // 避免重複添加相同的迷因
+        const existingIds = memes.value.map((m) => m._id || m.id)
+        const newMemes = userMemes.filter(
+          (meme) => !existingIds.includes(meme._id || meme.id),
+        )
+        memes.value.push(...newMemes)
       }
 
-      // 判斷是否還有更多數據（基於實際篩選結果）
-      hasMore.value = allMemes.length === params.limit && userMemes.length > 0
+      // 判斷是否還有更多數據（基於API返回的數據量）
+      hasMore.value = allMemes.length === params.limit
 
       if (hasMore.value) {
         currentPage.value++
@@ -398,8 +427,208 @@ const loadMoreMemes = async () => {
   if (loadingMore.value || !hasMore.value) return
 
   loadingMore.value = true
-  await loadUserMemes(false)
-  loadingMore.value = false
+
+  try {
+    // 根據當前標籤頁調用對應的載入函數
+    switch (activeTab.value) {
+      case 'posts':
+        await loadUserMemes(false)
+        break
+      case 'liked':
+        await loadUserCollections(false)
+        break
+      case 'collected':
+        await loadUserLikedMemes(false)
+        break
+      default:
+        await loadUserMemes(false)
+    }
+  } catch (error) {
+    console.error('載入更多內容失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '載入更多內容失敗',
+      life: 3000,
+    })
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+// 載入用戶收藏的迷因
+const loadUserCollections = async (reset = false) => {
+  try {
+    if (reset) {
+      currentPage.value = 1
+      memes.value = []
+      hasMore.value = true
+    }
+
+    // 獲取用戶的收藏記錄
+    const collectionsResponse = await collectionService.getAll()
+    const userCollections = collectionsResponse.data.filter(
+      (collection) => collection.user_id === userId.value,
+    )
+
+    // 分頁處理收藏記錄
+    const pageSize = 10
+    const startIndex = (currentPage.value - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const pagedCollections = userCollections.slice(startIndex, endIndex)
+
+    if (pagedCollections.length > 0) {
+      const memesWithAuthors = await Promise.all(
+        pagedCollections.map(async (collection) => {
+          try {
+            const memeResponse = await memeService.get(collection.meme_id)
+            const meme = memeResponse.data
+
+            // 載入作者資訊
+            if (meme.author_id) {
+              const authorId =
+                typeof meme.author_id === 'object' && meme.author_id.$oid
+                  ? meme.author_id.$oid
+                  : meme.author_id
+              const authorResponse = await userService.get(authorId)
+              meme.author = authorResponse.data.user || authorResponse.data
+            } else {
+              meme.author = {
+                display_name: '匿名用戶',
+                username: 'anonymous',
+                avatar: null,
+              }
+            }
+            return meme
+          } catch (error) {
+            console.warn(
+              `載入收藏迷因 ${collection.meme_id} 失敗:`,
+              error.message,
+            )
+            return null
+          }
+        }),
+      )
+
+      const validMemes = memesWithAuthors.filter((meme) => meme !== null)
+
+      if (reset) {
+        memes.value = validMemes
+      } else {
+        // 避免重複添加相同的迷因
+        const existingIds = memes.value.map((m) => m._id || m.id)
+        const newMemes = validMemes.filter(
+          (meme) => !existingIds.includes(meme._id || meme.id),
+        )
+        memes.value.push(...newMemes)
+      }
+
+      // 判斷是否還有更多數據
+      hasMore.value = endIndex < userCollections.length
+      if (hasMore.value) {
+        currentPage.value++
+      }
+    } else {
+      if (reset) {
+        memes.value = []
+      }
+      hasMore.value = false
+    }
+  } catch (error) {
+    console.error('載入用戶收藏失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '無法載入收藏內容',
+      life: 3000,
+    })
+  }
+}
+
+// 載入用戶按讚的迷因
+const loadUserLikedMemes = async (reset = false) => {
+  try {
+    if (reset) {
+      currentPage.value = 1
+      memes.value = []
+      hasMore.value = true
+    }
+
+    // 獲取用戶的按讚記錄
+    const likesResponse = await likeService.getAll()
+    const userLikes = likesResponse.data.filter(
+      (like) => like.user_id === userId.value,
+    )
+
+    // 分頁處理按讚記錄
+    const pageSize = 10
+    const startIndex = (currentPage.value - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const pagedLikes = userLikes.slice(startIndex, endIndex)
+
+    if (pagedLikes.length > 0) {
+      const memesWithAuthors = await Promise.all(
+        pagedLikes.map(async (like) => {
+          try {
+            const memeResponse = await memeService.get(like.meme_id)
+            const meme = memeResponse.data
+
+            // 載入作者資訊
+            if (meme.author_id) {
+              const authorId =
+                typeof meme.author_id === 'object' && meme.author_id.$oid
+                  ? meme.author_id.$oid
+                  : meme.author_id
+              const authorResponse = await userService.get(authorId)
+              meme.author = authorResponse.data.user || authorResponse.data
+            } else {
+              meme.author = {
+                display_name: '匿名用戶',
+                username: 'anonymous',
+                avatar: null,
+              }
+            }
+            return meme
+          } catch (error) {
+            console.warn(`載入按讚迷因 ${like.meme_id} 失敗:`, error.message)
+            return null
+          }
+        }),
+      )
+
+      const validMemes = memesWithAuthors.filter((meme) => meme !== null)
+
+      if (reset) {
+        memes.value = validMemes
+      } else {
+        // 避免重複添加相同的迷因
+        const existingIds = memes.value.map((m) => m._id || m.id)
+        const newMemes = validMemes.filter(
+          (meme) => !existingIds.includes(meme._id || meme.id),
+        )
+        memes.value.push(...newMemes)
+      }
+
+      // 判斷是否還有更多數據
+      hasMore.value = endIndex < userLikes.length
+      if (hasMore.value) {
+        currentPage.value++
+      }
+    } else {
+      if (reset) {
+        memes.value = []
+      }
+      hasMore.value = false
+    }
+  } catch (error) {
+    console.error('載入用戶按讚失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '無法載入按讚內容',
+      life: 3000,
+    })
+  }
 }
 
 // 標籤點擊處理
@@ -439,8 +668,16 @@ const getEmptyStateDescription = () => {
 
 // 監聽標籤切換
 watch(activeTab, (newTab) => {
+  // 重置分頁狀態
+  currentPage.value = 1
+  hasMore.value = true
+
   if (newTab === 'posts') {
     loadUserMemes(true)
+  } else if (newTab === 'liked') {
+    loadUserCollections(true)
+  } else if (newTab === 'collected') {
+    loadUserLikedMemes(true)
   }
   // 其他標籤的邏輯可以在這裡添加
 })
@@ -451,6 +688,7 @@ watch(
   () => {
     if (userId.value) {
       loadUserProfile()
+      loadUserStats()
       if (activeTab.value === 'posts') {
         loadUserMemes(true)
       }
@@ -464,7 +702,7 @@ onMounted(async () => {
   loading.value = true
 
   try {
-    await Promise.all([loadUserProfile(), loadUserMemes(true)])
+    await Promise.all([loadUserProfile(), loadUserStats(), loadUserMemes(true)])
   } finally {
     loading.value = false
   }
