@@ -27,13 +27,18 @@
           class="border border-gray-200"
         />
         <div>
-          <div class="font-semibold text-gray-800">
+          <router-link
+            v-if="getUserInfo(comment)._id"
+            :to="`/users/${getUserInfo(comment)._id}`"
+            class="font-semibold text-gray-800 hover:text-blue-600 transition-colors cursor-pointer block"
+          >
             {{
               getUserInfo(comment).display_name ||
               getUserInfo(comment).username ||
               '匿名用戶'
             }}
-          </div>
+          </router-link>
+          <div v-else class="font-semibold text-gray-800">匿名用戶</div>
           <div class="text-xs text-gray-500">
             {{ formatTime(comment.createdAt || comment.created_at) }}
             <span

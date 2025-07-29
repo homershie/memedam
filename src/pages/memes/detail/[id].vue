@@ -33,7 +33,18 @@
                   {{ meme.title }}
                 </h1>
                 <div class="flex items-center text-sm text-gray-600 space-x-4">
-                  <span>由 {{ authorName }} 發布</span>
+                  <span>
+                    由
+                    <router-link
+                      v-if="meme.author && (meme.author._id || meme.author.id)"
+                      :to="`/users/${meme.author._id || meme.author.id}`"
+                      class="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    >
+                      {{ authorName }}
+                    </router-link>
+                    <span v-else class="font-medium">{{ authorName }}</span>
+                    發布
+                  </span>
                   <span>{{ publishedTime }}</span>
                   <span>已瀏覽 {{ viewCount }} 次</span>
                 </div>

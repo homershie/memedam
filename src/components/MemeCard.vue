@@ -16,13 +16,19 @@
           />
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-semibold text-gray-800">
+              <router-link
+                v-if="meme.author && (meme.author._id || meme.author.id)"
+                :to="`/users/${meme.author._id || meme.author.id}`"
+                class="font-semibold text-gray-800 hover:text-blue-600 transition-colors cursor-pointer"
+                @click.stop
+              >
                 {{
                   meme.author?.display_name ||
                   meme.author?.username ||
                   '匿名用戶'
                 }}
-              </span>
+              </router-link>
+              <span v-else class="font-semibold text-gray-800"> 匿名用戶 </span>
               <span class="text-xs text-gray-400">· {{ publishedTime }}</span>
             </div>
           </div>
