@@ -1,5 +1,8 @@
 <template>
-  <Card class="mb-8 max-w-5xl mx-auto!">
+  <Card
+    class="mb-8 max-w-5xl mx-auto! cursor-pointer hover:shadow-lg transition-shadow"
+    @click="navigateToDetail"
+  >
     <ConfirmPopup />
     <template #header>
       <div class="flex items-center justify-between p-4 pb-0">
@@ -29,7 +32,7 @@
           severity="secondary"
           text
           rounded
-          @click="showMenu"
+          @click.stop="showMenu"
         />
         <OverlayPanel ref="menuRef">
           <div class="flex flex-col min-w-[120px]">
@@ -174,7 +177,7 @@
                 :value="`#${tag.name}`"
                 severity="secondary"
                 class="cursor-pointer"
-                @click="onTagClick(tag)"
+                @click.stop="onTagClick(tag)"
               />
             </div>
           </div>
@@ -190,7 +193,7 @@
               :severity="isLiked ? 'success' : 'secondary'"
               text
               :label="likesCount.toString()"
-              @click="toggleLike"
+              @click.stop="toggleLike"
               class="transition-colors"
             />
             <Button
@@ -200,7 +203,7 @@
               :severity="isDisliked ? 'danger' : 'secondary'"
               text
               :label="dislikesCount.toString()"
-              @click="toggleDislike"
+              @click.stop="toggleDislike"
               class="transition-colors"
             />
             <Button
@@ -208,7 +211,7 @@
               severity="secondary"
               text
               :label="commentsCount.toString()"
-              @click="showComments"
+              @click.stop="showComments"
             />
           </div>
           <div class="flex items-center space-x-2">
@@ -216,14 +219,14 @@
               :icon="isCollected ? 'pi pi-bookmark-fill' : 'pi pi-bookmark'"
               :severity="isCollected ? 'warning' : 'secondary'"
               text
-              @click="toggleCollection"
+              @click.stop="toggleCollection"
               v-tooltip.top="isCollected ? '取消收藏' : '收藏'"
             />
             <Button
               icon="pi pi-share-alt"
               severity="secondary"
               text
-              @click="showShareOptions"
+              @click.stop="showShareOptions"
               v-tooltip.top="'分享'"
             />
             <OverlayPanel ref="shareMenuRef">
@@ -658,6 +661,7 @@ const showComments = () => {
       },
       modal: true,
       closable: true,
+      dismissableMask: true,
       draggable: false,
       resizable: false,
     },
@@ -708,6 +712,10 @@ const showMenu = (event) => {
 
 const onEdit = () => {
   window.location.href = `/memes/edit/${memeId.value}`
+}
+
+const navigateToDetail = () => {
+  router.push(`/memes/detail/${memeId.value}`)
 }
 
 const showDeleteConfirm = (event) => {

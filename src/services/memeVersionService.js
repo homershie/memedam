@@ -10,6 +10,9 @@ export default {
   get(id) {
     return apiService.httpAuth.get(`/meme-versions/${id}`)
   },
+  getByMemeId(memeId) {
+    return apiService.httpAuth.get(`/meme-versions?meme_id=${memeId}`)
+  },
   update(id, data) {
     return apiService.httpAuth.put(`/meme-versions/${id}`, data)
   },
