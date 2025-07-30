@@ -1023,10 +1023,7 @@ const recordView = async () => {
 
     if (response.data && response.data.data) {
       const { isDuplicate } = response.data.data
-      if (isDuplicate) {
-        console.log('重複瀏覽，不計入統計')
-      } else {
-        console.log('瀏覽記錄已保存')
+      if (!isDuplicate) {
         // 更新瀏覽次數
         viewCount.value += 1
       }
@@ -1040,8 +1037,10 @@ const recordView = async () => {
 const loadViewStats = async () => {
   try {
     const response = await viewService.getStats(memeId.value, 'all')
+
     if (response.data && response.data.data) {
       const stats = response.data.data
+
       // 更新統計數據
       viewCount.value =
         stats.effective_views || stats.total_views || viewCount.value
@@ -1302,15 +1301,15 @@ const testViewStats = async () => {
     })
 
     // 測試記錄瀏覽
-    const viewResponse = await viewService.recordView(memeId.value, {
+    const testViewData = {
       duration: 30,
       referrer: 'test',
-    })
-    console.log('記錄瀏覽結果:', viewResponse.data)
+    }
+
+    await viewService.recordView(memeId.value, testViewData)
 
     // 測試取得統計
-    const statsResponse = await viewService.getStats(memeId.value, 'all')
-    console.log('瀏覽統計結果:', statsResponse.data)
+    await viewService.getStats(memeId.value, 'all')
 
     // 更新統計數據
     await loadViewStats()
@@ -1318,7 +1317,7 @@ const testViewStats = async () => {
     toast.add({
       severity: 'success',
       summary: '測試完成',
-      detail: '瀏覽統計功能測試完成，請查看控制台',
+      detail: '瀏覽統計功能測試完成',
       life: 3000,
     })
   } catch (error) {
@@ -1351,21 +1350,28 @@ watch(meme, (newMeme) => {
 
 // 瀏覽時間追蹤
 const pageEnterTime = ref(null)
+const pageEnterRoute = ref(null) // 記錄進入頁面時的路由
 
 // 記錄頁面離開時的瀏覽時間
 const recordPageLeave = () => {
-  if (pageEnterTime.value && memeId.value) {
+  // 檢查是否從迷因詳情頁面進入
+  const wasOnMemeDetailPage = pageEnterRoute.value?.includes('/memes/detail/')
+  const currentMemeId =
+    memeId.value || route.params.id || pageEnterRoute.value?.split('/').pop()
+
+  if (pageEnterTime.value && currentMemeId && wasOnMemeDetailPage) {
     const duration = Math.floor((Date.now() - pageEnterTime.value) / 1000)
+
     if (duration > 0) {
+      const leaveViewData = {
+        duration,
+        referrer: document.referrer || '',
+      }
+
       // 異步記錄瀏覽時間，不等待回應
-      viewService
-        .recordView(memeId.value, {
-          duration,
-          referrer: document.referrer || '',
-        })
-        .catch((error) => {
-          console.error('記錄瀏覽時間失敗:', error)
-        })
+      viewService.recordView(currentMemeId, leaveViewData).catch((error) => {
+        console.error('記錄瀏覽時間失敗:', error)
+      })
     }
   }
 }
@@ -1373,6 +1379,8 @@ const recordPageLeave = () => {
 // 初始化
 onMounted(() => {
   pageEnterTime.value = Date.now()
+  pageEnterRoute.value = route.fullPath
+
   loadMeme()
 
   // 監聽頁面離開事件
@@ -1382,7 +1390,12 @@ onMounted(() => {
 
 // 清理事件監聽器
 onUnmounted(() => {
-  recordPageLeave()
+  // 檢查是否從迷因詳情頁面進入
+  const wasOnMemeDetailPage = pageEnterRoute.value?.includes('/memes/detail/')
+  if (wasOnMemeDetailPage) {
+    recordPageLeave()
+  }
+
   window.removeEventListener('beforeunload', recordPageLeave)
   window.removeEventListener('pagehide', recordPageLeave)
 })

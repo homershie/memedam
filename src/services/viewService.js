@@ -3,7 +3,8 @@ import apiService from './apiService'
 export default {
   // 記錄瀏覽
   recordView(memeId, data = {}) {
-    return apiService.http.post(`/views/${memeId}`, data)
+    // 使用認證的請求，確保用戶 ID 被傳送
+    return apiService.httpAuth.post(`/views/${memeId}`, data)
   },
 
   // 取得迷因瀏覽統計
