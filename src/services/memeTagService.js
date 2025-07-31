@@ -22,6 +22,9 @@ export default {
   getMemesByTagId(tagId) {
     return apiService.http.get(`/api/meme-tags/tag/${tagId}/memes`)
   },
+  getRelation(id) {
+    return apiService.http.get(`/api/meme-tags/relation/${id}`)
+  },
   update(id, data) {
     return apiService.httpAuth.put(`/api/meme-tags/${id}`, data)
   },
