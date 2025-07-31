@@ -12,6 +12,18 @@
       <SearchBox ref="searchBoxRef" @search="handleSearch" class="w-full" />
     </div>
 
+    <!-- 搜尋模式提示 -->
+    <div v-if="searchQuery.trim()" class="text-center mb-4">
+      <div
+        class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg"
+      >
+        <i class="pi pi-search text-yellow-500"></i>
+        <span class="text-sm"
+          >搜尋「{{ searchQuery }}」的結果，使用預設排序以確保準確性</span
+        >
+      </div>
+    </div>
+
     <!-- 篩選狀態顯示 -->
     <div
       v-if="selectedTags.length > 0"
@@ -87,7 +99,11 @@
     </div>
 
     <!-- 無限滾動觸發元素 -->
-    <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
+    <div
+      v-if="infiniteHasMore && !isRecommendationMode"
+      ref="triggerRef"
+      class="h-4 w-full"
+    >
       <div v-if="infiniteLoading" class="flex justify-center py-6">
         <div class="flex items-center text-gray-500">
           <ProgressSpinner style="width: 20px; height: 20px" />
@@ -114,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import MemeCard from '@/components/MemeCard.vue'
@@ -125,6 +141,7 @@ import Dialog from 'primevue/dialog'
 import memeService from '@/services/memeService'
 import userService from '@/services/userService'
 import tagService from '@/services/tagService'
+import recommendationService from '@/services/recommendationService'
 import Tag from 'primevue/tag'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 
@@ -144,9 +161,13 @@ const searchQuery = ref('')
 const searchBoxRef = ref(null)
 
 // 篩選和排序
-const sortBy = ref('created_at_desc')
 const selectedTags = ref([])
 const availableTags = ref([])
+
+// 檢查是否為推薦模式
+const isRecommendationMode = computed(() => {
+  return !searchQuery.value.trim()
+})
 
 // 評論對話框
 const showCommentsDialog = ref(false)
@@ -164,14 +185,13 @@ const loadMemes = async (reset = true) => {
     const params = {
       page: currentPage.value,
       limit: pageSize.value,
-      sort: sortBy.value,
     }
 
     let response
 
     // 如果有搜尋關鍵字
     if (searchQuery.value.trim()) {
-      // 搜尋時使用傳統搜尋保持時間排序
+      // 搜尋時使用傳統搜尋保持時間排序，不支援推薦排序
       const searchParams = {
         ...params,
         useFuzzySearch: false,
@@ -190,19 +210,142 @@ const loadMemes = async (reset = true) => {
         response = await memeService.search(searchQuery.value, searchParams)
       }
     } else if (selectedTags.value.length > 0) {
-      // 只有標籤篩選
+      // 只有標籤篩選，使用混合推薦
       const tagNames = selectedTags.value.map((tag) => tag.name)
-      response = await memeService.getByTags(tagNames, params)
+      response = await loadRecommendations('recommendation_mixed', {
+        ...params,
+        tags: tagNames,
+      })
     } else {
-      // 沒有篩選條件，使用一般 API
-      response = await memeService.getAll(params)
+      // 沒有篩選條件，使用混合推薦
+      response = await loadRecommendations('recommendation_mixed', params)
     }
 
     const newMemes = response.data.memes || response.data || []
 
+    // 為每個迷因載入作者資訊（推薦模式下已經載入過，跳過）
+    let memesWithAuthors
+    if (!searchQuery.value.trim()) {
+      memesWithAuthors = newMemes
+    } else {
+      memesWithAuthors = await Promise.all(
+        newMemes.map(async (meme) => {
+          try {
+            if (meme.author_id) {
+              // 修正：支援 { $oid: ... } 格式
+              const authorId =
+                typeof meme.author_id === 'object' && meme.author_id.$oid
+                  ? meme.author_id.$oid
+                  : meme.author_id
+              const authorResponse = await userService.get(authorId)
+              meme.author = authorResponse.data.user
+            } else {
+              // 沒有作者 ID，設定預設值
+              meme.author = {
+                display_name: '匿名用戶',
+                username: 'anonymous',
+                avatar: null,
+              }
+            }
+            return meme
+          } catch (error) {
+            console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
+            // 如果載入作者失敗，設定預設值
+            meme.author = {
+              display_name: '未知用戶',
+              username: 'unknown',
+              avatar: null,
+            }
+            return meme
+          }
+        }),
+      )
+    }
+
+    if (reset) {
+      memes.value = memesWithAuthors
+    } else {
+      memes.value.push(...memesWithAuthors)
+    }
+
+    // 檢查是否還有更多資料（推薦模式下不支援分頁）
+    if (!searchQuery.value.trim()) {
+      hasMore.value = false
+    } else {
+      hasMore.value = newMemes.length === pageSize.value
+    }
+
+    // 更新無限滾動狀態（推薦模式下不支援無限滾動）
+    if (!searchQuery.value.trim()) {
+      updateLoadingState(false, false)
+    } else {
+      updateLoadingState(false, hasMore.value)
+    }
+  } catch (error) {
+    console.error('載入迷因失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '載入失敗',
+      detail: '無法載入迷因列表，請稍後再試',
+      life: 3000,
+    })
+
+    // 更新無限滾動狀態（推薦模式下不支援無限滾動）
+    if (!searchQuery.value.trim()) {
+      updateLoadingState(false, false)
+    } else {
+      updateLoadingState(false, false)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// 新增：載入推薦內容
+const loadRecommendations = async (recommendationType, params) => {
+  try {
+    const recommendationParams = {
+      limit: pageSize.value,
+      // 推薦 API 通常不支援分頁，所以移除 page 參數
+    }
+
+    // 如果有標籤篩選，加入標籤參數
+    if (params.tags) {
+      recommendationParams.tags = params.tags
+    }
+
+    const response =
+      await recommendationService.getMixedRecommendations(recommendationParams)
+
+    // 處理不同的回應格式
+    let memes = []
+    if (response.data) {
+      if (Array.isArray(response.data)) {
+        memes = response.data
+      } else if (response.data.memes) {
+        memes = response.data.memes
+      } else if (response.data.recommendations) {
+        memes = response.data.recommendations
+      } else if (response.data.data) {
+        // 處理巢狀 data 結構
+        const nestedData = response.data.data
+        if (Array.isArray(nestedData)) {
+          memes = nestedData
+        } else if (nestedData.memes) {
+          memes = nestedData.memes
+        } else if (nestedData.recommendations) {
+          memes = nestedData.recommendations
+        } else {
+          memes = [nestedData]
+        }
+      } else {
+        memes = [response.data]
+      }
+    }
+
     // 為每個迷因載入作者資訊
     const memesWithAuthors = await Promise.all(
-      newMemes.map(async (meme) => {
+      memes.map(async (meme) => {
         try {
           if (meme.author_id) {
             // 修正：支援 { $oid: ... } 格式
@@ -234,33 +377,43 @@ const loadMemes = async (reset = true) => {
       }),
     )
 
-    if (reset) {
-      memes.value = memesWithAuthors
-    } else {
-      memes.value.push(...memesWithAuthors)
+    // 如果沒有資料，回退到一般 API
+    if (memesWithAuthors.length === 0) {
+      console.warn('推薦 API 返回空資料，回退到一般 API')
+      // 使用一般 API 載入資料
+      const fallbackParams = { ...params }
+      delete fallbackParams.sort // 移除排序參數，使用預設排序
+      return await memeService.getAll(fallbackParams)
     }
 
-    // 檢查是否還有更多資料
-    hasMore.value = newMemes.length === pageSize.value
-
-    // 更新無限滾動狀態
-    updateLoadingState(false, hasMore.value)
+    // 確保回應格式一致
+    return {
+      data: {
+        memes: memesWithAuthors,
+        total:
+          response.data?.total ||
+          response.data?.count ||
+          memesWithAuthors.length,
+      },
+    }
   } catch (error) {
-    console.error('載入迷因失敗:', error)
-    toast.add({
-      severity: 'error',
-      summary: '載入失敗',
-      detail: '無法載入迷因列表，請稍後再試',
-      life: 3000,
-    })
-    updateLoadingState(false, false)
-  } finally {
-    loading.value = false
+    console.error('載入推薦失敗:', error)
+    // 如果推薦失敗，回退到一般 API
+    // 使用一般 API 載入資料
+    const fallbackParams = { ...params }
+    delete fallbackParams.sort // 移除排序參數，使用預設排序
+    return await memeService.getAll(fallbackParams)
   }
 }
 
 // 無限滾動載入函數
 const loadMoreContent = async () => {
+  // 推薦模式下不支援無限滾動，直接返回
+  if (!searchQuery.value.trim()) {
+    updateLoadingState(false, false)
+    return
+  }
+
   currentPage.value++
   await loadMemes(false)
 }
@@ -298,7 +451,11 @@ const handleSearch = (searchTerm) => {
       query: newQuery,
     })
   }
-  loadMemes()
+
+  // 延遲載入，確保狀態更新完成
+  nextTick(() => {
+    loadMemes()
+  })
 }
 
 // 載入可用標籤
@@ -353,10 +510,30 @@ const onShowComments = (meme) => {
   showCommentsDialog.value = true
 }
 
-// 監聽排序變化
-watch(sortBy, () => {
-  loadMemes()
-})
+// 監聽搜尋變化
+watch(
+  searchQuery,
+  () => {
+    // 搜尋變化時重新載入資料
+    loadMemes()
+  },
+  { immediate: true },
+)
+
+// 監聽路由查詢參數變化
+watch(
+  () => route.query,
+  (newQuery) => {
+    // 更新搜尋查詢
+    if (newQuery.search !== searchQuery.value) {
+      searchQuery.value = newQuery.search || ''
+      if (searchBoxRef.value) {
+        searchBoxRef.value.setQuery(searchQuery.value)
+      }
+    }
+  },
+  { deep: true },
+)
 
 const topTags = ref([])
 
@@ -382,6 +559,7 @@ onMounted(async () => {
     }
   }
 
+  // 載入資料
   await Promise.all([loadMemes(), loadAvailableTags()])
   loadTopTags()
 })
