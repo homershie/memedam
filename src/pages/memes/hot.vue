@@ -1,47 +1,47 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <ConfirmPopup />
-  <div class="container p-8 mx-auto space-y-6">
+  <div class="max-w-5xl p-8 mx-auto space-y-6">
     <!-- 頁面標題 -->
-    <div class="mb-6 text-center">
+    <div class="mb-6 text-start">
       <h1 class="text-3xl font-bold text-gray-800">熱門迷因</h1>
-      <p class="text-gray-600 mt-2">探索最受歡迎的迷因內容</p>
     </div>
 
-    <!-- 篩選狀態顯示 -->
-    <div
-      v-if="selectedTags.length > 0"
-      class="flex items-center justify-center gap-2 mb-4"
-    >
-      <span class="text-sm text-gray-600">已篩選：</span>
-      <Tag
-        v-for="tag in selectedTags"
-        :key="tag._id"
-        :value="`#${tag.name}`"
-        severity="success"
-        class="cursor-pointer"
-        @click="removeTag(tag)"
-      />
-      <Button
-        label="清除篩選"
-        icon="pi pi-times"
-        size="small"
-        severity="secondary"
-        text
-        @click="clearFilters"
-      />
-    </div>
-
-    <!-- 迷因類型標籤 -->
-    <div class="flex flex-wrap gap-2 mb-6 justify-center">
-      <Tag
-        v-for="tag in memeTypeTags"
-        :key="tag._id"
-        :value="`#${tag.name}`"
-        :severity="isTagSelected(tag) ? 'success' : 'primary'"
-        class="cursor-pointer hover:bg-primary-50"
-        @click="onTagClick(tag)"
-      />
+    <div class="flex justify-between flex-wrap">
+      <!-- 迷因類型標籤 -->
+      <div class="flex flex-wrap gap-2 mb-6 justify-start items-center">
+        <Tag
+          v-for="tag in memeTypeTags"
+          :key="tag._id"
+          :value="`#${tag.name}`"
+          :severity="isTagSelected(tag) ? 'success' : 'primary'"
+          class="cursor-pointer hover:bg-primary-50"
+          @click="onTagClick(tag)"
+        />
+      </div>
+      <!-- 篩選狀態顯示 -->
+      <div
+        v-if="selectedTags.length > 0"
+        class="flex justify-start items-center gap-2 mb-4"
+      >
+        <span class="text-sm text-gray-600">已篩選：</span>
+        <Tag
+          v-for="tag in selectedTags"
+          :key="tag._id"
+          :value="`#${tag.name}`"
+          severity="success"
+          class="cursor-pointer"
+          @click="removeTag(tag)"
+        />
+        <Button
+          label="清除篩選"
+          icon="pi pi-times"
+          size="small"
+          severity="secondary"
+          text
+          @click="clearFilters"
+        />
+      </div>
     </div>
 
     <!-- 載入中狀態 -->
@@ -145,12 +145,6 @@ const loadMemes = async () => {
       limit: 50,
     }
 
-    // 如果有標籤篩選，加入標籤參數
-    if (selectedTags.value.length > 0) {
-      const tagNames = selectedTags.value.map((tag) => tag.name)
-      params.tags = tagNames
-    }
-
     const response = await recommendationService.getHotRecommendations(params)
 
     // 處理不同的回應格式
@@ -245,11 +239,21 @@ const loadMemes = async () => {
       }),
     )
 
-    memes.value = memesWithAuthors
+    // 根據選擇的標籤進行前端篩選
+    let filteredMemes = memesWithAuthors
+
+    if (selectedTags.value.length > 0) {
+      const selectedTypes = selectedTags.value.map((tag) => tag._id)
+      filteredMemes = memesWithAuthors.filter((meme) => {
+        return selectedTypes.includes(meme.type)
+      })
+    }
+
+    memes.value = filteredMemes
 
     // 如果沒有資料，顯示提示
-    if (memesWithAuthors.length === 0) {
-      console.warn('熱門推薦 API 返回空資料')
+    if (filteredMemes.length === 0) {
+      console.warn('熱門推薦 API 返回空資料或篩選後無結果')
     }
   } catch (error) {
     console.error('載入熱門迷因失敗:', error)

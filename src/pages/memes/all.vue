@@ -166,16 +166,8 @@ const selectedMeme = ref(null)
 const loadMemes = async (reset = true) => {
   // 防止重複載入
   if (loading.value) {
-    console.log('🔍 跳過重複載入（正在載入中）')
     return
   }
-
-  console.log('🔍 loadMemes 開始:', {
-    reset,
-    searchQuery: searchQuery.value,
-    selectedTags: selectedTags.value.length,
-    currentPage: currentPage.value,
-  })
 
   try {
     if (reset) {
@@ -194,7 +186,6 @@ const loadMemes = async (reset = true) => {
     // 如果有搜尋關鍵字
     if (searchQuery.value.trim()) {
       isSearching.value = true // 標記正在搜尋
-      console.log('🔍 進入搜尋模式')
       // 搜尋時使用傳統搜尋保持時間排序，不支援推薦排序
       const searchParams = {
         ...params,
@@ -204,44 +195,41 @@ const loadMemes = async (reset = true) => {
       if (selectedTags.value.length > 0) {
         // 有搜尋關鍵字 + 標籤篩選
         const tagNames = selectedTags.value.map((tag) => tag.name)
-        console.log('🔍 搜尋 + 標籤篩選:', tagNames)
+        // 將陣列轉換為逗號分隔的字串
+        const tagsString = tagNames.join(',')
         response = await memeService.searchByTags(
           searchQuery.value,
-          tagNames,
+          tagsString,
           searchParams,
         )
       } else {
         // 只有搜尋關鍵字
-        console.log('🔍 純搜尋模式')
         response = await memeService.search(searchQuery.value, searchParams)
       }
     } else {
       isSearching.value = false // 標記不是搜尋模式
       if (selectedTags.value.length > 0) {
         // 只有標籤篩選，使用混合推薦
-        console.log('🔍 進入推薦模式（標籤篩選）')
         const tagNames = selectedTags.value.map((tag) => tag.name)
+        // 將陣列轉換為逗號分隔的字串
+        const tagsString = tagNames.join(',')
         response = await loadRecommendations('recommendation_mixed', {
           ...params,
-          tags: tagNames,
+          tags: tagsString,
         })
       } else {
         // 沒有篩選條件，使用混合推薦
-        console.log('🔍 進入推薦模式（無篩選）')
         response = await loadRecommendations('recommendation_mixed', params)
       }
     }
 
     const newMemes = response.data.memes || response.data || []
-    console.log('🔍 取得迷因數量:', newMemes.length)
 
     // 為每個迷因載入作者資訊（推薦模式下已經載入過，跳過）
     let memesWithAuthors
     if (!searchQuery.value.trim()) {
-      console.log('🔍 跳過作者資訊載入（推薦模式）')
       memesWithAuthors = newMemes
     } else {
-      console.log('🔍 載入搜尋結果的作者資訊')
       memesWithAuthors = await Promise.all(
         newMemes.map(async (meme) => {
           try {
@@ -282,16 +270,12 @@ const loadMemes = async (reset = true) => {
       memes.value.push(...memesWithAuthors)
     }
 
-    console.log('🔍 最終迷因數量:', memes.value.length)
-
     // 檢查是否還有更多資料（推薦模式下不支援分頁）
     if (!searchQuery.value.trim()) {
       hasMore.value = false
     } else {
       hasMore.value = newMemes.length === pageSize.value
     }
-
-    console.log('🔍 分頁狀態:', { hasMore: hasMore.value })
 
     // 更新無限滾動狀態（推薦模式下不支援無限滾動）
     if (!searchQuery.value.trim()) {
@@ -316,7 +300,6 @@ const loadMemes = async (reset = true) => {
     }
   } finally {
     loading.value = false
-    console.log('🔍 loadMemes 結束')
   }
 }
 
@@ -330,7 +313,10 @@ const loadRecommendations = async (recommendationType, params) => {
 
     // 如果有標籤篩選，加入標籤參數
     if (params.tags) {
-      recommendationParams.tags = params.tags
+      // 確保標籤參數是字串格式
+      recommendationParams.tags = Array.isArray(params.tags)
+        ? params.tags.join(',')
+        : params.tags
     }
 
     const response =
@@ -398,7 +384,6 @@ const loadRecommendations = async (recommendationType, params) => {
 
     // 如果沒有資料，回退到一般 API
     if (memesWithAuthors.length === 0) {
-      console.warn('推薦 API 返回空資料，回退到一般 API')
       // 使用一般 API 載入資料
       const fallbackParams = { ...params }
       delete fallbackParams.sort // 移除排序參數，使用預設排序
@@ -450,15 +435,8 @@ const {
 
 // 處理搜尋
 const handleSearch = (searchTerm) => {
-  console.log('🔍 handleSearch 開始:', {
-    oldSearchQuery: searchQuery.value,
-    newSearchTerm: searchTerm,
-    isEqual: searchQuery.value === searchTerm,
-  })
-
   // 如果搜尋詞沒有變化，跳過處理
   if (searchQuery.value === searchTerm) {
-    console.log('🔍 搜尋詞未變化，跳過處理')
     return
   }
 
@@ -467,7 +445,6 @@ const handleSearch = (searchTerm) => {
 
   // 更新 URL 查詢參數（使用 replace 避免歷史記錄堆疊）
   if (searchTerm.trim()) {
-    console.log('🔍 更新URL查詢參數（有搜尋詞）')
     router.replace({
       path: '/memes/all',
       query: {
@@ -477,7 +454,6 @@ const handleSearch = (searchTerm) => {
     })
   } else {
     // 清除搜尋時移除 search 參數
-    console.log('🔍 更新URL查詢參數（清除搜尋）')
     const newQuery = { ...route.query }
     delete newQuery.search
     router.replace({
@@ -485,8 +461,6 @@ const handleSearch = (searchTerm) => {
       query: newQuery,
     })
   }
-
-  console.log('🔍 handleSearch 結束')
   // 不需要手動呼叫 loadMemes，watch 會處理
 }
 
@@ -496,7 +470,7 @@ const loadAvailableTags = async () => {
     const response = await tagService.getPopular()
     availableTags.value = response.data || []
   } catch {
-    console.error('載入標籤失敗')
+    // 載入標籤失敗，靜默處理
   }
 }
 
@@ -546,13 +520,6 @@ const onShowComments = (meme) => {
 watch(
   searchQuery,
   (newSearchQuery, oldSearchQuery) => {
-    console.log('👀 搜尋查詢變化:', {
-      old: oldSearchQuery,
-      new: newSearchQuery,
-      isEqual: newSearchQuery === oldSearchQuery,
-      isSearching: isSearching.value,
-    })
-
     // 只有在搜尋查詢真正變化時才重新載入
     if (newSearchQuery !== oldSearchQuery) {
       // 避免在搜尋進行中時重置為空字串
@@ -561,14 +528,10 @@ watch(
         !newSearchQuery.trim() &&
         oldSearchQuery.trim()
       ) {
-        console.log('👀 跳過重置搜尋查詢（搜尋進行中）')
         return
       }
 
-      console.log('👀 觸發重新載入')
       loadMemes()
-    } else {
-      console.log('👀 跳過重新載入（查詢未變化）')
     }
   },
   { immediate: false },
@@ -578,49 +541,32 @@ watch(
 watch(
   () => route.query,
   (newQuery, oldQuery) => {
-    console.log('👀 路由查詢參數變化:', {
-      old: oldQuery,
-      new: newQuery,
-      currentSearchQuery: searchQuery.value,
-      searchChanged: newQuery.search !== searchQuery.value,
-      oldSearch: oldQuery?.search,
-      newSearch: newQuery?.search,
-      isSearching: isSearching.value,
-    })
-
     // 只在搜尋查詢真正變化時才更新
     if (newQuery.search !== searchQuery.value) {
       // 避免在搜尋過程中重置為空字串
       if (searchQuery.value.trim() && !newQuery.search) {
-        console.log('👀 跳過重置搜尋查詢（當前有搜尋內容）')
         return
       }
 
       // 避免在搜尋進行中時重置查詢
       if (loading.value && searchQuery.value.trim() && !newQuery.search) {
-        console.log('👀 跳過重置搜尋查詢（正在載入中且有搜尋內容）')
         return
       }
 
       // 避免在搜尋狀態下重置為空字串
       if (isSearching.value && !newQuery.search) {
-        console.log('👀 跳過重置搜尋查詢（當前為搜尋狀態）')
         return
       }
 
       // 避免在初始化時重置為空字串
       if (!oldQuery && !newQuery.search && searchQuery.value.trim()) {
-        console.log('👀 跳過重置搜尋查詢（初始化時有搜尋內容）')
         return
       }
 
-      console.log('👀 更新搜尋查詢:', newQuery.search)
       searchQuery.value = newQuery.search || ''
       if (searchBoxRef.value) {
         searchBoxRef.value.setQuery(searchQuery.value)
       }
-    } else {
-      console.log('👀 搜尋查詢未變化，跳過更新')
     }
   },
   { deep: true, immediate: false }, // 移除 immediate: true，避免初始化時觸發
@@ -633,7 +579,6 @@ const loadTopTags = async () => {
     const res = await tagService.getPopular(10)
     // 修正：正確取用 popularTags 陣列
     topTags.value = res.data.popularTags || []
-    console.log('topTags', topTags.value)
   } catch {
     topTags.value = []
   }
@@ -641,11 +586,8 @@ const loadTopTags = async () => {
 
 // 初始化
 onMounted(async () => {
-  console.log('🔍 初始化開始')
-
   // 檢查路由查詢參數
   if (route.query.search) {
-    console.log('🔍 從路由查詢參數載入搜尋:', route.query.search)
     searchQuery.value = route.query.search
     // 設定搜尋框的值
     if (searchBoxRef.value) {
@@ -654,11 +596,8 @@ onMounted(async () => {
   }
 
   // 載入資料
-  console.log('🔍 開始載入資料')
   await Promise.all([loadMemes(), loadAvailableTags()])
   loadTopTags()
-
-  console.log('🔍 初始化完成')
 })
 </script>
 
