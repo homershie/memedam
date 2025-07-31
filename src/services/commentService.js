@@ -2,21 +2,21 @@ import apiService from './apiService'
 
 export default {
   create(data) {
-    return apiService.httpAuth.post('/comments', data)
+    return apiService.httpAuth.post('/api/comments', data)
   },
   getAll(params = {}) {
     const queryString = new URLSearchParams(params).toString()
-    const url = queryString ? `/comments?${queryString}` : '/comments'
+    const url = queryString ? `/api/comments?${queryString}` : '/api/comments'
     return apiService.http.get(url)
   },
   get(id) {
-    return apiService.http.get(`/comments/${id}`)
+    return apiService.http.get(`/api/comments/${id}`)
   },
   update(id, data) {
-    return apiService.httpAuth.put(`/comments/${id}`, data)
+    return apiService.httpAuth.put(`/api/comments/${id}`, data)
   },
   remove(id) {
-    return apiService.httpAuth.delete(`/comments/${id}`)
+    return apiService.httpAuth.delete(`/api/comments/${id}`)
   },
   // 獲取指定迷因的所有留言（包含回復）
   getByMemeId(memeId) {

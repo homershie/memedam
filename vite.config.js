@@ -7,6 +7,7 @@ import Pages from 'vite-plugin-pages'
 import Layouts from 'vite-plugin-vue-layouts'
 import Components from 'unplugin-vue-components/vite'
 import { PrimeVueResolver } from '@primevue/auto-import-resolver'
+import { VueMcp } from 'vite-plugin-vue-mcp'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -18,6 +19,7 @@ export default defineConfig({
     Components({
       resolvers: [PrimeVueResolver()],
     }),
+    VueMcp(),
   ],
   resolve: {
     alias: {

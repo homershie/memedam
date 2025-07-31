@@ -49,11 +49,11 @@ const processParams = (params = {}) => {
 
 export default {
   create(data) {
-    return apiService.httpAuth.post('/memes', data)
+    return apiService.httpAuth.post('/api/memes', data)
   },
   getAll(params = {}) {
     const processedParams = processParams(params)
-    return apiService.http.get('/memes', { params: processedParams })
+    return apiService.http.get('/api/memes', { params: processedParams })
   },
   // 新增：使用標籤名稱進行基本篩選
   getByTags(tagNames, params = {}) {
@@ -62,7 +62,7 @@ export default {
       ...processedParams,
       tags: Array.isArray(tagNames) ? tagNames.join(',') : tagNames,
     }
-    return apiService.http.get('/memes', { params: queryParams })
+    return apiService.http.get('/api/memes', { params: queryParams })
   },
   // 新增：使用標籤ID進行進階篩選
   getByTagIds(tagIds, params = {}) {
@@ -71,7 +71,7 @@ export default {
       ...processedParams,
       tagIds: Array.isArray(tagIds) ? tagIds.join(',') : tagIds,
     }
-    return apiService.http.get('/memes/by-tags', { params: queryParams })
+    return apiService.http.get('/api/memes/by-tags', { params: queryParams })
   },
   // 新增：搜尋功能
   search(searchTerm, params = {}) {
@@ -81,7 +81,7 @@ export default {
       search: searchTerm,
       useFuzzySearch: params.useFuzzySearch ?? true,
     }
-    return apiService.http.get('/memes', { params: queryParams })
+    return apiService.http.get('/api/memes', { params: queryParams })
   },
   // 新增：根據標籤搜尋
   searchByTags(searchTerm, tagNames, params = {}) {
@@ -92,41 +92,41 @@ export default {
       tags: Array.isArray(tagNames) ? tagNames.join(',') : tagNames,
       useFuzzySearch: params.useFuzzySearch ?? true,
     }
-    return apiService.http.get('/memes', { params: queryParams })
+    return apiService.http.get('/api/memes', { params: queryParams })
   },
   // 新增：取得搜尋建議/推薦關鍵字
   getSearchSuggestions() {
-    return apiService.http.get('/memes/search-suggestions')
+    return apiService.http.get('/api/memes/search-suggestions')
   },
   get(id) {
-    return apiService.http.get(`/memes/${id}`)
+    return apiService.http.get(`/api/memes/${id}`)
   },
   update(id, data) {
-    return apiService.httpAuth.put(`/memes/${id}`, data)
+    return apiService.httpAuth.put(`/api/memes/${id}`, data)
   },
   remove(id) {
-    return apiService.httpAuth.delete(`/memes/${id}`)
+    return apiService.httpAuth.delete(`/api/memes/${id}`)
   },
   addEditor(id, data) {
-    return apiService.httpAuth.post(`/memes/${id}/editors`, data)
+    return apiService.httpAuth.post(`/api/memes/${id}/editors`, data)
   },
   removeEditor(id) {
-    return apiService.httpAuth.delete(`/memes/${id}/editors`)
+    return apiService.httpAuth.delete(`/api/memes/${id}/editors`)
   },
   proposeEdit(id, data) {
-    return apiService.httpAuth.post(`/memes/${id}/proposals`, data)
+    return apiService.httpAuth.post(`/api/memes/${id}/proposals`, data)
   },
   listProposals(id) {
-    return apiService.httpAuth.get(`/memes/${id}/proposals`)
+    return apiService.httpAuth.get(`/api/memes/${id}/proposals`)
   },
   approveProposal(id, proposalId) {
     return apiService.httpAuth.post(
-      `/memes/${id}/proposals/${proposalId}/approve`,
+      `/api/memes/${id}/proposals/${proposalId}/approve`,
     )
   },
   rejectProposal(id, proposalId) {
     return apiService.httpAuth.post(
-      `/memes/${id}/proposals/${proposalId}/reject`,
+      `/api/memes/${id}/proposals/${proposalId}/reject`,
     )
   },
 }

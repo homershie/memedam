@@ -26,7 +26,7 @@ const httpAuth = axios.create({
 
 // 在每個請求前，加入 token
 // config = 請求設定值，路徑、資料等等
-httpAuth.interceptors.request.use(config => {
+httpAuth.interceptors.request.use((config) => {
   const user = useUserStore()
   config.headers.Authorization = `Bearer ${user.token}`
   return config
@@ -34,14 +34,14 @@ httpAuth.interceptors.request.use(config => {
 
 // .use(成功處理, 失敗處理)
 httpAuth.interceptors.response.use(
-  res => res,
-  async error => {
+  (res) => res,
+  async (error) => {
     // 如果錯誤有回應，沒網路的話不會有回應
     if (
       error.response && // 如果是 400 錯誤，而且請求不是更新
       error.response.status === 400 &&
       error.response.data.message === 'token 已過期' &&
-      error.config.url !== '/users/refresh'
+      error.config.url !== '/api/users/refresh'
     ) {
       const user = useUserStore()
       try {
@@ -61,7 +61,7 @@ httpAuth.interceptors.response.use(
     // 如果沒有回應，或是其他錯誤
     // 回傳原本的錯誤
     throw error
-  }
+  },
 )
 
 export default { http, httpAuth }
