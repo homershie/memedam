@@ -129,4 +129,29 @@ export default {
       `/api/memes/${id}/proposals/${proposalId}/reject`,
     )
   },
+
+  // 新增：批次更新熱門分數
+  batchUpdateHotScores(data = {}) {
+    return apiService.httpAuth.post('/api/memes/batch-update-hot-scores', data)
+  },
+
+  // 新增：取得熱門迷因列表
+  getHotList(params = {}) {
+    return apiService.http.get('/api/memes/hot/list', { params })
+  },
+
+  // 新增：取得趨勢迷因列表
+  getTrendingList(params = {}) {
+    return apiService.http.get('/api/memes/trending/list', { params })
+  },
+
+  // 新增：取得迷因分數分析
+  getScoreAnalysis(id) {
+    return apiService.http.get(`/api/memes/${id}/score-analysis`)
+  },
+
+  // 新增：取得迷因熱門分數
+  getHotScore(id) {
+    return apiService.http.get(`/api/memes/${id}/hot-score`)
+  },
 }
