@@ -94,9 +94,11 @@ export default {
     }
     return apiService.http.get('/api/memes', { params: queryParams })
   },
-  // 新增：取得搜尋建議/推薦關鍵字
-  getSearchSuggestions() {
-    return apiService.http.get('/api/memes/search-suggestions')
+  // 取得搜尋建議
+  getSearchSuggestions(query) {
+    return apiService.http.get('/api/memes/search-suggestions', {
+      params: { q: query },
+    })
   },
   get(id) {
     return apiService.http.get(`/api/memes/${id}`)
@@ -107,51 +109,61 @@ export default {
   remove(id) {
     return apiService.httpAuth.delete(`/api/memes/${id}`)
   },
+
+  // 批次更新熱門分數
+  batchUpdateHotScores(data = {}) {
+    return apiService.httpAuth.post('/api/memes/batch-update-hot-scores', data)
+  },
+
+  // 取得熱門迷因列表
+  getHotList(params = {}) {
+    return apiService.http.get('/api/memes/hot/list', { params })
+  },
+
+  // 取得迷因分數分析
+  getScoreAnalysis(id) {
+    return apiService.http.get(`/api/memes/${id}/score-analysis`)
+  },
+
+  // 更新迷因熱門分數
+  updateHotScore(id) {
+    return apiService.httpAuth.put(`/api/memes/${id}/hot-score`)
+  },
+
+  // 新增協作者
   addEditor(id, data) {
     return apiService.httpAuth.post(`/api/memes/${id}/editors`, data)
   },
-  removeEditor(id) {
-    return apiService.httpAuth.delete(`/api/memes/${id}/editors`)
+
+  // 移除協作者
+  removeEditor(id, editorId) {
+    return apiService.httpAuth.delete(`/api/memes/${id}/editors`, {
+      params: { editorId },
+    })
   },
+
+  // 提交修改提案
   proposeEdit(id, data) {
     return apiService.httpAuth.post(`/api/memes/${id}/proposals`, data)
   },
+
+  // 查詢所有提案
   listProposals(id) {
     return apiService.httpAuth.get(`/api/memes/${id}/proposals`)
   },
+
+  // 審核通過提案
   approveProposal(id, proposalId) {
     return apiService.httpAuth.post(
       `/api/memes/${id}/proposals/${proposalId}/approve`,
     )
   },
-  rejectProposal(id, proposalId) {
+
+  // 駁回提案
+  rejectProposal(id, proposalId, data = {}) {
     return apiService.httpAuth.post(
       `/api/memes/${id}/proposals/${proposalId}/reject`,
+      data,
     )
-  },
-
-  // 新增：批次更新熱門分數
-  batchUpdateHotScores(data = {}) {
-    return apiService.httpAuth.post('/api/memes/batch-update-hot-scores', data)
-  },
-
-  // 新增：取得熱門迷因列表
-  getHotList(params = {}) {
-    return apiService.http.get('/api/memes/hot/list', { params })
-  },
-
-  // 新增：取得趨勢迷因列表
-  getTrendingList(params = {}) {
-    return apiService.http.get('/api/memes/trending/list', { params })
-  },
-
-  // 新增：取得迷因分數分析
-  getScoreAnalysis(id) {
-    return apiService.http.get(`/api/memes/${id}/score-analysis`)
-  },
-
-  // 新增：取得迷因熱門分數
-  getHotScore(id) {
-    return apiService.http.get(`/api/memes/${id}/hot-score`)
   },
 }

@@ -124,7 +124,16 @@
           },
           "status": {
             "type": "integer",
-            "description": "HTTP狀態碼"
+            "description": "HTTP 狀態碼"
+          },
+          "message": {
+            "type": "string",
+            "description": "錯誤訊息"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "錯誤發生時間"
           }
         }
       },
@@ -912,6 +921,46 @@
               "format": "binary"
             },
             "description": "迷因圖片文件"
+          }
+        }
+      },
+      "MemeEditProposal": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "提案唯一ID"
+          },
+          "memeId": {
+            "type": "string",
+            "description": "迷因ID"
+          },
+          "proposerId": {
+            "type": "string",
+            "description": "提案者ID"
+          },
+          "changes": {
+            "type": "object",
+            "description": "修改內容"
+          },
+          "notes": {
+            "type": "string",
+            "description": "修改說明"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "approved", "rejected"],
+            "description": "提案狀態"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "創建時間"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新時間"
           }
         }
       },
@@ -4773,10 +4822,24 @@
             }
           },
           "400": {
-            "description": "請求參數錯誤"
+            "description": "請求參數錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -5121,16 +5184,44 @@
             }
           },
           "400": {
-            "description": "請求參數錯誤"
+            "description": "請求參數錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "權限不足"
+            "description": "權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因不存在"
+            "description": "迷因不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -5158,13 +5249,34 @@
             "description": "迷因刪除成功"
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "權限不足"
+            "description": "權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因不存在"
+            "description": "迷因不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -5198,10 +5310,24 @@
             }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "500": {
-            "description": "伺服器錯誤"
+            "description": "伺服器錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -5439,16 +5565,44 @@
             }
           },
           "400": {
-            "description": "請求參數錯誤"
+            "description": "請求參數錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "權限不足"
+            "description": "權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因不存在"
+            "description": "迷因不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -5497,16 +5651,44 @@
             }
           },
           "400": {
-            "description": "請求參數錯誤"
+            "description": "請求參數錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "權限不足"
+            "description": "權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因不存在"
+            "description": "迷因不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -5572,13 +5754,34 @@
             }
           },
           "400": {
-            "description": "請求參數錯誤"
+            "description": "請求參數錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因不存在"
+            "description": "迷因不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -5622,13 +5825,34 @@
             }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "權限不足"
+            "description": "權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因不存在"
+            "description": "迷因不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -5679,13 +5903,34 @@
             }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "權限不足"
+            "description": "權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因或提案不存在"
+            "description": "迷因或提案不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -5752,13 +5997,34 @@
             }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "權限不足"
+            "description": "權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因或提案不存在"
+            "description": "迷因或提案不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -5803,10 +6069,24 @@
             }
           },
           "401": {
-            "description": "未授權"
+            "description": "未授權",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "迷因不存在"
+            "description": "迷因不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -7072,6 +7352,14 @@
         "parameters": [
           {
             "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
+          {
+            "in": "query",
             "name": "limit",
             "schema": {
               "type": "integer",
@@ -7106,6 +7394,23 @@
               "default": false
             },
             "description": "是否排除已看過的迷因"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼（用於分頁）"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "排除的迷因ID（逗號分隔，用於無限捲動）"
           }
         ],
         "responses": {
@@ -7114,7 +7419,82 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecommendationResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recommendations": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Meme"
+                          }
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "days": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "page": {
+                              "type": "integer"
+                            },
+                            "exclude_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "skip": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "totalPages": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
                 }
               }
             }
@@ -7127,6 +7507,14 @@
         "summary": "取得最新推薦",
         "tags": ["Recommendations"],
         "parameters": [
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
           {
             "in": "query",
             "name": "limit",
@@ -7154,6 +7542,23 @@
               "default": 24
             },
             "description": "時間範圍小時數"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼（用於分頁）"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "排除的迷因ID（逗號分隔，用於無限捲動）"
           }
         ],
         "responses": {
@@ -7162,7 +7567,82 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecommendationResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recommendations": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Meme"
+                          }
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "hours": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "page": {
+                              "type": "integer"
+                            },
+                            "exclude_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "skip": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "totalPages": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
                 }
               }
             }
@@ -7223,6 +7703,14 @@
         "parameters": [
           {
             "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
+          {
+            "in": "query",
             "name": "limit",
             "schema": {
               "type": "integer",
@@ -7258,6 +7746,14 @@
           }
         ],
         "parameters": [
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
           {
             "in": "query",
             "name": "limit",
@@ -7302,6 +7798,23 @@
               "default": 0.3
             },
             "description": "熱門分數權重"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼（用於分頁）"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "排除的迷因ID（逗號分隔，用於無限捲動）"
           }
         ],
         "responses": {
@@ -7310,7 +7823,94 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecommendationResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recommendations": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Meme"
+                          }
+                        },
+                        "user_id": {
+                          "type": "string"
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "min_similarity": {
+                              "type": "number"
+                            },
+                            "exclude_interacted": {
+                              "type": "boolean"
+                            },
+                            "include_hot_score": {
+                              "type": "boolean"
+                            },
+                            "hot_score_weight": {
+                              "type": "number"
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "page": {
+                              "type": "integer"
+                            },
+                            "exclude_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "algorithm_details": {
+                          "type": "object"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "skip": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "totalPages": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
                 }
               }
             }
@@ -7369,6 +7969,23 @@
               "default": 0.3
             },
             "description": "熱門分數權重"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼（用於分頁）"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "排除的迷因ID（逗號分隔，用於無限捲動）"
           }
         ],
         "responses": {
@@ -7377,7 +7994,88 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecommendationResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recommendations": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Meme"
+                          }
+                        },
+                        "query_tags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "min_similarity": {
+                              "type": "number"
+                            },
+                            "include_hot_score": {
+                              "type": "boolean"
+                            },
+                            "hot_score_weight": {
+                              "type": "number"
+                            },
+                            "page": {
+                              "type": "integer"
+                            },
+                            "exclude_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "algorithm_details": {
+                          "type": "object"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "skip": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "totalPages": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
                 }
               }
             }
@@ -7455,6 +8153,14 @@
         "parameters": [
           {
             "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
+          {
+            "in": "query",
             "name": "limit",
             "schema": {
               "type": "integer",
@@ -7487,11 +8193,108 @@
               "default": true
             },
             "description": "是否包含冷啟動分析"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "要排除的項目ID列表（逗號分隔）"
           }
         ],
         "responses": {
           "200": {
             "description": "成功取得混合推薦",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommendations/infinite-scroll": {
+      "get": {
+        "summary": "取得無限捲動推薦",
+        "tags": ["Recommendations"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每頁推薦數量"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "要排除的項目ID列表（逗號分隔）"
+          },
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
+          {
+            "in": "query",
+            "name": "custom_weights",
+            "schema": {
+              "type": "string"
+            },
+            "description": "自定義權重 JSON 字串"
+          },
+          {
+            "in": "query",
+            "name": "include_social_scores",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "description": "是否包含社交分數"
+          },
+          {
+            "in": "query",
+            "name": "include_recommendation_reasons",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "description": "是否包含推薦原因"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功取得無限捲動推薦",
             "content": {
               "application/json": {
                 "schema": {
@@ -7513,6 +8316,14 @@
           }
         ],
         "parameters": [
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
           {
             "in": "query",
             "name": "limit",
@@ -7566,6 +8377,23 @@
               "default": 0.3
             },
             "description": "熱門分數權重"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼（用於分頁）"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "排除的迷因ID（逗號分隔，用於無限捲動）"
           }
         ],
         "responses": {
@@ -7574,7 +8402,97 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecommendationResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recommendations": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Meme"
+                          }
+                        },
+                        "user_id": {
+                          "type": "string"
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "min_similarity": {
+                              "type": "number"
+                            },
+                            "max_similar_users": {
+                              "type": "integer"
+                            },
+                            "exclude_interacted": {
+                              "type": "boolean"
+                            },
+                            "include_hot_score": {
+                              "type": "boolean"
+                            },
+                            "hot_score_weight": {
+                              "type": "number"
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "page": {
+                              "type": "integer"
+                            },
+                            "exclude_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "algorithm_details": {
+                          "type": "object"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "skip": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "totalPages": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
                 }
               }
             }
@@ -7660,6 +8578,14 @@
         "parameters": [
           {
             "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "標籤列表（逗號分隔）"
+          },
+          {
+            "in": "query",
             "name": "limit",
             "schema": {
               "type": "integer",
@@ -7711,6 +8637,23 @@
               "default": 0.3
             },
             "description": "熱門分數權重"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "頁碼（用於分頁）"
+          },
+          {
+            "in": "query",
+            "name": "exclude_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "排除的迷因ID（逗號分隔，用於無限捲動）"
           }
         ],
         "responses": {
@@ -7719,7 +8662,97 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecommendationResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recommendations": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Meme"
+                          }
+                        },
+                        "user_id": {
+                          "type": "string"
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "min_similarity": {
+                              "type": "number"
+                            },
+                            "max_similar_users": {
+                              "type": "integer"
+                            },
+                            "exclude_interacted": {
+                              "type": "boolean"
+                            },
+                            "include_hot_score": {
+                              "type": "boolean"
+                            },
+                            "hot_score_weight": {
+                              "type": "number"
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "page": {
+                              "type": "integer"
+                            },
+                            "exclude_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "algorithm_details": {
+                          "type": "object"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "skip": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "totalPages": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
                 }
               }
             }
@@ -9632,6 +10665,238 @@
           },
           "401": {
             "description": "Token無效"
+          }
+        }
+      }
+    },
+    "/api/users/bind/{provider}": {
+      "post": {
+        "summary": "綁定社群帳號",
+        "tags": ["Authentication"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["google", "facebook", "discord", "twitter"]
+            },
+            "description": "社群平台提供商"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "社群帳號綁定成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求參數錯誤"
+          },
+          "401": {
+            "description": "未授權"
+          },
+          "409": {
+            "description": "帳號已綁定"
+          }
+        }
+      }
+    },
+    "/api/users/auth/google": {
+      "get": {
+        "summary": "Google OAuth 登入",
+        "tags": ["OAuth"],
+        "description": "重定向到 Google 授權頁面",
+        "responses": {
+          "302": {
+            "description": "重定向到 Google 授權頁面"
+          }
+        }
+      }
+    },
+    "/api/users/auth/google/callback": {
+      "get": {
+        "summary": "Google OAuth 回調",
+        "tags": ["OAuth"],
+        "description": "處理 Google OAuth 授權回調",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Google 授權碼"
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            },
+            "description": "狀態參數"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "重定向到前端並帶上 token"
+          },
+          "401": {
+            "description": "OAuth 認證失敗"
+          }
+        }
+      }
+    },
+    "/api/users/auth/facebook": {
+      "get": {
+        "summary": "Facebook OAuth 登入",
+        "tags": ["OAuth"],
+        "description": "重定向到 Facebook 授權頁面",
+        "responses": {
+          "302": {
+            "description": "重定向到 Facebook 授權頁面"
+          }
+        }
+      }
+    },
+    "/api/users/auth/facebook/callback": {
+      "get": {
+        "summary": "Facebook OAuth 回調",
+        "tags": ["OAuth"],
+        "description": "處理 Facebook OAuth 授權回調",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Facebook 授權碼"
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            },
+            "description": "狀態參數"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "重定向到前端並帶上 token"
+          },
+          "401": {
+            "description": "OAuth 認證失敗"
+          }
+        }
+      }
+    },
+    "/api/users/auth/discord": {
+      "get": {
+        "summary": "Discord OAuth 登入",
+        "tags": ["OAuth"],
+        "description": "重定向到 Discord 授權頁面",
+        "responses": {
+          "302": {
+            "description": "重定向到 Discord 授權頁面"
+          }
+        }
+      }
+    },
+    "/api/users/auth/discord/callback": {
+      "get": {
+        "summary": "Discord OAuth 回調",
+        "tags": ["OAuth"],
+        "description": "處理 Discord OAuth 授權回調",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Discord 授權碼"
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            },
+            "description": "狀態參數"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "重定向到前端並帶上 token"
+          },
+          "401": {
+            "description": "OAuth 認證失敗"
+          }
+        }
+      }
+    },
+    "/api/users/auth/twitter": {
+      "get": {
+        "summary": "Twitter OAuth 登入",
+        "tags": ["OAuth"],
+        "description": "重定向到 Twitter 授權頁面",
+        "responses": {
+          "302": {
+            "description": "重定向到 Twitter 授權頁面"
+          }
+        }
+      }
+    },
+    "/api/users/auth/twitter/callback": {
+      "get": {
+        "summary": "Twitter OAuth 回調",
+        "tags": ["OAuth"],
+        "description": "處理 Twitter OAuth 授權回調",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Twitter 授權碼"
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            },
+            "description": "狀態參數"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "重定向到前端並帶上 token"
+          },
+          "401": {
+            "description": "OAuth 認證失敗"
           }
         }
       }

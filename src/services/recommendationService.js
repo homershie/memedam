@@ -3,7 +3,9 @@ import apiService from './apiService'
 export default {
   // 取得熱門推薦
   getHotRecommendations(params = {}) {
-    return apiService.http.get('/api/recommendations/hot', { params })
+    return apiService.http.get('/api/recommendations', {
+      params: { ...params, algorithm: 'hot' },
+    })
   },
 
   // 取得最新推薦

@@ -266,18 +266,24 @@ const loadMemes = async (reset = true) => {
     }
 
     // 檢查是否還有更多資料
+    let backendHasMore = false
     if (!searchQuery.value.trim()) {
       // 推薦模式：使用後端返回的分頁資訊
       if (response.data && response.data.pagination) {
-        hasMore.value = response.data.pagination.hasMore
+        backendHasMore = response.data.pagination.hasMore
       } else {
         // 如果沒有分頁資訊，使用傳統邏輯
-        hasMore.value = newMemes.length >= pageSize.value
+        backendHasMore = newMemes.length >= pageSize.value
       }
     } else {
       // 搜尋模式：傳統分頁邏輯
-      hasMore.value = newMemes.length === pageSize.value
+      backendHasMore = newMemes.length === pageSize.value
     }
+
+    // 智能 hasMore 邏輯：如果後端返回了數據，且數據量等於頁面大小，或者後端明確表示還有更多數據
+    hasMore.value =
+      newMemes.length > 0 &&
+      (newMemes.length === pageSize.value || backendHasMore)
 
     // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)

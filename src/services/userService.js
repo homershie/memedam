@@ -58,25 +58,4 @@ export default {
   getStats(userId) {
     return apiService.http.get(`/api/follows/stats/${userId}`)
   },
-  // 追隨相關
-  follow(userId) {
-    return apiService.httpAuth.post('/api/follows/follow', { user_id: userId })
-  },
-  unfollow(userId) {
-    return apiService.httpAuth.post('/api/follows/unfollow', {
-      user_id: userId,
-    })
-  },
-  toggleFollow(userId) {
-    return apiService.httpAuth.post('/api/follows/toggle', { user_id: userId })
-  },
-  getFollowStatus(userId) {
-    return apiService.httpAuth.get(`/api/follows/status/${userId}`)
-  },
-  getFollowing(userId, params = {}) {
-    return apiService.http.get(`/api/follows/following/${userId}`, { params })
-  },
-  getFollowers(userId, params = {}) {
-    return apiService.http.get(`/api/follows/followers/${userId}`, { params })
-  },
 }
