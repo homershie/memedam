@@ -87,11 +87,7 @@
     </div>
 
     <!-- 無限滾動觸發元素 -->
-    <div
-      v-if="infiniteHasMore && !isRecommendationMode"
-      ref="triggerRef"
-      class="h-4 w-full"
-    >
+    <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
       <div v-if="infiniteLoading" class="flex justify-center py-6">
         <div class="flex items-center text-gray-500">
           <ProgressSpinner style="width: 20px; height: 20px" />
@@ -118,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import MemeCard from '@/components/MemeCard.vue'
@@ -142,7 +138,7 @@ const memes = ref([])
 const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
-const pageSize = ref(50)
+const pageSize = ref(5)
 
 // 搜尋相關
 const searchQuery = ref('')
@@ -152,11 +148,6 @@ const isSearching = ref(false) // 標記是否正在搜尋
 // 篩選和排序
 const selectedTags = ref([])
 const availableTags = ref([])
-
-// 檢查是否為推薦模式
-const isRecommendationMode = computed(() => {
-  return !searchQuery.value.trim()
-})
 
 // 評論對話框
 const showCommentsDialog = ref(false)
@@ -270,19 +261,18 @@ const loadMemes = async (reset = true) => {
       memes.value.push(...memesWithAuthors)
     }
 
-    // 檢查是否還有更多資料（推薦模式下不支援分頁）
+    // 檢查是否還有更多資料
+    // 修改：推薦模式也支援無限滾動，但使用不同的邏輯
     if (!searchQuery.value.trim()) {
-      hasMore.value = false
+      // 推薦模式：如果返回的資料量等於請求的數量，可能還有更多
+      hasMore.value = newMemes.length >= pageSize.value
     } else {
+      // 搜尋模式：傳統分頁邏輯
       hasMore.value = newMemes.length === pageSize.value
     }
 
-    // 更新無限滾動狀態（推薦模式下不支援無限滾動）
-    if (!searchQuery.value.trim()) {
-      updateLoadingState(false, false)
-    } else {
-      updateLoadingState(false, hasMore.value)
-    }
+    // 更新無限滾動狀態
+    updateLoadingState(false, hasMore.value)
   } catch (error) {
     console.error('載入迷因失敗:', error)
     toast.add({
@@ -292,12 +282,8 @@ const loadMemes = async (reset = true) => {
       life: 3000,
     })
 
-    // 更新無限滾動狀態（推薦模式下不支援無限滾動）
-    if (!searchQuery.value.trim()) {
-      updateLoadingState(false, false)
-    } else {
-      updateLoadingState(false, false)
-    }
+    // 更新無限滾動狀態
+    updateLoadingState(false, false)
   } finally {
     loading.value = false
   }
@@ -308,8 +294,14 @@ const loadRecommendations = async (recommendationType, params) => {
   try {
     const recommendationParams = {
       limit: pageSize.value,
-      // 推薦 API 通常不支援分頁，所以移除 page 參數
+      // 推薦 API 支援分頁，保留 page 參數
+      page: currentPage.value,
+      // 清除舊的快取數據
+      clear_cache: true,
     }
+
+    // 移除 excludeIds 邏輯，讓後端自己處理分頁
+    // 後端應該根據 page 參數正確計算 skip 值
 
     // 如果有標籤篩選，加入標籤參數
     if (params.tags) {
@@ -319,38 +311,44 @@ const loadRecommendations = async (recommendationType, params) => {
         : params.tags
     }
 
+    console.log('推薦參數:', recommendationParams)
     const response =
       await recommendationService.getMixedRecommendations(recommendationParams)
+    console.log('推薦API完整回應:', response)
 
     // 處理不同的回應格式
-    let memes = []
+    let recommendations = []
     if (response.data) {
       if (Array.isArray(response.data)) {
-        memes = response.data
+        recommendations = response.data
       } else if (response.data.memes) {
-        memes = response.data.memes
+        recommendations = response.data.memes
       } else if (response.data.recommendations) {
-        memes = response.data.recommendations
+        recommendations = response.data.recommendations
       } else if (response.data.data) {
         // 處理巢狀 data 結構
         const nestedData = response.data.data
         if (Array.isArray(nestedData)) {
-          memes = nestedData
+          recommendations = nestedData
         } else if (nestedData.memes) {
-          memes = nestedData.memes
+          recommendations = nestedData.memes
         } else if (nestedData.recommendations) {
-          memes = nestedData.recommendations
+          recommendations = nestedData.recommendations
         } else {
-          memes = [nestedData]
+          recommendations = [nestedData]
         }
       } else {
-        memes = [response.data]
+        recommendations = [response.data]
       }
     }
 
+    // 新增：調試日誌
+    console.log('推薦API回應:', response.data)
+    console.log('解析後的迷因數量:', recommendations.length)
+
     // 為每個迷因載入作者資訊
     const memesWithAuthors = await Promise.all(
-      memes.map(async (meme) => {
+      recommendations.map(async (meme) => {
         try {
           if (meme.author_id) {
             // 修正：支援 { $oid: ... } 格式
@@ -412,12 +410,7 @@ const loadRecommendations = async (recommendationType, params) => {
 
 // 無限滾動載入函數
 const loadMoreContent = async () => {
-  // 推薦模式下不支援無限滾動，直接返回
-  if (!searchQuery.value.trim()) {
-    updateLoadingState(false, false)
-    return
-  }
-
+  // 修改：推薦模式也支援無限滾動
   currentPage.value++
   await loadMemes(false)
 }
