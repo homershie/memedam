@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <ConfirmPopup />
-  <div class="max-w-5xl p-8 mx-auto space-y-6">
+  <div class="w-5xl p-8 mx-auto space-y-6">
     <!-- 頁面標題 -->
     <div class="mb-6 text-start">
       <h1 class="text-3xl font-bold text-gray-800">最多人喜歡</h1>
@@ -217,17 +217,11 @@ const loadMemes = async (reset = true) => {
     }
 
     // 檢查是否還有更多資料
-    let backendHasMore = false
     if (response.data && response.data.pagination) {
-      backendHasMore = response.data.pagination.hasMore
+      hasMore.value = response.data.pagination.hasMore
     } else {
-      backendHasMore = memesWithAuthors.length === pageSize.value
+      hasMore.value = memesWithAuthors.length === pageSize.value
     }
-
-    // 智能 hasMore 邏輯：如果後端返回了數據，且數據量等於頁面大小，或者後端明確表示還有更多數據
-    hasMore.value =
-      memesWithAuthors.length > 0 &&
-      (memesWithAuthors.length === pageSize.value || backendHasMore)
 
     // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)

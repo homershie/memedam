@@ -11,6 +11,11 @@ export default {
     return apiService.http.get('/api/tags', { params })
   },
 
+  // 取得標籤分類（用於前端篩選）
+  getCategories(params = {}) {
+    return apiService.http.get('/api/tags/categories', { params })
+  },
+
   // 取得熱門標籤
   getPopular(limit = 10) {
     return apiService.http.get('/api/tags/popular', {

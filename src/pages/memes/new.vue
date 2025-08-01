@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <ConfirmPopup />
-  <div class="max-w-5xl p-8 mx-auto space-y-6">
+  <div class="w-5xl p-8 mx-auto space-y-6">
     <!-- 頁面標題 -->
     <div class="mb-6 text-start">
       <h1 class="text-3xl font-bold text-gray-800">最新迷因</h1>
@@ -120,6 +120,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
 import memeService from '@/services/memeService'
 import userService from '@/services/userService'
+import tagService from '@/services/tagService'
 import Tag from 'primevue/tag'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 
@@ -136,13 +137,7 @@ const pageSize = ref(5)
 const selectedTags = ref([])
 
 // 迷因類型標籤
-const memeTypeTags = ref([
-  { _id: 'text', name: '用語' },
-  { _id: 'image', name: '圖片' },
-  { _id: 'gif', name: 'GIF' },
-  { _id: 'video', name: '影片' },
-  { _id: 'audio', name: '音訊' },
-])
+const memeTypeTags = ref([])
 
 // 評論對話框
 const showCommentsDialog = ref(false)
@@ -171,8 +166,9 @@ const loadMemes = async (reset = true) => {
 
     // 如果有標籤篩選，加入標籤參數
     if (selectedTags.value.length > 0) {
-      const tagNames = selectedTags.value.map((tag) => tag.name)
-      params.tags = tagNames.join(',')
+      // 使用迷因的 type 欄位進行篩選
+      const types = selectedTags.value.map((tag) => tag._id)
+      params.types = types.join(',')
     }
 
     const response = await memeService.getAll(params)
@@ -308,8 +304,28 @@ const onShowComments = (meme) => {
   showCommentsDialog.value = true
 }
 
+// 載入標籤分類
+const loadTagCategories = async () => {
+  try {
+    const response = await tagService.getCategories({ lang: 'zh' })
+    if (response.data && response.data.categories) {
+      memeTypeTags.value = response.data.categories.memeTypes || []
+    }
+  } catch (error) {
+    console.error('載入標籤分類失敗:', error)
+    // 如果載入失敗，使用預設標籤
+    memeTypeTags.value = [
+      { _id: 'text', name: '用語', count: 0 },
+      { _id: 'image', name: '圖片', count: 0 },
+      { _id: 'video', name: '影片', count: 0 },
+      { _id: 'audio', name: '音訊', count: 0 },
+    ]
+  }
+}
+
 // 初始化
 onMounted(async () => {
+  await loadTagCategories()
   await loadMemes()
 })
 </script>
