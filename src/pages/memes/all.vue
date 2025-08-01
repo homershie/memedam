@@ -87,7 +87,11 @@
     </div>
 
     <!-- 無限滾動觸發元素 -->
-    <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
+    <div
+      v-if="infiniteHasMore && memes.length > 0"
+      ref="triggerRef"
+      class="h-4 w-full"
+    >
       <div v-if="infiniteLoading" class="flex justify-center py-6">
         <div class="flex items-center text-gray-500">
           <ProgressSpinner style="width: 20px; height: 20px" />
@@ -262,10 +266,14 @@ const loadMemes = async (reset = true) => {
     }
 
     // 檢查是否還有更多資料
-    // 修改：推薦模式也支援無限滾動，但使用不同的邏輯
     if (!searchQuery.value.trim()) {
-      // 推薦模式：如果返回的資料量等於請求的數量，可能還有更多
-      hasMore.value = newMemes.length >= pageSize.value
+      // 推薦模式：使用後端返回的分頁資訊
+      if (response.data && response.data.pagination) {
+        hasMore.value = response.data.pagination.hasMore
+      } else {
+        // 如果沒有分頁資訊，使用傳統邏輯
+        hasMore.value = newMemes.length >= pageSize.value
+      }
     } else {
       // 搜尋模式：傳統分頁邏輯
       hasMore.value = newMemes.length === pageSize.value
@@ -300,8 +308,8 @@ const loadRecommendations = async (recommendationType, params) => {
       clear_cache: true,
     }
 
-    // 移除 excludeIds 邏輯，讓後端自己處理分頁
-    // 後端應該根據 page 參數正確計算 skip 值
+    // 移除 exclude_ids 邏輯，讓後端自己處理分頁
+    // 後端會根據 page 參數正確計算分頁，不需要前端排除
 
     // 如果有標籤篩選，加入標籤參數
     if (params.tags) {
@@ -311,10 +319,10 @@ const loadRecommendations = async (recommendationType, params) => {
         : params.tags
     }
 
-    console.log('推薦參數:', recommendationParams)
     const response =
-      await recommendationService.getMixedRecommendations(recommendationParams)
-    console.log('推薦API完整回應:', response)
+      await recommendationService.getInfiniteScrollRecommendations(
+        recommendationParams,
+      )
 
     // 處理不同的回應格式
     let recommendations = []
@@ -341,10 +349,6 @@ const loadRecommendations = async (recommendationType, params) => {
         recommendations = [response.data]
       }
     }
-
-    // 新增：調試日誌
-    console.log('推薦API回應:', response.data)
-    console.log('解析後的迷因數量:', recommendations.length)
 
     // 為每個迷因載入作者資訊
     const memesWithAuthors = await Promise.all(
@@ -410,6 +414,11 @@ const loadRecommendations = async (recommendationType, params) => {
 
 // 無限滾動載入函數
 const loadMoreContent = async () => {
+  // 防止在初始載入時觸發
+  if (memes.value.length === 0) {
+    return
+  }
+
   // 修改：推薦模式也支援無限滾動
   currentPage.value++
   await loadMemes(false)
@@ -422,8 +431,8 @@ const {
   hasMore: infiniteHasMore,
   updateLoadingState,
 } = useInfiniteScrollWrapper(loadMoreContent, {
-  distance: 10,
-  interval: 100,
+  distance: 200, // 增加距離，確保只有真正接近底部時才觸發
+  interval: 100, // 增加間隔，避免重複觸發
 })
 
 // 處理搜尋
@@ -487,20 +496,20 @@ const onTagClick = (tag) => {
 const addTag = (tag) => {
   if (!isTagSelected(tag)) {
     selectedTags.value.push(tag)
-    loadMemes()
+    loadMemes(true) // 明確指定重置
   }
 }
 
 // 移除標籤篩選
 const removeTag = (tag) => {
   selectedTags.value = selectedTags.value.filter((t) => t._id !== tag._id)
-  loadMemes()
+  loadMemes(true) // 明確指定重置
 }
 
 // 清除所有篩選
 const clearFilters = () => {
   selectedTags.value = []
-  loadMemes()
+  loadMemes(true) // 明確指定重置
 }
 
 // 顯示評論
@@ -524,7 +533,7 @@ watch(
         return
       }
 
-      loadMemes()
+      loadMemes(true) // 明確指定重置
     }
   },
   { immediate: false },

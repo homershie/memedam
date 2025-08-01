@@ -55,6 +55,13 @@ export default {
     return apiService.httpAuth.get('/api/recommendations/mixed', { params })
   },
 
+  // 取得無限滾動推薦（專門為前端無限滾動設計）
+  getInfiniteScrollRecommendations(params = {}) {
+    return apiService.httpAuth.get('/api/recommendations/infinite-scroll', {
+      params,
+    })
+  },
+
   // 取得協同過濾推薦
   getCollaborativeFilteringRecommendations(params = {}) {
     return apiService.httpAuth.get(
