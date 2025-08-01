@@ -241,12 +241,12 @@
                   </div>
                   <div
                     v-if="
-                      (meme.updated_at || meme.updatedAt) &&
-                      (meme.updated_at !== meme.created_at ||
-                        meme.updatedAt !== meme.createdAt)
+                      (meme.modified_at || meme.modifiedAt) &&
+                      (meme.modified_at !== meme.created_at ||
+                        meme.modifiedAt !== meme.createdAt)
                     "
                   >
-                    <span class="font-medium">最後更新：</span
+                    <span class="font-medium">最後修改：</span
                     >{{ lastUpdatedTime }}
                   </div>
                   <div>
@@ -727,7 +727,8 @@ const publishedTime = computed(() => {
 
 const fullPublishedTime = computed(() => {
   if (!meme.value) return ''
-  let time = meme.value.created_at || meme.value.createdAt
+  // 優先使用 modified_at，如果沒有則使用 created_at
+  let time = meme.value.modified_at || meme.value.modifiedAt || meme.value.created_at || meme.value.createdAt
   if (typeof time === 'object' && time.$date) {
     time = time.$date
   }
@@ -737,7 +738,8 @@ const fullPublishedTime = computed(() => {
 
 const shortPublishedTime = computed(() => {
   if (!meme.value) return ''
-  let time = meme.value.created_at || meme.value.createdAt
+  // 優先使用 modified_at，如果沒有則使用 created_at
+  let time = meme.value.modified_at || meme.value.modifiedAt || meme.value.created_at || meme.value.createdAt
   if (typeof time === 'object' && time.$date) {
     time = time.$date
   }
@@ -747,7 +749,8 @@ const shortPublishedTime = computed(() => {
 
 const lastUpdatedTime = computed(() => {
   if (!meme.value) return ''
-  let time = meme.value.updated_at || meme.value.updatedAt
+  // 優先使用 modified_at，如果沒有則使用 updated_at
+  let time = meme.value.modified_at || meme.value.modifiedAt || meme.value.updated_at || meme.value.updatedAt
   if (typeof time === 'object' && time.$date) {
     time = time.$date
   }

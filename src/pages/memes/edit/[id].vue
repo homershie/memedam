@@ -777,6 +777,8 @@ const handleSubmit = async () => {
       ...form,
       detail_markdown: detailMarkdown.value,
       tags_cache: tagNames,
+      // 標記為實質性修改，讓後端更新 modified_at
+      _markAsModified: true,
     }
 
     // 清理空字串欄位，避免後端驗證問題
