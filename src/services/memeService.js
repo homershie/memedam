@@ -125,6 +125,12 @@ export default {
     return apiService.http.get(`/api/memes/${id}/score-analysis`)
   },
 
+  // 取得隨機迷因
+  getRandom(params = {}) {
+    const processedParams = processParams(params)
+    return apiService.http.get('/api/memes/random', { params: processedParams })
+  },
+
   // 更新迷因熱門分數
   updateHotScore(id) {
     return apiService.httpAuth.put(`/api/memes/${id}/hot-score`)

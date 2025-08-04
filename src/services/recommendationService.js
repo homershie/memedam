@@ -144,4 +144,9 @@ export default {
   getAllRecommendations(params = {}) {
     return apiService.http.get('/api/recommendations', { params })
   },
+
+  // 取得每日隨機迷因
+  getDailyMeme(params = {}) {
+    return apiService.http.get('/api/recommendations/daily-meme', { params })
+  },
 }

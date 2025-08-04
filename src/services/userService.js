@@ -1,5 +1,18 @@
 import apiService from './apiService'
 
+// 獲取活躍用戶
+const getActiveUsers = async (limit = 10) => {
+  try {
+    const response = await apiService.http.get(
+      `/api/users/active?limit=${limit}`,
+    )
+    return response
+  } catch (error) {
+    console.error('獲取活躍用戶失敗:', error)
+    throw error
+  }
+}
+
 export default {
   // 使用者 CRUD
   create(data) {
@@ -58,4 +71,5 @@ export default {
   getStats(userId) {
     return apiService.http.get(`/api/follows/stats/${userId}`)
   },
+  getActiveUsers,
 }

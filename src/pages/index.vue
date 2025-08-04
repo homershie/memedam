@@ -116,60 +116,147 @@
     </div>
 
     <!-- 每日迷因 -->
-    <Panel class="mb-4" header="每日迷因">
+    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-4">
+      <h2 class="text-center text-3xl font-bold">每日迷因</h2>
       <div class="text-center text-gray-500 mb-4">
-        點擊按鈕隨機抽一個讓你的小今天充滿迷因吧！
+        點擊按鈕隨機抽一個屬於你今天的迷因吧！
       </div>
       <div class="flex justify-center mb-4">
-        <Button label="開始" icon="pi pi-refresh" class="p-button-secondary" />
+        <Button
+          :label="dailyMemeButtonText"
+          :icon="dailyMemeButtonIcon"
+          :severity="dailyMemeButtonSeverity"
+          :disabled="dailyMemeButtonDisabled"
+          class="w-40 h-16"
+          @click="getDailyMeme"
+        />
       </div>
-      <Card class="max-w-2xl mx-auto">
-        <template #header>
-          <div class="bg-gray-200 w-32 h-32 flex items-center justify-center">
-            <span class="text-gray-400 text-4xl">🖼️</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="flex items-center text-xs text-gray-400 mb-1">
-            <span>迷因分類</span>
-            <span class="mx-2">|</span>
-            <span>2小時前</span>
-            <span class="mx-2">|</span>
-            <span>艾某某</span>
-          </div>
-          <div class="font-bold text-xl mb-1">這裡是迷因的名字</div>
-          <div class="text-sm text-gray-600">
-            這是一個迷因的較長文字或故事，描述內容更豐富，讓大家更有共鳴。
-          </div>
-        </template>
-      </Card>
-    </Panel>
+
+      <!-- 載入中狀態 -->
+      <div v-if="dailyMemeLoading" class="flex justify-center py-8">
+        <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
+      </div>
+
+      <!-- 隨機迷因顯示 -->
+      <div v-else-if="dailyMeme" class="w-full max-w-2xl">
+        <MemeCard
+          :meme="dailyMeme"
+          @tag-click="onTagClick"
+          @show-comments="onShowComments"
+          @deleted="onDailyMemeDeleted"
+        />
+      </div>
+    </div>
 
     <!-- 本月活躍作者 -->
-    <Panel class="mb-4" header="本月活躍作者">
-      <div class="flex flex-col md:flex-row gap-4">
-        <div class="flex-1">
-          <div class="mb-2 text-gray-600 text-sm">
-            這是一個根據貢獻和社交互動計算的榜單，顯示本月最活躍的作者。點擊以查看更多。
+    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-4">
+      <div class="flex flex-col lg:flex-row gap-x-20">
+        <div class="flex-1 lg:flex-1">
+          <h2 class="text-3xl font-bold mb-4">本月活躍作者</h2>
+          <div class="mb-4 text-gray-600 text-base">
+            這些是本月最活躍的迷因創作者，他們為平台帶來了豐富多彩的內容。透過他們的創意和分享，讓我們的迷因社群更加精彩。
           </div>
-          <Button label="進去投餵" outlined />
+          <Button
+            class="w-32 h-16"
+            label="建立迷因"
+            @click="$router.push('/memes/post')"
+          />
         </div>
-        <div class="flex-[2] space-y-2">
-          <Card v-for="n in 5" :key="n" class="mb-2">
+        <div class="flex-1 lg:flex-1 flex flex-wrap space-y-2">
+          <!-- 載入中狀態 -->
+          <div
+            v-if="activeUsersLoading"
+            class="w-full flex justify-center py-8"
+          >
+            <ProgressSpinner
+              style="width: 50px; height: 50px"
+              strokeWidth="4"
+            />
+          </div>
+
+          <!-- 活躍用戶列表 -->
+          <Panel
+            v-else-if="activeUsers.length > 0"
+            class="w-full"
+            v-for="(user, index) in activeUsers"
+            :key="user._id"
+            toggleable
+            collapsed
+          >
             <template #header>
-              <Avatar icon="pi pi-user" shape="circle" class="mt-1" />
-            </template>
-            <template #content>
-              <div class="font-bold">使用者</div>
-              <div class="text-xs text-gray-400 mb-1">本月貢獻{{ n }}篇</div>
-              <div class="text-xs text-gray-600">
-                這是一個簡短的作者介紹或自我描述，展現其個人特色。
+              <div class="flex items-center gap-2">
+                <Avatar
+                  :image="user.avatar"
+                  :label="
+                    user.display_name
+                      ? user.display_name.charAt(0)
+                      : user.username
+                        ? user.username.charAt(0).toUpperCase()
+                        : 'U'
+                  "
+                  shape="circle"
+                  size="large"
+                  @error="handleAvatarError"
+                />
+                <span class="font-bold">{{
+                  user.display_name || user.username
+                }}</span>
               </div>
             </template>
-          </Card>
+            <template #footer>
+              <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                  <Button
+                    rounded
+                    text
+                    @click="followUser(user._id, index)"
+                    :disabled="user.isFollowing"
+                  >
+                    <i
+                      :class="
+                        user.isFollowing
+                          ? 'ri-user-follow-fill'
+                          : 'ri-user-follow-line'
+                      "
+                    ></i>
+                  </Button>
+                  <p>{{ user.follower_count || 0 }} 個追蹤者</p>
+                </div>
+                <span class="text-surface-500 dark:text-surface-400">
+                  參與 {{ user.meme_count }} 篇迷因創作
+                </span>
+              </div>
+            </template>
+            <template #icons>
+              <Menu ref="menu" id="config_menu" :model="items" popup />
+            </template>
+            <div class="space-y-3">
+              <p class="m-0">{{ user.bio || '這位創作者還沒有個人簡介' }}</p>
+              <div class="flex items-center gap-4 text-sm text-gray-600">
+                <span>迷因數量: {{ user.meme_count || 0 }}</span>
+                <span>獲得讚數: {{ user.total_likes_received || 0 }}</span>
+                <span>追蹤者: {{ user.follower_count || 0 }}</span>
+              </div>
+            </div>
+          </Panel>
+
+          <!-- 空狀態 -->
+          <div v-else class="w-full text-center py-12">
+            <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">
+              暫無活躍作者
+            </h3>
+            <p class="text-gray-500">目前沒有活躍作者資料，請稍後再試</p>
+            <Button
+              label="重新載入"
+              icon="pi pi-refresh"
+              @click="loadActiveUsers"
+              class="mt-4"
+            />
+          </div>
         </div>
       </div>
-    </Panel>
+    </div>
   </div>
 </template>
 
@@ -177,16 +264,20 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import Panel from 'primevue/panel'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
 import Tag from 'primevue/tag'
 import ProgressSpinner from 'primevue/progressspinner'
+import Panel from 'primevue/panel'
+import Menu from 'primevue/menu'
 import MemeCardSlim from '@/components/MemeCardSlim.vue'
 import tagService from '@/services/tagService'
 import recommendationService from '@/services/recommendationService'
 import userService from '@/services/userService'
+import followService from '@/services/followService'
+import MemeCard from '@/components/MemeCard.vue'
+import memeService from '@/services/memeService'
 
 const router = useRouter()
 const toast = useToast()
@@ -194,6 +285,100 @@ const toast = useToast()
 const topTags = ref([])
 const featuredMemes = ref([])
 const loading = ref(false)
+
+// 活躍用戶相關狀態
+const activeUsers = ref([])
+const activeUsersLoading = ref(false)
+
+// Menu items for user actions
+const items = ref([
+  {
+    label: '查看個人資料',
+    icon: 'pi pi-user',
+    command: () => {
+      // 可以導航到用戶個人資料頁面
+    },
+  },
+  {
+    label: '查看迷因作品',
+    icon: 'pi pi-images',
+    command: () => {
+      // 可以導航到用戶的迷因列表
+    },
+  },
+])
+
+// Daily meme state
+const dailyMeme = ref(null)
+const dailyMemeLoading = ref(false)
+const dailyMemeButtonDisabled = ref(false)
+
+// Text and icon for the daily meme button
+const dailyMemeButtonText = ref('開始')
+const dailyMemeButtonIcon = ref('pi pi-refresh')
+const dailyMemeButtonSeverity = ref('primary')
+
+// 檢查今天是否已經抽取過迷因
+const checkDailyMemeStatus = async () => {
+  const today = new Date().toDateString()
+  const lastMemeDate = localStorage.getItem('dailyMemeDate')
+
+  if (lastMemeDate === today) {
+    // 今天已經抽取過，檢查是否有儲存的迷因資料
+    const savedMeme = localStorage.getItem('dailyMemeData')
+    if (savedMeme) {
+      try {
+        const parsedMeme = JSON.parse(savedMeme)
+
+        // 確保有作者資訊
+        if (parsedMeme.author) {
+          // 已經有作者資訊，直接使用
+        } else if (parsedMeme.author_id) {
+          try {
+            const authorId =
+              typeof parsedMeme.author_id === 'object' &&
+              parsedMeme.author_id.$oid
+                ? parsedMeme.author_id.$oid
+                : parsedMeme.author_id
+            const authorResponse = await userService.get(authorId)
+            parsedMeme.author = authorResponse.data.user
+          } catch (error) {
+            console.warn('載入儲存迷因的作者資訊失敗:', error)
+            parsedMeme.author = {
+              display_name: '未知用戶',
+              username: 'unknown',
+              avatar: null,
+            }
+          }
+        } else {
+          parsedMeme.author = {
+            display_name: '匿名用戶',
+            username: 'anonymous',
+            avatar: null,
+          }
+        }
+
+        dailyMeme.value = parsedMeme
+        dailyMemeButtonDisabled.value = true
+        dailyMemeButtonText.value = '今日已抽取'
+        dailyMemeButtonIcon.value = 'pi pi-check'
+        dailyMemeButtonSeverity.value = 'success'
+      } catch (error) {
+        console.error('解析儲存的迷因資料失敗:', error)
+        // 如果解析失敗，清除儲存資料
+        localStorage.removeItem('dailyMemeDate')
+        localStorage.removeItem('dailyMemeData')
+      }
+    }
+  } else {
+    // 今天還沒抽取過，重置狀態
+    dailyMeme.value = null
+    dailyMemeButtonDisabled.value = false
+    dailyMemeButtonText.value = '開始'
+    dailyMemeButtonIcon.value = 'pi pi-refresh'
+    dailyMemeButtonSeverity.value = 'primary'
+  }
+}
 
 // 載入熱門標籤
 const loadTopTags = async () => {
@@ -203,6 +388,70 @@ const loadTopTags = async () => {
   } catch (error) {
     console.error('載入熱門標籤失敗:', error)
     topTags.value = []
+  }
+}
+
+// 載入活躍用戶
+const loadActiveUsers = async () => {
+  try {
+    activeUsersLoading.value = true
+    const response = await userService.getActiveUsers(10)
+
+    if (response.data && response.data.success) {
+      activeUsers.value = response.data.activeUsers || []
+    } else {
+      activeUsers.value = []
+    }
+  } catch (error) {
+    console.error('載入活躍用戶失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '載入失敗',
+      detail: '無法載入活躍用戶資料，請稍後再試',
+      life: 3000,
+    })
+    activeUsers.value = []
+  } finally {
+    activeUsersLoading.value = false
+  }
+}
+
+// 處理頭像載入錯誤
+const handleAvatarError = (event) => {
+  // 當頭像載入失敗時，移除 image 屬性，讓它顯示 label
+  event.target.removeAttribute('src')
+}
+
+// 追蹤用戶
+const followUser = async (userId, index) => {
+  try {
+    // 調用追蹤API
+    const response = await followService.toggleFollow(userId)
+
+    if (response.data && response.data.success) {
+      // 更新本地狀態
+      activeUsers.value[index].isFollowing =
+        !activeUsers.value[index].isFollowing
+
+      toast.add({
+        severity: 'success',
+        summary: '操作成功',
+        detail: activeUsers.value[index].isFollowing
+          ? '已追蹤用戶'
+          : '已取消追蹤',
+        life: 2000,
+      })
+    } else {
+      throw new Error('API回應格式錯誤')
+    }
+  } catch (error) {
+    console.error('追蹤用戶失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: '追蹤操作失敗，請稍後再試',
+      life: 3000,
+    })
   }
 }
 
@@ -308,9 +557,141 @@ const onShowComments = (meme) => {
   console.log('顯示評論:', meme)
 }
 
+// 獲取每日迷因
+const getDailyMeme = async () => {
+  if (dailyMemeButtonDisabled.value) {
+    return
+  }
+
+  dailyMemeButtonDisabled.value = true
+  dailyMemeButtonText.value = '抽取中...'
+  dailyMemeButtonIcon.value = 'pi pi-spin pi-spinner'
+  dailyMemeButtonSeverity.value = 'warning'
+
+  try {
+    dailyMemeLoading.value = true
+    const response = await memeService.getRandom()
+
+    // 處理不同的資料格式
+    let memes = []
+    if (response.data) {
+      if (Array.isArray(response.data)) {
+        memes = response.data
+      } else if (response.data.memes && Array.isArray(response.data.memes)) {
+        memes = response.data.memes
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        memes = response.data.data
+      } else if (response.data.meme) {
+        // 如果後端直接回傳單一迷因
+        memes = [response.data.meme]
+      } else if (typeof response.data === 'object' && response.data.id) {
+        // 如果後端直接回傳迷因物件
+        memes = [response.data]
+      } else if (
+        response.data.success &&
+        response.data.data &&
+        response.data.data.meme
+      ) {
+        // 處理後端回傳的標準格式：{success: true, data: {meme: {...}}}
+        memes = [response.data.data.meme]
+      } else {
+        console.warn('無法識別的資料格式:', response.data)
+        memes = []
+      }
+    }
+
+    if (memes.length > 0) {
+      // 隨機選擇一個迷因
+      const randomIndex = Math.floor(Math.random() * memes.length)
+      const randomMeme = memes[randomIndex]
+
+      // 載入作者資訊
+      if (randomMeme.author) {
+        // 後端已經提供了作者資訊
+      } else if (randomMeme.author_id) {
+        try {
+          const authorId =
+            typeof randomMeme.author_id === 'object' &&
+            randomMeme.author_id.$oid
+              ? randomMeme.author_id.$oid
+              : randomMeme.author_id
+          const authorResponse = await userService.get(authorId)
+          randomMeme.author = authorResponse.data.user
+        } catch (error) {
+          console.warn('載入作者資訊失敗:', error)
+          randomMeme.author = {
+            display_name: '未知用戶',
+            username: 'unknown',
+            avatar: null,
+          }
+        }
+      } else {
+        randomMeme.author = {
+          display_name: '匿名用戶',
+          username: 'anonymous',
+          avatar: null,
+        }
+      }
+
+      dailyMeme.value = randomMeme
+
+      // 儲存今日迷因資料
+      const today = new Date().toDateString()
+      localStorage.setItem('dailyMemeDate', today)
+      localStorage.setItem('dailyMemeData', JSON.stringify(randomMeme))
+
+      // 更新按鈕狀態
+      dailyMemeButtonText.value = '今日已抽取'
+      dailyMemeButtonIcon.value = 'pi pi-check'
+      dailyMemeButtonSeverity.value = 'success'
+
+      toast.add({
+        severity: 'success',
+        summary: '抽取成功',
+        detail: '今天的迷因已為您準備好了！',
+        life: 3000,
+      })
+    } else {
+      dailyMeme.value = null
+      toast.add({
+        severity: 'error',
+        summary: '抽取失敗',
+        detail: '無法獲取隨機迷因，請稍後再試',
+        life: 3000,
+      })
+    }
+  } catch (error) {
+    console.error('獲取每日迷因失敗:', error)
+    dailyMeme.value = null
+    toast.add({
+      severity: 'error',
+      summary: '抽取失敗',
+      detail: '無法獲取隨機迷因，請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    dailyMemeLoading.value = false
+  }
+}
+
+// 每日迷因刪除處理
+const onDailyMemeDeleted = () => {
+  dailyMeme.value = null
+  // 清除儲存的資料
+  localStorage.removeItem('dailyMemeDate')
+  localStorage.removeItem('dailyMemeData')
+  // 重置按鈕狀態
+  dailyMemeButtonDisabled.value = false
+  dailyMemeButtonText.value = '開始'
+  dailyMemeButtonIcon.value = 'pi pi-refresh'
+  dailyMemeButtonSeverity.value = 'primary'
+}
+
 // 初始化
 onMounted(async () => {
-  await Promise.all([loadTopTags(), loadFeaturedMemes()])
+  // 檢查每日迷因狀態
+  await checkDailyMemeStatus()
+  await Promise.all([loadTopTags(), loadFeaturedMemes(), loadActiveUsers()])
 })
 </script>
 
