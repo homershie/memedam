@@ -275,7 +275,7 @@ const menuList = [
   { label: '熱門迷因', icon: 'pi pi-star', route: '/memes/hot' },
   { label: '近期話題', icon: 'pi pi-comments', route: '/memes/trending' },
   { label: '最新迷因', icon: 'pi pi-bell', route: '/memes/new' },
-  { label: '最多人喜歡', icon: 'pi pi-thumbs-up', route: '/memes/liked' },
+  { label: '大家都在看', icon: 'pi pi-thumbs-up', route: '/memes/liked' },
   { separator: true },
   { label: '設定', icon: 'pi pi-cog', route: '/settings' },
   { label: '檢舉紀錄', icon: 'pi pi-flag', route: '/reports' },

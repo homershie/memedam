@@ -183,7 +183,15 @@ const loadMemes = async (reset = true) => {
     // 如果有已載入的迷因，排除它們以避免重複
     if (memes.value.length > 0) {
       const excludeIds = memes.value
-        .map((meme) => meme.id || meme._id)
+        .map((meme) => {
+          // 確保返回正確的ID格式
+          if (meme.id) {
+            return meme.id.toString()
+          } else if (meme._id) {
+            return meme._id.toString()
+          }
+          return null
+        })
         .filter(Boolean)
       if (excludeIds.length > 0) {
         params.exclude_ids = excludeIds.join(',')
@@ -201,18 +209,26 @@ const loadMemes = async (reset = true) => {
     let memesData = []
     if (
       response.data &&
+      response.data.success &&
       response.data.data &&
       response.data.data.recommendations
     ) {
       // 處理後端返回的標準結構
       memesData = response.data.data.recommendations
+    } else if (
+      response.data &&
+      response.data.data &&
+      response.data.data.recommendations
+    ) {
+      // 處理後端返回的標準結構（沒有 success 欄位）
+      memesData = response.data.data.recommendations
     } else if (Array.isArray(response.data)) {
       memesData = response.data
-    } else if (response.data.memes) {
+    } else if (response.data && response.data.memes) {
       memesData = response.data.memes
-    } else if (response.data.recommendations) {
+    } else if (response.data && response.data.recommendations) {
       memesData = response.data.recommendations
-    } else if (response.data.data) {
+    } else if (response.data && response.data.data) {
       // 處理巢狀 data 結構
       const nestedData = response.data.data
       if (Array.isArray(nestedData)) {
@@ -224,8 +240,10 @@ const loadMemes = async (reset = true) => {
       } else {
         memesData = [nestedData]
       }
-    } else {
+    } else if (response.data) {
       memesData = [response.data]
+    } else {
+      memesData = []
     }
 
     // 為每個迷因載入作者資訊
@@ -261,8 +279,18 @@ const loadMemes = async (reset = true) => {
                 authorId = meme.author_id
               }
 
-              const authorResponse = await userService.get(authorId)
-              meme.author = authorResponse.data.user
+              try {
+                const authorResponse = await userService.get(authorId)
+                meme.author = authorResponse.data.user
+              } catch (authorError) {
+                console.warn(`載入作者 ${authorId} 失敗:`, authorError.message)
+                // 如果載入作者失敗，設定預設值
+                meme.author = {
+                  display_name: '未知用戶',
+                  username: 'unknown',
+                  avatar: null,
+                }
+              }
             }
           } else {
             // 沒有作者 ID，設定預設值
@@ -274,8 +302,11 @@ const loadMemes = async (reset = true) => {
           }
           return meme
         } catch (error) {
-          console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
-          // 如果載入作者失敗，設定預設值
+          console.warn(
+            `處理迷因 ${meme._id || meme.id} 時發生錯誤:`,
+            error.message,
+          )
+          // 如果處理迷因失敗，設定預設值
           meme.author = {
             display_name: '未知用戶',
             username: 'unknown',
@@ -294,10 +325,25 @@ const loadMemes = async (reset = true) => {
 
     // 檢查是否還有更多資料
     let backendHasMore = false
-    if (response.data && response.data.data && response.data.data.pagination) {
+    if (
+      response.data &&
+      response.data.success &&
+      response.data.data &&
+      response.data.data.pagination
+    ) {
       backendHasMore = response.data.data.pagination.hasMore
       console.log(
         'Social recommendations pagination:',
+        response.data.data.pagination,
+      )
+    } else if (
+      response.data &&
+      response.data.data &&
+      response.data.data.pagination
+    ) {
+      backendHasMore = response.data.data.pagination.hasMore
+      console.log(
+        'Social recommendations pagination (fallback):',
         response.data.data.pagination,
       )
     } else if (response.data && response.data.pagination) {
@@ -344,10 +390,19 @@ const loadMemes = async (reset = true) => {
     updateLoadingState(false, hasMore.value)
   } catch (error) {
     console.error('載入社交推薦失敗:', error)
+
+    // 檢查是否是後端錯誤
+    let errorMessage = '無法載入社交推薦列表，請稍後再試'
+    if (error.response && error.response.data && error.response.data.error) {
+      errorMessage = error.response.data.error
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+
     toast.add({
       severity: 'error',
       summary: '載入失敗',
-      detail: '無法載入社交推薦列表，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
 
