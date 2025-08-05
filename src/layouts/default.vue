@@ -110,7 +110,7 @@
         </div>
       </template>
       <template #end>
-        <div class="flex items-center gap-6">
+        <div class="flex gap-2 items-center lg:gap-6">
           <!-- 桌面版搜尋列 -->
           <div class="relative hidden md:block">
             <SearchBox @search="handleSearch" />
