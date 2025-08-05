@@ -149,4 +149,27 @@ export default {
   getDailyMeme(params = {}) {
     return apiService.http.get('/api/recommendations/daily-meme', { params })
   },
+
+  // 取得大家都在看的內容（trending）
+  getTrendingRecommendations(params = {}) {
+    return apiService.http.get('/api/recommendations', {
+      params: { ...params, algorithm: 'trending' },
+    })
+  },
+
+  // 智能推薦：根據登入狀態選擇合適的推薦算法
+  getSmartRecommendations(params = {}, isLoggedIn = false) {
+    if (isLoggedIn) {
+      // 登入用戶：使用個人化推薦
+      return this.getSocialCollaborativeFilteringRecommendations(params)
+    } else {
+      // 未登入用戶：使用大家都在看的內容
+      return this.getTrendingRecommendations(params)
+    }
+  },
+
+  // 取得推薦統計（包含 trending 統計）
+  getTrendingStats() {
+    return apiService.http.get('/api/recommendations/trending-stats')
+  },
 }

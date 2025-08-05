@@ -5,6 +5,7 @@
     <!-- 頁面標題 -->
     <div class="mb-6 text-start">
       <h1 class="text-3xl font-bold text-gray-800">最新迷因</h1>
+      <p class="text-gray-600 mt-2">基於時間排序的最新內容推薦</p>
     </div>
 
     <div class="flex justify-between flex-wrap">
@@ -64,12 +65,12 @@
     <!-- 空狀態 -->
     <div v-else class="text-center py-12">
       <i class="pi pi-image text-6xl text-gray-300 mb-4"></i>
-      <h3 class="text-xl font-semibold text-gray-600 mb-2">暫無最新迷因</h3>
+      <h3 class="text-xl font-semibold text-gray-600 mb-2">暫無最新推薦</h3>
       <p class="text-gray-500">
         {{
           selectedTags.length > 0
-            ? '沒有符合篩選條件的最新迷因'
-            : '目前沒有最新迷因，請稍後再試'
+            ? '沒有符合篩選條件的最新推薦'
+            : '目前沒有最新推薦內容，請稍後再試'
         }}
       </p>
       <Button
@@ -118,11 +119,13 @@ import MemeCard from '@/components/MemeCard.vue'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
-import memeService from '@/services/memeService'
 import userService from '@/services/userService'
 import tagService from '@/services/tagService'
 import Tag from 'primevue/tag'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
+
+// 新增推薦服務
+import recommendationService from '@/services/recommendationService'
 
 const toast = useToast()
 
@@ -143,7 +146,7 @@ const memeTypeTags = ref([])
 const showCommentsDialog = ref(false)
 const selectedMeme = ref(null)
 
-// 載入迷因列表
+// 載入迷因列表 - 使用 latest 推薦算法
 const loadMemes = async (reset = true) => {
   // 防止重複載入
   if (loading.value) {
@@ -157,36 +160,130 @@ const loadMemes = async (reset = true) => {
       memes.value = []
     }
 
+    // 使用 latest 推薦 API
     const params = {
       page: currentPage.value,
       limit: pageSize.value,
-      sort: 'createdAt',
-      order: 'desc',
     }
 
     // 如果有標籤篩選，加入標籤參數
     if (selectedTags.value.length > 0) {
-      // 使用迷因的 type 欄位進行篩選
-      const types = selectedTags.value.map((tag) => tag._id)
-      params.types = types.join(',')
+      const tagNames = selectedTags.value.map((tag) => tag.name)
+      params.tags = tagNames.join(',')
     }
 
-    const response = await memeService.getAll(params)
+    // 如果有已載入的迷因，排除它們以避免重複
+    if (memes.value.length > 0) {
+      const excludeIds = memes.value
+        .map((meme) => {
+          // 確保返回正確的ID格式
+          if (meme.id) {
+            return meme.id.toString()
+          } else if (meme._id) {
+            return meme._id.toString()
+          }
+          return null
+        })
+        .filter(Boolean)
+      if (excludeIds.length > 0) {
+        params.exclude_ids = excludeIds.join(',')
+      }
+    }
 
-    const newMemes = response.data.memes || response.data || []
+    console.log('Latest recommendations request params:', params)
+    const response =
+      await recommendationService.getLatestRecommendations(params)
+    console.log('Latest recommendations response:', response.data)
+
+    // 處理推薦系統的回應格式
+    let memesData = []
+    if (
+      response.data &&
+      response.data.success &&
+      response.data.data &&
+      response.data.data.recommendations
+    ) {
+      // 處理後端返回的標準結構
+      memesData = response.data.data.recommendations
+    } else if (
+      response.data &&
+      response.data.data &&
+      response.data.data.recommendations
+    ) {
+      // 處理後端返回的標準結構（沒有 success 欄位）
+      memesData = response.data.data.recommendations
+    } else if (Array.isArray(response.data)) {
+      memesData = response.data
+    } else if (response.data && response.data.memes) {
+      memesData = response.data.memes
+    } else if (response.data && response.data.recommendations) {
+      memesData = response.data.recommendations
+    } else if (response.data && response.data.data) {
+      // 處理巢狀 data 結構
+      const nestedData = response.data.data
+      if (Array.isArray(nestedData)) {
+        memesData = nestedData
+      } else if (nestedData.memes) {
+        memesData = nestedData.memes
+      } else if (nestedData.recommendations) {
+        memesData = nestedData.recommendations
+      } else {
+        memesData = [nestedData]
+      }
+    } else if (response.data) {
+      memesData = [response.data]
+    } else {
+      memesData = []
+    }
 
     // 為每個迷因載入作者資訊
     const memesWithAuthors = await Promise.all(
-      newMemes.map(async (meme) => {
+      memesData.map(async (meme) => {
         try {
           if (meme.author_id) {
-            const authorId =
-              typeof meme.author_id === 'object' && meme.author_id.$oid
-                ? meme.author_id.$oid
-                : meme.author_id
-            const authorResponse = await userService.get(authorId)
-            meme.author = authorResponse.data.user
+            // 檢查是否已經是完整的用戶物件
+            if (typeof meme.author_id === 'object' && meme.author_id._id) {
+              // 如果 author_id 已經是完整的用戶物件，直接使用
+              meme.author = {
+                _id: meme.author_id._id,
+                username: meme.author_id.username || 'unknown',
+                display_name: meme.author_id.display_name || '未知用戶',
+                avatar:
+                  meme.author_id.avatar || meme.author_id.avatarUrl || null,
+              }
+            } else {
+              // 處理不同格式的作者 ID
+              let authorId = null
+
+              if (typeof meme.author_id === 'string') {
+                authorId = meme.author_id
+              } else if (typeof meme.author_id === 'object') {
+                if (meme.author_id.$oid) {
+                  authorId = meme.author_id.$oid
+                } else if (meme.author_id.toString) {
+                  authorId = meme.author_id.toString()
+                } else {
+                  authorId = meme.author_id
+                }
+              } else {
+                authorId = meme.author_id
+              }
+
+              try {
+                const authorResponse = await userService.get(authorId)
+                meme.author = authorResponse.data.user
+              } catch (authorError) {
+                console.warn(`載入作者 ${authorId} 失敗:`, authorError.message)
+                // 如果載入作者失敗，設定預設值
+                meme.author = {
+                  display_name: '未知用戶',
+                  username: 'unknown',
+                  avatar: null,
+                }
+              }
+            }
           } else {
+            // 沒有作者 ID，設定預設值
             meme.author = {
               display_name: '匿名用戶',
               username: 'anonymous',
@@ -195,7 +292,11 @@ const loadMemes = async (reset = true) => {
           }
           return meme
         } catch (error) {
-          console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
+          console.warn(
+            `處理迷因 ${meme._id || meme.id} 時發生錯誤:`,
+            error.message,
+          )
+          // 如果處理迷因失敗，設定預設值
           meme.author = {
             display_name: '未知用戶',
             username: 'unknown',
@@ -214,25 +315,84 @@ const loadMemes = async (reset = true) => {
 
     // 檢查是否還有更多資料
     let backendHasMore = false
-    if (response.data && response.data.pagination) {
+    if (
+      response.data &&
+      response.data.success &&
+      response.data.data &&
+      response.data.data.pagination
+    ) {
+      backendHasMore = response.data.data.pagination.hasMore
+      console.log(
+        'Latest recommendations pagination:',
+        response.data.data.pagination,
+      )
+    } else if (
+      response.data &&
+      response.data.data &&
+      response.data.data.pagination
+    ) {
+      backendHasMore = response.data.data.pagination.hasMore
+      console.log(
+        'Latest recommendations pagination (fallback):',
+        response.data.data.pagination,
+      )
+    } else if (response.data && response.data.pagination) {
       backendHasMore = response.data.pagination.hasMore
+      console.log(
+        'Latest recommendations pagination (fallback):',
+        response.data.pagination,
+      )
     } else {
       backendHasMore = memesWithAuthors.length === pageSize.value
+      console.log(
+        'Latest recommendations hasMore (fallback):',
+        backendHasMore,
+        'memesWithAuthors.length:',
+        memesWithAuthors.length,
+        'pageSize:',
+        pageSize.value,
+      )
     }
 
     // 智能 hasMore 邏輯：如果後端返回了數據，且數據量等於頁面大小，或者後端明確表示還有更多數據
     hasMore.value =
       memesWithAuthors.length > 0 &&
-      (memesWithAuthors.length === pageSize.value || backendHasMore)
+      (memesWithAuthors.length >= pageSize.value || backendHasMore)
+
+    console.log(
+      'Latest recommendations currentPage:',
+      currentPage.value,
+      'hasMore:',
+      hasMore.value,
+      'memes count:',
+      memesWithAuthors.length,
+      'pageSize:',
+      pageSize.value,
+      'backendHasMore:',
+      backendHasMore,
+    )
 
     // 更新無限滾動狀態
+    console.log(
+      'Latest recommendations updateLoadingState: loading=false, hasMore=',
+      hasMore.value,
+    )
     updateLoadingState(false, hasMore.value)
   } catch (error) {
-    console.error('載入迷因失敗:', error)
+    console.error('載入最新推薦失敗:', error)
+
+    // 檢查是否是後端錯誤
+    let errorMessage = '無法載入最新推薦列表，請稍後再試'
+    if (error.response && error.response.data && error.response.data.error) {
+      errorMessage = error.response.data.error
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+
     toast.add({
       severity: 'error',
       summary: '載入失敗',
-      detail: '無法載入迷因列表，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
 
@@ -245,11 +405,23 @@ const loadMemes = async (reset = true) => {
 
 // 無限滾動載入函數
 const loadMoreContent = async () => {
+  // 防止在初始載入時觸發
   if (memes.value.length === 0) {
+    console.log(
+      'Latest recommendations loadMoreContent: memes is empty, skipping',
+    )
     return
   }
 
+  console.log(
+    'Latest recommendations loadMoreContent: currentPage before increment:',
+    currentPage.value,
+  )
   currentPage.value++
+  console.log(
+    'Latest recommendations loadMoreContent: currentPage after increment:',
+    currentPage.value,
+  )
   await loadMemes(false)
 }
 

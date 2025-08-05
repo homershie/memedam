@@ -728,7 +728,11 @@ const publishedTime = computed(() => {
 const fullPublishedTime = computed(() => {
   if (!meme.value) return ''
   // 優先使用 modified_at，如果沒有則使用 created_at
-  let time = meme.value.modified_at || meme.value.modifiedAt || meme.value.created_at || meme.value.createdAt
+  let time =
+    meme.value.modified_at ||
+    meme.value.modifiedAt ||
+    meme.value.created_at ||
+    meme.value.createdAt
   if (typeof time === 'object' && time.$date) {
     time = time.$date
   }
@@ -739,7 +743,11 @@ const fullPublishedTime = computed(() => {
 const shortPublishedTime = computed(() => {
   if (!meme.value) return ''
   // 優先使用 modified_at，如果沒有則使用 created_at
-  let time = meme.value.modified_at || meme.value.modifiedAt || meme.value.created_at || meme.value.createdAt
+  let time =
+    meme.value.modified_at ||
+    meme.value.modifiedAt ||
+    meme.value.created_at ||
+    meme.value.createdAt
   if (typeof time === 'object' && time.$date) {
     time = time.$date
   }
@@ -750,7 +758,11 @@ const shortPublishedTime = computed(() => {
 const lastUpdatedTime = computed(() => {
   if (!meme.value) return ''
   // 優先使用 modified_at，如果沒有則使用 updated_at
-  let time = meme.value.modified_at || meme.value.modifiedAt || meme.value.updated_at || meme.value.updatedAt
+  let time =
+    meme.value.modified_at ||
+    meme.value.modifiedAt ||
+    meme.value.updated_at ||
+    meme.value.updatedAt
   if (typeof time === 'object' && time.$date) {
     time = time.$date
   }

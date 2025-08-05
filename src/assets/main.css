@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
 
+/* PrimeVue 自訂變數 */
+:root {
+  --p-menu-border-radius: 0;
+}
+
 html,
 body,
 #app {

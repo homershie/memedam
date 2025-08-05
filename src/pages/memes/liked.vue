@@ -5,7 +5,13 @@
     <!-- 頁面標題 -->
     <div class="mb-6 text-start">
       <h1 class="text-3xl font-bold text-gray-800">大家都在看</h1>
-      <p class="text-gray-600 mt-2">基於社交網絡的智能推薦</p>
+      <p class="text-gray-600 mt-2">
+        {{
+          userStore.isLoggedIn
+            ? '基於您的興趣和社交網絡的智能推薦'
+            : '基於熱門趨勢和社交信號的推薦'
+        }}
+      </p>
     </div>
 
     <div class="flex justify-between flex-wrap">
@@ -65,12 +71,16 @@
     <!-- 空狀態 -->
     <div v-else class="text-center py-12">
       <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
-      <h3 class="text-xl font-semibold text-gray-600 mb-2">暫無社交推薦</h3>
+      <h3 class="text-xl font-semibold text-gray-600 mb-2">
+        {{ userStore.isLoggedIn ? '暫無個人化推薦' : '暫無熱門推薦' }}
+      </h3>
       <p class="text-gray-500">
         {{
           selectedTags.length > 0
-            ? '沒有符合篩選條件的社交推薦內容'
-            : '目前沒有基於社交網絡的推薦內容，請稍後再試'
+            ? '沒有符合篩選條件的推薦內容'
+            : userStore.isLoggedIn
+              ? '目前沒有基於您的興趣的推薦內容，請稍後再試'
+              : '目前沒有熱門趨勢內容，請稍後再試'
         }}
       </p>
       <Button
@@ -123,10 +133,12 @@ import userService from '@/services/userService'
 import Tag from 'primevue/tag'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 
-// 新增推薦服務
+// 新增推薦服務和用戶存儲
 import recommendationService from '@/services/recommendationService'
+import { useUserStore } from '@/stores/userStore'
 
 const toast = useToast()
+const userStore = useUserStore()
 
 // 響應式數據
 const memes = ref([])
@@ -142,7 +154,6 @@ const selectedTags = ref([])
 const memeTypeTags = ref([
   { _id: 'text', name: '用語' },
   { _id: 'image', name: '圖片' },
-  { _id: 'gif', name: 'GIF' },
   { _id: 'video', name: '影片' },
   { _id: 'audio', name: '音訊' },
 ])
@@ -151,7 +162,7 @@ const memeTypeTags = ref([
 const showCommentsDialog = ref(false)
 const selectedMeme = ref(null)
 
-// 載入迷因列表 - 使用社交協同過濾推薦算法
+// 載入迷因列表 - 使用智能推薦算法
 const loadMemes = async (reset = true) => {
   // 防止重複載入
   if (loading.value) {
@@ -165,13 +176,24 @@ const loadMemes = async (reset = true) => {
       memes.value = []
     }
 
-    // 使用社交協同過濾推薦 API
+    // 檢查用戶登入狀態
+    const isLoggedIn = userStore.isLoggedIn
+
+    // 基礎參數
     const params = {
       page: currentPage.value,
       limit: pageSize.value,
-      include_hot_score: true, // 結合熱門分數
-      hot_score_weight: 0.3, // 熱門分數權重
-      exclude_interacted: false, // 不排除已互動的迷因
+    }
+
+    // 根據登入狀態添加不同參數
+    if (isLoggedIn) {
+      // 登入用戶：使用個人化推薦參數
+      params.include_hot_score = true
+      params.hot_score_weight = 0.3
+      params.exclude_interacted = false
+    } else {
+      // 未登入用戶：使用 trending 參數
+      params.include_social_signals = true
     }
 
     // 如果有標籤篩選，加入標籤參數
@@ -198,12 +220,15 @@ const loadMemes = async (reset = true) => {
       }
     }
 
-    console.log('Social recommendations request params:', params)
-    const response =
-      await recommendationService.getSocialCollaborativeFilteringRecommendations(
-        params,
-      )
-    console.log('Social recommendations response:', response.data)
+    console.log('Smart recommendations request params:', params)
+    console.log('User login status:', isLoggedIn)
+
+    // 使用智能推薦服務
+    const response = await recommendationService.getSmartRecommendations(
+      params,
+      isLoggedIn,
+    )
+    console.log('Smart recommendations response:', response.data)
 
     // 處理推薦系統的回應格式
     let memesData = []
@@ -333,7 +358,7 @@ const loadMemes = async (reset = true) => {
     ) {
       backendHasMore = response.data.data.pagination.hasMore
       console.log(
-        'Social recommendations pagination:',
+        'Smart recommendations pagination:',
         response.data.data.pagination,
       )
     } else if (
@@ -343,19 +368,19 @@ const loadMemes = async (reset = true) => {
     ) {
       backendHasMore = response.data.data.pagination.hasMore
       console.log(
-        'Social recommendations pagination (fallback):',
+        'Smart recommendations pagination (fallback):',
         response.data.data.pagination,
       )
     } else if (response.data && response.data.pagination) {
       backendHasMore = response.data.pagination.hasMore
       console.log(
-        'Social recommendations pagination (fallback):',
+        'Smart recommendations pagination (fallback):',
         response.data.pagination,
       )
     } else {
       backendHasMore = memesWithAuthors.length === pageSize.value
       console.log(
-        'Social recommendations hasMore (fallback):',
+        'Smart recommendations hasMore (fallback):',
         backendHasMore,
         'memesWithAuthors.length:',
         memesWithAuthors.length,
@@ -370,7 +395,7 @@ const loadMemes = async (reset = true) => {
       (memesWithAuthors.length >= pageSize.value || backendHasMore)
 
     console.log(
-      'Social recommendations currentPage:',
+      'Smart recommendations currentPage:',
       currentPage.value,
       'hasMore:',
       hasMore.value,
@@ -384,15 +409,15 @@ const loadMemes = async (reset = true) => {
 
     // 更新無限滾動狀態
     console.log(
-      'Social recommendations updateLoadingState: loading=false, hasMore=',
+      'Smart recommendations updateLoadingState: loading=false, hasMore=',
       hasMore.value,
     )
     updateLoadingState(false, hasMore.value)
   } catch (error) {
-    console.error('載入社交推薦失敗:', error)
+    console.error('載入智能推薦失敗:', error)
 
     // 檢查是否是後端錯誤
-    let errorMessage = '無法載入社交推薦列表，請稍後再試'
+    let errorMessage = '無法載入推薦列表，請稍後再試'
     if (error.response && error.response.data && error.response.data.error) {
       errorMessage = error.response.data.error
     } else if (error.message) {
@@ -418,18 +443,18 @@ const loadMoreContent = async () => {
   // 防止在初始載入時觸發
   if (memes.value.length === 0) {
     console.log(
-      'Social recommendations loadMoreContent: memes is empty, skipping',
+      'Smart recommendations loadMoreContent: memes is empty, skipping',
     )
     return
   }
 
   console.log(
-    'Social recommendations loadMoreContent: currentPage before increment:',
+    'Smart recommendations loadMoreContent: currentPage before increment:',
     currentPage.value,
   )
   currentPage.value++
   console.log(
-    'Social recommendations loadMoreContent: currentPage after increment:',
+    'Smart recommendations loadMoreContent: currentPage after increment:',
     currentPage.value,
   )
   await loadMemes(false)
