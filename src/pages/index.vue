@@ -49,7 +49,7 @@
       <div class="text-center text-gray-500 mb-8">
         最新消息與站務公告將在此處更新，請留意更新情況。
       </div>
-      <div class="grid md:grid-cols-3 gap-4">
+      <div class="grid lg:grid-cols-3 gap-4">
         <Card v-for="n in 3" :key="n" class="w-full">
           <template #header>
             <div class="h-60 flex items-center justify-center">
@@ -89,7 +89,7 @@
       <!-- 迷因列表 -->
       <div
         v-else-if="featuredMemes.length > 0"
-        class="grid md:grid-cols-3 gap-4 w-full"
+        class="grid lg:grid-cols-3 gap-4 w-full"
       >
         <MemeCardSlim
           v-for="meme in featuredMemes"
@@ -150,7 +150,7 @@
 
     <!-- 本月活躍作者 -->
     <div class="mb-4 px-32 py-16 flex flex-col items-center gap-4">
-      <div class="flex flex-col lg:flex-row gap-x-20">
+      <div class="flex flex-col lg:flex-row gap-20">
         <div class="flex-1 lg:flex-1">
           <h2 class="text-3xl font-bold mb-4">本月活躍作者</h2>
           <div class="mb-4 text-gray-600 text-base">
@@ -187,16 +187,10 @@
               <div class="flex items-center gap-2">
                 <Avatar
                   :image="user.avatar"
-                  :label="
-                    user.display_name
-                      ? user.display_name.charAt(0)
-                      : user.username
-                        ? user.username.charAt(0).toUpperCase()
-                        : 'U'
-                  "
+                  :icon="!user.avatar ? 'pi pi-user' : undefined"
                   shape="circle"
                   size="large"
-                  @error="handleAvatarError"
+                  :data-user-id="user._id"
                 />
                 <span class="font-bold">{{
                   user.display_name || user.username
@@ -210,7 +204,8 @@
                     rounded
                     text
                     @click="followUser(user._id, index)"
-                    :disabled="user.isFollowing"
+                    :disabled="userStore.userId === user._id"
+                    :loading="user.followLoading"
                   >
                     <i
                       :class="
@@ -220,7 +215,9 @@
                       "
                     ></i>
                   </Button>
-                  <p>{{ user.follower_count || 0 }} 個追蹤者</p>
+                  <p class="text-primary-500">
+                    {{ user.follower_count || 0 }} 個追蹤者
+                  </p>
                 </div>
                 <span class="text-surface-500 dark:text-surface-400">
                   參與 {{ user.meme_count }} 篇迷因創作
@@ -232,11 +229,6 @@
             </template>
             <div class="space-y-3">
               <p class="m-0">{{ user.bio || '這位創作者還沒有個人簡介' }}</p>
-              <div class="flex items-center gap-4 text-sm text-gray-600">
-                <span>迷因數量: {{ user.meme_count || 0 }}</span>
-                <span>獲得讚數: {{ user.total_likes_received || 0 }}</span>
-                <span>追蹤者: {{ user.follower_count || 0 }}</span>
-              </div>
             </div>
           </Panel>
 
@@ -264,6 +256,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useUserStore } from '@/stores/userStore'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
@@ -281,6 +274,7 @@ import memeService from '@/services/memeService'
 
 const router = useRouter()
 const toast = useToast()
+const userStore = useUserStore()
 
 const topTags = ref([])
 const featuredMemes = ref([])
@@ -399,6 +393,38 @@ const loadActiveUsers = async () => {
 
     if (response.data && response.data.success) {
       activeUsers.value = response.data.activeUsers || []
+
+      // 初始化每個用戶的追蹤狀態
+      activeUsers.value.forEach((user, index) => {
+        activeUsers.value[index].isFollowing = false
+        activeUsers.value[index].followLoading = false
+      })
+
+      // 如果用戶已登入，檢查每個用戶的追蹤狀態
+      if (userStore.isLoggedIn) {
+        await Promise.all(
+          activeUsers.value.map(async (user, index) => {
+            try {
+              // 跳過自己的追蹤狀態檢查
+              if (user._id === userStore.userId) {
+                activeUsers.value[index].isFollowing = false
+                return
+              }
+
+              const followResponse = await followService.getFollowStatus(
+                user._id,
+              )
+              if (followResponse.data && followResponse.data.success) {
+                activeUsers.value[index].isFollowing =
+                  followResponse.data.isFollowing || false
+              }
+            } catch (error) {
+              console.warn(`檢查用戶 ${user._id} 追蹤狀態失敗:`, error)
+              activeUsers.value[index].isFollowing = false
+            }
+          }),
+        )
+      }
     } else {
       activeUsers.value = []
     }
@@ -416,29 +442,50 @@ const loadActiveUsers = async () => {
   }
 }
 
-// 處理頭像載入錯誤
-const handleAvatarError = (event) => {
-  // 當頭像載入失敗時，移除 image 屬性，讓它顯示 label
-  event.target.removeAttribute('src')
-}
-
 // 追蹤用戶
 const followUser = async (userId, index) => {
   try {
+    // 檢查是否追蹤自己
+    if (userId === userStore.userId) {
+      toast.add({
+        severity: 'warn',
+        summary: '無法追蹤',
+        detail: '您無法追蹤自己',
+        life: 3000,
+      })
+      return
+    }
+
+    // 設定載入狀態
+    activeUsers.value[index].followLoading = true
+
     // 調用追蹤API
     const response = await followService.toggleFollow(userId)
 
     if (response.data && response.data.success) {
+      // 根據 API 回應的 action 欄位判斷新的追蹤狀態
+      const newFollowStatus = response.data.action === 'followed'
+
       // 更新本地狀態
-      activeUsers.value[index].isFollowing =
-        !activeUsers.value[index].isFollowing
+      activeUsers.value[index].isFollowing = newFollowStatus
+
+      // 更新追蹤人數
+      if (newFollowStatus) {
+        // 開始追蹤，增加追蹤人數
+        activeUsers.value[index].follower_count =
+          (activeUsers.value[index].follower_count || 0) + 1
+      } else {
+        // 取消追蹤，減少追蹤人數
+        activeUsers.value[index].follower_count = Math.max(
+          (activeUsers.value[index].follower_count || 0) - 1,
+          0,
+        )
+      }
 
       toast.add({
         severity: 'success',
         summary: '操作成功',
-        detail: activeUsers.value[index].isFollowing
-          ? '已追蹤用戶'
-          : '已取消追蹤',
+        detail: newFollowStatus ? '已追蹤用戶' : '已取消追蹤',
         life: 2000,
       })
     } else {
@@ -446,12 +493,24 @@ const followUser = async (userId, index) => {
     }
   } catch (error) {
     console.error('追蹤用戶失敗:', error)
+
+    // 根據錯誤類型顯示不同訊息
+    let errorMessage = '追蹤操作失敗，請稍後再試'
+    if (error.response?.status === 401) {
+      errorMessage = '請先登入後再進行追蹤操作'
+    } else if (error.response?.status === 400) {
+      errorMessage = error.response.data?.message || '操作失敗'
+    }
+
     toast.add({
       severity: 'error',
       summary: '操作失敗',
-      detail: '追蹤操作失敗，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
+  } finally {
+    // 清除載入狀態
+    activeUsers.value[index].followLoading = false
   }
 }
 
