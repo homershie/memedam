@@ -13,7 +13,7 @@
             icon="pi pi-bars"
             severity="contrast"
             class="p-button-text rounded-full"
-            @click="toggleSidebar"
+            @click="handleMenuClick"
           />
           <router-link to="/">
             <svg
@@ -129,9 +129,10 @@
     </Menubar>
     <!-- 主內容 -->
     <div class="flex flex-1 h-screen mt-[80px]">
+      <!-- 桌面版側邊欄 (lg 以上顯示) -->
       <div
         :class="[
-          'h-[calc(100vh-80px)] flex flex-col group transition-all duration-300 ease-in-out relative',
+          'h-[calc(100vh-80px)] flex flex-col group transition-all duration-300 ease-in-out relative hidden lg:block',
           sidebarVisible
             ? 'w-1/6 opacity-100'
             : 'w-0 opacity-0 overflow-hidden',
@@ -225,10 +226,84 @@
           </Menu>
         </div>
       </div>
+      <!-- 行動版側邊欄 (lg 以下顯示) -->
+      <div
+        v-if="mobileSidebarVisible"
+        class="fixed inset-0 z-40 lg:hidden"
+        @click="closeMobileSidebar"
+      >
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+        <div
+          class="fixed left-0 top-0 h-full w-60 bg-white shadow-lg"
+          @click.stop
+        >
+          <div class="flex flex-col h-full">
+            <!-- 頂部 Logo -->
+            <div class="flex items-center justify-between p-4 border-b">
+              <router-link to="/" class="text-xl font-bold"
+                >MemeDex</router-link
+              >
+              <Button
+                icon="pi pi-times"
+                severity="contrast"
+                class="p-button-text rounded-full"
+                @click="closeMobileSidebar"
+              />
+            </div>
+            <!-- 行動版選單 -->
+            <div class="flex-1 overflow-y-auto">
+              <Menu :model="menuList" class="border-none px-4">
+                <template #item="{ item, props }">
+                  <div v-if="item.separator" class="my-2 border-t"></div>
+                  <template v-else>
+                    <router-link
+                      v-if="item.route"
+                      v-slot="{ href, navigate }"
+                      :to="item.route"
+                      custom
+                    >
+                      <a
+                        v-ripple
+                        :href="href"
+                        v-bind="props.action"
+                        @click="
+                          () => {
+                            navigate()
+                            closeMobileSidebar()
+                          }
+                        "
+                      >
+                        <span :class="item.icon" />
+                        <span class="ml-2">{{ item.label }}</span>
+                      </a>
+                    </router-link>
+                    <a
+                      v-else-if="item.url"
+                      v-ripple
+                      :href="item.url"
+                      :target="item.target"
+                      v-bind="props.action"
+                    >
+                      <span :class="item.icon" />
+                      <span class="ml-2">{{ item.label }}</span>
+                    </a>
+                    <span v-else class="ml-2 text-xs text-gray-400">{{
+                      item.label
+                    }}</span>
+                  </template>
+                </template>
+              </Menu>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主內容區域 -->
       <div
         :class="[
           'h-[calc(100vh-80px)] overflow-y-auto transition-all duration-300 relative flex flex-1 justify-center',
-          sidebarVisible ? 'w-5/6' : 'w-full',
+          sidebarVisible ? 'lg:w-5/6' : 'lg:w-full',
+          'w-full',
         ]"
       >
         <router-view :key="$route.fullPath" />
@@ -244,6 +319,7 @@ import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
 import DynamicDialog from 'primevue/dynamicdialog'
+import Toast from 'primevue/toast'
 import userService from '@/services/userService'
 import Menu from 'primevue/menu'
 import Menubar from 'primevue/menubar'
@@ -254,9 +330,22 @@ const user = useUserStore()
 const router = useRouter()
 const toast = useToast()
 const sidebarVisible = ref(true)
+const mobileSidebarVisible = ref(false)
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value
+}
+
+const closeMobileSidebar = () => {
+  mobileSidebarVisible.value = false
+}
+
+const handleMenuClick = () => {
+  if (window.innerWidth >= 1024) {
+    toggleSidebar()
+  } else {
+    mobileSidebarVisible.value = !mobileSidebarVisible.value
+  }
 }
 
 const handleSearch = (searchTerm) => {

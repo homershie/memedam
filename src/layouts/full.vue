@@ -1,4 +1,4 @@
-ntent
+<!-- content -->
 <template>
   <div class="full-layout">
     <!-- Logo 區域 -->
