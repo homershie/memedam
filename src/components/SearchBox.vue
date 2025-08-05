@@ -2,6 +2,7 @@
   <div class="relative">
     <InputGroup>
       <InputText
+        ref="inputRef"
         v-model="searchQuery"
         :placeholder="props.placeholder"
         @keyup.enter="handleSearch"
@@ -72,7 +73,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import InputGroup from 'primevue/inputgroup'
@@ -99,6 +100,7 @@ const searchQuery = ref('')
 const showSuggestions = ref(false)
 const popularKeywords = ref([])
 const searchSuggestions = ref([])
+const inputRef = ref(null)
 
 // 過濾後的建議
 const filteredSuggestions = computed(() => {
@@ -230,17 +232,43 @@ const clearSearch = () => {
   })
 }
 
+// 聚焦方法
+const focus = () => {
+  // 使用 setTimeout 確保 DOM 已經渲染
+  setTimeout(() => {
+    if (inputRef.value) {
+      // 嘗試直接聚焦
+      if (typeof inputRef.value.focus === 'function') {
+        inputRef.value.focus()
+      } else {
+        // 如果沒有 focus 方法，嘗試找到實際的 input 元素
+        const inputElement =
+          inputRef.value.$el?.querySelector('input') ||
+          document.querySelector('input[placeholder="搜尋迷因"]')
+        if (inputElement) {
+          inputElement.focus()
+        }
+      }
+    }
+  }, 50)
+}
+
 // 初始化
 onMounted(() => {
   loadPopularKeywords()
   loadSearchSuggestions()
+
+  // 如果設置了自動聚焦，等待 DOM 更新後聚焦
+  if (props.autoFocus) {
+    nextTick(() => {
+      focus()
+    })
+  }
 })
 
 // 暴露方法給父元件
 defineExpose({
-  focus: () => {
-    // 可以用來聚焦搜尋框
-  },
+  focus,
   clear: () => {
     searchQuery.value = ''
   },

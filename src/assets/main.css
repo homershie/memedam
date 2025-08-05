@@ -16,7 +16,6 @@ body,
 
 body {
   font-family:
-    'Noto Sans TC',
     'Jost',
     -apple-system,
     BlinkMacSystemFont,
@@ -28,6 +27,7 @@ body {
     'Fira Sans',
     'Droid Sans',
     'Helvetica Neue',
+    'Noto Sans TC',
     sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

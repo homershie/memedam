@@ -2,7 +2,9 @@
 <template>
   <div class="full-layout">
     <!-- Logo 區域 -->
-    <div class="logo-section">
+    <div
+      class="m-0 py-[13px] logo-section w-full h-auto absolute top-0 left-0 flex items-center justify-center lg:justify-start lg:ms-20"
+    >
       <router-link to="/" class="logo-link">
         <svg
           width="143"
@@ -71,7 +73,7 @@
       </router-link>
     </div>
     <!-- slot for page content -->
-    <router-view />
+    <router-view class="pt-6" />
     <Toast position="bottom-right" />
   </div>
 </template>
@@ -90,29 +92,6 @@ import Toast from 'primevue/toast'
   justify-content: start;
   position: relative;
   padding-top: 60px;
-}
-
-.logo-section {
-  position: absolute;
-  width: 100%;
-  height: 80px;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  a {
-    margin-left: 10%;
-  }
-}
-
-.logo-link {
-  display: inline-block;
-  text-decoration: none;
-}
-
-.logo-link:hover {
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
 }
 
 :deep(.p-toast) {

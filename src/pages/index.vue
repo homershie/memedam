@@ -2,7 +2,7 @@
 <template>
   <div class="container mx-auto p-4 space-y-12">
     <!-- 首頁標題與搜尋/上傳 -->
-    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-8">
+    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
       <h1 class="text-5xl font-bold">讓最新的迷因為生活增添風味</h1>
       <p class="text-base mt-1">
         探索網友們精心整理的迷因，用互動的方式參與迷因的定義，讓自己成為最新穎最顛覆的迷因。
@@ -27,7 +27,7 @@
     </div>
 
     <!-- 贊助用戶橫條 -->
-    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-8">
+    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
       <h2 class="text-center text-3xl font-bold">
         特別感謝請站長喝飲料的乾爹和乾媽！
       </h2>
@@ -44,7 +44,7 @@
     </div>
 
     <!-- 公告欄 -->
-    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-4">
+    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
       <h2 class="text-center text-3xl font-bold">公告欄</h2>
       <div class="text-center text-gray-500 mb-8">
         最新消息與站務公告將在此處更新，請留意更新情況。
@@ -75,7 +75,7 @@
     </div>
 
     <!-- 近期精選迷因 -->
-    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-4">
+    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
       <h2 class="text-center text-3xl font-bold">近期精選迷因</h2>
       <div class="text-center text-gray-500 mb-8">
         精選迷因將在此處更新，請留意更新情況。
@@ -116,7 +116,7 @@
     </div>
 
     <!-- 每日迷因 -->
-    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-4">
+    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
       <h2 class="text-center text-3xl font-bold">每日迷因</h2>
       <div class="text-center text-gray-500 mb-4">
         點擊按鈕隨機抽一個屬於你今天的迷因吧！
@@ -149,7 +149,7 @@
     </div>
 
     <!-- 本月活躍作者 -->
-    <div class="mb-4 px-32 py-16 flex flex-col items-center gap-4">
+    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
       <div class="flex flex-col lg:flex-row gap-20">
         <div class="flex-1 lg:flex-1">
           <h2 class="text-3xl font-bold mb-4">本月活躍作者</h2>

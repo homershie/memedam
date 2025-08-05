@@ -2,8 +2,34 @@
   <div class="min-h-screen flex flex-col w-full relative">
     <Toast position="bottom-right" />
     <DynamicDialog />
-    <!-- 導覽列：改用 PrimeVue Menubar -->
+
+    <!-- 搜尋模式下的自定義佈局 -->
+    <div
+      v-if="isSearchMode"
+      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50 bg-white border-b border-gray-200 flex items-center"
+    >
+      <div class="flex items-center gap-4 w-full">
+        <Button
+          icon="pi pi-arrow-left"
+          severity="contrast"
+          class="p-button-text rounded-full"
+          @click="exitSearchMode"
+        />
+        <div class="flex-1 flex justify-center">
+          <div class="w-full max-w-md">
+            <SearchBox
+              ref="searchBoxRef"
+              @search="handleSearch"
+              :auto-focus="true"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 正常模式下的 Menubar -->
     <Menubar
+      v-else
       :model="[]"
       class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50"
     >
@@ -85,17 +111,25 @@
       </template>
       <template #end>
         <div class="flex items-center gap-6">
-          <!-- 搜尋列 -->
-          <div class="relative">
+          <!-- 桌面版搜尋列 -->
+          <div class="relative hidden md:block">
             <SearchBox @search="handleSearch" />
           </div>
+
+          <!-- 手機版搜尋按鈕 -->
+          <Button
+            icon="pi pi-search"
+            severity="secondary"
+            class="p-button-text rounded-lg md:hidden"
+            @click="enterSearchMode"
+          />
 
           <!-- Menu Items -->
           <Button
             v-if="user.isLoggedIn"
             label="投稿"
             severity="secondary"
-            class="p-button-text rounded-lg"
+            class="p-button-text rounded-lg hidden md:inline-flex"
             @click="$router.push('/memes/post')"
           />
           <Button
@@ -109,7 +143,7 @@
             v-if="user.isLoggedIn && user.isAdmin"
             label="管理"
             severity="secondary"
-            class="p-button-text rounded-lg"
+            class="p-button-text rounded-lg hidden md:inline-flex"
             @click="$router.push('/admin')"
           />
           <Button
@@ -121,12 +155,13 @@
           />
           <Button
             label="成為付費會員"
-            class="text-white rounded-lg"
+            class="text-white rounded-lg hidden md:inline-flex"
             @click="$router.push('/premium')"
           />
         </div>
       </template>
     </Menubar>
+
     <!-- 主內容 -->
     <div class="flex flex-1 h-screen mt-[80px]">
       <!-- 桌面版側邊欄 (lg 以上顯示) -->
@@ -425,11 +460,11 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
+import Menubar from 'primevue/menubar'
 import DynamicDialog from 'primevue/dynamicdialog'
 import Toast from 'primevue/toast'
 import userService from '@/services/userService'
 import Menu from 'primevue/menu'
-import Menubar from 'primevue/menubar'
 import Divider from 'primevue/divider'
 import SearchBox from '@/components/SearchBox.vue'
 
@@ -438,6 +473,10 @@ const router = useRouter()
 const toast = useToast()
 const sidebarVisible = ref(true)
 const mobileSidebarVisible = ref(false)
+
+// 響應式數據
+const isSearchMode = ref(false)
+const searchBoxRef = ref(null)
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value
@@ -458,6 +497,23 @@ const handleMenuClick = () => {
 const handleSearch = (searchTerm) => {
   // SearchBox 元件會處理頁面跳轉，這裡可以加入額外的搜尋邏輯
   console.log('從 default.vue 搜尋:', searchTerm)
+  if (isSearchMode.value) {
+    exitSearchMode()
+  }
+}
+
+const enterSearchMode = () => {
+  isSearchMode.value = true
+  // 等待 DOM 更新後聚焦搜尋框
+  setTimeout(() => {
+    if (searchBoxRef.value) {
+      searchBoxRef.value.focus()
+    }
+  }, 100)
+}
+
+const exitSearchMode = () => {
+  isSearchMode.value = false
 }
 
 const menuList = [
@@ -539,5 +595,14 @@ export default {
 
 .mobile-sidebar-leave-to .fixed.left-0 {
   transform: translateX(-100%);
+}
+
+/* 確保搜尋模式下的搜尋框佔滿可用空間 */
+.flex-1 {
+  flex: 1;
+}
+
+.max-w-md {
+  max-width: 28rem;
 }
 </style>
