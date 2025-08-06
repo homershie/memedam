@@ -41,7 +41,7 @@
             class="p-button-text rounded-full"
             @click="handleMenuClick"
           />
-          <router-link to="/">
+          <router-link to="/" class="logo-link">
             <svg
               width="143"
               height="48"
@@ -310,7 +310,7 @@
                   class="p-button-text rounded-full"
                   @click="handleMenuClick"
                 />
-                <router-link to="/">
+                <router-link to="/" class="logo-link">
                   <svg
                     width="143"
                     height="48"
@@ -566,6 +566,16 @@ export default {
 :deep(.p-menu-item-content) {
   padding-top: 0.2rem !important;
   padding-bottom: 0.2rem !important;
+}
+
+/* Logo 在深色模式下的顏色轉換 */
+.logo-link svg {
+  transition: filter 0.3s ease;
+}
+
+/* 深色模式下將 Logo 反轉為白色 */
+.dark .logo-link svg {
+  filter: invert(1);
 }
 
 /* 整體容器動畫 - 控制底色透明度 */

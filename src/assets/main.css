@@ -6,6 +6,11 @@
   --p-menu-border-radius: 0;
 }
 
+/* 強制深色模式使用 primary-500 */
+.dark {
+  --p-primary-color: var(--p-primary-500) !important;
+}
+
 html,
 body,
 #app {
