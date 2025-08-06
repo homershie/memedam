@@ -166,7 +166,6 @@ const loadMemes = async (reset = true) => {
     const params = {
       page: currentPage.value,
       limit: pageSize.value,
-      days: 30, // 明確指定查詢最近30天的迷因
       _t: Date.now(), // 添加時間戳避免快取
     }
 

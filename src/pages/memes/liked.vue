@@ -198,26 +198,9 @@ const loadMemes = async (reset = true) => {
 
     // 如果有標籤篩選，加入標籤參數
     if (selectedTags.value.length > 0) {
-      const tagNames = selectedTags.value.map((tag) => tag.name)
-      params.tags = tagNames.join(',')
-    }
-
-    // 如果有已載入的迷因，排除它們以避免重複
-    if (memes.value.length > 0) {
-      const excludeIds = memes.value
-        .map((meme) => {
-          // 確保返回正確的ID格式
-          if (meme.id) {
-            return meme.id.toString()
-          } else if (meme._id) {
-            return meme._id.toString()
-          }
-          return null
-        })
-        .filter(Boolean)
-      if (excludeIds.length > 0) {
-        params.exclude_ids = excludeIds.join(',')
-      }
+      // 使用迷因的 type 欄位進行篩選（與其他頁面保持一致）
+      const types = selectedTags.value.map((tag) => tag._id)
+      params.types = types.join(',')
     }
 
     console.log('Smart recommendations request params:', params)
@@ -389,10 +372,8 @@ const loadMemes = async (reset = true) => {
       )
     }
 
-    // 智能 hasMore 邏輯：如果後端返回了數據，且數據量等於頁面大小，或者後端明確表示還有更多數據
-    hasMore.value =
-      memesWithAuthors.length > 0 &&
-      (memesWithAuthors.length >= pageSize.value || backendHasMore)
+    // 簡化的 hasMore 邏輯：直接使用後端的 hasMore 狀態
+    hasMore.value = backendHasMore
 
     console.log(
       'Smart recommendations currentPage:',

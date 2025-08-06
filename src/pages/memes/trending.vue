@@ -169,8 +169,9 @@ const loadMemes = async (reset = true) => {
 
     // 如果有標籤篩選，加入標籤參數
     if (selectedTags.value.length > 0) {
-      const tagNames = selectedTags.value.map((tag) => tag.name)
-      params.tags = tagNames.join(',')
+      // 使用迷因的 type 欄位進行篩選（與 hot.vue 保持一致）
+      const types = selectedTags.value.map((tag) => tag._id)
+      params.types = types.join(',')
     }
 
     // 如果有已載入的迷因，排除它們以避免重複
