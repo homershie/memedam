@@ -153,6 +153,10 @@
             class="p-button-text rounded-lg"
             @click="logout"
           />
+
+          <!-- 主題切換按鈕 -->
+          <ThemeToggle mode="single" />
+
           <Button
             label="成為付費會員"
             class="text-white rounded-lg hidden md:inline-flex"
@@ -467,6 +471,7 @@ import userService from '@/services/userService'
 import Menu from 'primevue/menu'
 import Divider from 'primevue/divider'
 import SearchBox from '@/components/SearchBox.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const user = useUserStore()
 const router = useRouter()

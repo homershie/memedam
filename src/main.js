@@ -34,7 +34,7 @@ app.use(PrimeVue, {
   theme: {
     preset: Aura,
     options: {
-      darkModeSelector: false, // 強制只用淺色
+      darkModeSelector: '.dark',
       cssLayer: {
         name: 'primevue',
         order: 'theme, base, primevue',
@@ -123,6 +123,21 @@ updatePreset({
       800: '#991248',
       900: '#730A31',
       950: '#4A041A',
+    },
+    dark: {
+      primary: {
+        50: '#FFF5FC',
+        100: '#FFEBF9',
+        200: '#FFCCEF',
+        300: '#FFADE2',
+        400: '#FF70C1',
+        500: '#ff3399',
+        600: '#E62984',
+        700: '#BF1D63',
+        800: '#991248',
+        900: '#730A31',
+        950: '#4A041A',
+      },
     },
     colorScheme: {
       light: {
