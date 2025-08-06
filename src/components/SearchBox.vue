@@ -38,18 +38,18 @@
         showSuggestions &&
         (filteredSuggestions.length > 0 || popularKeywords.length > 0)
       "
-      class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+      class="pop-keyword-container absolute top-full left-0 right-0 mt-1 border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
     >
       <!-- 推薦關鍵字 -->
       <div v-if="!searchQuery.trim() && popularKeywords.length > 0" class="p-3">
-        <div class="text-xs text-gray-500 mb-2">熱門搜尋</div>
+        <div class="text-xs mb-2">熱門搜尋</div>
         <div class="flex flex-wrap gap-1">
           <Tag
             v-for="keyword in popularKeywords"
             :key="keyword"
             :value="keyword"
             severity="secondary"
-            class="cursor-pointer hover:bg-primary-50 text-xs"
+            class="cursor-pointer hover:bg-primary-100 text-xs pop-keyword"
             @click="selectSuggestion(keyword)"
           />
         </div>
@@ -287,5 +287,23 @@ defineExpose({
 /* 確保建議清單在最上層 */
 .z-50 {
   z-index: 50;
+}
+
+.pop-keyword-container {
+  background-color: var(--p-surface-0);
+  border-color: var(--p-surface-200);
+}
+
+.dark .pop-keyword-container {
+  background-color: var(--p-surface-900);
+  border-color: var(--p-surface-500);
+}
+
+.pop-keyword:hover {
+  background-color: var(--p-surface-200);
+}
+
+.dark .pop-keyword:hover {
+  background-color: var(--p-surface-500);
 }
 </style>

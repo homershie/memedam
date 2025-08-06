@@ -1,6 +1,6 @@
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
-  darkMode: 'class',
+  darkMode: ['selector', '.dark'],
   theme: {
     extend: {
       maxWidth: {
@@ -8,4 +8,5 @@ export default {
       },
     },
   },
+  plugins: [require('tailwindcss-primeui')],
 }

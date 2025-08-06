@@ -138,7 +138,7 @@
 
       <!-- 迷因列表 -->
       <div v-else-if="filteredMemes.length > 0" class="space-y-4">
-        <SimpleMemeCard
+        <MemeCardSlim
           v-for="meme in filteredMemes"
           :key="meme.id || meme._id"
           :meme="meme"
@@ -194,7 +194,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
-import SimpleMemeCard from '@/components/SimpleMemeCard.vue'
+import MemeCardSlim from '@/components/MemeCardSlim.vue'
 import userService from '@/services/userService'
 import memeService from '@/services/memeService'
 import collectionService from '@/services/collectionService'

@@ -1,9 +1,12 @@
 <template>
-  <Card class="w-full relative cursor-pointer hover:shadow-lg transition-shadow" @click="navigateToDetail">
+  <Card
+    class="w-full relative cursor-pointer hover:shadow-lg transition-shadow"
+    @click="navigateToDetail"
+  >
     <ConfirmPopup />
     <template #header>
       <Button
-        style="position: absolute; top: 10px; right: 10px; z-index: 10;"
+        style="position: absolute; top: 10px; right: 10px; z-index: 10"
         icon="pi pi-ellipsis-h"
         severity="contrast"
         text
@@ -12,14 +15,20 @@
       />
       <div class="h-60 flex items-center justify-center overflow-hidden">
         <!-- 根據類型顯示不同內容 -->
-        <div v-if="meme.type === 'image' && meme.image_url" class="w-full h-full">
+        <div
+          v-if="meme.type === 'image' && meme.image_url"
+          class="w-full h-full"
+        >
           <Image
             :src="meme.image_url"
             :alt="meme.title"
             class="w-full h-full object-cover rounded-t-lg"
           />
         </div>
-        <div v-else-if="meme.type === 'video' && meme.video_url" class="w-full h-full">
+        <div
+          v-else-if="meme.type === 'video' && meme.video_url"
+          class="w-full h-full"
+        >
           <!-- 外部影片平台 -->
           <div v-if="isExternalVideoUrl(meme.video_url)" class="w-full h-full">
             <iframe
@@ -41,7 +50,10 @@
             您的瀏覽器不支援影片播放
           </video>
         </div>
-        <div v-else-if="meme.type === 'audio' && meme.audio_url" class="w-full h-full">
+        <div
+          v-else-if="meme.type === 'audio' && meme.audio_url"
+          class="w-full h-full"
+        >
           <!-- 外部音訊平台 -->
           <div v-if="isExternalAudioUrl(meme.audio_url)" class="w-full h-full">
             <iframe
@@ -64,7 +76,10 @@
             您的瀏覽器不支援音訊播放
           </audio>
         </div>
-        <div v-else-if="meme.type === 'gif' && meme.image_url" class="w-full h-full">
+        <div
+          v-else-if="meme.type === 'gif' && meme.image_url"
+          class="w-full h-full"
+        >
           <img
             :src="meme.image_url"
             :alt="meme.title"
@@ -80,7 +95,10 @@
             :hover-effect="false"
           />
         </div>
-        <div v-else class="w-full h-full bg-gray-200 flex items-center justify-center rounded-t-lg">
+        <div
+          v-else
+          class="w-full h-full bg-gray-200 flex items-center justify-center rounded-t-lg"
+        >
           <span class="text-gray-400 text-4xl">🖼️</span>
         </div>
       </div>
@@ -113,14 +131,14 @@
         </div>
       </OverlayPanel>
     </template>
-    
+
     <template #title>
       <div class="flex justify-start items-center gap-2">
         <h3 class="mb-1 text-xl font-bold">{{ meme.title }}</h3>
         <span class="text-xs text-gray-400">· {{ publishedTime }}</span>
       </div>
     </template>
-    
+
     <template #content>
       <!-- 標籤 -->
       <div class="flex flex-wrap gap-2 mb-4" v-if="tags.length > 0">
@@ -134,9 +152,13 @@
         />
       </div>
 
-      <div class="text-sm text-gray-600 mb-4" v-if="meme.content">
-        {{ meme.content.length > 100 ? meme.content.substring(0, 100) + '...' : meme.content }}
-      </div>
+      <p class="mb-4" v-if="meme.content">
+        {{
+          meme.content.length > 100
+            ? meme.content.substring(0, 100) + '...'
+            : meme.content
+        }}
+      </p>
 
       <Divider class="my-2" />
       <div class="flex justify-around text-gray-500 text-lg">
@@ -561,4 +583,4 @@ const showDeleteConfirm = (event) => {
   height: 100% !important;
   object-fit: cover !important;
 }
-</style> 
+</style>

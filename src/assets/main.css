@@ -4,6 +4,10 @@
 /* PrimeVue 自訂變數 */
 :root {
   --p-menu-border-radius: 0;
+  --p-button-primary-hover-background: var(--p-primary-600);
+  --p-button-primary-hover-border-color: var(--p-primary-600);
+  --p-button-primary-hover-color: var(--p-surface-0);
+  --p-button-primary-color: var(--p-surface-0);
 }
 
 /* 強制深色模式使用 primary-500 */
@@ -43,6 +47,40 @@ body {
   max-width: 100%;
   margin: 0 auto;
   font-weight: normal;
+}
+
+h1 {
+  @apply text-5xl font-bold text-gray-900;
+}
+
+h2 {
+  @apply text-3xl font-bold text-gray-900;
+}
+
+h3 {
+  @apply text-xl font-semibold text-gray-900;
+}
+
+p {
+  @apply text-gray-800 text-base;
+}
+
+.subtitle {
+  @apply text-base text-gray-800;
+}
+
+.dark h1,
+.dark h2,
+.dark h3 {
+  @apply text-white;
+}
+
+.dark p {
+  @apply text-gray-300;
+}
+
+.dark .subtitle {
+  @apply text-gray-400;
 }
 
 a,

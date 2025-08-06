@@ -171,7 +171,7 @@
             </div>
 
             <!-- 內容預覽 -->
-            <p class="text-gray-600 mb-4" v-if="meme.content">
+            <p class="mb-4" v-if="meme.content">
               {{ meme.content }}
             </p>
 
@@ -191,7 +191,7 @@
 
         <!-- 互動按鈕 -->
         <div
-          class="flex items-center justify-between pt-4 border-t border-gray-200"
+          class="flex items-center justify-between pt-4 border-t border-t-stone-200 dark:border-t-stone-800"
         >
           <div class="flex items-center space-x-6">
             <Button

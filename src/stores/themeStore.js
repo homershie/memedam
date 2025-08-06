@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 export const useThemeStore = defineStore('theme', () => {
   const theme = ref('system')
@@ -40,9 +40,19 @@ export const useThemeStore = defineStore('theme', () => {
     })
   }
 
+  // 新增 isDark 屬性
+  const isDark = computed(() => {
+    if (theme.value === 'dark') return true
+    if (theme.value === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+    return false
+  })
+
   return {
     theme,
     setTheme,
     initTheme,
+    isDark, // 記得回傳
   }
 })

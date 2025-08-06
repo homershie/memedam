@@ -3,8 +3,8 @@
   <div class="container mx-auto p-4 space-y-12">
     <!-- 首頁標題與搜尋/上傳 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h1 class="text-5xl font-bold">讓最新的迷因為生活增添風味</h1>
-      <p class="text-base mt-1">
+      <h1>讓最新的迷因為生活增添風味</h1>
+      <p class="subtitle mt-1">
         探索網友們精心整理的迷因，用互動的方式參與迷因的定義，讓自己成為最新穎最顛覆的迷因。
       </p>
       <div class="flex flex-wrap justify-center gap-2 mt-4">
@@ -28,16 +28,14 @@
 
     <!-- 贊助用戶橫條 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h2 class="text-center text-3xl font-bold">
-        特別感謝請站長喝飲料的乾爹和乾媽！
-      </h2>
+      <h2 class="text-center">特別感謝請站長喝飲料的乾爹和乾媽！</h2>
 
       <div class="flex flex-wrap justify-center gap-8 mt-2">
         <div v-for="n in 11" :key="n" class="flex items-center gap-4">
           <Avatar icon="pi pi-user" shape="circle" class="mb-1" size="large" />
           <div class="text-xs">
             <h4 class="font-bold text-base">使用者名稱</h4>
-            <p class="text-sm">注入了100點快樂</p>
+            <p class="subtitle">注入了100點快樂</p>
           </div>
         </div>
       </div>
@@ -45,8 +43,8 @@
 
     <!-- 公告欄 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
-      <h2 class="text-center text-3xl font-bold">公告欄</h2>
-      <div class="text-center text-gray-500 mb-8">
+      <h2 class="text-center">公告欄</h2>
+      <div class="text-center subtitle mb-8">
         最新消息與站務公告將在此處更新，請留意更新情況。
       </div>
       <div class="grid lg:grid-cols-3 gap-4">
@@ -61,14 +59,14 @@
           </template>
           <template #content>
             <div class="mb-2 flex justify-between items-center">
-              <h3 class="text-xl font-bold mb-1">標題{{ n }}</h3>
+              <h3 class="mb-1">標題{{ n }}</h3>
               <Tag value="公告" severity="secondary" />
             </div>
-            <div class="text-base text-gray-600 mb-2">
+            <p class="mb-2">
               這裡是公告內容的簡短描述，讓大家快速掌握最新動態。
               如果公告內容較長，可以點擊進入公告頁面。這邊的字數限制在100字以內。
               讓使用者可以快速了解公告內容，並決定是否要點擊進入公告頁面。
-            </div>
+            </p>
           </template>
         </Card>
       </div>
@@ -76,8 +74,8 @@
 
     <!-- 近期精選迷因 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
-      <h2 class="text-center text-3xl font-bold">近期精選迷因</h2>
-      <div class="text-center text-gray-500 mb-8">
+      <h2 class="text-center">近期精選迷因</h2>
+      <div class="text-center subtitle mb-8">
         精選迷因將在此處更新，請留意更新情況。
       </div>
 
@@ -104,8 +102,8 @@
       <!-- 空狀態 -->
       <div v-else class="text-center py-12">
         <i class="pi pi-image text-6xl text-gray-300 mb-4"></i>
-        <h3 class="text-xl font-semibold text-gray-600 mb-2">暫無精選迷因</h3>
-        <p class="text-gray-500">目前沒有精選迷因，請稍後再試</p>
+        <h3 class="mb-2">暫無精選迷因</h3>
+        <p class="subtitle">目前沒有精選迷因，請稍後再試</p>
         <Button
           label="重新載入"
           icon="pi pi-refresh"
@@ -117,8 +115,8 @@
 
     <!-- 每日迷因 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
-      <h2 class="text-center text-3xl font-bold">每日迷因</h2>
-      <div class="text-center text-gray-500 mb-4">
+      <h2 class="text-center">每日迷因</h2>
+      <div class="text-center subtitle mb-4">
         點擊按鈕隨機抽一個屬於你今天的迷因吧！
       </div>
       <div class="flex justify-center mb-4">
@@ -152,8 +150,8 @@
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
       <div class="flex flex-col lg:flex-row gap-20">
         <div class="flex-1 lg:flex-1">
-          <h2 class="text-3xl font-bold mb-4">本月活躍作者</h2>
-          <div class="mb-4 text-gray-600 text-base">
+          <h2 class="mb-4">本月活躍作者</h2>
+          <div class="mb-4 subtitle">
             這些是本月最活躍的迷因創作者，他們為平台帶來了豐富多彩的內容。透過他們的創意和分享，讓我們的迷因社群更加精彩。
           </div>
           <Button
@@ -219,7 +217,7 @@
                     {{ user.follower_count || 0 }} 個追蹤者
                   </p>
                 </div>
-                <span class="text-surface-500 dark:text-surface-400">
+                <span class="text-gray-500 dark:text-gray-400">
                   參與 {{ user.meme_count }} 篇迷因創作
                 </span>
               </div>
@@ -235,9 +233,7 @@
           <!-- 空狀態 -->
           <div v-else class="w-full text-center py-12">
             <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
-            <h3 class="text-xl font-semibold text-gray-600 mb-2">
-              暫無活躍作者
-            </h3>
+            <h3 class="mb-2">暫無活躍作者</h3>
             <p class="text-gray-500">目前沒有活躍作者資料，請稍後再試</p>
             <Button
               label="重新載入"

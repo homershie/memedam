@@ -7,8 +7,8 @@
         :class="[
           'p-2 rounded-lg transition-colors',
           theme === 'light'
-            ? 'bg-surface-700 text-white'
-            : 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300',
+            ? 'bg-gray-700 text-white'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
         ]"
         :title="'淺色模式'"
       >
@@ -20,8 +20,8 @@
         :class="[
           'p-2 rounded-lg transition-colors',
           theme === 'system'
-            ? 'bg-surface-700 text-white'
-            : 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300',
+            ? 'bg-gray-700 text-white'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
         ]"
         :title="'根據系統設定'"
       >
@@ -33,8 +33,8 @@
         :class="[
           'p-2 rounded-lg transition-colors',
           theme === 'dark'
-            ? 'bg-surface-700 text-white'
-            : 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300',
+            ? 'bg-gray-700 text-white'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
         ]"
         :title="'深色模式'"
       >
@@ -59,7 +59,7 @@
     <div v-else-if="mode === 'single'" class="flex items-center">
       <button
         @click="toggleTheme"
-        class="w-8 h-8 rounded-full transition-colors text-secondary-700 hover:bg-stone-100 dark:text-secondary-300 dark:hover:bg-stone-700"
+        class="w-8 h-8 rounded-full transition-colors text-secondary-700 dark:text-secondary-300 theme-toggle"
         :title="getCurrentThemeTitle()"
       >
         <i :class="getCurrentThemeIcon()"></i>

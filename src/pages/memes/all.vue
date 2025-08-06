@@ -4,8 +4,8 @@
   <div class="container p-8 mx-auto space-y-6">
     <!-- 頁面標題 -->
     <div class="mb-6 text-center">
-      <h1 class="text-3xl font-bold text-gray-800">所有迷因</h1>
-      <p class="text-gray-600 mt-2">探索最新、最熱門的迷因內容</p>
+      <h1>所有迷因</h1>
+      <p class="mt-2">探索最新、最熱門的迷因內容</p>
     </div>
 
     <div class="flex justify-center w-full lg:w-1/2 mx-auto">
