@@ -50,9 +50,21 @@ export default {
   refresh() {
     return apiService.httpAuth.post('/api/users/refresh')
   },
+  // 密碼變更
+  changePassword(data) {
+    return apiService.httpAuth.post('/api/users/change-password', data)
+  },
+  // 電子信箱變更
+  changeEmail(data) {
+    return apiService.httpAuth.post('/api/users/change-email', data)
+  },
   // 綁定社群帳號
   bindSocial(provider, data) {
     return apiService.httpAuth.post(`/api/users/bind/${provider}`, data)
+  },
+  // 解除綁定社群帳號
+  unbindSocial(provider) {
+    return apiService.httpAuth.delete(`/api/users/unbind/${provider}`)
   },
   // OAuth 觸發
   googleAuth() {

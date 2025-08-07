@@ -14,6 +14,11 @@ import Menubar from 'primevue/menubar'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Tag from 'primevue/tag'
+import Dropdown from 'primevue/dropdown'
+import Calendar from 'primevue/calendar'
+import Textarea from 'primevue/textarea'
+import Dialog from 'primevue/dialog'
+import InputSwitch from 'primevue/inputswitch'
 
 export function registerPlugins(app) {
   app
@@ -24,5 +29,10 @@ export function registerPlugins(app) {
     .component('Menubar', Menubar)
     .component('InputText', InputText)
     .component('Password', Password)
-    .component('Tag', Tag) // 添加這行
+    .component('Tag', Tag)
+    .component('Dropdown', Dropdown)
+    .component('Calendar', Calendar)
+    .component('Textarea', Textarea)
+    .component('Dialog', Dialog)
+    .component('InputSwitch', InputSwitch)
 }

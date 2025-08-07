@@ -235,17 +235,6 @@
           <!-- 個人資訊 TabPanel -->
           <TabPanel value="1" class="settings-tab-panel">
             <div class="space-y-8">
-              <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
-                <h2
-                  class="text-2xl font-semibold text-gray-900 dark:text-white"
-                >
-                  個人資訊
-                </h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">
-                  編輯您的個人資料
-                </p>
-              </div>
-
               <form @submit.prevent="updateProfile" class="space-y-6">
                 <!-- 頭像 -->
                 <div class="space-y-4">
@@ -281,6 +270,7 @@
                     </div>
                   </div>
                 </div>
+                <h3>個人資料</h3>
 
                 <!-- 基本資訊 -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -330,22 +320,6 @@
                       v-model="userProfile.birthday"
                       dateFormat="yy-mm-dd"
                       placeholder="選擇生日"
-                      class="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      生日隱私設定
-                    </label>
-                    <Dropdown
-                      v-model="userProfile.birthdayPrivacy"
-                      :options="privacyOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="選擇隱私設定"
                       class="w-full"
                     />
                   </div>
@@ -708,9 +682,6 @@
         </div>
       </template>
     </Dialog>
-
-    <!-- Toast 通知 -->
-    <Toast />
   </div>
 </template>
 
@@ -718,6 +689,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import userService from '@/services/userService'
+import uploadService from '@/services/uploadService'
 
 // PrimeVue Tabs 組件
 import Tabs from 'primevue/tabs'
@@ -731,12 +704,14 @@ defineOptions({
   name: 'SettingsPage',
 })
 
+// 全域 toast 服務
 const toast = useToast()
 
 // 響應式資料
 const activeTabIndex = ref('0')
 const showEmailDialog = ref(false)
 const showDeleteDialog = ref(false)
+const avatarInput = ref(null)
 
 // 設定區塊
 const sections = ref([
@@ -748,14 +723,13 @@ const sections = ref([
 
 // 使用者資料
 const userProfile = reactive({
-  username: 'memedex_user',
-  email: 'user@example.com',
-  displayName: '迷因達人',
+  username: '',
+  email: '',
+  displayName: '',
   avatar: null,
-  gender: 'not_specified',
+  gender: '',
   birthday: null,
-  birthdayPrivacy: 'age_only',
-  bio: '熱愛迷因文化的創作者 🎭',
+  bio: '',
 })
 
 // 密碼表單
@@ -817,7 +791,90 @@ onMounted(() => {
   if (savedTheme) {
     preferences.themeMode = savedTheme
   }
+
+  // 載入使用者資料
+  loadUserProfile()
 })
+
+// 載入使用者資料
+const loadUserProfile = async () => {
+  try {
+    const response = await userService.getMe()
+    const userData = response.data.user || response.data
+
+    // 更新使用者資料
+    Object.assign(userProfile, {
+      username: userData.username || '',
+      email: userData.email || '',
+      displayName: userData.display_name || userData.displayName || '',
+      avatar: userData.avatar || null,
+      gender: userData.gender || '',
+      birthday: userData.birthday ? new Date(userData.birthday) : null,
+      bio: userData.bio || '',
+    })
+
+    // 載入通知設定（從後端）
+    if (userData.notificationSettings) {
+      Object.assign(notificationSettings, userData.notificationSettings)
+    } else {
+      // 如果後端沒有，嘗試從 localStorage 載入
+      const savedNotificationSettings = localStorage.getItem(
+        'notificationSettings',
+      )
+      if (savedNotificationSettings) {
+        try {
+          const parsed = JSON.parse(savedNotificationSettings)
+          Object.assign(notificationSettings, parsed)
+        } catch (e) {
+          console.error('解析通知設定失敗:', e)
+        }
+      }
+    }
+
+    // 載入偏好設定（從後端）
+    if (userData.preferences) {
+      Object.assign(preferences, userData.preferences)
+    } else {
+      // 如果後端沒有，嘗試從 localStorage 載入
+      const savedPreferences = localStorage.getItem('userPreferences')
+      if (savedPreferences) {
+        try {
+          const parsed = JSON.parse(savedPreferences)
+          Object.assign(preferences, parsed)
+        } catch (e) {
+          console.error('解析偏好設定失敗:', e)
+        }
+      }
+    }
+
+    // 更新社群帳號狀態
+    updateSocialAccountsStatus(userData)
+  } catch (error) {
+    console.error('載入使用者資料失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '載入使用者資料失敗'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  }
+}
+
+// 更新社群帳號狀態
+const updateSocialAccountsStatus = (userData) => {
+  socialAccounts.value.forEach((account) => {
+    const socialIdField = `${account.platform}_id`
+    account.connected = !!userData[socialIdField]
+    // 如果有綁定，可以從其他來源獲取電子信箱
+    if (account.connected) {
+      account.email = userData.email || ''
+    }
+  })
+}
 
 // 刪除帳號表單
 const deleteForm = reactive({
@@ -831,21 +888,28 @@ const socialAccounts = ref([
   {
     platform: 'google',
     name: 'Google',
-    email: 'user@gmail.com',
+    email: '',
     icon: 'pi pi-google',
-    connected: true,
+    connected: false,
   },
   {
     platform: 'facebook',
     name: 'Facebook',
-    email: 'user@facebook.com',
+    email: '',
     icon: 'pi pi-facebook',
+    connected: false,
+  },
+  {
+    platform: 'discord',
+    name: 'Discord',
+    email: '',
+    icon: 'pi pi-discord',
     connected: false,
   },
   {
     platform: 'twitter',
     name: 'Twitter',
-    email: 'user@twitter.com',
+    email: '',
     icon: 'pi pi-twitter',
     connected: false,
   },
@@ -853,16 +917,10 @@ const socialAccounts = ref([
 
 // 選項資料
 const genderOptions = ref([
-  { label: '不公開', value: 'not_specified' },
+  { label: '不公開', value: '' },
   { label: '男性', value: 'male' },
   { label: '女性', value: 'female' },
   { label: '其他', value: 'other' },
-])
-
-const privacyOptions = ref([
-  { label: '完全不公開', value: 'private' },
-  { label: '只顯示年齡', value: 'age_only' },
-  { label: '公開完整日期', value: 'public' },
 ])
 
 const themeOptions = ref([
@@ -934,13 +992,16 @@ const changePassword = async () => {
   }
 
   try {
-    // 模擬 API 呼叫
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 呼叫 API 變更密碼
+    await userService.changePassword({
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword,
+    })
 
     toast.add({
       severity: 'success',
       summary: '成功',
-      detail: '密碼已成功變更',
+      detail: '密碼已成功變更，請重新登入',
       life: 3000,
     })
 
@@ -948,11 +1009,21 @@ const changePassword = async () => {
     passwordForm.currentPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
-  } catch {
+
+    // 重新導向到登入頁面
+    setTimeout(() => {
+      window.location.href = '/login'
+    }, 2000)
+  } catch (error) {
+    console.error('密碼變更失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '密碼變更失敗，請稍後再試'
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '密碼變更失敗，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -980,24 +1051,35 @@ const changeEmail = async () => {
   }
 
   try {
-    // 模擬 API 呼叫
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 呼叫 API 變更電子信箱
+    await userService.changeEmail({
+      newEmail: emailForm.newEmail,
+      currentPassword: emailForm.currentPassword,
+    })
 
     toast.add({
       severity: 'success',
       summary: '成功',
-      detail: '驗證信已發送，請檢查您的信箱',
+      detail: '電子信箱已成功變更，請重新驗證',
       life: 3000,
     })
 
     showEmailDialog.value = false
     emailForm.newEmail = ''
     emailForm.currentPassword = ''
-  } catch {
+
+    // 更新使用者資料中的電子信箱
+    userProfile.email = emailForm.newEmail
+  } catch (error) {
+    console.error('電子信箱變更失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '發送驗證信失敗，請稍後再試'
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '發送驗證信失敗，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -1023,8 +1105,16 @@ const updateProfile = async () => {
   }
 
   try {
-    // 模擬 API 呼叫
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 準備要更新的資料
+    const updateData = {
+      display_name: userProfile.displayName,
+      gender: userProfile.gender,
+      birthday: userProfile.birthday,
+      bio: userProfile.bio,
+    }
+
+    // 呼叫 API 更新個人資料
+    await userService.updateMe(updateData)
 
     toast.add({
       severity: 'success',
@@ -1032,11 +1122,16 @@ const updateProfile = async () => {
       detail: '個人資料已成功更新',
       life: 3000,
     })
-  } catch {
+  } catch (error) {
+    console.error('個人資料更新失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '更新失敗，請稍後再試'
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '更新失敗，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -1048,8 +1143,10 @@ const saveNotificationSettings = async () => {
   notificationForm.loading = true
 
   try {
-    // 模擬 API 呼叫
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 呼叫 API 儲存通知設定
+    await userService.updateMe({
+      notificationSettings: notificationSettings,
+    })
 
     toast.add({
       severity: 'success',
@@ -1057,11 +1154,16 @@ const saveNotificationSettings = async () => {
       detail: '通知設定已儲存',
       life: 3000,
     })
-  } catch {
+  } catch (error) {
+    console.error('通知設定儲存失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '儲存失敗，請稍後再試'
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '儲存失敗，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -1076,8 +1178,10 @@ const savePreferences = async () => {
     // 儲存主題設定到 localStorage
     localStorage.setItem('theme', preferences.themeMode)
 
-    // 模擬 API 呼叫
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 呼叫 API 儲存偏好設定
+    await userService.updateMe({
+      preferences: preferences,
+    })
 
     toast.add({
       severity: 'success',
@@ -1085,11 +1189,16 @@ const savePreferences = async () => {
       detail: '偏好設定已儲存',
       life: 3000,
     })
-  } catch {
+  } catch (error) {
+    console.error('偏好設定儲存失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '儲存失敗，請稍後再試'
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '儲存失敗，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -1097,23 +1206,37 @@ const savePreferences = async () => {
   }
 }
 
-const toggleSocialAccount = (account) => {
-  if (account.connected) {
-    // 解除綁定邏輯
-    account.connected = false
+const toggleSocialAccount = async (account) => {
+  try {
+    if (account.connected) {
+      // 解除綁定邏輯
+      await userService.unbindSocial(account.platform)
+      account.connected = false
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: `${account.name} 帳號已解除綁定`,
+        life: 3000,
+      })
+    } else {
+      // 綁定邏輯 - 需要社群平台的 socialId，暫時模擬
+      toast.add({
+        severity: 'info',
+        summary: '提示',
+        detail: `${account.name} 帳號綁定功能開發中，請稍後再試`,
+        life: 3000,
+      })
+    }
+  } catch (error) {
+    console.error('社群帳號操作失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '操作失敗，請稍後再試'
     toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: `${account.name} 帳號已解除綁定`,
-      life: 3000,
-    })
-  } else {
-    // 綁定邏輯
-    account.connected = true
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: `${account.name} 帳號已綁定`,
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
       life: 3000,
     })
   }
@@ -1130,8 +1253,8 @@ const deleteAccount = async () => {
   }
 
   try {
-    // 模擬 API 呼叫
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    // 呼叫 API 刪除帳號
+    await userService.deleteMe()
 
     toast.add({
       severity: 'success',
@@ -1142,11 +1265,21 @@ const deleteAccount = async () => {
 
     showDeleteDialog.value = false
     deleteForm.confirmation = ''
-  } catch {
+
+    // 重新導向到登入頁面
+    setTimeout(() => {
+      window.location.href = '/login'
+    }, 2000)
+  } catch (error) {
+    console.error('帳號刪除失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '刪除失敗，請稍後再試'
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '刪除失敗，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -1154,21 +1287,68 @@ const deleteAccount = async () => {
   }
 }
 
-const handleAvatarChange = (event) => {
+const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (file) {
-    // 這裡可以處理檔案上傳邏輯
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      userProfile.avatar = e.target.result
+    try {
+      // 檢查檔案大小 (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.add({
+          severity: 'error',
+          summary: '錯誤',
+          detail: '檔案大小不能超過 2MB',
+          life: 3000,
+        })
+        return
+      }
+
+      // 檢查檔案類型
+      if (!file.type.startsWith('image/')) {
+        toast.add({
+          severity: 'error',
+          summary: '錯誤',
+          detail: '只能上傳圖片檔案',
+          life: 3000,
+        })
+        return
+      }
+
+      // 建立 FormData
+      const formData = new FormData()
+      formData.append('image', file)
+
+      // 先上傳圖片
+      const uploadResponse = await uploadService.createImage(formData)
+
+      // 更新使用者資料中的頭像
+      const updateResponse = await userService.updateMe({
+        avatar: uploadResponse.data.url,
+      })
+
+      // 更新頭像顯示
+      userProfile.avatar = updateResponse.data.user.avatar
+
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '頭像已成功更新',
+        life: 3000,
+      })
+    } catch (error) {
+      console.error('頭像上傳失敗:', error)
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        '頭像上傳失敗，請稍後再試'
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: errorMessage,
+        life: 3000,
+      })
     }
-    reader.readAsDataURL(file)
   }
 }
-
-onMounted(() => {
-  // 初始化時可以載入使用者資料
-})
 </script>
 
 <style scoped lang="scss">
