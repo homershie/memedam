@@ -154,6 +154,9 @@
             @click="logout"
           />
 
+          <!-- 通知按鈕（僅登入用戶可見） -->
+          <NotificationButton v-if="user.isLoggedIn" />
+
           <!-- 主題切換按鈕 -->
           <ThemeToggle mode="single" />
 
@@ -473,6 +476,7 @@ import Menu from 'primevue/menu'
 import Divider from 'primevue/divider'
 import SearchBox from '@/components/SearchBox.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import NotificationButton from '@/components/NotificationButton.vue'
 
 const user = useUserStore()
 const router = useRouter()
