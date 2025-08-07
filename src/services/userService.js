@@ -83,5 +83,10 @@ export default {
   getStats(userId) {
     return apiService.http.get(`/api/follows/stats/${userId}`)
   },
+  // 搜索用戶（用於@提及功能）
+  searchUsers(params = {}) {
+    const queryString = new URLSearchParams(params).toString()
+    return apiService.httpAuth.get(`/api/users/search?${queryString}`)
+  },
   getActiveUsers,
 }
