@@ -84,4 +84,8 @@ export default {
     return apiService.http.get(`/api/follows/stats/${userId}`)
   },
   getActiveUsers,
+  // 搜索用戶（用於@提及功能）
+  searchUsers(params = {}) {
+    return apiService.http.get('/api/users/search', { params })
+  },
 }
