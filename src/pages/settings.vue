@@ -1379,13 +1379,15 @@ const removeAvatar = async () => {
     // 清除暫存檔案
     tempAvatarFile.value = null
 
-    // 立即呼叫 API 移除頭像
-    await userService.updateMe({
-      avatar: null,
-    })
+  // 立即呼叫 API 以預設頭像更新兩個欄位
+  const defaultAvatar = getDefaultAvatar()
+  await userService.updateMe({
+    avatar: defaultAvatar,
+    avatarUrl: defaultAvatar,
+  })
 
-    // 更新頭像顯示為預設頭像 URL
-    userProfile.avatar = getDefaultAvatar()
+  // 更新頭像顯示為預設頭像 URL
+  userProfile.avatar = defaultAvatar
 
     toast.add({
       severity: 'success',
