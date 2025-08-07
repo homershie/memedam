@@ -242,19 +242,46 @@
                     頭像
                   </h3>
                   <div class="flex items-center space-x-4">
-                    <div class="relative">
+                    <div class="relative group">
                       <img
-                        :src="userProfile.avatar || '/default-avatar.png'"
+                        :src="userProfile.avatar || getDefaultAvatar()"
                         alt="頭像"
                         class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
                       />
+                      <!-- Hover 覆蓋層 - 移除按鈕 -->
+                      <div
+                        v-if="
+                          userProfile.avatar &&
+                          !userProfile.avatar.includes('api.dicebear.com') &&
+                          (tempAvatarFile ||
+                            !userProfile.avatar.startsWith('blob:'))
+                        "
+                        class="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      >
+                        <Button
+                          icon="pi pi-trash"
+                          severity="primary"
+                          size="small"
+                          class="w-8 h-8 rounded-full"
+                          @click="removeAvatar"
+                        />
+                      </div>
+                      <!-- 相機按鈕 -->
                       <Button
                         icon="pi pi-camera"
                         severity="secondary"
                         size="small"
-                        class="absolute -bottom-1 -right-1 w-8 h-8"
+                        class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full"
                         @click="$refs.avatarInput.click()"
                       />
+
+                      <!-- 如果有暫存檔案，顯示預覽提示 -->
+                      <div
+                        v-if="tempAvatarFile"
+                        class="absolute -top-1 -right-1 bg-warning-500 text-white text-xs px-1 py-0.5 rounded-full"
+                      >
+                        預覽
+                      </div>
                     </div>
                     <div>
                       <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -686,7 +713,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import userService from '@/services/userService'
@@ -731,6 +758,15 @@ const userProfile = reactive({
   birthday: null,
   bio: '',
 })
+
+// 暫存的頭像檔案
+const tempAvatarFile = ref(null)
+
+// 取得預設頭像 URL
+const getDefaultAvatar = () => {
+  if (!userProfile.username) return '/default-avatar.png'
+  return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${encodeURIComponent(userProfile.username)}`
+}
 
 // 密碼表單
 const passwordForm = reactive({
@@ -794,6 +830,13 @@ onMounted(() => {
 
   // 載入使用者資料
   loadUserProfile()
+})
+
+// 組件卸載時清理預覽 URL
+onUnmounted(() => {
+  if (userProfile.avatar && userProfile.avatar.startsWith('blob:')) {
+    URL.revokeObjectURL(userProfile.avatar)
+  }
 })
 
 // 載入使用者資料
@@ -1113,8 +1156,33 @@ const updateProfile = async () => {
       bio: userProfile.bio,
     }
 
+    // 如果有新的頭像檔案，先上傳
+    if (tempAvatarFile.value) {
+      const formData = new FormData()
+      formData.append('image', tempAvatarFile.value)
+
+      // 上傳圖片
+      const uploadResponse = await uploadService.createImage(formData)
+
+      // 將頭像 URL 加入更新資料
+      updateData.avatar = uploadResponse.data.url
+
+      // 清除暫存檔案
+      tempAvatarFile.value = null
+    }
+
     // 呼叫 API 更新個人資料
-    await userService.updateMe(updateData)
+    const response = await userService.updateMe(updateData)
+
+    // 更新頭像顯示（如果沒有新頭像，使用回應中的資料）
+    if (response.data.user && response.data.user.avatar) {
+      userProfile.avatar = response.data.user.avatar
+    }
+
+    // 清理預覽 URL（如果有的話）
+    if (userProfile.avatar && userProfile.avatar.startsWith('blob:')) {
+      URL.revokeObjectURL(userProfile.avatar)
+    }
 
     toast.add({
       severity: 'success',
@@ -1287,6 +1355,45 @@ const deleteAccount = async () => {
   }
 }
 
+const removeAvatar = async () => {
+  try {
+    // 清理預覽 URL（如果有的話）
+    if (userProfile.avatar && userProfile.avatar.startsWith('blob:')) {
+      URL.revokeObjectURL(userProfile.avatar)
+    }
+
+    // 清除暫存檔案
+    tempAvatarFile.value = null
+
+    // 立即呼叫 API 移除頭像
+    await userService.updateMe({
+      avatar: null,
+    })
+
+    // 更新頭像顯示為預設頭像
+    userProfile.avatar = null
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '頭像已移除',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('頭像移除失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '移除失敗，請稍後再試'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  }
+}
+
 const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (file) {
@@ -1313,37 +1420,30 @@ const handleAvatarChange = async (event) => {
         return
       }
 
-      // 建立 FormData
-      const formData = new FormData()
-      formData.append('image', file)
+      // 清理舊的預覽 URL
+      if (userProfile.avatar && userProfile.avatar.startsWith('blob:')) {
+        URL.revokeObjectURL(userProfile.avatar)
+      }
 
-      // 先上傳圖片
-      const uploadResponse = await uploadService.createImage(formData)
+      // 暫存檔案，不立即上傳
+      tempAvatarFile.value = file
 
-      // 更新使用者資料中的頭像
-      const updateResponse = await userService.updateMe({
-        avatar: uploadResponse.data.url,
-      })
-
-      // 更新頭像顯示
-      userProfile.avatar = updateResponse.data.user.avatar
+      // 建立預覽 URL
+      const previewUrl = URL.createObjectURL(file)
+      userProfile.avatar = previewUrl
 
       toast.add({
-        severity: 'success',
-        summary: '成功',
-        detail: '頭像已成功更新',
+        severity: 'info',
+        summary: '提示',
+        detail: '頭像已選擇，請點擊「儲存變更」來套用',
         life: 3000,
       })
     } catch (error) {
-      console.error('頭像上傳失敗:', error)
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        '頭像上傳失敗，請稍後再試'
+      console.error('頭像選擇失敗:', error)
       toast.add({
         severity: 'error',
         summary: '錯誤',
-        detail: errorMessage,
+        detail: '頭像選擇失敗，請稍後再試',
         life: 3000,
       })
     }
