@@ -3,16 +3,18 @@
     :class="[
       'comment-item border rounded-lg p-4 transition-all duration-200',
       isReply
-        ? 'border-blue-100 bg-blue-50/30 hover:bg-blue-50/50'
-        : 'border-gray-200 bg-white hover:shadow-md',
+        ? 'border-blue-100 bg-blue-50/30 hover:bg-surface-50/50 dark:border-surface-800 dark:bg-surface-900/30 dark:hover:bg-surface-900/50'
+        : 'border-gray-200 bg-white hover:shadow-md dark:border-surface-800 dark:bg-surface-900/30 dark:hover:shadow-lg dark:hover:shadow-surface-900/50',
     ]"
   >
     <!-- 回復標示 -->
     <div
       v-if="isReply"
-      class="flex items-center gap-2 mb-2 text-xs text-blue-600"
+      class="flex items-center gap-2 mb-2 text-xs text-secondary-600 dark:text-secondary-400"
     >
-      <i class="pi pi-reply text-xs"></i>
+      <i
+        class="pi pi-reply text-xs text-secondary-600 dark:text-secondary-400"
+      ></i>
       <span>回復留言</span>
     </div>
 
@@ -30,7 +32,7 @@
           <router-link
             v-if="getUserInfo(comment)._id"
             :to="`/users/${getUserInfo(comment)._id}`"
-            class="font-semibold text-gray-800 hover:text-blue-600 transition-colors cursor-pointer block"
+            class="font-semibold text-gray-800 hover:text-secondary-600 transition-colors cursor-pointer block"
           >
             {{
               getUserInfo(comment).display_name ||
@@ -90,7 +92,10 @@
     </div>
 
     <!-- 留言內容 -->
-    <div v-if="!isEditing" class="text-gray-700 leading-relaxed">
+    <div
+      v-if="!isEditing"
+      class="text-gray-700 leading-relaxed dark:text-gray-300"
+    >
       {{ comment.content }}
     </div>
 
@@ -129,7 +134,7 @@
         label="回復"
         icon="pi pi-reply"
         size="small"
-        severity="secondary"
+        severity="info"
         text
         @click="toggleReplyForm"
       />

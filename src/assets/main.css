@@ -1,6 +1,23 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
 
+/* 自訂深色模式變體定義 - 解決與其他變體的衝突 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-secondary-50: #fdf7ff;
+  --color-secondary-100: #faf0ff;
+  --color-secondary-200: #efd4fc;
+  --color-secondary-300: #e4bbfc;
+  --color-secondary-400: #c789fa;
+  --color-secondary-500: #a259f7;
+  --color-secondary-600: #8b47de;
+  --color-secondary-700: #6b32ba;
+  --color-secondary-800: #4b2194;
+  --color-secondary-900: #311270;
+  --color-secondary-950: #1a0747;
+}
+
 /* PrimeVue 自訂變數 */
 :root {
   --p-menu-border-radius: 0;
@@ -8,11 +25,27 @@
   --p-button-primary-hover-border-color: var(--p-primary-600);
   --p-button-primary-hover-color: var(--p-surface-0);
   --p-button-primary-color: var(--p-surface-0);
+  --p-button-text-secondary-color: var(--p-surface-800);
+  --p-button-text-info-color: var(--p-secondary-600);
+  --p-tag-primary-color: var(--p-primary-500);
+  --p-tag-primary-background: var(--p-primary-100);
+  --p-tag-secondary-color: var(--p-primary-50);
+  --p-tag-secondary-background: var(--p-primary-500);
+  --p-tag-info-color: var(--p-info-500);
+  --p-tag-info-background: var(--p-info-100);
 }
 
 /* 強制深色模式使用 primary-500 */
 .dark {
-  --p-primary-color: var(--p-primary-500) !important;
+  --p-primary-color: var(--p-primary-500);
+  --p-button-text-secondary-color: var(--p-surface-300);
+  --p-button-text-info-color: var(--p-secondary-400);
+  --p-tag-primary-color: var(--p-primary-100);
+  --p-tag-primary-background: var(--p-primary-800);
+  --p-tag-secondary-color: var(--p-primary-500);
+  --p-tag-secondary-background: var(--p-primary-50);
+  --p-tag-info-color: var(--p-info-100);
+  --p-tag-info-background: var(--p-info-800);
 }
 
 html,
@@ -50,45 +83,47 @@ body {
 }
 
 h1 {
-  @apply text-5xl font-bold text-gray-900;
+  @apply text-5xl font-bold text-gray-900 dark:text-white;
 }
 
 h2 {
-  @apply text-3xl font-bold text-gray-900;
+  @apply text-4xl font-bold text-gray-900 dark:text-white;
 }
 
 h3 {
-  @apply text-xl font-semibold text-gray-900;
+  @apply text-3xl font-semibold text-gray-900 dark:text-white;
+}
+
+h4 {
+  @apply text-2xl font-semibold text-gray-900 dark:text-white;
+}
+
+h5 {
+  @apply text-xl font-semibold text-gray-900 dark:text-white;
+}
+
+h6 {
+  @apply text-lg font-semibold text-gray-900 dark:text-white;
 }
 
 p {
-  @apply text-gray-800 text-base;
+  @apply text-gray-800 text-base dark:text-gray-300;
 }
 
 .subtitle {
-  @apply text-base text-gray-800;
+  @apply text-base text-gray-800 dark:text-gray-400;
 }
 
-.dark h1,
-.dark h2,
-.dark h3 {
-  @apply text-white;
+a {
+  @apply decoration-0 text-surface-800 transition-all p-1 dark:text-surface-300;
 }
 
-.dark p {
-  @apply text-gray-300;
+.p-tag[data-p='primary']:hover {
+  background-color: var(--p-primary-50) !important;
 }
 
-.dark .subtitle {
-  @apply text-gray-400;
-}
-
-a,
-.green {
-  text-decoration: none;
-  color: var(--vt-c-primary);
-  transition: 0.4s;
-  padding: 3px;
+.dark .p-tag[data-p='primary']:hover {
+  background-color: var(--p-primary-500) !important;
 }
 
 @media (min-width: 1024px) {

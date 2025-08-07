@@ -204,6 +204,7 @@
                     :href="href"
                     v-bind="props.action"
                     @click="navigate"
+                    class="text-surface-100 dark:text-surface-300"
                   >
                     <span :class="item.icon" />
                     <span class="ml-2">{{ item.label }}</span>

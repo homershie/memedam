@@ -12,17 +12,29 @@
       <SearchBox ref="searchBoxRef" @search="handleSearch" class="w-full" />
     </div>
 
+    <!-- 熱門標籤 -->
+    <div class="flex flex-wrap gap-2 mb-6 justify-center">
+      <Tag
+        v-for="tag in topTags"
+        :key="tag._id"
+        :value="`#${tag.name}`"
+        :severity="isTagSelected(tag) ? 'secondary' : 'primary'"
+        class="cursor-pointer"
+        @click="onTagClick(tag)"
+      />
+    </div>
+
     <!-- 篩選狀態顯示 -->
     <div
       v-if="selectedTags.length > 0"
       class="flex items-center justify-center gap-2 mb-4"
     >
-      <span class="text-sm text-gray-600">已篩選：</span>
+      <p class="text-sm!">已篩選：</p>
       <Tag
         v-for="tag in selectedTags"
         :key="tag._id"
         :value="`#${tag.name}`"
-        severity="success"
+        severity="secondary"
         class="cursor-pointer"
         @click="removeTag(tag)"
       />
@@ -33,18 +45,6 @@
         severity="secondary"
         text
         @click="clearFilters"
-      />
-    </div>
-
-    <!-- 熱門標籤 -->
-    <div class="flex flex-wrap gap-2 mb-6 justify-center">
-      <Tag
-        v-for="tag in topTags"
-        :key="tag._id"
-        :value="`#${tag.name}`"
-        :severity="isTagSelected(tag) ? 'success' : 'primary'"
-        class="cursor-pointer hover:bg-primary-50"
-        @click="onTagClick(tag)"
       />
     </div>
 

@@ -18,7 +18,7 @@ import Aura from '@primeuix/themes/aura'
 import { updatePreset } from '@primeuix/themes'
 import ConfirmationService from 'primevue/confirmationservice'
 
-// 引入 PrimeVue 基本樣式
+// 引入 PrimeVue Icon
 import 'primeicons/primeicons.css'
 // 引入 Remix Icon
 import 'remixicon/fonts/remixicon.css'
@@ -65,7 +65,7 @@ updatePreset({
       200: '#EFD4FC',
       300: '#E4BBFC',
       400: '#C789FA',
-      500: '#a259f7',
+      500: '#A259F7',
       600: '#8B47DE',
       700: '#6B32BA',
       800: '#4B2194',

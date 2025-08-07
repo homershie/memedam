@@ -134,7 +134,7 @@
 
     <template #title>
       <div class="flex justify-start items-center gap-2">
-        <h3 class="mb-1 text-xl font-bold">{{ meme.title }}</h3>
+        <h4 class="mb-1">{{ meme.title }}</h4>
         <span class="text-xs text-gray-400">· {{ publishedTime }}</span>
       </div>
     </template>
@@ -146,7 +146,7 @@
           v-for="tag in tags.slice(0, 3)"
           :key="tag._id"
           :value="`#${tag.name}`"
-          severity="secondary"
+          severity="primary"
           class="cursor-pointer"
           @click.stop="onTagClick(tag)"
         />
@@ -165,7 +165,7 @@
         <Button
           class="w-1/3"
           :icon="isLiked ? 'pi pi-thumbs-up-fill' : 'pi pi-thumbs-up'"
-          :severity="isLiked ? 'success' : 'secondary'"
+          :severity="isLiked ? 'primary' : 'secondary'"
           text
           :label="likesCount.toString()"
           @click.stop="toggleLike"
@@ -173,7 +173,7 @@
         <Button
           class="w-1/3"
           :icon="isDisliked ? 'pi pi-thumbs-down-fill' : 'pi pi-thumbs-down'"
-          :severity="isDisliked ? 'danger' : 'secondary'"
+          :severity="isDisliked ? 'success' : 'secondary'"
           text
           :label="dislikesCount.toString()"
           @click.stop="toggleDislike"

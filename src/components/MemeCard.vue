@@ -181,7 +181,7 @@
                 v-for="tag in tags"
                 :key="tag._id"
                 :value="`#${tag.name}`"
-                severity="secondary"
+                severity="primary"
                 class="cursor-pointer"
                 @click.stop="onTagClick(tag)"
               />
@@ -196,7 +196,7 @@
           <div class="flex items-center space-x-6">
             <Button
               :icon="isLiked ? 'pi pi-thumbs-up-fill' : 'pi pi-thumbs-up'"
-              :severity="isLiked ? 'success' : 'secondary'"
+              :severity="isLiked ? 'primary' : 'secondary'"
               text
               :label="likesCount.toString()"
               @click.stop="toggleLike"
@@ -206,7 +206,7 @@
               :icon="
                 isDisliked ? 'pi pi-thumbs-down-fill' : 'pi pi-thumbs-down'
               "
-              :severity="isDisliked ? 'danger' : 'secondary'"
+              :severity="isDisliked ? 'success' : 'secondary'"
               text
               :label="dislikesCount.toString()"
               @click.stop="toggleDislike"

@@ -13,8 +13,8 @@
           v-for="tag in topTags"
           :key="tag._id"
           :value="`#${tag.name}`"
-          severity="secondary"
-          class="cursor-pointer hover:bg-primary-50"
+          severity="primary"
+          class="cursor-pointer"
           @click="handleTagClick(tag)"
         />
       </div>
@@ -28,13 +28,13 @@
 
     <!-- 贊助用戶橫條 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h2 class="text-center">特別感謝請站長喝飲料的乾爹和乾媽！</h2>
+      <h3 class="text-center">特別感謝請站長喝飲料的乾爹和乾媽！</h3>
 
       <div class="flex flex-wrap justify-center gap-8 mt-2">
         <div v-for="n in 11" :key="n" class="flex items-center gap-4">
           <Avatar icon="pi pi-user" shape="circle" class="mb-1" size="large" />
           <div class="text-xs">
-            <h4 class="font-bold text-base">使用者名稱</h4>
+            <h6>使用者名稱</h6>
             <p class="subtitle">注入了100點快樂</p>
           </div>
         </div>
@@ -59,8 +59,8 @@
           </template>
           <template #content>
             <div class="mb-2 flex justify-between items-center">
-              <h3 class="mb-1">標題{{ n }}</h3>
-              <Tag value="公告" severity="secondary" />
+              <h4 class="mb-1">標題{{ n }}</h4>
+              <Tag value="公告" severity="primary" />
             </div>
             <p class="mb-2">
               這裡是公告內容的簡短描述，讓大家快速掌握最新動態。
@@ -352,7 +352,7 @@ const checkDailyMemeStatus = async () => {
         dailyMemeButtonDisabled.value = true
         dailyMemeButtonText.value = '今日已抽取'
         dailyMemeButtonIcon.value = 'pi pi-check'
-        dailyMemeButtonSeverity.value = 'success'
+        dailyMemeButtonSeverity.value = 'primary'
       } catch (error) {
         console.error('解析儲存的迷因資料失敗:', error)
         // 如果解析失敗，清除儲存資料

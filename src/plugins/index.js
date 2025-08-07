@@ -13,6 +13,7 @@ import Button from 'primevue/button'
 import Menubar from 'primevue/menubar'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
+import Tag from 'primevue/tag'
 
 export function registerPlugins(app) {
   app
@@ -23,4 +24,5 @@ export function registerPlugins(app) {
     .component('Menubar', Menubar)
     .component('InputText', InputText)
     .component('Password', Password)
+    .component('Tag', Tag) // 添加這行
 }

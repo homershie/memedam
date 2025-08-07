@@ -38,7 +38,7 @@
         showSuggestions &&
         (filteredSuggestions.length > 0 || popularKeywords.length > 0)
       "
-      class="pop-keyword-container absolute top-full left-0 right-0 mt-1 border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+      class="pop-keyword-container absolute top-full left-0 right-0 mt-1 border rounded-lg shadow-lg max-h-64 overflow-y-auto"
     >
       <!-- 推薦關鍵字 -->
       <div v-if="!searchQuery.trim() && popularKeywords.length > 0" class="p-3">
@@ -48,8 +48,8 @@
             v-for="keyword in popularKeywords"
             :key="keyword"
             :value="keyword"
-            severity="secondary"
-            class="cursor-pointer hover:bg-primary-100 text-xs pop-keyword"
+            severity="primary"
+            class="cursor-pointer text-xs pop-keyword"
             @click="selectSuggestion(keyword)"
           />
         </div>
@@ -126,14 +126,7 @@ const loadPopularKeywords = async () => {
 
     // 從熱門標籤中提取關鍵字，並加入一些預設關鍵字
     const tagKeywords = popularTags.map((tag) => tag.name).slice(0, 6)
-    const defaultKeywords = [
-      '搞笑',
-      '可愛',
-      '表情包',
-      '網路流行語',
-      '心情',
-      '工作',
-    ]
+    const defaultKeywords = ['搞笑', '可愛', '表情', '流行', '心情', '工作']
 
     // 合併並去重
     popularKeywords.value = [
@@ -147,9 +140,9 @@ const loadPopularKeywords = async () => {
       '狗狗',
       '搞笑',
       '可愛',
-      '表情包',
-      '台灣迷因',
-      '網路流行語',
+      '表情',
+      '台灣',
+      '流行',
       '動物',
       '心情',
       '工作',
@@ -166,18 +159,18 @@ const loadSearchSuggestions = async () => {
     console.warn('載入搜尋建議失敗:', error)
     // 使用預設建議
     searchSuggestions.value = [
-      '可愛動物',
-      '工作迷因',
-      '心情迷因',
-      '台灣特色',
-      '網路梗圖',
-      '表情包',
-      '搞笑圖片',
-      '日常生活',
-      '學生生活',
-      '上班族',
-      '貓咪表情',
-      '狗狗日常',
+      '動物',
+      '工作',
+      '心情',
+      '台灣',
+      '梗圖',
+      '表情',
+      '搞笑',
+      '日常',
+      '學生',
+      '上班',
+      '貓咪',
+      '狗狗',
     ]
   }
 }
@@ -284,14 +277,10 @@ defineExpose({
   width: 100%;
 }
 
-/* 確保建議清單在最上層 */
-.z-50 {
-  z-index: 50;
-}
-
 .pop-keyword-container {
   background-color: var(--p-surface-0);
   border-color: var(--p-surface-200);
+  z-index: 100;
 }
 
 .dark .pop-keyword-container {
@@ -300,10 +289,10 @@ defineExpose({
 }
 
 .pop-keyword:hover {
-  background-color: var(--p-surface-200);
+  background-color: var(--p-primary-50);
 }
 
 .dark .pop-keyword:hover {
-  background-color: var(--p-surface-500);
+  background-color: var(--p-primary-500);
 }
 </style>

@@ -59,7 +59,7 @@
     <div v-else-if="mode === 'single'" class="flex items-center">
       <button
         @click="toggleTheme"
-        class="w-8 h-8 rounded-full transition-colors text-secondary-700 dark:text-secondary-300 theme-toggle"
+        class="w-8 h-8 rounded-full transition-colors theme-toggle"
         :title="getCurrentThemeTitle()"
       >
         <i :class="getCurrentThemeIcon()"></i>
