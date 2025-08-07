@@ -95,9 +95,9 @@
     <div
       v-if="!isEditing"
       class="text-gray-700 leading-relaxed dark:text-gray-300"
-    >
-      {{ comment.content }}
-    </div>
+      v-html="formattedContent"
+      @click="handleContentClick"
+    ></div>
 
     <!-- 編輯模式 -->
     <div v-else class="space-y-3">
@@ -187,6 +187,7 @@ import Textarea from 'primevue/textarea'
 import OverlayPanel from 'primevue/overlaypanel'
 import CommentForm from './CommentForm.vue'
 import { getId, formatPublishedTime } from '@/utils/dataUtils'
+import { convertMentionsToHTML } from '@/utils/mentionUtils'
 
 const props = defineProps({
   comment: {
@@ -261,10 +262,63 @@ const canDelete = computed(() => {
   )
 })
 
+// 格式化留言內容，將@提及轉換為可點擊的標籤
+const formattedContent = computed(() => {
+  const content = props.comment.content || ''
+
+  // 生成用戶連結的函數
+  const userLinkGenerator = (username) => {
+    // 這裡可以根據用戶名生成用戶頁面連結
+    // 暫時返回用戶頁面的路由
+    return `/users/${username}`
+  }
+
+  return convertMentionsToHTML(content, userLinkGenerator)
+})
+
 // 格式化時間
 const formatTime = (timestamp) => {
   if (!timestamp) return '未知時間'
   return formatPublishedTime({ created_at: timestamp })
+}
+
+// 處理留言內容點擊事件
+const handleContentClick = (event) => {
+  const target = event.target
+
+  // 檢查是否點擊了@提及標籤（通過data-username屬性識別）
+  if (target.hasAttribute('data-username')) {
+    event.preventDefault()
+    const username = target.getAttribute('data-username')
+
+    if (username) {
+      // 觸發回復功能，並帶入@提及
+      handleMentionClick(username)
+    }
+    return
+  }
+
+  // 處理其他連結點擊
+  if (target.tagName === 'A' && target.href) {
+    // 阻止預設的瀏覽器行為
+    event.preventDefault()
+    // 跳轉到用戶頁面
+    window.location.href = target.href
+  }
+}
+
+// 處理@提及點擊
+const handleMentionClick = (username) => {
+  // 顯示回復表單
+  showReplyForm.value = true
+
+  // 等待DOM更新後，設置回復內容
+  nextTick(() => {
+    if (replyFormRef.value) {
+      // 在回復表單中插入@提及
+      replyFormRef.value.insertMention(username)
+    }
+  })
 }
 
 // 顯示選單

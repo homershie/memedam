@@ -244,14 +244,17 @@
                   <div class="flex items-center space-x-4">
                     <div class="relative group">
                       <img
-                        :src="userProfile.avatar || getDefaultAvatar()"
+                        :src="getAvatarUrl()"
                         alt="頭像"
                         class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                        @error="handleAvatarError"
+                        @load="handleAvatarLoad"
                       />
                       <!-- Hover 覆蓋層 - 移除按鈕 -->
                       <div
                         v-if="
                           userProfile.avatar &&
+                          !userProfile.avatar.includes('dicebear.com') &&
                           !userProfile.avatar.includes('api.dicebear.com') &&
                           (tempAvatarFile ||
                             !userProfile.avatar.startsWith('blob:'))
@@ -768,6 +771,11 @@ const getDefaultAvatar = () => {
   return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${encodeURIComponent(userProfile.username)}`
 }
 
+// 取得頭像 URL（簡化版本，因為 userProfile.avatar 現在總是會有值）
+const getAvatarUrl = () => {
+  return userProfile.avatar || getDefaultAvatar()
+}
+
 // 密碼表單
 const passwordForm = reactive({
   currentPassword: '',
@@ -850,7 +858,8 @@ const loadUserProfile = async () => {
       username: userData.username || '',
       email: userData.email || '',
       displayName: userData.display_name || userData.displayName || '',
-      avatar: userData.avatar || null,
+      // 優先使用自定義頭像，如果沒有則使用預設頭像 URL
+      avatar: userData.avatar || userData.avatarUrl || getDefaultAvatar(),
       gender: userData.gender || '',
       birthday: userData.birthday ? new Date(userData.birthday) : null,
       bio: userData.bio || '',
@@ -1174,9 +1183,14 @@ const updateProfile = async () => {
     // 呼叫 API 更新個人資料
     const response = await userService.updateMe(updateData)
 
-    // 更新頭像顯示（如果沒有新頭像，使用回應中的資料）
+    // 更新頭像顯示
     if (response.data.user && response.data.user.avatar) {
       userProfile.avatar = response.data.user.avatar
+    } else if (response.data.user && response.data.user.avatarUrl) {
+      userProfile.avatar = response.data.user.avatarUrl
+    } else {
+      // 如果都沒有，使用預設頭像
+      userProfile.avatar = getDefaultAvatar()
     }
 
     // 清理預覽 URL（如果有的話）
@@ -1370,13 +1384,13 @@ const removeAvatar = async () => {
       avatar: null,
     })
 
-    // 更新頭像顯示為預設頭像
-    userProfile.avatar = null
+    // 更新頭像顯示為預設頭像 URL
+    userProfile.avatar = getDefaultAvatar()
 
     toast.add({
       severity: 'success',
       summary: '成功',
-      detail: '頭像已移除',
+      detail: '頭像已移除，已切換至預設頭像',
       life: 3000,
     })
   } catch (error) {
@@ -1392,6 +1406,20 @@ const removeAvatar = async () => {
       life: 3000,
     })
   }
+}
+
+const handleAvatarError = (event) => {
+  console.error('頭像載入失敗:', event.target.src)
+  // 如果預設頭像載入失敗，可以嘗試其他方案
+  if (event.target.src.includes('dicebear.com')) {
+    console.log('Dicebear 頭像載入失敗，嘗試使用本地預設頭像')
+    // 可以設定一個本地預設頭像
+    event.target.src = '/default-avatar.png'
+  }
+}
+
+const handleAvatarLoad = (event) => {
+  console.log('頭像載入成功:', event.target.src)
 }
 
 const handleAvatarChange = async (event) => {

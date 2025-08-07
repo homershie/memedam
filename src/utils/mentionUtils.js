@@ -10,7 +10,9 @@
 export function parseMentions(text) {
   if (!text) return []
 
-  const mentionRegex = /@(\w+)/g
+  // 改進的正則表達式，確保@後面是有效的用戶名（字母、數字、底線）
+  // 並且後面有空格、標點符號或行尾
+  const mentionRegex = /@(\w+)(?=\s|$|[^\w@])/g
   const mentions = []
   let match
 
@@ -56,13 +58,18 @@ export function convertMentionsToHTML(text, userLinkGenerator = null) {
     const mention = mentions[i]
     const username = mention.username
 
-    let replacement = `<span class="mention" data-username="${username}">@${username}</span>`
+    // 檢查提及後面是否有空格，如果沒有則添加
+    const afterMention = html.substring(mention.end)
+    const needsSpace = afterMention.length > 0 && !afterMention.startsWith(' ')
+    const spaceAfter = needsSpace ? ' ' : ''
+
+    let replacement = `<span class="inline-block px-2 py-1 mx-1 bg-gray-100 rounded font-medium cursor-pointer transition-all duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-500" data-username="${username}">@${username}</span>${spaceAfter}`
 
     // 如果提供了連結生成器，則生成連結
     if (userLinkGenerator) {
       const userLink = userLinkGenerator(username)
       if (userLink) {
-        replacement = `<a href="${userLink}" class="mention-link" data-username="${username}">@${username}</a>`
+        replacement = `<a href="${userLink}" class="inline-block px-2 py-1 mx-1 bg-gray-100 rounded font-medium cursor-pointer transition-all duration-200 hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800  dark:hover:bg-gray-700 no-underline" data-username="${username}">@${username}</a>${spaceAfter}`
       }
     }
 
@@ -82,7 +89,8 @@ export function convertMentionsToHTML(text, userLinkGenerator = null) {
  */
 export function hasMentions(text) {
   if (!text) return false
-  return /@\w+/.test(text)
+  // 使用與 parseMentions 相同的正則表達式
+  return /@(\w+)(?=\s|$|[^\w@])/.test(text)
 }
 
 /**

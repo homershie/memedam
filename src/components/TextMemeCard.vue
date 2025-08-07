@@ -7,7 +7,9 @@
     ]"
   >
     <div>
-      <h3 :class="['font-bold', titleClass]">{{ title }}</h3>
+      <h3 class="text-white!" :class="['font-bold', titleClass]">
+        {{ title }}
+      </h3>
     </div>
   </div>
 </template>

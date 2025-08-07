@@ -218,6 +218,11 @@ const focus = () => {
 defineExpose({
   clearForm,
   focus,
+  insertMention: (username) => {
+    if (mentionInputRef.value) {
+      mentionInputRef.value.insertMention(username)
+    }
+  },
 })
 </script>
 

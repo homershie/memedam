@@ -1,9 +1,15 @@
 <template>
   <div class="mention-input-container">
-    <!-- 輸入框 -->
+    <!-- 顯示層：渲染標籤 -->
+    <div
+      class="mention-display-layer"
+      v-html="displayHtml"
+      :style="displayLayerStyle"
+    ></div>
+    <!-- 輸入層：透明文字，實際輸入 -->
     <div
       ref="inputContainer"
-      class="mention-input"
+      class="mention-input-layer bg-white w-full min-h-20 p-3 border border-gray-300 rounded-lg text-base leading-6 resize-vertical outline-none transition-all duration-200 dark:bg-gray-800 dark:border-gray-700"
       :class="{ focused: isFocused }"
       @click="focusInput"
       @keydown="handleKeydown"
@@ -14,19 +20,28 @@
       :placeholder="placeholder"
       role="textbox"
       aria-multiline="true"
+      style="
+        background: transparent;
+        color: transparent;
+        caret-color: #222;
+        position: relative;
+        z-index: 2;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: break-word;
+      "
     ></div>
-
     <!-- @提及下拉選單 -->
     <div
       v-if="showMentionList && mentionList.length > 0"
       ref="mentionDropdown"
-      class="mention-dropdown"
+      class="bg-white border border-gray-300 rounded-lg shadow-md max-h-40 overflow-y-auto min-w-40 dark:bg-gray-800 dark:border-gray-700"
       :style="dropdownStyle"
     >
       <div
         v-for="(user, index) in mentionList"
         :key="user._id"
-        class="mention-item"
+        class="mention-item p-2 cursor-pointer transition-all duration-200"
         :class="{ selected: index === selectedIndex }"
         @click="selectMention(user)"
         @mouseenter="selectedIndex = index"
@@ -59,6 +74,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import userService from '@/services/userService'
+// import { parseMentions } from '@/utils/mentionUtils' // 已不需要
 
 /**
  * @typedef {Object} User
@@ -96,16 +112,69 @@ const currentMentionQuery = ref('')
 const mentionStartPosition = ref(0)
 const mentionEndPosition = ref(0)
 
+// 新增：顯示層的 HTML
+const displayHtml = ref('')
+
+// 計算顯示層樣式，確保與輸入層完全一致
+const displayLayerStyle = computed(() => ({
+  pointerEvents: 'none',
+  position: 'absolute',
+  inset: 0,
+  color: '#222',
+  minHeight: '100%',
+  padding: '12px',
+  fontSize: '16px',
+  lineHeight: '1.5',
+  fontFamily: 'inherit',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  overflowWrap: 'break-word',
+  border: 'none',
+  outline: 'none',
+  resize: 'vertical',
+  backgroundColor: 'transparent',
+}))
+
+const updateDisplayHtml = () => {
+  const content = inputContainer.value?.textContent || ''
+  // 將 @xxx 轉成 <span class="mention-tag">@xxx</span>
+  let html = content.replace(/@(\w+)(?=\s|$|[^\w@])/g, (match) => {
+    return `<span class="mention-tag">${match}</span>`
+  })
+  // 保留空格
+  html = html.replace(/ /g, '&nbsp;')
+  displayHtml.value = html
+}
+
 // 計算屬性
 const dropdownStyle = computed(() => {
   if (!inputContainer.value) return {}
 
   const mentionRect = getMentionRect()
+  const containerRect = inputContainer.value.getBoundingClientRect()
+
+  // 計算相對於容器的位置
+  let relativeTop = mentionRect.bottom - containerRect.top
+  let relativeLeft = mentionRect.left - containerRect.left
+
+  // 確保下拉選單不會超出容器邊界
+  const dropdownWidth = 200 // 預估下拉選單寬度
+  const dropdownHeight = Math.min(mentionList.value.length * 40, 160) // 預估高度
+
+  // 檢查右邊界
+  if (relativeLeft + dropdownWidth > containerRect.width) {
+    relativeLeft = Math.max(0, containerRect.width - dropdownWidth)
+  }
+
+  // 檢查下邊界，如果超出則顯示在光標上方
+  if (relativeTop + dropdownHeight > containerRect.height) {
+    relativeTop = mentionRect.top - containerRect.top - dropdownHeight
+  }
 
   return {
     position: 'absolute',
-    top: `${mentionRect.bottom + 5}px`,
-    left: `${mentionRect.left}px`,
+    top: `${relativeTop}px`,
+    left: `${relativeLeft}px`,
     zIndex: 1000,
   }
 })
@@ -127,12 +196,11 @@ const handleBlur = () => {
   }, 200)
 }
 
+// 修改 handleInput
 const handleInput = () => {
   const content = inputContainer.value?.textContent || ''
-  // 更新 v-model
   emit('update:modelValue', content)
-
-  // 檢查是否需要顯示@提及列表
+  updateDisplayHtml()
   checkForMention(content)
 }
 
@@ -194,7 +262,8 @@ const checkForMention = (content) => {
       const query = afterAt.trim()
       currentMentionQuery.value = query
       mentionStartPosition.value = atIndex
-      mentionEndPosition.value = cursorPosition
+      // 修正：mentionEndPosition 應該是 @ 加上查詢文本的結束位置
+      mentionEndPosition.value = atIndex + 1 + query.length
 
       // 搜索用戶
       searchUsers(query)
@@ -241,7 +310,7 @@ const selectMention = (user) => {
   const beforeMention = content.substring(0, mentionStartPosition.value)
   const afterMention = content.substring(mentionEndPosition.value)
 
-  // 插入@提及
+  // 插入@提及，確保後面有空格
   const mentionText = `@${user.username} `
   const newContent = beforeMention + mentionText + afterMention
 
@@ -249,6 +318,7 @@ const selectMention = (user) => {
   if (inputContainer.value) {
     inputContainer.value.textContent = newContent
     emit('update:modelValue', newContent)
+    updateDisplayHtml()
   }
 
   // 設置光標位置
@@ -315,9 +385,37 @@ const getMentionRect = () => {
   const selection = window.getSelection()
   if (selection && selection.rangeCount > 0) {
     const range = selection.getRangeAt(0)
-    return range.getBoundingClientRect()
+
+    // 確保範圍在輸入容器內
+    if (inputContainer.value?.contains(range.commonAncestorContainer)) {
+      const rect = range.getBoundingClientRect()
+
+      // 如果範圍為空（只有光標），創建一個小的矩形
+      if (rect.width === 0) {
+        const tempRange = range.cloneRange()
+        tempRange.collapse(false)
+        const tempRect = tempRange.getBoundingClientRect()
+        return tempRect
+      }
+
+      return rect
+    }
   }
-  return inputContainer.value?.getBoundingClientRect() || new DOMRect()
+
+  // 如果無法獲取光標位置，返回輸入框底部位置
+  const containerRect = inputContainer.value?.getBoundingClientRect()
+  if (containerRect) {
+    return {
+      top: containerRect.bottom - 20,
+      bottom: containerRect.bottom,
+      left: containerRect.left + 10,
+      right: containerRect.right - 10,
+      width: containerRect.width - 20,
+      height: 20,
+    }
+  }
+
+  return new DOMRect()
 }
 
 // 監聽點擊外部
@@ -338,6 +436,7 @@ onMounted(() => {
   // 設置初始內容
   if (props.modelValue && inputContainer.value) {
     inputContainer.value.textContent = props.modelValue
+    updateDisplayHtml()
   }
 })
 
@@ -352,6 +451,33 @@ defineExpose({
     if (inputContainer.value) {
       inputContainer.value.textContent = ''
       emit('update:modelValue', '')
+      updateDisplayHtml()
+    }
+  },
+  insertMention: (username) => {
+    if (inputContainer.value && username) {
+      const currentContent = inputContainer.value.textContent || ''
+      const cursorPosition = getCursorPosition()
+
+      // 在當前光標位置插入提及
+      const beforeCursor = currentContent.substring(0, cursorPosition)
+      const afterCursor = currentContent.substring(cursorPosition)
+      const mentionText = `@${username} `
+      const newContent = beforeCursor + mentionText + afterCursor
+
+      // 更新輸入框內容
+      inputContainer.value.textContent = newContent
+      emit('update:modelValue', newContent)
+      updateDisplayHtml()
+
+      // 設置光標位置到提及後面
+      const newCursorPosition = cursorPosition + mentionText.length
+      setCursorPosition(newCursorPosition)
+
+      // 重新聚焦
+      nextTick(() => {
+        inputContainer.value?.focus()
+      })
     }
   },
 })
@@ -361,22 +487,49 @@ defineExpose({
 .mention-input-container {
   position: relative;
   width: 100%;
+  min-height: 48px;
 }
 
-.mention-input {
-  width: 100%;
-  min-height: 80px;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
+.mention-display-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  color: #222;
+  min-height: 100%;
+  z-index: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-family: inherit;
+  font-size: 16px;
   line-height: 1.5;
-  resize: vertical;
+  padding: 12px;
+  border: none;
   outline: none;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-  background-color: white;
+  resize: vertical;
+  background-color: transparent;
+}
+
+.mention-input-layer {
+  background: transparent;
+  color: transparent;
+  caret-color: #222;
+  position: relative;
+  z-index: 2;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.mention-tag {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  padding: 0 4px;
+  margin: 0 1px;
+  font-weight: 500;
+  border: 1px solid #bbdefb;
 }
 
 .mention-input:focus {
@@ -390,25 +543,14 @@ defineExpose({
   pointer-events: none;
 }
 
-.mention-dropdown {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  max-height: 200px;
-  overflow-y: auto;
-  min-width: 200px;
-}
-
-.mention-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
 .mention-item:hover,
 .mention-item.selected {
-  background-color: #f3f4f6;
+  background-color: var(--p-surface-100);
+}
+
+.dark .mention-item:hover,
+.dark .mention-item.selected {
+  background-color: var(--p-primary-500);
 }
 
 .mention-item:first-child {
@@ -417,24 +559,5 @@ defineExpose({
 
 .mention-item:last-child {
   border-radius: 0 0 8px 8px;
-}
-
-/* 深色模式 */
-@media (prefers-color-scheme: dark) {
-  .mention-input {
-    background-color: #1f2937;
-    border-color: #4b5563;
-    color: #f9fafb;
-  }
-
-  .mention-dropdown {
-    background: #1f2937;
-    border-color: #4b5563;
-  }
-
-  .mention-item:hover,
-  .mention-item.selected {
-    background-color: #374151;
-  }
 }
 </style>
