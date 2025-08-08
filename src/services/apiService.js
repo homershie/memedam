@@ -40,7 +40,10 @@ httpAuth.interceptors.response.use(
     if (
       error.response && // 如果是 400 錯誤，而且請求不是更新
       error.response.status === 400 &&
-      error.response.data.message === 'token 已過期' &&
+      (error.response.data.message === 'token 已過期' ||
+        error.response.data.message === '無效的 token' ||
+        error.response.data.message === 'Token is invalid' ||
+        error.response.data.message === 'Token expired') &&
       error.config.url !== '/api/users/refresh'
     ) {
       const user = useUserStore()

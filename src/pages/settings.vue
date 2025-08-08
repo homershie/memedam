@@ -275,12 +275,22 @@
                   </h3>
                   <div class="flex items-center space-x-4">
                     <div class="relative group">
-                      <img
-                        :src="getAvatarUrl()"
-                        alt="頭像"
-                        class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
-                        @error="handleAvatarError"
-                        @load="handleAvatarLoad"
+                      <Avatar
+                        :image="
+                          userProfile.avatar &&
+                          !userProfile.avatar.startsWith('blob:')
+                            ? userProfile.avatar
+                            : undefined
+                        "
+                        :icon="
+                          !userProfile.avatar ||
+                          userProfile.avatar.startsWith('blob:')
+                            ? 'pi pi-user'
+                            : undefined
+                        "
+                        shape="circle"
+                        size="xlarge"
+                        class="border-2 border-gray-200 dark:border-gray-600"
                       />
                       <!-- Hover 覆蓋層 - 移除按鈕 -->
                       <div
@@ -748,19 +758,21 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, useRouter } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import userService from '@/services/userService'
 import uploadService from '@/services/uploadService'
 import verificationService from '@/services/verificationService'
 
-// PrimeVue Tabs 組件
+// PrimeVue 組件
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
+import Avatar from 'primevue/avatar'
 
 // 元件名稱
 defineOptions({
@@ -803,17 +815,6 @@ const isResendingVerification = ref(false)
 
 // 暫存的頭像檔案
 const tempAvatarFile = ref(null)
-
-// 取得預設頭像 URL
-const getDefaultAvatar = () => {
-  if (!userProfile.username) return '/default-avatar.png'
-  return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${encodeURIComponent(userProfile.username)}`
-}
-
-// 取得頭像 URL（簡化版本，因為 userProfile.avatar 現在總是會有值）
-const getAvatarUrl = () => {
-  return userProfile.avatar || getDefaultAvatar()
-}
 
 // 密碼表單
 const passwordForm = reactive({
@@ -906,8 +907,8 @@ const loadUserProfile = async () => {
       email: userData.email || '',
       emailVerified: userData.email_verified || userData.emailVerified || false,
       displayName: userData.display_name || userData.displayName || '',
-      // 優先使用自定義頭像，如果沒有則使用預設頭像 URL
-      avatar: userData.avatar || userData.avatarUrl || getDefaultAvatar(),
+      // 使用自定義頭像或 null（Avatar 組件會顯示預設圖標）
+      avatar: userData.avatar || userData.avatarUrl || null,
       gender: userData.gender || '',
       birthday: userData.birthday ? new Date(userData.birthday) : null,
       bio: userData.bio || '',
@@ -951,6 +952,23 @@ const loadUserProfile = async () => {
     updateSocialAccountsStatus(userData)
   } catch (error) {
     console.error('載入使用者資料失敗:', error)
+
+    // 檢查是否為認證錯誤
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      toast.add({
+        severity: 'error',
+        summary: '認證失敗',
+        detail: '請重新登入以繼續使用',
+        life: 3000,
+      })
+
+      // 重定向到登入頁面
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
+      return
+    }
+
     const errorMessage =
       error.response?.data?.message ||
       error.response?.data?.error ||
@@ -1193,7 +1211,7 @@ const changeEmail = async () => {
 
   try {
     // 呼叫 API 變更電子信箱
-    await userService.changeEmail({
+    const response = await userService.changeEmail({
       newEmail: emailForm.newEmail,
       currentPassword: emailForm.currentPassword,
     })
@@ -1201,7 +1219,7 @@ const changeEmail = async () => {
     toast.add({
       severity: 'success',
       summary: '成功',
-      detail: '電子信箱已成功變更，請重新驗證',
+      detail: response.data?.message || '電子信箱已成功變更，請重新驗證',
       life: 3000,
     })
 
@@ -1211,12 +1229,42 @@ const changeEmail = async () => {
 
     // 更新使用者資料中的電子信箱
     userProfile.email = emailForm.newEmail
+    userProfile.emailVerified = false // 重置驗證狀態
   } catch (error) {
     console.error('電子信箱變更失敗:', error)
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      '發送驗證信失敗，請稍後再試'
+
+    // 更詳細的錯誤處理
+    let errorMessage = '電子信箱變更失敗，請稍後再試'
+
+    if (error.response) {
+      // 伺服器回應了錯誤狀態碼
+      const status = error.response.status
+      const data = error.response.data
+
+      switch (status) {
+        case 400:
+          errorMessage = data?.message || '請求格式錯誤'
+          break
+        case 401:
+          errorMessage = data?.message || '目前密碼不正確'
+          break
+        case 409:
+          errorMessage = data?.message || '此電子信箱已被其他使用者註冊'
+          break
+        case 422:
+          errorMessage = data?.message || '電子信箱格式不正確'
+          break
+        default:
+          errorMessage = data?.message || '電子信箱變更失敗'
+      }
+    } else if (error.request) {
+      // 請求已發出但沒有收到回應
+      errorMessage = '無法連接到伺服器，請檢查網路連線'
+    } else {
+      // 其他錯誤
+      errorMessage = error.message || '電子信箱變更失敗'
+    }
+
     toast.add({
       severity: 'error',
       summary: '錯誤',
@@ -1279,7 +1327,7 @@ const updateProfile = async () => {
       userProfile.avatar = response.data.user.avatarUrl
     } else {
       // 如果都沒有，使用預設頭像
-      userProfile.avatar = getDefaultAvatar()
+      userProfile.avatar = null // 移除 getDefaultAvatar()
     }
 
     // 清理預覽 URL（如果有的話）
@@ -1469,14 +1517,13 @@ const removeAvatar = async () => {
     tempAvatarFile.value = null
 
     // 立即呼叫 API 以預設頭像更新兩個欄位
-    const defaultAvatar = getDefaultAvatar()
     await userService.updateMe({
-      avatar: defaultAvatar,
-      avatarUrl: defaultAvatar,
+      avatar: null, // 移除 getDefaultAvatar()
+      avatarUrl: null, // 移除 getDefaultAvatar()
     })
 
     // 更新頭像顯示為預設頭像 URL
-    userProfile.avatar = defaultAvatar
+    userProfile.avatar = null // 移除 getDefaultAvatar()
   } catch (error) {
     console.error('頭像移除失敗:', error)
     const errorMessage =
@@ -1490,20 +1537,6 @@ const removeAvatar = async () => {
       life: 3000,
     })
   }
-}
-
-const handleAvatarError = (event) => {
-  console.error('頭像載入失敗:', event.target.src)
-  // 如果預設頭像載入失敗，可以嘗試其他方案
-  if (event.target.src.includes('dicebear.com')) {
-    console.log('Dicebear 頭像載入失敗，嘗試使用本地預設頭像')
-    // 可以設定一個本地預設頭像
-    event.target.src = '/default-avatar.png'
-  }
-}
-
-const handleAvatarLoad = (event) => {
-  console.log('頭像載入成功:', event.target.src)
 }
 
 const handleAvatarChange = async (event) => {
@@ -1783,6 +1816,6 @@ const handleAvatarChange = async (event) => {
 <route lang="yaml">
 meta:
   title: '設定'
-  login: ''
+  login: true
   admin: false
 </route>
