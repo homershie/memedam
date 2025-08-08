@@ -162,6 +162,16 @@
         </Button>
       </form>
 
+      <!-- 忘記密碼連結（僅在登入時顯示） -->
+      <div v-if="activeTab === 'login'" class="text-center mt-4">
+        <router-link
+          to="/forgot-password"
+          class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+        >
+          忘記密碼？
+        </router-link>
+      </div>
+
       <!-- 社交媒體登入 -->
       <div class="mt-8">
         <div class="flex justify-center gap-4">
@@ -320,19 +330,18 @@ const onSubmit = async () => {
         password: formData.password,
       })
 
-      toast.add({
-        severity: 'success',
-        summary: '註冊成功',
-        detail: '歡迎加入 MemeDam！',
-        life: 3000,
-      })
+      // 註冊成功後轉到註冊完成頁面
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+      }
 
-      // 註冊成功後切換到登入
-      activeTab.value = 'login'
-      formData.username = ''
-      formData.email = ''
-      formData.password = ''
-      formData.confirmPassword = ''
+      router.push({
+        path: '/registration-success',
+        query: {
+          user: encodeURIComponent(JSON.stringify(userData)),
+        },
+      })
     } else {
       // 登入邏輯
       const { data } = await userService.login({

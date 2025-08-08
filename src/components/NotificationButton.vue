@@ -153,6 +153,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useUserStore } from '@/stores/userStore'
 import Button from 'primevue/button'
 import Popover from 'primevue/popover'
 import Badge from 'primevue/badge'
@@ -161,6 +162,7 @@ import notificationService from '@/services/notificationService'
 
 const router = useRouter()
 const toast = useToast()
+const user = useUserStore()
 
 // 響應式數據
 const notifications = ref([])
@@ -188,6 +190,11 @@ const toggleNotifications = (event) => {
 }
 
 const fetchNotifications = async (append = false) => {
+  // 檢查用戶是否已登入
+  if (!user.isLoggedIn) {
+    return
+  }
+
   if (loading.value) return
 
   loading.value = true
@@ -236,6 +243,11 @@ const updateUnreadCount = () => {
 }
 
 const markAsRead = async (notificationId) => {
+  // 檢查用戶是否已登入
+  if (!user.isLoggedIn) {
+    return
+  }
+
   if (markingRead.value.includes(notificationId)) return
 
   markingRead.value.push(notificationId)
@@ -270,6 +282,11 @@ const markAsRead = async (notificationId) => {
 }
 
 const markAllAsRead = async () => {
+  // 檢查用戶是否已登入
+  if (!user.isLoggedIn) {
+    return
+  }
+
   if (markingAllRead.value) return
 
   markingAllRead.value = true
@@ -301,6 +318,11 @@ const markAllAsRead = async () => {
 }
 
 const deleteNotification = async (notificationId) => {
+  // 檢查用戶是否已登入
+  if (!user.isLoggedIn) {
+    return
+  }
+
   if (deleting.value.includes(notificationId)) return
 
   deleting.value.push(notificationId)
@@ -390,6 +412,11 @@ const formatTime = (timestamp) => {
 
 // 定期檢查新通知
 const checkForNewNotifications = () => {
+  // 檢查用戶是否已登入
+  if (!user.isLoggedIn) {
+    return
+  }
+
   if (!document.hidden) {
     // 只獲取第一頁來檢查是否有新通知
     fetchNotifications()
@@ -398,18 +425,21 @@ const checkForNewNotifications = () => {
 
 // 組件掛載時獲取通知
 onMounted(() => {
-  fetchNotifications()
+  // 檢查用戶是否已登入
+  if (user.isLoggedIn) {
+    fetchNotifications()
 
-  // 設定定期檢查（每5分鐘）
-  const interval = setInterval(checkForNewNotifications, 5 * 60 * 1000)
+    // 設定定期檢查（每5分鐘）
+    const interval = setInterval(checkForNewNotifications, 5 * 60 * 1000)
 
-  // 監聽頁面可見性變化
-  document.addEventListener('visibilitychange', checkForNewNotifications)
+    // 監聽頁面可見性變化
+    document.addEventListener('visibilitychange', checkForNewNotifications)
 
-  // 清理
-  return () => {
-    clearInterval(interval)
-    document.removeEventListener('visibilitychange', checkForNewNotifications)
+    // 清理
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', checkForNewNotifications)
+    }
   }
 })
 </script>

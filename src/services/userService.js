@@ -50,9 +50,18 @@ export default {
   refresh() {
     return apiService.httpAuth.post('/api/users/refresh')
   },
-  // 密碼變更
+  // 密碼相關
   changePassword(data) {
     return apiService.httpAuth.post('/api/users/change-password', data)
+  },
+  forgotPassword(email) {
+    return apiService.http.post('/api/users/forgot-password', { email })
+  },
+  resetPassword(token, newPassword) {
+    return apiService.http.post('/api/users/reset-password', {
+      token,
+      newPassword,
+    })
   },
   // 電子信箱變更
   changeEmail(data) {
@@ -86,7 +95,7 @@ export default {
   // 搜索用戶（用於@提及功能）
   searchUsers(params = {}) {
     const queryString = new URLSearchParams(params).toString()
-    return apiService.httpAuth.get(`/api/users/search?${queryString}`)
+    return apiService.http.get(`/api/users/search?${queryString}`)
   },
   getActiveUsers,
 }

@@ -112,27 +112,59 @@
               <!-- 電子信箱管理 -->
               <div class="space-y-4">
                 <h3 class="text-lg font-medium">電子信箱管理</h3>
-                <div class="bg-gray-100 rounded-lg p-4">
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-sm font-medium">
+                      <p
+                        class="text-sm font-medium text-gray-900 dark:text-white"
+                      >
                         {{ userProfile.email }}
                       </p>
                       <div class="flex items-center space-x-2 mt-1">
-                        <i class="pi pi-check-circle text-success-500"></i>
+                        <i
+                          :class="
+                            userProfile.emailVerified
+                              ? 'pi pi-check-circle text-success-500'
+                              : 'pi pi-exclamation-triangle text-warning-500'
+                          "
+                        ></i>
                         <span
-                          class="text-sm text-success-600 dark:text-success-400"
-                          >已驗證</span
+                          :class="
+                            userProfile.emailVerified
+                              ? 'text-sm text-success-600 dark:text-success-400'
+                              : 'text-sm text-warning-600 dark:text-warning-400'
+                          "
                         >
+                          {{ userProfile.emailVerified ? '已驗證' : '未驗證' }}
+                        </span>
                       </div>
+                      <p
+                        v-if="!userProfile.emailVerified"
+                        class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                      >
+                        請驗證您的電子信箱以使用完整功能
+                      </p>
                     </div>
-                    <Button
-                      label="變更信箱"
-                      icon="pi pi-pencil"
-                      severity="secondary"
-                      @click="showEmailDialog = true"
-                      class="btn-secondary"
-                    />
+                    <div class="flex space-x-2">
+                      <Button
+                        v-if="!userProfile.emailVerified"
+                        label="重新發送驗證信"
+                        icon="pi pi-send"
+                        severity="warning"
+                        size="small"
+                        @click="resendVerificationEmail"
+                        :loading="isResendingVerification"
+                        class="btn-secondary"
+                      />
+                      <Button
+                        label="變更信箱"
+                        icon="pi pi-pencil"
+                        severity="secondary"
+                        size="small"
+                        @click="showEmailDialog = true"
+                        class="btn-secondary"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -721,6 +753,7 @@ import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import userService from '@/services/userService'
 import uploadService from '@/services/uploadService'
+import verificationService from '@/services/verificationService'
 
 // PrimeVue Tabs 組件
 import Tabs from 'primevue/tabs'
@@ -755,12 +788,16 @@ const sections = ref([
 const userProfile = reactive({
   username: '',
   email: '',
+  emailVerified: false,
   displayName: '',
   avatar: null,
   gender: '',
   birthday: null,
   bio: '',
 })
+
+// 重新發送驗證信狀態
+const isResendingVerification = ref(false)
 
 // 暫存的頭像檔案
 const tempAvatarFile = ref(null)
@@ -830,14 +867,22 @@ const handleThemeChange = (newTheme) => {
 }
 
 // 初始化主題設定
-onMounted(() => {
+onMounted(async () => {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
     preferences.themeMode = savedTheme
   }
 
   // 載入使用者資料
-  loadUserProfile()
+  await loadUserProfile()
+
+  // 檢查 URL 中是否有驗證 token，如果有則重定向到驗證頁面
+  const urlParams = new URLSearchParams(window.location.search)
+  const verificationToken = urlParams.get('token')
+  if (verificationToken) {
+    router.push(`/verify?token=${verificationToken}`)
+    return
+  }
 })
 
 // 組件卸載時清理預覽 URL
@@ -857,6 +902,7 @@ const loadUserProfile = async () => {
     Object.assign(userProfile, {
       username: userData.username || '',
       email: userData.email || '',
+      emailVerified: userData.email_verified || userData.emailVerified || false,
       displayName: userData.display_name || userData.displayName || '',
       // 優先使用自定義頭像，如果沒有則使用預設頭像 URL
       avatar: userData.avatar || userData.avatarUrl || getDefaultAvatar(),
@@ -1019,6 +1065,48 @@ const contentNotifications = ref([
 ])
 
 // 方法
+
+// 處理郵件驗證
+
+
+// 重新發送驗證信
+const resendVerificationEmail = async () => {
+  if (!userProfile.email) {
+    toast.add({
+      severity: 'error',
+      summary: '發送失敗',
+      detail: '無法獲取電子信箱地址',
+      life: 3000,
+    })
+    return
+  }
+
+  isResendingVerification.value = true
+  try {
+    await verificationService.resendVerificationEmail(userProfile.email)
+    toast.add({
+      severity: 'success',
+      summary: '發送成功',
+      detail: '驗證郵件已重新發送，請檢查您的信箱',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('重新發送驗證信失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '發送失敗，請稍後再試'
+    toast.add({
+      severity: 'error',
+      summary: '發送失敗',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    isResendingVerification.value = false
+  }
+}
+
 const changePassword = async () => {
   passwordForm.loading = true
   passwordForm.errors = {}

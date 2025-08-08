@@ -67,9 +67,11 @@ export default {
     return apiService.httpAuth.get('/api/admin/recommendation-system-status')
   },
 
-  // 取得推薦系統配置
-  getRecommendationSystemConfig() {
-    return apiService.httpAuth.get('/api/admin/recommendation-system-config')
+  // 更新推薦系統配置
+  updateRecommendationSystemConfig(config) {
+    return apiService.httpAuth.put('/api/admin/recommendation-system-config', {
+      config,
+    })
   },
 
   // 批次更新用戶偏好
@@ -93,9 +95,11 @@ export default {
     return apiService.httpAuth.get('/api/admin/content-based-statistics')
   },
 
-  // 取得內容基礎配置
-  getContentBasedConfig() {
-    return apiService.httpAuth.get('/api/admin/content-based-config')
+  // 更新內容基礎配置
+  updateContentBasedConfig(config) {
+    return apiService.httpAuth.put('/api/admin/content-based-config', {
+      config,
+    })
   },
 
   // 批次更新協同過濾
@@ -121,8 +125,47 @@ export default {
     )
   },
 
-  // 取得協同過濾配置
-  getCollaborativeFilteringConfig() {
-    return apiService.httpAuth.get('/api/admin/collaborative-filtering-config')
+  // 更新協同過濾配置
+  updateCollaborativeFilteringConfig(config) {
+    return apiService.httpAuth.put(
+      '/api/admin/collaborative-filtering-config',
+      {
+        config,
+      },
+    )
+  },
+
+  // 用戶清理相關功能
+  // 手動執行刪除提醒任務
+  sendDeletionReminders() {
+    return apiService.httpAuth.post('/api/users/admin/send-deletion-reminders')
+  },
+
+  // 手動執行刪除未驗證用戶任務
+  deleteUnverifiedUsers() {
+    return apiService.httpAuth.post('/api/users/admin/delete-unverified-users')
+  },
+
+  // 獲取未驗證用戶統計資訊
+  getUnverifiedUsersStats() {
+    return apiService.httpAuth.get('/api/users/admin/unverified-stats')
+  },
+
+  // 通知管理功能
+  // 手動觸發熱門內容通知
+  sendHotContentNotifications() {
+    return apiService.httpAuth.post('/api/admin/notifications/hot-content')
+  },
+
+  // 手動觸發週報摘要通知
+  sendWeeklySummaryNotifications() {
+    return apiService.httpAuth.post('/api/admin/notifications/weekly-summary')
+  },
+
+  // 手動清理舊通知
+  cleanupOldNotifications(days = 30) {
+    return apiService.httpAuth.post(
+      `/api/admin/notifications/cleanup?days=${days}`,
+    )
   },
 }
