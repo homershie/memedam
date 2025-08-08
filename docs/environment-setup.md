@@ -12,7 +12,7 @@
 | ------------------ | -------------- | ----------------------- |
 | `NODE_ENV`         | Node.js 環境   | `development`           |
 | `VITE_API_URL`     | API 伺服器位址 | `http://localhost:4000` |
-| `VITE_APP_TITLE`   | 應用程式標題   | `迷因典 MemeDex`        |
+| `VITE_APP_TITLE`   | 應用程式標題   | `迷因典 MemeDam`        |
 | `VITE_APP_VERSION` | 應用程式版本   | `1.0.0`                 |
 
 ### 開發環境設定

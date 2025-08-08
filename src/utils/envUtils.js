@@ -28,7 +28,7 @@ export const getApiUrl = () => {
 
 // 取得應用程式標題
 export const getAppTitle = () => {
-  return import.meta.env.VITE_APP_TITLE || '迷因典 MemeDex'
+  return import.meta.env.VITE_APP_TITLE || '迷因典 MemeDam'
 }
 
 // 取得應用程式版本

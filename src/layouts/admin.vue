@@ -17,7 +17,7 @@
             <span class="text-white font-bold text-lg">M</span>
           </div>
           <div>
-            <h1 class="text-white font-semibold text-sm">迷因典 MemeDex</h1>
+            <h1 class="text-white font-semibold text-sm">迷因典 MemeDam</h1>
           </div>
         </div>
       </div>

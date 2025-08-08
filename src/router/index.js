@@ -9,9 +9,9 @@ const router = createRouter({
 
 router.afterEach((to) => {
   if (to.meta && to.meta.title) {
-    document.title = to.meta.title + ' | 迷因典 MemeDex'
+    document.title = to.meta.title + ' | 迷因典 MemeDam'
   } else {
-    document.title = '迷因典 MemeDex'
+    document.title = '迷因典 MemeDam'
   }
 })
 

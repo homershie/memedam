@@ -1359,7 +1359,7 @@ watch(
 // 頁面標題
 watch(meme, (newMeme) => {
   if (newMeme) {
-    document.title = `${newMeme.title} | 迷因典 MemeDex`
+    document.title = `${newMeme.title} | 迷因典 MemeDam`
   }
 })
 

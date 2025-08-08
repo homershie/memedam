@@ -201,7 +201,7 @@
     <div
       class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-500 dark:text-gray-400"
     >
-      © 2025 迷因典 MemeDex
+      © 2025 迷因典 MemeDam
     </div>
   </div>
 </template>
@@ -323,7 +323,7 @@ const onSubmit = async () => {
       toast.add({
         severity: 'success',
         summary: '註冊成功',
-        detail: '歡迎加入 MemeDex！',
+        detail: '歡迎加入 MemeDam！',
         life: 3000,
       })
 

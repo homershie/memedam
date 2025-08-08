@@ -1,4 +1,4 @@
-# memedex
+# memedam
 
 一個基於 Vue 3 + Vite 的迷因分享平台，支援無限滾動、推薦系統和搜尋功能。
 

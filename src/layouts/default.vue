@@ -250,7 +250,7 @@
               </div>
               <Divider />
               <div class="text-s mb-10">
-                <div class="mb-2">© 2025 迷因典 MemeDex ®</div>
+                <div class="mb-2">© 2025 迷因典 MemeDam ®</div>
                 <div>
                   <a href="#" class="hover:underline">privacy</a> |
                   <a href="#" class="hover:underline">terms of service</a> |
