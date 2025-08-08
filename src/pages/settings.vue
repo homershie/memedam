@@ -213,18 +213,45 @@
                         <p class="font-medium">
                           {{ account.name }}
                         </p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                        <p
+                          v-if="account.connected && account.email"
+                          class="text-sm text-gray-600 dark:text-gray-400"
+                        >
                           {{ account.email }}
+                        </p>
+                        <p
+                          v-else-if="account.connected"
+                          class="text-sm text-success-600 dark:text-success-400"
+                        >
+                          已綁定
+                        </p>
+                        <p
+                          v-else
+                          class="text-sm text-gray-500 dark:text-gray-400"
+                        >
+                          未綁定
                         </p>
                       </div>
                     </div>
-                    <Button
-                      :label="account.connected ? '解除綁定' : '綁定帳號'"
-                      :icon="account.connected ? 'pi pi-unlink' : 'pi pi-link'"
-                      :severity="account.connected ? 'secondary' : 'primary'"
-                      @click="toggleSocialAccount(account)"
-                      class="btn-action"
-                    />
+                    <div class="flex items-center space-x-2">
+                      <span
+                        v-if="account.connected"
+                        class="text-xs bg-success-100 text-success-800 px-2 py-1 rounded-full dark:bg-success-900/20 dark:text-success-300"
+                      >
+                        已綁定
+                      </span>
+                      <Button
+                        :label="account.connected ? '解除綁定' : '綁定帳號'"
+                        :icon="
+                          account.connected ? 'pi pi-unlink' : 'pi pi-link'
+                        "
+                        :severity="account.connected ? 'secondary' : 'primary'"
+                        :loading="account.loading"
+                        :disabled="account.loading"
+                        @click="toggleSocialAccount(account)"
+                        class="btn-action"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -742,6 +769,50 @@
         </div>
       </template>
     </Dialog>
+
+    <!-- 解除綁定確認對話框 -->
+    <Dialog
+      v-model:visible="showUnbindDialog"
+      modal
+      header="確認解除綁定"
+      :style="{ width: '500px' }"
+      :closable="false"
+    >
+      <div class="space-y-4">
+        <div class="flex items-start space-x-3">
+          <i
+            class="pi pi-exclamation-triangle text-warning-500 text-xl mt-1"
+          ></i>
+          <div>
+            <p class="text-warning-800 dark:text-warning-200 font-medium">
+              確認解除綁定
+            </p>
+            <p class="text-gray-700 dark:text-gray-300 mt-2">
+              解除綁定
+              {{ selectedAccount?.name }}
+              帳號後，您將無法使用該帳號登入。您可以隨時重新綁定。
+            </p>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end space-x-2">
+          <Button
+            label="取消"
+            severity="secondary"
+            @click="showUnbindDialog = false"
+            class="btn-secondary"
+          />
+          <Button
+            label="確認解除綁定"
+            icon="pi pi-unlink"
+            severity="warning"
+            @click="confirmUnbind"
+            class="btn-warning"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -776,6 +847,8 @@ const router = useRouter()
 const activeTabIndex = ref('0')
 const showEmailDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showUnbindDialog = ref(false)
+const selectedAccount = ref(null)
 const avatarInput = ref(null)
 
 // 設定區塊
@@ -874,6 +947,9 @@ onMounted(async () => {
     router.push(`/verify?token=${verificationToken}`)
     return
   }
+
+  // 檢查是否有 OAuth 回調參數
+  await handleOAuthCallback()
 })
 
 // 組件卸載時清理預覽 URL
@@ -938,6 +1014,9 @@ const loadUserProfile = async () => {
 
     // 更新社群帳號狀態
     updateSocialAccountsStatus(userData)
+
+    // 獲取詳細的綁定狀態
+    await loadBindStatus()
   } catch (error) {
     console.error('載入使用者資料失敗:', error)
 
@@ -974,12 +1053,39 @@ const loadUserProfile = async () => {
 const updateSocialAccountsStatus = (userData) => {
   socialAccounts.value.forEach((account) => {
     const socialIdField = `${account.platform}_id`
+    const socialEmailField = `${account.platform}_email`
+    const socialNameField = `${account.platform}_name`
+
     account.connected = !!userData[socialIdField]
-    // 如果有綁定，可以從其他來源獲取電子信箱
+
+    // 如果有綁定，從對應欄位獲取資訊
     if (account.connected) {
-      account.email = userData.email || ''
+      account.email = userData[socialEmailField] || userData.email || ''
+      account.displayName = userData[socialNameField] || account.name
+    } else {
+      account.email = ''
+      account.displayName = account.name
     }
   })
+}
+
+// 載入綁定狀態
+const loadBindStatus = async () => {
+  try {
+    const response = await userService.getBindStatus()
+    if (response.data && response.data.bindStatus) {
+      // 更新社群帳號的綁定狀態
+      socialAccounts.value.forEach((account) => {
+        const bindStatus = response.data.bindStatus[account.platform]
+        if (bindStatus !== undefined) {
+          account.connected = bindStatus
+        }
+      })
+    }
+  } catch (error) {
+    console.error('載入綁定狀態失敗:', error)
+    // 不顯示錯誤訊息，因為這不是關鍵功能
+  }
 }
 
 // 刪除帳號表單
@@ -997,6 +1103,7 @@ const socialAccounts = ref([
     email: '',
     icon: 'pi pi-google',
     connected: false,
+    loading: false,
   },
   {
     platform: 'facebook',
@@ -1004,6 +1111,7 @@ const socialAccounts = ref([
     email: '',
     icon: 'pi pi-facebook',
     connected: false,
+    loading: false,
   },
   {
     platform: 'discord',
@@ -1011,6 +1119,7 @@ const socialAccounts = ref([
     email: '',
     icon: 'pi pi-discord',
     connected: false,
+    loading: false,
   },
   {
     platform: 'twitter',
@@ -1018,6 +1127,7 @@ const socialAccounts = ref([
     email: '',
     icon: 'pi pi-twitter',
     connected: false,
+    loading: false,
   },
 ])
 
@@ -1416,32 +1526,168 @@ const savePreferences = async () => {
 }
 
 const toggleSocialAccount = async (account) => {
-  try {
-    if (account.connected) {
-      // 解除綁定邏輯
-      await userService.unbindSocial(account.platform)
-      account.connected = false
-      toast.add({
-        severity: 'success',
-        summary: '成功',
-        detail: `${account.name} 帳號已解除綁定`,
-        life: 3000,
-      })
-    } else {
-      // 綁定邏輯 - 需要社群平台的 socialId，暫時模擬
-      toast.add({
-        severity: 'info',
-        summary: '提示',
-        detail: `${account.name} 帳號綁定功能開發中，請稍後再試`,
-        life: 3000,
-      })
+  if (account.connected) {
+    // 顯示解除綁定確認對話框
+    selectedAccount.value = account
+    showUnbindDialog.value = true
+  } else {
+    // 綁定邏輯 - 使用 OAuth 流程
+    account.loading = true
+    try {
+      await initiateSocialBinding(account)
+    } finally {
+      account.loading = false
     }
+  }
+}
+
+// 確認解除綁定
+const confirmUnbind = async () => {
+  if (!selectedAccount.value) return
+
+  try {
+    await userService.unbindSocial(selectedAccount.value.platform)
+    selectedAccount.value.connected = false
+    selectedAccount.value.email = ''
+    selectedAccount.value.displayName = selectedAccount.value.name
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: `${selectedAccount.value.name} 帳號已解除綁定`,
+      life: 3000,
+    })
   } catch (error) {
-    console.error('社群帳號操作失敗:', error)
+    console.error('社群帳號解除綁定失敗:', error)
     const errorMessage =
       error.response?.data?.message ||
       error.response?.data?.error ||
-      '操作失敗，請稍後再試'
+      '解除綁定失敗，請稍後再試'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    showUnbindDialog.value = false
+    selectedAccount.value = null
+  }
+}
+
+// 處理 OAuth 回調
+const handleOAuthCallback = async () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const oauthCode = urlParams.get('code')
+  const oauthState = urlParams.get('state')
+  const oauthProvider = urlParams.get('provider')
+  const oauthError = urlParams.get('error')
+  const success = urlParams.get('success')
+  const message = urlParams.get('message')
+
+  // 處理綁定回調結果
+  if (success !== null) {
+    if (success === 'true') {
+      toast.add({
+        severity: 'success',
+        summary: '綁定成功',
+        detail: message || '社群帳號綁定成功',
+        life: 3000,
+      })
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: '綁定失敗',
+        detail: message || '社群帳號綁定失敗',
+        life: 5000,
+      })
+    }
+
+    // 重新載入使用者資料以更新綁定狀態
+    await loadUserProfile()
+
+    // 清理 URL 參數
+    window.history.replaceState({}, document.title, window.location.pathname)
+    return
+  }
+
+  // 處理傳統的 OAuth 回調（向後相容）
+  if (oauthError) {
+    toast.add({
+      severity: 'error',
+      summary: 'OAuth 錯誤',
+      detail: `授權失敗: ${oauthError}`,
+      life: 5000,
+    })
+    // 清理 URL 參數
+    window.history.replaceState({}, document.title, window.location.pathname)
+    return
+  }
+
+  if (oauthCode && oauthProvider) {
+    try {
+      // 顯示載入提示
+      toast.add({
+        severity: 'info',
+        summary: '處理中',
+        detail: `正在處理 ${oauthProvider} 授權...`,
+        life: 3000,
+      })
+
+      // 呼叫後端 API 處理 OAuth 回調
+      await userService.bindSocial(oauthProvider, {
+        code: oauthCode,
+        state: oauthState,
+      })
+
+      // 重新載入使用者資料
+      await loadUserProfile()
+
+      toast.add({
+        severity: 'success',
+        summary: '綁定成功',
+        detail: `${oauthProvider} 帳號已成功綁定`,
+        life: 3000,
+      })
+
+      // 清理 URL 參數
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } catch (error) {
+      console.error('OAuth 回調處理失敗:', error)
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        '綁定失敗，請稍後再試'
+      toast.add({
+        severity: 'error',
+        summary: '綁定失敗',
+        detail: errorMessage,
+        life: 5000,
+      })
+      // 清理 URL 參數
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }
+}
+
+// 初始化社群帳號綁定
+const initiateSocialBinding = async (account) => {
+  try {
+    // 使用新的綁定 API 端點
+    const response = await userService.initBindAuth(account.platform)
+
+    if (response.data && response.data.success) {
+      // 重定向到 OAuth 授權頁面
+      window.location.href = response.data.authUrl
+    } else {
+      throw new Error('初始化綁定流程失敗')
+    }
+  } catch (error) {
+    console.error('初始化社群綁定失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '綁定失敗，請稍後再試'
     toast.add({
       severity: 'error',
       summary: '錯誤',
@@ -1597,6 +1843,12 @@ const handleAvatarChange = async (event) => {
 .btn-danger {
   @apply bg-danger-600 hover:bg-danger-700 text-white border-danger-600 hover:border-danger-700
          focus:ring-2 focus:ring-danger-500 focus:ring-offset-2
+         transition-colors duration-200 font-medium px-4 py-2 rounded-lg;
+}
+
+.btn-warning {
+  @apply bg-warning-600 hover:bg-warning-700 text-white border-warning-600 hover:border-warning-700
+         focus:ring-2 focus:ring-warning-500 focus:ring-offset-2
          transition-colors duration-200 font-medium px-4 py-2 rounded-lg;
 }
 

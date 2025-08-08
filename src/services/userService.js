@@ -88,6 +88,14 @@ export default {
   twitterAuth() {
     return apiService.http.get('/api/users/auth/twitter')
   },
+
+  // OAuth 綁定相關
+  getBindStatus() {
+    return apiService.httpAuth.get('/api/users/bind-status')
+  },
+  initBindAuth(provider) {
+    return apiService.httpAuth.get(`/api/users/bind-auth/${provider}`)
+  },
   // 用戶統計相關
   getStats(userId) {
     return apiService.http.get(`/api/follows/stats/${userId}`)
