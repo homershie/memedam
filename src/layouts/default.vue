@@ -41,6 +41,7 @@
             class="p-button-text rounded-full"
             @click="handleMenuClick"
           />
+
           <router-link to="/" class="logo-link">
             <svg
               width="143"

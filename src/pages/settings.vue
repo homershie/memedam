@@ -748,7 +748,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, useRouter } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import userService from '@/services/userService'
@@ -769,6 +769,8 @@ defineOptions({
 
 // 全域 toast 服務
 const toast = useToast()
+
+const router = useRouter()
 
 // 響應式資料
 const activeTabIndex = ref('0')
@@ -1067,7 +1069,6 @@ const contentNotifications = ref([
 // 方法
 
 // 處理郵件驗證
-
 
 // 重新發送驗證信
 const resendVerificationEmail = async () => {
