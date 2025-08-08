@@ -185,7 +185,6 @@
               <div class="flex items-center gap-2">
                 <Avatar
                   :image="user.avatar"
-                  :icon="!user.avatar ? 'pi pi-user' : undefined"
                   shape="circle"
                   size="large"
                   :data-user-id="user._id"

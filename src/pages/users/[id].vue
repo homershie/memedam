@@ -10,7 +10,6 @@
           <div class="flex-shrink-0">
             <Avatar
               :image="userProfile?.avatar"
-              :icon="!userProfile?.avatar ? 'pi pi-user' : undefined"
               shape="circle"
               size="xlarge"
               class="border-4 border-gray-200 w-32 h-32"

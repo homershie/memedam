@@ -9,7 +9,6 @@
         <div class="flex items-center space-x-3">
           <Avatar
             :image="meme.author?.avatar"
-            :icon="!meme.author?.avatar ? 'pi pi-user' : undefined"
             shape="circle"
             size="large"
             class="border-2 border-gray-200"

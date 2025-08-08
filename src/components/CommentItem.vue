@@ -23,7 +23,6 @@
       <div class="flex items-center gap-3">
         <Avatar
           :image="getUserInfo(comment).avatar"
-          :icon="!getUserInfo(comment).avatar ? 'pi pi-user' : undefined"
           shape="circle"
           size="normal"
           class="border border-gray-200"

@@ -276,18 +276,7 @@
                   <div class="flex items-center space-x-4">
                     <div class="relative group">
                       <Avatar
-                        :image="
-                          userProfile.avatar &&
-                          !userProfile.avatar.startsWith('blob:')
-                            ? userProfile.avatar
-                            : undefined
-                        "
-                        :icon="
-                          !userProfile.avatar ||
-                          userProfile.avatar.startsWith('blob:')
-                            ? 'pi pi-user'
-                            : undefined
-                        "
+                        :image="userProfile.avatar"
                         shape="circle"
                         size="xlarge"
                         class="border-2 border-gray-200 dark:border-gray-600"
@@ -298,8 +287,7 @@
                           userProfile.avatar &&
                           !userProfile.avatar.includes('dicebear.com') &&
                           !userProfile.avatar.includes('api.dicebear.com') &&
-                          (tempAvatarFile ||
-                            !userProfile.avatar.startsWith('blob:'))
+                          !userProfile.avatar.startsWith('blob:')
                         "
                         class="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       >
@@ -907,7 +895,7 @@ const loadUserProfile = async () => {
       email: userData.email || '',
       emailVerified: userData.email_verified || userData.emailVerified || false,
       displayName: userData.display_name || userData.displayName || '',
-      // 使用自定義頭像或 null（Avatar 組件會顯示預設圖標）
+      // 使用自定義頭像
       avatar: userData.avatar || userData.avatarUrl || null,
       gender: userData.gender || '',
       birthday: userData.birthday ? new Date(userData.birthday) : null,
@@ -1109,6 +1097,9 @@ const resendVerificationEmail = async () => {
       detail: '驗證郵件已重新發送，請檢查您的信箱',
       life: 3000,
     })
+
+    // 重新載入使用者資料以確保狀態同步
+    await loadUserProfile()
   } catch (error) {
     console.error('重新發送驗證信失敗:', error)
     const errorMessage =
@@ -1223,13 +1214,16 @@ const changeEmail = async () => {
       life: 3000,
     })
 
-    showEmailDialog.value = false
-    emailForm.newEmail = ''
-    emailForm.currentPassword = ''
-
     // 更新使用者資料中的電子信箱
     userProfile.email = emailForm.newEmail
     userProfile.emailVerified = false // 重置驗證狀態
+
+    // 重新載入使用者資料以確保資料同步
+    await loadUserProfile()
+
+    showEmailDialog.value = false
+    emailForm.newEmail = ''
+    emailForm.currentPassword = ''
   } catch (error) {
     console.error('電子信箱變更失敗:', error)
 
@@ -1304,11 +1298,10 @@ const updateProfile = async () => {
 
     // 如果有新的頭像檔案，先上傳
     if (tempAvatarFile.value) {
-      const formData = new FormData()
-      formData.append('image', tempAvatarFile.value)
-
-      // 上傳圖片
-      const uploadResponse = await uploadService.createImage(formData)
+      // 使用新的頭像上傳端點
+      const uploadResponse = await uploadService.uploadAvatar(
+        tempAvatarFile.value,
+      )
 
       // 將頭像 URL 加入更新資料
       updateData.avatar = uploadResponse.data.url
@@ -1325,9 +1318,6 @@ const updateProfile = async () => {
       userProfile.avatar = response.data.user.avatar
     } else if (response.data.user && response.data.user.avatarUrl) {
       userProfile.avatar = response.data.user.avatarUrl
-    } else {
-      // 如果都沒有，使用預設頭像
-      userProfile.avatar = null // 移除 getDefaultAvatar()
     }
 
     // 清理預覽 URL（如果有的話）
@@ -1518,12 +1508,12 @@ const removeAvatar = async () => {
 
     // 立即呼叫 API 以預設頭像更新兩個欄位
     await userService.updateMe({
-      avatar: null, // 移除 getDefaultAvatar()
-      avatarUrl: null, // 移除 getDefaultAvatar()
+      avatar: null,
+      avatarUrl: null,
     })
 
-    // 更新頭像顯示為預設頭像 URL
-    userProfile.avatar = null // 移除 getDefaultAvatar()
+    // 更新頭像顯示
+    userProfile.avatar = null
   } catch (error) {
     console.error('頭像移除失敗:', error)
     const errorMessage =
