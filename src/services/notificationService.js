@@ -11,6 +11,11 @@ export default {
     return apiService.httpAuth.get('/api/notifications', { params })
   },
 
+  // 加入獲取未讀計數的方法
+  getUnreadCount() {
+    return apiService.httpAuth.get('/api/notifications/unread/count')
+  },
+
   // 取得指定通知
   get(id) {
     return apiService.httpAuth.get(`/api/notifications/${id}`)

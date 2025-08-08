@@ -73,7 +73,7 @@
       </router-link>
     </div>
     <!-- slot for page content -->
-    <router-view class="pt-6" />
+    <router-view />
     <Toast position="bottom-right" />
   </div>
 </template>

@@ -1379,22 +1379,15 @@ const removeAvatar = async () => {
     // 清除暫存檔案
     tempAvatarFile.value = null
 
-  // 立即呼叫 API 以預設頭像更新兩個欄位
-  const defaultAvatar = getDefaultAvatar()
-  await userService.updateMe({
-    avatar: defaultAvatar,
-    avatarUrl: defaultAvatar,
-  })
-
-  // 更新頭像顯示為預設頭像 URL
-  userProfile.avatar = defaultAvatar
-
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '頭像已移除，已切換至預設頭像',
-      life: 3000,
+    // 立即呼叫 API 以預設頭像更新兩個欄位
+    const defaultAvatar = getDefaultAvatar()
+    await userService.updateMe({
+      avatar: defaultAvatar,
+      avatarUrl: defaultAvatar,
     })
+
+    // 更新頭像顯示為預設頭像 URL
+    userProfile.avatar = defaultAvatar
   } catch (error) {
     console.error('頭像移除失敗:', error)
     const errorMessage =
@@ -1461,13 +1454,6 @@ const handleAvatarChange = async (event) => {
       // 建立預覽 URL
       const previewUrl = URL.createObjectURL(file)
       userProfile.avatar = previewUrl
-
-      toast.add({
-        severity: 'info',
-        summary: '提示',
-        detail: '頭像已選擇，請點擊「儲存變更」來套用',
-        life: 3000,
-      })
     } catch (error) {
       console.error('頭像選擇失敗:', error)
       toast.add({

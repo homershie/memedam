@@ -1,118 +1,160 @@
 <template>
-  <div class="page-content">
+  <div
+    class="min-h-screen px-4 pt-6 flex justify-center min-w-full md:min-w-5xl md:px-0"
+  >
     <!-- 主要內容區域 -->
-    <div class="main-content">
+    <div class="w-full max-w-md">
       <!-- 導航標籤 -->
-      <div class="nav-tabs">
+      <div class="flex justify-center mb-8 gap-8">
         <button
-          class="nav-tab"
-          :class="{ active: activeTab === 'register' }"
+          class="relative px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors duration-300 hover:text-gray-900 dark:hover:text-white"
+          :class="{
+            'text-gray-900 dark:text-white font-bold': activeTab === 'register',
+            'text-gray-600 dark:text-gray-400': activeTab !== 'register',
+          }"
           @click="activeTab = 'register'"
         >
           註冊
+          <div
+            v-if="activeTab === 'register'"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white"
+          ></div>
         </button>
         <button
-          class="nav-tab"
-          :class="{ active: activeTab === 'login' }"
+          class="relative px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors duration-300 hover:text-gray-900 dark:hover:text-white"
+          :class="{
+            'text-gray-900 dark:text-white font-bold': activeTab === 'login',
+            'text-gray-600 dark:text-gray-400': activeTab !== 'login',
+          }"
           @click="activeTab = 'login'"
         >
           登入
+          <div
+            v-if="activeTab === 'login'"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white"
+          ></div>
         </button>
       </div>
 
       <!-- 標題 -->
-      <h1 class="page-title">
+      <h1
+        class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-4"
+      >
         {{ activeTab === 'register' ? '註冊' : '登入' }}
       </h1>
 
       <!-- 條款說明 -->
-      <p class="terms-text" v-if="activeTab === 'register'">
+      <p
+        class="text-sm text-gray-600 dark:text-gray-400 mb-8 text-center leading-relaxed"
+        v-if="activeTab === 'register'"
+      >
         如果註冊，即表示你同意
-        <a href="#" class="link">服務條款</a>和
-        <a href="#" class="link">隱私政策</a>，包括
-        <a href="#" class="link">Cookie 使用政策</a>。
+        <a
+          href="#"
+          class="text-gray-900 dark:text-white underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          >服務條款</a
+        >和
+        <a
+          href="#"
+          class="text-gray-900 dark:text-white underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          >隱私政策</a
+        >，包括
+        <a
+          href="#"
+          class="text-gray-900 dark:text-white underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          >Cookie 使用政策</a
+        >。
       </p>
 
       <!-- 表單 -->
-      <form @submit.prevent="onSubmit" class="form-container">
-        <div class="form-field" v-if="activeTab === 'register'">
-          <label class="field-label">使用者名稱*</label>
+      <form @submit.prevent="onSubmit" class="space-y-6 mb-8">
+        <div v-if="activeTab === 'register'" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-900 dark:text-white"
+            >使用者名稱*</label
+          >
           <InputText
             v-model="formData.username"
             name="username"
             autocomplete="username"
-            class="form-input"
-            :class="{ 'p-invalid': errors.username }"
+            class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            :class="{ 'border-red-500 focus:ring-red-500': errors.username }"
             placeholder="請輸入使用者名稱"
           />
-          <small class="error-message" v-if="errors.username">{{
+          <small class="text-red-500 text-xs" v-if="errors.username">{{
             errors.username
           }}</small>
         </div>
 
-        <div class="form-field">
-          <label class="field-label">{{
-            activeTab === 'register' ? '電子信箱*' : '使用者名稱或電子信箱*'
-          }}</label>
+        <div class="space-y-2">
+          <label
+            class="block text-sm font-medium text-gray-900 dark:text-white"
+            >{{
+              activeTab === 'register' ? '電子信箱*' : '使用者名稱或電子信箱*'
+            }}</label
+          >
           <InputText
             v-model="formData.email"
             :type="activeTab === 'register' ? 'email' : 'text'"
             name="email"
             :autocomplete="activeTab === 'register' ? 'email' : 'username'"
-            class="form-input"
-            :class="{ 'p-invalid': errors.email }"
+            class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            :class="{ 'border-red-500 focus:ring-red-500': errors.email }"
             :placeholder="
               activeTab === 'register'
                 ? '請輸入電子信箱'
                 : '請輸入使用者名稱或電子信箱'
             "
           />
-          <small class="error-message" v-if="errors.email">{{
+          <small class="text-red-500 text-xs" v-if="errors.email">{{
             errors.email
           }}</small>
         </div>
 
-        <div class="form-field">
-          <label class="field-label">密碼*</label>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-900 dark:text-white"
+            >密碼*</label
+          >
           <Password
             v-model="formData.password"
             name="password"
             :autocomplete="
               activeTab === 'register' ? 'new-password' : 'current-password'
             "
-            class="form-input"
+            class="w-full"
             :class="{ 'p-invalid': errors.password }"
             placeholder="請輸入密碼"
             :feedback="false"
             toggleMask
           />
-          <small class="error-message" v-if="errors.password">{{
+          <small class="text-red-500 text-xs" v-if="errors.password">{{
             errors.password
           }}</small>
         </div>
 
         <!-- 新增確認密碼欄位（僅註冊時顯示） -->
-        <div class="form-field" v-if="activeTab === 'register'">
-          <label class="field-label">確認密碼*</label>
+        <div class="space-y-2" v-if="activeTab === 'register'">
+          <label class="block text-sm font-medium text-gray-900 dark:text-white"
+            >確認密碼*</label
+          >
           <Password
             v-model="formData.confirmPassword"
             name="confirmPassword"
             autocomplete="new-password"
-            class="form-input"
+            class="w-full"
             :class="{ 'p-invalid': errors.confirmPassword }"
             placeholder="請再次輸入密碼"
             :feedback="false"
             toggleMask
           />
-          <small class="error-message" v-if="errors.confirmPassword">{{
+          <small class="text-red-500 text-xs" v-if="errors.confirmPassword">{{
             errors.confirmPassword
           }}</small>
         </div>
 
         <Button
           type="submit"
-          color="primary"
-          class="btn-block"
+          class="w-full h-12 text-base font-medium"
+          severity="primary"
           :loading="isSubmitting"
           :disabled="isSubmitting"
         >
@@ -121,25 +163,46 @@
       </form>
 
       <!-- 社交媒體登入 -->
-      <div class="social-login">
-        <div class="social-buttons">
-          <button class="social-button">
-            <i class="pi pi-google"></i>
+      <div class="mt-8">
+        <div class="flex justify-center gap-4">
+          <button
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <i
+              class="pi pi-google text-xl text-gray-700 dark:text-gray-300"
+            ></i>
           </button>
-          <button class="social-button">
-            <i class="pi pi-facebook"></i>
+          <button
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <i
+              class="pi pi-facebook text-xl text-gray-700 dark:text-gray-300"
+            ></i>
           </button>
-          <button class="social-button">
-            <i class="pi pi-twitter"></i>
+          <button
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <i
+              class="pi pi-twitter text-xl text-gray-700 dark:text-gray-300"
+            ></i>
           </button>
-          <button class="social-button">
-            <i class="pi pi-discord"></i>
+          <button
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <i
+              class="pi pi-discord text-xl text-gray-700 dark:text-gray-300"
+            ></i>
           </button>
         </div>
       </div>
     </div>
+
     <!-- 版權聲明 -->
-    <div class="copyright">© 2025 迷因典 MemeDex</div>
+    <div
+      class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-500 dark:text-gray-400"
+    >
+      © 2025 迷因典 MemeDex
+    </div>
   </div>
 </template>
 
@@ -308,171 +371,13 @@ const onSubmit = async () => {
 </script>
 
 <style scoped lang="scss">
-.page-content {
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  margin: 0 auto;
-}
-
-.main-content {
-  width: 100%;
-}
-
-.nav-tabs {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
-  gap: 2rem;
-}
-
-.nav-tab {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  color: #666;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  position: relative;
-  transition: color 0.3s ease;
-}
-
-.nav-tab.active {
-  color: #000;
-  font-weight: bold;
-}
-
-.nav-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #000;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #000;
-  margin-bottom: 1rem;
-}
-
-.terms-text {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 2rem;
-  line-height: 1.4;
-}
-
-.link {
-  color: #000;
-  text-decoration: underline;
-}
-
-.form-container {
-  margin-bottom: 2rem;
-}
-
-.form-field {
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
-
-.field-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #000;
-}
-
-.form-input {
+/* 輸入框樣式 */
+:deep(.p-inputtext) {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 0.5rem;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #000;
-}
-
-.form-input.p-invalid {
-  border-color: #dc3545;
-}
-
-.error-message {
-  color: #dc3545;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.social-login {
-  margin-top: 2rem;
-}
-
-.social-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.social-button {
-  width: 50px;
-  height: 50px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.social-button:hover {
-  border-color: #000;
-  background-color: #f8f9fa;
-}
-
-.social-button i {
-  font-size: 1.2rem;
-  color: #000;
-}
-
-.copyright {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 1rem;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.btn-block {
-  width: 100%;
-}
-
-:deep(.p-password-input) {
-  width: 90%;
-}
-
-:deep(.p-password-input) {
-  padding: 0.1rem;
-  border: none;
-}
-
-:deep(.p-password-input:focus) {
-  outline: none;
-}
-
-:deep(.p-password.p-invalid .p-password-input) {
-  border-color: #dc3545;
+  transition: all 0.2s;
 }
 </style>
 
