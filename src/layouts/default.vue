@@ -192,7 +192,7 @@
             overflow-overlay: auto;
           "
         >
-          <Menu :model="menuList" class="border-none px-4">
+          <Menu :model="filteredMenuList" class="border-none px-4">
             <template #item="{ item, props }">
               <div v-if="item.separator" class="my-2 border-t"></div>
               <template v-else>
@@ -383,7 +383,7 @@
 
               <!-- 可捲動的 Menu -->
               <Menu
-                :model="menuList"
+                :model="filteredMenuList"
                 class="border-none px-4 pb-2 h-[calc(100%-80px)] overflow-y-hidden hover:overflow-y-auto"
                 style="
                   scrollbar-gutter: stable;
@@ -462,7 +462,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
@@ -538,11 +538,42 @@ const menuList = [
   { label: '最新迷因', icon: 'pi pi-bell', route: '/memes/new' },
   { label: '大家都在看', icon: 'pi pi-thumbs-up', route: '/memes/liked' },
   { separator: true },
-  { label: '設定', icon: 'pi pi-cog', route: '/settings' },
-  { label: '檢舉紀錄', icon: 'pi pi-flag', route: '/reports' },
-  { label: '提供意見', icon: 'pi pi-comment', route: '/feedback' },
+  { label: '設定', icon: 'pi pi-cog', route: '/settings', requireAuth: true },
+  {
+    label: '檢舉紀錄',
+    icon: 'pi pi-flag',
+    route: '/reports',
+    requireAuth: true,
+  },
+  {
+    label: '提供意見',
+    icon: 'pi pi-comment',
+    route: '/feedback',
+    requireAuth: true,
+  },
   { separator: true },
 ]
+
+const filteredMenuList = computed(() => {
+  const filtered = menuList.filter((item) => {
+    // 如果項目需要認證但用戶未登入，則過濾掉
+    if (item.requireAuth && !user.isLoggedIn) {
+      return false
+    }
+    return true
+  })
+
+  // 移除連續的分隔線
+  return filtered.filter((item, index, array) => {
+    if (item.separator) {
+      // 如果是第一個項目且是分隔線，則移除
+      if (index === 0) return false
+      // 如果前一個項目也是分隔線，則移除
+      if (array[index - 1] && array[index - 1].separator) return false
+    }
+    return true
+  })
+})
 
 const logout = async () => {
   try {
@@ -567,6 +598,9 @@ export default {
 </script>
 
 <style scoped>
+:deep(.p-menubar) {
+  border: none;
+}
 :deep(.p-menu-item-content) {
   padding-top: 0.2rem !important;
   padding-bottom: 0.2rem !important;
