@@ -3,13 +3,3 @@ compatibility_date = "2024-01-01"
 
 [pages]
 pages_build_output_dir = "dist"
-
-[build]
-command = "npm run build"
-
-[build.environment]
-NODE_VERSION = "22.16.0"
-NODE_ENV = "production"
-
-[env.production]
-name = "memedam"
