@@ -212,7 +212,7 @@
             ></i>
           </button>
         </div>
-        
+
         <!-- 社群登入載入提示 -->
         <div v-if="socialLoginLoading" class="text-center mt-4">
           <small class="text-gray-600 dark:text-gray-400">
@@ -402,7 +402,7 @@ const handleSocialLogin = async (provider) => {
   socialLoginLoading.value = true
 
   try {
-    await handleOAuthLogin(provider, router)
+    await handleOAuthLogin(provider, router, toast)
   } catch (error) {
     console.error(`${provider} 登入失敗:`, error)
     // handleOAuthLogin 已經處理了錯誤提示

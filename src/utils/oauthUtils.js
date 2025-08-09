@@ -1,15 +1,14 @@
 import { useUserStore } from '@/stores/userStore'
-import { useToast } from 'primevue/usetoast'
 
 /**
  * OAuth 登入處理函數
  * @param {string} provider - 社群平台 (google, facebook, discord, twitter)
  * @param {function} router - Vue Router 實例
+ * @param {object} toast - PrimeVue toast 實例
  * @returns {Promise} OAuth 登入結果
  */
-export const handleOAuthLogin = async (provider, router) => {
+export const handleOAuthLogin = async (provider, router, toast) => {
   const userStore = useUserStore()
-  const toast = useToast()
 
   try {
     // 1. 計算彈出視窗位置
@@ -22,7 +21,7 @@ export const handleOAuthLogin = async (provider, router) => {
     const popup = window.open(
       `${import.meta.env.VITE_API_URL}/api/users/auth/${provider}`,
       `${provider}_oauth`,
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
     )
 
     if (!popup) {
@@ -42,7 +41,7 @@ export const handleOAuthLogin = async (provider, router) => {
 
           // 檢查是否回到我們的域名（表示授權完成）
           const currentUrl = popup.location.href
-          
+
           if (currentUrl.includes(window.location.origin)) {
             // 解析 URL 參數
             const url = new URL(currentUrl)
@@ -83,12 +82,14 @@ export const handleOAuthLogin = async (provider, router) => {
     })
   } catch (error) {
     console.error(`${provider} OAuth 登入失敗:`, error)
-    toast.add({
-      severity: 'error',
-      summary: '登入失敗',
-      detail: error.message || '社群登入過程中發生錯誤',
-      life: 5000
-    })
+    if (toast) {
+      toast.add({
+        severity: 'error',
+        summary: '登入失敗',
+        detail: error.message || '社群登入過程中發生錯誤',
+        life: 5000,
+      })
+    }
     throw error
   }
 }
@@ -106,11 +107,14 @@ const handleOAuthSuccess = async (token, userStore, toast, router) => {
     localStorage.setItem('temp_oauth_token', token)
 
     // 使用 token 獲取用戶資訊
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/users/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
 
     if (!response.ok) {
       throw new Error('獲取用戶資訊失敗')
@@ -122,7 +126,7 @@ const handleOAuthSuccess = async (token, userStore, toast, router) => {
     userStore.login({
       ...userData.user,
       token: token,
-      userId: userData.user._id
+      userId: userData.user._id,
     })
 
     // 清除臨時 token
@@ -132,7 +136,7 @@ const handleOAuthSuccess = async (token, userStore, toast, router) => {
       severity: 'success',
       summary: '登入成功',
       detail: '歡迎回來！',
-      life: 3000
+      life: 3000,
     })
 
     // 導向首頁
@@ -159,7 +163,7 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
       severity: 'error',
       summary: 'OAuth 登入失敗',
       detail: `授權失敗: ${error}`,
-      life: 5000
+      life: 5000,
     })
     // 清除 URL 參數
     router.replace({ query: {} })
@@ -177,7 +181,7 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
         severity: 'error',
         summary: '登入失敗',
         detail: error.message || 'OAuth 登入過程中發生錯誤',
-        life: 5000
+        life: 5000,
       })
       // 清除 URL 參數
       router.replace({ query: {} })
