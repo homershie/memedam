@@ -33,4 +33,18 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vue-router', 'pinia'],
+          primevue: ['primevue', 'primeicons'],
+        },
+      },
+    },
+  },
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'pinia', 'primevue'],
+  },
 })

@@ -10,3 +10,6 @@ command = "npm run build"
 [build.environment]
 NODE_VERSION = "22.16.0"
 NODE_ENV = "production"
+
+[env.production]
+name = "memedam"
