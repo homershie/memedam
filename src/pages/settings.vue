@@ -1088,6 +1088,68 @@ const loadBindStatus = async () => {
   }
 }
 
+// 初始化社群帳號綁定
+const initiateSocialBinding = async (account) => {
+  try {
+    // 第一步：調用認證端點獲取授權 URL
+    // 需要帶上 Authorization header（通過 httpAuth 自動處理）
+    const response = await userService.initBindAuth(account.platform)
+
+    if (response.data && response.data.authUrl) {
+      // 第二步：重定向到授權 URL
+      window.location.href = response.data.authUrl
+    } else {
+      throw new Error('初始化綁定流程失敗：未獲取到授權 URL')
+    }
+  } catch (error) {
+    console.error('初始化社群綁定失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '綁定失敗，請稍後再試'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  }
+}
+
+// 確認解除綁定
+const confirmUnbind = async () => {
+  if (!selectedAccount.value) return
+
+  try {
+    await userService.unbindSocial(selectedAccount.value.platform)
+    selectedAccount.value.connected = false
+    selectedAccount.value.email = ''
+    selectedAccount.value.displayName = selectedAccount.value.name
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: `${selectedAccount.value.name} 帳號已解除綁定`,
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('社群帳號解除綁定失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '解除綁定失敗，請稍後再試'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    showUnbindDialog.value = false
+    selectedAccount.value = null
+  }
+}
+
 // 刪除帳號表單
 const deleteForm = reactive({
   confirmation: '',
@@ -1541,40 +1603,6 @@ const toggleSocialAccount = async (account) => {
   }
 }
 
-// 確認解除綁定
-const confirmUnbind = async () => {
-  if (!selectedAccount.value) return
-
-  try {
-    await userService.unbindSocial(selectedAccount.value.platform)
-    selectedAccount.value.connected = false
-    selectedAccount.value.email = ''
-    selectedAccount.value.displayName = selectedAccount.value.name
-
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: `${selectedAccount.value.name} 帳號已解除綁定`,
-      life: 3000,
-    })
-  } catch (error) {
-    console.error('社群帳號解除綁定失敗:', error)
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      '解除綁定失敗，請稍後再試'
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: errorMessage,
-      life: 3000,
-    })
-  } finally {
-    showUnbindDialog.value = false
-    selectedAccount.value = null
-  }
-}
-
 // 處理 OAuth 回調
 const handleOAuthCallback = async () => {
   const urlParams = new URLSearchParams(window.location.search)
@@ -1667,34 +1695,6 @@ const handleOAuthCallback = async () => {
       // 清理 URL 參數
       window.history.replaceState({}, document.title, window.location.pathname)
     }
-  }
-}
-
-// 初始化社群帳號綁定
-const initiateSocialBinding = async (account) => {
-  try {
-    // 第一步：調用認證端點獲取授權 URL
-    // 需要帶上 Authorization header（通過 httpAuth 自動處理）
-    const response = await userService.initBindAuth(account.platform)
-
-    if (response.data && response.data.authUrl) {
-      // 第二步：重定向到授權 URL
-      window.location.href = response.data.authUrl
-    } else {
-      throw new Error('初始化綁定流程失敗：未獲取到授權 URL')
-    }
-  } catch (error) {
-    console.error('初始化社群綁定失敗:', error)
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      '綁定失敗，請稍後再試'
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: errorMessage,
-      life: 3000,
-    })
   }
 }
 
