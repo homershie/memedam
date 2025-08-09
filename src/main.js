@@ -18,8 +18,8 @@ import Aura from '@primeuix/themes/aura'
 import { updatePreset } from '@primeuix/themes'
 import ConfirmationService from 'primevue/confirmationservice'
 
-// 引入 PrimeVue Icon - 使用相對路徑
-import '../node_modules/primeicons/primeicons.css'
+// 引入 PrimeVue Icon - 使用正確的路徑
+import 'primeicons/primeicons.css'
 // 引入 Remix Icon
 import 'remixicon/fonts/remixicon.css'
 

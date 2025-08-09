@@ -22,6 +22,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      primeicons: fileURLToPath(
+        new URL('./node_modules/primeicons', import.meta.url),
+      ),
     },
   },
   server: {
@@ -45,6 +48,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'primevue', 'primeicons'],
+    include: ['vue', 'vue-router', 'pinia', 'primevue'],
   },
 })
