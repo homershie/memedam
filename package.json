@@ -5,14 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npx vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "install:all": "npm install --include=dev"
   },
   "dependencies": {
     "@iconify/vue": "^5.0.0",
     "@primeuix/themes": "^1.2.1",
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vueup/vue-quill": "^1.2.0",
     "@vueuse/core": "^13.5.0",
     "@vueuse/head": "^2.0.0",
@@ -29,8 +31,13 @@
     "remixicon": "^4.6.0",
     "swiper": "^11.2.10",
     "tailwindcss-primeui": "^0.6.1",
+    "unplugin-vue-components": "^28.8.0",
     "validator": "^13.15.15",
     "vee-validate": "^4.15.1",
+    "vite": "^5.2.0",
+    "vite-plugin-pages": "^0.33.1",
+    "vite-plugin-vue-layouts": "^0.11.0",
+    "vite-plugin-vue-mcp": "^0.3.2",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1",
     "yup": "^1.6.1"
@@ -40,7 +47,6 @@
     "@primevue/auto-import-resolver": "^4.3.6",
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
-    "@vitejs/plugin-vue": "^6.0.0",
     "@vue/eslint-config-prettier": "^10.2.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.29.0",
@@ -52,11 +58,6 @@
     "prettier": "3.5.3",
     "sass": "^1.89.2",
     "tailwindcss": "^4.1.11",
-    "unplugin-vue-components": "^28.8.0",
-    "vite": "^5.2.0",
-    "vite-plugin-pages": "^0.33.1",
-    "vite-plugin-vue-devtools": "^7.7.7",
-    "vite-plugin-vue-layouts": "^0.11.0",
-    "vite-plugin-vue-mcp": "^0.3.2"
+    "vite-plugin-vue-devtools": "^7.7.7"
   }
 }
