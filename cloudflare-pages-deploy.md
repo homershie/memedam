@@ -1,3 +1,4 @@
+
 # Cloudflare Pages 部署指南
 
 ## 🚀 自動部署設定
@@ -17,6 +18,10 @@
 NODE_VERSION = 22.16.0
 NODE_ENV = production
 ```
+
+> **注意**：Cloudflare Pages 在 `NODE_ENV=production` 時預設不會安裝 `devDependencies`，
+> 導致建置工具如 `vite` 無法使用。本專案於根目錄新增了 `.npmrc` 檔案，
+> 內容設定 `production=false` 以確保開發依賴在部署時也會被安裝。
 
 ### 📦 部署步驟
 
@@ -90,7 +95,7 @@ npm run preview
 
 相比上次部署，我們修正了：
 - ✅ 移除了不相容的 `wrangler.toml` 檔案
-- ✅ 將核心建置工具移到 `dependencies` 確保部署時安裝
+- ✅ 透過 `.npmrc` (`production=false`) 確保部署時安裝開發依賴
 - ✅ 簡化建置命令
 - ✅ 確保 Node.js 版本一致性
 
