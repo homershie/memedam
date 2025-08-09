@@ -39,12 +39,12 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['vue', 'vue-router', 'pinia'],
-          primevue: ['primevue', 'primeicons'],
+          primevue: ['primevue'],
         },
       },
     },
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'primevue'],
+    include: ['vue', 'vue-router', 'pinia', 'primevue', 'primeicons'],
   },
 })
