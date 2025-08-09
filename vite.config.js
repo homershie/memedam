@@ -2,7 +2,6 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import Pages from 'vite-plugin-pages'
 import Layouts from 'vite-plugin-vue-layouts'
 import Components from 'unplugin-vue-components/vite'
@@ -13,7 +12,6 @@ import { VueMcp } from 'vite-plugin-vue-mcp'
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
     Pages(),
     Layouts(),
     Components({

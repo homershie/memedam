@@ -8,9 +8,5 @@ export default {
       },
     },
   },
-  plugins: [
-    import('tailwindcss-primeui').then((mod) =>
-      mod.default ? mod.default : mod,
-    ),
-  ],
+  plugins: [],
 }
