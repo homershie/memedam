@@ -1,0 +1,27 @@
+name = "memedam"
+compatibility_date = "2024-12-01"
+
+[build]
+command = "npm run build"
+cwd = "."
+watch_dir = "src"
+
+[build.upload]
+format = "modules"
+dir = "dist"
+main = "./index.html"
+
+[[build.upload.rules]]
+type = "ESModule"
+globs = ["**/*.js"]
+
+[[build.upload.rules]]
+type = "Text"
+globs = ["**/*.html"]
+
+[[build.upload.rules]]
+type = "Data"
+globs = ["**/*.css", "**/*.png", "**/*.jpg", "**/*.svg", "**/*.ico"]
+
+[vars]
+NODE_ENV = "production"
