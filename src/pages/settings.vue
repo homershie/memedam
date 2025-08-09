@@ -1673,14 +1673,15 @@ const handleOAuthCallback = async () => {
 // 初始化社群帳號綁定
 const initiateSocialBinding = async (account) => {
   try {
-    // 使用新的綁定 API 端點
+    // 第一步：調用認證端點獲取授權 URL
+    // 需要帶上 Authorization header（通過 httpAuth 自動處理）
     const response = await userService.initBindAuth(account.platform)
 
-    if (response.data && response.data.success) {
-      // 重定向到 OAuth 授權頁面
+    if (response.data && response.data.authUrl) {
+      // 第二步：重定向到授權 URL
       window.location.href = response.data.authUrl
     } else {
-      throw new Error('初始化綁定流程失敗')
+      throw new Error('初始化綁定流程失敗：未獲取到授權 URL')
     }
   } catch (error) {
     console.error('初始化社群綁定失敗:', error)
