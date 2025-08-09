@@ -176,33 +176,48 @@
       <div class="mt-8">
         <div class="flex justify-center gap-4">
           <button
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="handleSocialLogin('google')"
+            :disabled="socialLoginLoading"
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i
               class="pi pi-google text-xl text-gray-700 dark:text-gray-300"
             ></i>
           </button>
           <button
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="handleSocialLogin('facebook')"
+            :disabled="socialLoginLoading"
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i
               class="pi pi-facebook text-xl text-gray-700 dark:text-gray-300"
             ></i>
           </button>
           <button
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="handleSocialLogin('twitter')"
+            :disabled="socialLoginLoading"
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i
               class="pi pi-twitter text-xl text-gray-700 dark:text-gray-300"
             ></i>
           </button>
           <button
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="handleSocialLogin('discord')"
+            :disabled="socialLoginLoading"
+            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i
               class="pi pi-discord text-xl text-gray-700 dark:text-gray-300"
             ></i>
           </button>
+        </div>
+        
+        <!-- 社群登入載入提示 -->
+        <div v-if="socialLoginLoading" class="text-center mt-4">
+          <small class="text-gray-600 dark:text-gray-400">
+            正在開啟授權視窗，請稍候...
+          </small>
         </div>
       </div>
     </div>
@@ -229,6 +244,7 @@ import Password from 'primevue/password'
 import userService from '@/services/userService'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
+import { handleOAuthLogin } from '@/utils/oauthUtils'
 
 const router = useRouter()
 const user = useUserStore()
@@ -237,6 +253,7 @@ const toast = useToast()
 // 響應式數據
 const activeTab = ref('register')
 const isSubmitting = ref(false)
+const socialLoginLoading = ref(false)
 
 const formData = reactive({
   username: '',
@@ -375,6 +392,22 @@ const onSubmit = async () => {
     })
   } finally {
     isSubmitting.value = false
+  }
+}
+
+// 社群登入處理
+const handleSocialLogin = async (provider) => {
+  if (socialLoginLoading.value) return
+
+  socialLoginLoading.value = true
+
+  try {
+    await handleOAuthLogin(provider, router)
+  } catch (error) {
+    console.error(`${provider} 登入失敗:`, error)
+    // handleOAuthLogin 已經處理了錯誤提示
+  } finally {
+    socialLoginLoading.value = false
   }
 }
 </script>

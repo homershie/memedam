@@ -249,9 +249,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
+import { handleOAuthCallback } from '@/utils/oauthUtils'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
@@ -268,6 +269,7 @@ import MemeCard from '@/components/MemeCard.vue'
 import memeService from '@/services/memeService'
 
 const router = useRouter()
+const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
 
@@ -741,8 +743,19 @@ const onDailyMemeDeleted = () => {
   dailyMemeButtonSeverity.value = 'primary'
 }
 
+// 處理 OAuth 回調
+const handleOAuthCallbackOnMount = async () => {
+  // 只在首頁載入時處理 OAuth 回調
+  if (route.query.token || route.query.error) {
+    await handleOAuthCallback(route, router, userStore, toast)
+  }
+}
+
 // 初始化
 onMounted(async () => {
+  // 處理 OAuth 回調
+  await handleOAuthCallbackOnMount()
+  
   // 檢查每日迷因狀態
   await checkDailyMemeStatus()
   await Promise.all([loadTopTags(), loadFeaturedMemes(), loadActiveUsers()])
