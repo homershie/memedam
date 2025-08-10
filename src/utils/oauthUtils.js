@@ -50,11 +50,10 @@ export const handleOAuthLogin = async (provider, router, toast) => {
           window.removeEventListener('message', messageHandler)
           clearInterval(checkClosed)
 
-          // 處理 OAuth 成功
-          handleOAuthSuccess(event.data.token, userStore, toast, router, false)
+          // 處理 OAuth 成功並跳轉
+          handleOAuthSuccess(event.data.token, userStore, toast, router, true)
             .then(() => {
-              // 在父視窗中跳轉到首頁
-              window.location.href = '/'
+              resolve()
             })
             .catch(reject)
         } else if (event.data.type === 'oauth_error') {
@@ -107,10 +106,9 @@ export const handleOAuthLogin = async (provider, router, toast) => {
               reject(new Error(`OAuth 授權失敗: ${error}`))
             } else if (token) {
               // 4. 使用 token 獲取用戶資訊並登入
-              handleOAuthSuccess(token, userStore, toast, router, false)
+              handleOAuthSuccess(token, userStore, toast, router, true)
                 .then(() => {
-                  // 在父視窗中跳轉到首頁
-                  window.location.href = '/'
+                  resolve()
                 })
                 .catch(reject)
             } else {
