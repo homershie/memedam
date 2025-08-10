@@ -395,21 +395,24 @@ const onSubmit = async () => {
   }
 }
 
-// 社群登入處理
+// 社群登入處理（重定向方式）
 const handleSocialLogin = async (provider) => {
   if (socialLoginLoading.value) return
 
   socialLoginLoading.value = true
 
   try {
-    console.log(`開始 ${provider} 社群登入`)
+    console.log(`開始 ${provider} 社群登入（重定向方式）`)
+    
+    // 使用重定向方式進行 OAuth，頁面會直接跳轉
     await handleOAuthLogin(provider, router, toast)
-    console.log(`${provider} 社群登入成功`)
-    // handleOAuthLogin 內部已經處理了跳轉邏輯，這裡不需要重複跳轉
+    
+    // 注意：這行不會執行，因為頁面已經重定向了
+    console.log(`${provider} 社群登入重定向完成`)
   } catch (error) {
     console.error(`${provider} 登入失敗:`, error)
     
-    // 顯示錯誤訊息給用戶
+    // 顯示錯誤訊息給用戶（只有在重定向失敗時才會執行）
     toast.add({
       severity: 'error',
       summary: '社群登入失敗',
