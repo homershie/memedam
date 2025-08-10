@@ -110,6 +110,7 @@ export const handleOAuthLogin = async (provider, router, toast) => {
 
       // 延遲開始檢查，給彈出視窗時間載入 OAuth URL
       let checkStarted = false
+      let consecutiveClosedChecks = 0 // 連續檢測到關閉的次數
       
       const checkClosed = setInterval(() => {
         try {
@@ -131,9 +132,9 @@ export const handleOAuthLogin = async (provider, router, toast) => {
               checkStarted = true
             }
             
-            // 如果超過 5 秒還沒開始載入，也開始檢查
-            if (Date.now() - startTime > 5000) {
-              console.log('超過 5 秒，強制開始檢查')
+            // 如果超過 10 秒還沒開始載入，也開始檢查
+            if (Date.now() - startTime > 10000) {
+              console.log('超過 10 秒，強制開始檢查')
               checkStarted = true
             }
             
@@ -143,20 +144,31 @@ export const handleOAuthLogin = async (provider, router, toast) => {
             }
           }
           
-          // 檢查視窗是否真的關閉
+          // 多次確認視窗關閉，避免誤判
           if (popup.closed) {
-            console.log('檢測到彈出視窗關閉')
-            if (isResolved) {
-              console.log('OAuth 已經處理過，忽略視窗關閉')
+            consecutiveClosedChecks++
+            console.log(`檢測到彈出視窗關閉 (第 ${consecutiveClosedChecks} 次檢查)`)
+            
+            // 需要連續 3 次檢查都確認關閉才認為真的關閉
+            if (consecutiveClosedChecks >= 3) {
+              if (isResolved) {
+                console.log('OAuth 已經處理過，忽略視窗關閉')
+                return
+              }
+              isResolved = true
+
+              clearInterval(checkClosed)
+              window.removeEventListener('message', messageHandler)
+              console.log('確認彈出視窗已關閉，用戶取消了授權')
+              reject(new Error('用戶取消了授權'))
               return
             }
-            isResolved = true
-
-            clearInterval(checkClosed)
-            window.removeEventListener('message', messageHandler)
-            console.log('用戶取消了授權或視窗意外關閉')
-            reject(new Error('用戶取消了授權'))
-            return
+          } else {
+            // 視窗沒有關閉，重置計數器
+            if (consecutiveClosedChecks > 0) {
+              console.log('彈出視窗重新開啟，重置關閉計數器')
+              consecutiveClosedChecks = 0
+            }
           }
 
           // 檢查是否回到我們的域名（表示授權完成）
@@ -219,16 +231,28 @@ export const handleOAuthLogin = async (provider, router, toast) => {
           // 跨域錯誤是正常的，繼續檢查
           // 只有在檢查已開始後才判斷視窗關閉
           if (checkStarted && popup.closed) {
-            if (isResolved) return
-            isResolved = true
+            consecutiveClosedChecks++
+            console.log(`跨域錯誤檢查：檢測到彈出視窗關閉 (第 ${consecutiveClosedChecks} 次檢查)`)
+            
+            // 需要連續 3 次檢查都確認關閉才認為真的關閉
+            if (consecutiveClosedChecks >= 3) {
+              if (isResolved) return
+              isResolved = true
 
-            clearInterval(checkClosed)
-            window.removeEventListener('message', messageHandler)
-            console.log('用戶取消了授權')
-            reject(new Error('用戶取消了授權'))
+              clearInterval(checkClosed)
+              window.removeEventListener('message', messageHandler)
+              console.log('確認彈出視窗已關閉，用戶取消了授權')
+              reject(new Error('用戶取消了授權'))
+            }
+          } else {
+            // 視窗沒有關閉，重置計數器
+            if (consecutiveClosedChecks > 0) {
+              console.log('跨域錯誤檢查：彈出視窗未關閉，重置計數器')
+              consecutiveClosedChecks = 0
+            }
           }
         }
-      }, 2000) // 增加檢查間隔到 2 秒，給 OAuth 流程更多時間
+      }, 3000) // 增加檢查間隔到 3 秒，給 OAuth 流程更多時間
 
       // 設定超時（5分鐘）
       setTimeout(() => {
