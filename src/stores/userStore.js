@@ -15,17 +15,24 @@ export const useUserStore = defineStore(
     const isAdmin = computed(() => role.value === 'admin')
 
     const login = (data) => {
-      account.value = data.account
-      cartTotal.value = data.cartTotal
-      role.value = data.role
+      // 處理用戶資料
+      if (data.username) {
+        account.value = data.username
+      } else if (data.account) {
+        account.value = data.account
+      }
 
-      // 重新整理頁面時，用 token 取得使用者資料
-      // 這個回應不包含 token
+      cartTotal.value = data.cartTotal || 0
+      role.value = data.role || 'user'
+
+      // 處理 token 和 userId
       if (data.token) {
         token.value = data.token
       }
       if (data.userId) {
         userId.value = data.userId
+      } else if (data._id) {
+        userId.value = data._id
       }
     }
 

@@ -21,20 +21,66 @@ export const handleOAuthLogin = async (provider, router, toast) => {
     const popup = window.open(
       `${import.meta.env.VITE_API_URL}/api/users/auth/${provider}`,
       `${provider}_oauth`,
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=no`,
     )
 
     if (!popup) {
       throw new Error('彈出視窗被阻擋，請允許彈出視窗並重試')
     }
 
-    // 3. 監聽彈出視窗關閉或 URL 變化
+    // 3. 監聽彈出視窗關閉和消息
     return new Promise((resolve, reject) => {
+      let isResolved = false
+
+      // 監聽來自彈出視窗的消息
+      const messageHandler = (event) => {
+        // 檢查來源是否為我們的域名
+        if (
+          event.origin !== window.location.origin &&
+          !event.origin.includes(import.meta.env.VITE_API_URL)
+        ) {
+          return
+        }
+
+        if (event.data.type === 'oauth_success') {
+          if (isResolved) return
+          isResolved = true
+
+          // 移除消息監聽器
+          window.removeEventListener('message', messageHandler)
+          clearInterval(checkClosed)
+
+          // 處理 OAuth 成功
+          handleOAuthSuccess(event.data.token, userStore, toast, router, false)
+            .then(() => {
+              // 在父視窗中跳轉到首頁
+              window.location.href = '/'
+            })
+            .catch(reject)
+        } else if (event.data.type === 'oauth_error') {
+          if (isResolved) return
+          isResolved = true
+
+          // 移除消息監聽器
+          window.removeEventListener('message', messageHandler)
+          clearInterval(checkClosed)
+
+          reject(new Error(`OAuth 授權失敗: ${event.data.error}`))
+        }
+      }
+
+      // 添加消息監聽器
+      window.addEventListener('message', messageHandler)
+
       const checkClosed = setInterval(() => {
         try {
           // 檢查視窗是否關閉
           if (popup.closed) {
+            if (isResolved) return
+            isResolved = true
+
             clearInterval(checkClosed)
+            window.removeEventListener('message', messageHandler)
             reject(new Error('用戶取消了授權'))
             return
           }
@@ -43,42 +89,59 @@ export const handleOAuthLogin = async (provider, router, toast) => {
           const currentUrl = popup.location.href
 
           if (currentUrl.includes(window.location.origin)) {
+            if (isResolved) return
+            isResolved = true
+
             // 解析 URL 參數
             const url = new URL(currentUrl)
             const token = url.searchParams.get('token')
             const error = url.searchParams.get('error')
 
             clearInterval(checkClosed)
+            window.removeEventListener('message', messageHandler)
+
+            // 立即關閉小視窗
             popup.close()
 
             if (error) {
               reject(new Error(`OAuth 授權失敗: ${error}`))
             } else if (token) {
               // 4. 使用 token 獲取用戶資訊並登入
-              handleOAuthSuccess(token, userStore, toast, router)
-                .then(resolve)
+              handleOAuthSuccess(token, userStore, toast, router, false)
+                .then(() => {
+                  // 在父視窗中跳轉到首頁
+                  window.location.href = '/'
+                })
                 .catch(reject)
             } else {
               reject(new Error('未收到有效的授權 token'))
             }
           }
-        } catch (e) {
+        } catch {
           // 跨域錯誤是正常的，繼續檢查
           if (popup.closed) {
+            if (isResolved) return
+            isResolved = true
+
             clearInterval(checkClosed)
+            window.removeEventListener('message', messageHandler)
             reject(new Error('用戶取消了授權'))
           }
         }
-      }, 1000)
+      }, 500) // 縮短檢查間隔到 500ms
 
-      // 設定超時（10分鐘）
+      // 設定超時（5分鐘）
       setTimeout(() => {
+        if (isResolved) return
+        isResolved = true
+
         clearInterval(checkClosed)
+        window.removeEventListener('message', messageHandler)
         if (!popup.closed) {
           popup.close()
         }
-        reject(new Error('OAuth 授權超時'))
-      }, 600000)
+        reject(new Error('OAuth 授權超時，請重試'))
+      }, 300000) // 5分鐘超時
     })
   } catch (error) {
     console.error(`${provider} OAuth 登入失敗:`, error)
@@ -100,8 +163,15 @@ export const handleOAuthLogin = async (provider, router, toast) => {
  * @param {object} userStore - Pinia 用戶 store
  * @param {object} toast - PrimeVue toast
  * @param {object} router - Vue Router
+ * @param {boolean} shouldRedirect - 是否要跳轉到首頁
  */
-const handleOAuthSuccess = async (token, userStore, toast, router) => {
+const handleOAuthSuccess = async (
+  token,
+  userStore,
+  toast,
+  router,
+  shouldRedirect = false,
+) => {
   try {
     // 暫時儲存 token
     localStorage.setItem('temp_oauth_token', token)
@@ -126,7 +196,6 @@ const handleOAuthSuccess = async (token, userStore, toast, router) => {
     userStore.login({
       ...userData.user,
       token: token,
-      userId: userData.user._id,
     })
 
     // 清除臨時 token
@@ -139,8 +208,11 @@ const handleOAuthSuccess = async (token, userStore, toast, router) => {
       life: 3000,
     })
 
-    // 導向首頁
-    router.push('/')
+    // 根據參數決定是否跳轉
+    if (shouldRedirect) {
+      // 在父視窗中，使用 window.location.href 確保完整頁面跳轉
+      window.location.href = '/'
+    }
   } catch (error) {
     localStorage.removeItem('temp_oauth_token')
     throw error
@@ -172,7 +244,7 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
 
   if (token) {
     try {
-      await handleOAuthSuccess(token, userStore, toast, router)
+      await handleOAuthSuccess(token, userStore, toast, router, true)
       // 清除 URL 參數
       router.replace({ query: {} })
     } catch (error) {

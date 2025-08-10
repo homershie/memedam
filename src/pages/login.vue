@@ -403,6 +403,7 @@ const handleSocialLogin = async (provider) => {
 
   try {
     await handleOAuthLogin(provider, router, toast)
+    // handleOAuthLogin 內部已經處理了跳轉邏輯，這裡不需要重複跳轉
   } catch (error) {
     console.error(`${provider} 登入失敗:`, error)
     // handleOAuthLogin 已經處理了錯誤提示
