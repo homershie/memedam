@@ -10,11 +10,11 @@ import userService from './userService'
 // axios.post('http://localhost:4000/user')
 // axios.post('http://localhost:4000/user/login')
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
+  baseURL: import.meta.env.VITE_API_URL || '',
 })
 
 const httpAuth = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
+  baseURL: import.meta.env.VITE_API_URL || '',
 })
 
 // axios 攔截器

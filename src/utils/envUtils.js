@@ -23,7 +23,7 @@ export const isProduction = () => {
 
 // 取得 API URL
 export const getApiUrl = () => {
-  return import.meta.env.VITE_API_URL || 'http://localhost:4000'
+  return import.meta.env.VITE_API_URL || ''
 }
 
 // 取得應用程式標題
