@@ -35,10 +35,15 @@ export const handleOAuthLogin = async (provider, router, toast) => {
       // 監聽來自彈出視窗的消息
       const messageHandler = (event) => {
         // 檢查來源是否為我們的域名
-        if (
-          event.origin !== window.location.origin &&
-          !event.origin.includes(import.meta.env.VITE_API_URL)
-        ) {
+        const allowedOrigins = [
+          window.location.origin,
+          import.meta.env.VITE_API_URL,
+          'http://localhost:3000',
+          'http://localhost:5173'
+        ]
+        
+        if (!allowedOrigins.some(origin => event.origin.includes(origin))) {
+          console.log('忽略來自不受信任來源的消息:', event.origin)
           return
         }
 
@@ -46,14 +51,26 @@ export const handleOAuthLogin = async (provider, router, toast) => {
           if (isResolved) return
           isResolved = true
 
+          console.log('收到 OAuth 成功消息，開始處理登入')
+
           // 移除消息監聽器
           window.removeEventListener('message', messageHandler)
           clearInterval(checkClosed)
 
-          // 處理 OAuth 成功並跳轉
-          handleOAuthSuccess(event.data.token, userStore, toast, router, true)
+          // 處理 OAuth 成功
+          handleOAuthSuccess(event.data.token, userStore, toast, router)
             .then(() => {
-              resolve()
+              console.log('OAuth 處理完成，開始跳轉')
+              // 使用 Vue Router 進行跳轉
+              router.push('/').then(() => {
+                console.log('頁面跳轉成功')
+                resolve()
+              }).catch((error) => {
+                console.error('路由跳轉失敗:', error)
+                // 如果 router.push 失敗，則使用 window.location.href
+                window.location.href = '/'
+                resolve()
+              })
             })
             .catch(reject)
         } else if (event.data.type === 'oauth_error') {
@@ -105,10 +122,21 @@ export const handleOAuthLogin = async (provider, router, toast) => {
             if (error) {
               reject(new Error(`OAuth 授權失敗: ${error}`))
             } else if (token) {
+              console.log('從 URL 獲取到 token，開始處理登入')
               // 4. 使用 token 獲取用戶資訊並登入
-              handleOAuthSuccess(token, userStore, toast, router, true)
+              handleOAuthSuccess(token, userStore, toast, router)
                 .then(() => {
-                  resolve()
+                  console.log('OAuth 處理完成，開始跳轉')
+                  // 使用 Vue Router 進行跳轉
+                  router.push('/').then(() => {
+                    console.log('頁面跳轉成功')
+                    resolve()
+                  }).catch((error) => {
+                    console.error('路由跳轉失敗:', error)
+                    // 如果 router.push 失敗，則使用 window.location.href
+                    window.location.href = '/'
+                    resolve()
+                  })
                 })
                 .catch(reject)
             } else {
@@ -161,16 +189,16 @@ export const handleOAuthLogin = async (provider, router, toast) => {
  * @param {object} userStore - Pinia 用戶 store
  * @param {object} toast - PrimeVue toast
  * @param {object} router - Vue Router
- * @param {boolean} shouldRedirect - 是否要跳轉到首頁
  */
 const handleOAuthSuccess = async (
   token,
   userStore,
   toast,
   router,
-  shouldRedirect = false,
 ) => {
   try {
+    console.log('開始處理 OAuth 成功，token:', token.substring(0, 20) + '...')
+    
     // 暫時儲存 token
     localStorage.setItem('temp_oauth_token', token)
 
@@ -190,6 +218,8 @@ const handleOAuthSuccess = async (
 
     const userData = await response.json()
 
+    console.log('獲取用戶資訊成功:', userData.user?.username)
+
     // 登入用戶
     userStore.login({
       ...userData.user,
@@ -206,12 +236,9 @@ const handleOAuthSuccess = async (
       life: 3000,
     })
 
-    // 根據參數決定是否跳轉
-    if (shouldRedirect) {
-      // 在父視窗中，使用 window.location.href 確保完整頁面跳轉
-      window.location.href = '/'
-    }
+    console.log('用戶登入處理完成')
   } catch (error) {
+    console.error('handleOAuthSuccess 錯誤:', error)
     localStorage.removeItem('temp_oauth_token')
     throw error
   }
@@ -228,6 +255,8 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
   const token = route.query.token
   const error = route.query.error
 
+  console.log('處理 OAuth 回調，token:', token ? token.substring(0, 20) + '...' : '無', 'error:', error)
+
   if (error) {
     toast.add({
       severity: 'error',
@@ -242,9 +271,18 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
 
   if (token) {
     try {
-      await handleOAuthSuccess(token, userStore, toast, router, true)
-      // 清除 URL 參數
-      router.replace({ query: {} })
+      await handleOAuthSuccess(token, userStore, toast, router)
+      
+      // 成功後跳轉到首頁
+      router.push('/').then(() => {
+        console.log('OAuth 回調處理完成，跳轉成功')
+        // 清除 URL 參數
+        router.replace({ query: {} })
+      }).catch((routerError) => {
+        console.error('路由跳轉失敗:', routerError)
+        // 如果 router.push 失敗，則使用 window.location.href
+        window.location.href = '/'
+      })
     } catch (error) {
       console.error('OAuth 回調處理失敗:', error)
       toast.add({
