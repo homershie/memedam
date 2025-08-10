@@ -57,17 +57,41 @@ const closeWindow = () => {
 
 // 通知主視窗
 const notifyParentWindow = (data) => {
-  if (window.opener) {
-    // 發送消息給主視窗
-    window.opener.postMessage(data, window.location.origin)
+  console.log('準備通知主視窗:', data)
+  
+  if (window.opener && !window.opener.closed) {
+    try {
+      // 嘗試不同的目標域名
+      const possibleOrigins = [
+        '*', // 允許任何域名（開發階段）
+        window.location.origin,
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://localhost:5173'
+      ]
+      
+      possibleOrigins.forEach(origin => {
+        console.log(`嘗試發送消息到: ${origin}`)
+        window.opener.postMessage(data, origin)
+      })
+      
+      console.log('消息發送完成')
+    } catch (error) {
+      console.error('發送消息失敗:', error)
+    }
+  } else {
+    console.warn('無法找到主視窗或主視窗已關閉')
   }
 }
 
 onMounted(() => {
+  console.log('OAuth 回調頁面載入，查詢參數:', route.query)
+  
   const token = route.query.token
   const error = route.query.error
 
   if (error) {
+    console.log('檢測到授權錯誤:', error)
     isProcessing.value = false
     errorMessage.value = error
     // 通知主視窗授權失敗
@@ -75,6 +99,7 @@ onMounted(() => {
     // 延遲關閉視窗
     setTimeout(closeWindow, 3000)
   } else if (token) {
+    console.log('檢測到授權成功，token:', token.substring(0, 20) + '...')
     isProcessing.value = false
     isSuccess.value = true
     // 通知主視窗授權成功
@@ -82,6 +107,7 @@ onMounted(() => {
     // 延遲關閉視窗
     setTimeout(closeWindow, 2000)
   } else {
+    console.log('未檢測到 token 或 error')
     isProcessing.value = false
     errorMessage.value = '未收到有效的授權資訊'
     // 通知主視窗授權失敗
