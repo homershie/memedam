@@ -11,9 +11,14 @@ export const handleOAuthLogin = async (provider, router, toast) => {
   try {
     console.log(`開始 ${provider} OAuth 登入流程（重定向方式）`)
     
-    // 保存當前頁面狀態，登入完成後可以回到原頁面
-    localStorage.setItem('oauth_return_path', router.currentRoute.value.fullPath)
+    // 保存當前頁面狀態，但如果是從登入頁面開始，則設定為首頁
+    const currentPath = router.currentRoute.value.fullPath
+    const returnPath = currentPath === '/login' ? '/' : currentPath
+    
+    localStorage.setItem('oauth_return_path', returnPath)
     localStorage.setItem('oauth_provider', provider)
+    
+    console.log(`當前頁面: ${currentPath}, 登入後將跳轉到: ${returnPath}`)
     
     // 構建 OAuth URL
     let baseUrl = import.meta.env.VITE_API_URL
@@ -135,8 +140,12 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
       life: 5000,
     })
     
-    // 清除 URL 參數並回到登入頁
-    router.replace({ path: '/login', query: {} })
+    // 清除保存的狀態
+    localStorage.removeItem('oauth_return_path')
+    localStorage.removeItem('oauth_provider')
+    
+    // 清除 URL 參數並回到首頁
+    router.replace({ path: '/', query: {} })
     return
   }
 
@@ -171,8 +180,12 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
         life: 5000,
       })
       
-      // 清除 URL 參數並回到登入頁
-      router.replace({ path: '/login', query: {} })
+      // 清除保存的狀態
+      localStorage.removeItem('oauth_return_path')
+      localStorage.removeItem('oauth_provider')
+      
+      // 清除 URL 參數並回到首頁
+      router.replace({ path: '/', query: {} })
     }
   }
 }
