@@ -402,11 +402,20 @@ const handleSocialLogin = async (provider) => {
   socialLoginLoading.value = true
 
   try {
+    console.log(`開始 ${provider} 社群登入`)
     await handleOAuthLogin(provider, router, toast)
+    console.log(`${provider} 社群登入成功`)
     // handleOAuthLogin 內部已經處理了跳轉邏輯，這裡不需要重複跳轉
   } catch (error) {
     console.error(`${provider} 登入失敗:`, error)
-    // handleOAuthLogin 已經處理了錯誤提示
+    
+    // 顯示錯誤訊息給用戶
+    toast.add({
+      severity: 'error',
+      summary: '社群登入失敗',
+      detail: error.message || `${provider} 登入過程中發生錯誤`,
+      life: 5000,
+    })
   } finally {
     socialLoginLoading.value = false
   }
