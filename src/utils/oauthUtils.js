@@ -19,7 +19,8 @@ export const handleOAuthLogin = async (provider, router, toast) => {
     const left = (window.screen.width - width) / 2
     const top = (window.screen.height - height) / 2
 
-    const oauthUrl = `${import.meta.env.VITE_API_URL}/api/users/auth/${provider}`
+    const baseUrl = import.meta.env.VITE_API_URL || ''
+    const oauthUrl = `${baseUrl}/api/users/auth/${provider}`
     console.log(`OAuth URL: ${oauthUrl}`)
 
     // 2. 開啟 OAuth 授權彈出視窗
@@ -35,10 +36,18 @@ export const handleOAuthLogin = async (provider, router, toast) => {
     }
     
     console.log('彈出視窗成功開啟，開始監聽...')
+    
+    // 給彈出視窗一些時間載入
+    setTimeout(() => {
+      if (!popup.closed) {
+        console.log('彈出視窗載入 3 秒後仍然開啟，OAuth 流程正常進行中')
+      }
+    }, 3000)
 
     // 3. 監聽彈出視窗關閉和消息
     return new Promise((resolve, reject) => {
       let isResolved = false
+      const startTime = Date.now() // 記錄開始時間
 
       // 監聽來自彈出視窗的消息
       const messageHandler = (event) => {
@@ -99,8 +108,41 @@ export const handleOAuthLogin = async (provider, router, toast) => {
       // 添加消息監聽器
       window.addEventListener('message', messageHandler)
 
+      // 延遲開始檢查，給彈出視窗時間載入 OAuth URL
+      let checkStarted = false
+      
       const checkClosed = setInterval(() => {
         try {
+          // 如果還沒開始檢查，先等待幾秒讓 OAuth URL 載入
+          if (!checkStarted) {
+            try {
+              const currentUrl = popup.location.href
+              // 如果 URL 仍是 about:blank，繼續等待
+              if (currentUrl === 'about:blank') {
+                console.log('彈出視窗仍在載入 OAuth URL，繼續等待...')
+                return
+              } else {
+                console.log('彈出視窗已開始載入 OAuth URL:', currentUrl)
+                checkStarted = true
+              }
+            } catch (urlError) {
+              // 跨域錯誤表示已經跳轉到外部 OAuth 提供者，開始正式檢查
+              console.log('彈出視窗已跳轉到外部域名，開始正式檢查')
+              checkStarted = true
+            }
+            
+            // 如果超過 5 秒還沒開始載入，也開始檢查
+            if (Date.now() - startTime > 5000) {
+              console.log('超過 5 秒，強制開始檢查')
+              checkStarted = true
+            }
+            
+            // 還沒開始檢查，先不判斷視窗關閉
+            if (!checkStarted) {
+              return
+            }
+          }
+          
           // 檢查視窗是否真的關閉
           if (popup.closed) {
             console.log('檢測到彈出視窗關閉')
@@ -175,7 +217,8 @@ export const handleOAuthLogin = async (provider, router, toast) => {
         } catch (generalError) {
           console.error('檢查彈出視窗時發生錯誤:', generalError)
           // 跨域錯誤是正常的，繼續檢查
-          if (popup.closed) {
+          // 只有在檢查已開始後才判斷視窗關閉
+          if (checkStarted && popup.closed) {
             if (isResolved) return
             isResolved = true
 
@@ -185,7 +228,7 @@ export const handleOAuthLogin = async (provider, router, toast) => {
             reject(new Error('用戶取消了授權'))
           }
         }
-      }, 1000) // 增加檢查間隔到 1 秒，給 OAuth 流程更多時間
+      }, 2000) // 增加檢查間隔到 2 秒，給 OAuth 流程更多時間
 
       // 設定超時（5分鐘）
       setTimeout(() => {
@@ -234,8 +277,9 @@ const handleOAuthSuccess = async (
     localStorage.setItem('temp_oauth_token', token)
 
     // 使用 token 獲取用戶資訊
+    const baseUrl = import.meta.env.VITE_API_URL || ''
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/users/me`,
+      `${baseUrl}/api/users/me`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
