@@ -105,5 +105,30 @@ export default {
     const queryString = new URLSearchParams(params).toString()
     return apiService.http.get(`/api/users/search?${queryString}`)
   },
+  
+  // Username 相關 API
+  // 預覽 username 建議
+  previewUsernameSuggestions(provider, profile) {
+    return apiService.http.post('/api/username/preview', {
+      provider,
+      profile,
+    })
+  },
+  
+  // 檢查 username 可用性
+  checkUsernameAvailability(username) {
+    return apiService.http.get(`/api/username/check/${encodeURIComponent(username)}`)
+  },
+  
+  // 獲取個人化 username 建議（需登入）
+  getUsernameSuggestions() {
+    return apiService.httpAuth.get('/api/username/suggestions')
+  },
+  
+  // 完成社群註冊
+  completeSocialRegistration(data) {
+    return apiService.http.post('/api/auth/social/complete', data)
+  },
+  
   getActiveUsers,
 }

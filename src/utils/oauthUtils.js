@@ -1,24 +1,16 @@
 import { useUserStore } from '@/stores/userStore'
 
 /**
- * OAuth 登入處理函數（重定向方式）
+ * OAuth 登入處理函數（支援彈窗和重定向方式）
  * @param {string} provider - 社群平台 (google, facebook, discord, twitter)
  * @param {function} router - Vue Router 實例
  * @param {object} toast - PrimeVue toast 實例
+ * @param {boolean} usePopup - 是否使用彈窗方式，默認true
  * @returns {Promise} OAuth 登入結果
  */
-export const handleOAuthLogin = async (provider, router, toast) => {
+export const handleOAuthLogin = async (provider, router, toast, usePopup = true) => {
   try {
-    console.log(`開始 ${provider} OAuth 登入流程（重定向方式）`)
-
-    // 保存當前頁面狀態，但如果是從登入頁面開始，則設定為首頁
-    const currentPath = router.currentRoute.value.fullPath
-    const returnPath = currentPath === '/login' ? '/' : currentPath
-
-    localStorage.setItem('oauth_return_path', returnPath)
-    localStorage.setItem('oauth_provider', provider)
-
-    console.log(`當前頁面: ${currentPath}, 登入後將跳轉到: ${returnPath}`)
+    console.log(`開始 ${provider} OAuth 登入流程（${usePopup ? '彈窗' : '重定向'}方式）`)
 
     // 構建 OAuth URL
     let baseUrl = import.meta.env.VITE_API_URL
@@ -31,12 +23,11 @@ export const handleOAuthLogin = async (provider, router, toast) => {
     const oauthUrl = `${baseUrl}/api/users/auth/${provider}`
     console.log(`OAuth URL: ${oauthUrl}`)
 
-    // 直接重定向到 OAuth URL
-    console.log('開始重定向到 OAuth 提供者...')
-    window.location.href = oauthUrl
-
-    // 返回 Promise（雖然實際上頁面會重定向）
-    return Promise.resolve()
+    if (usePopup) {
+      return handlePopupOAuth(oauthUrl, provider, router, toast)
+    } else {
+      return handleRedirectOAuth(oauthUrl, router)
+    }
   } catch (error) {
     console.error(`${provider} OAuth 登入失敗:`, error)
     if (toast) {
@@ -49,6 +40,112 @@ export const handleOAuthLogin = async (provider, router, toast) => {
     }
     throw error
   }
+}
+
+/**
+ * 彈窗方式的 OAuth 處理
+ */
+const handlePopupOAuth = (oauthUrl, provider, router, toast) => {
+  return new Promise((resolve, reject) => {
+    console.log('開始彈窗 OAuth 流程')
+    
+    // 彈窗設定
+    const popup = window.open(
+      oauthUrl,
+      `${provider}_oauth`,
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    )
+
+    if (!popup) {
+      const error = new Error('無法開啟彈窗，請確認瀏覽器允許彈窗')
+      reject(error)
+      return
+    }
+
+    // 監聽消息
+    const messageHandler = (event) => {
+      console.log('收到OAuth回調消息:', event.data)
+
+      // 驗證消息來源（生產環境中應該更嚴格）
+      if (event.origin !== window.location.origin && event.origin !== '*') {
+        console.warn('收到來自未知來源的消息:', event.origin)
+        return
+      }
+
+      const { type, data, error } = event.data
+
+      switch (type) {
+        case 'oauth_success':
+          console.log('OAuth登入成功')
+          cleanup()
+          resolve({ success: true, data, needsUsername: false })
+          break
+
+        case 'oauth_needs_username':
+          console.log('OAuth成功，但需要選擇username')
+          cleanup()
+          resolve({ success: true, data, needsUsername: true })
+          break
+
+        case 'oauth_error':
+          console.error('OAuth登入失敗:', error)
+          cleanup()
+          reject(new Error(error || 'OAuth登入失敗'))
+          break
+
+        default:
+          console.log('未知的消息類型:', type)
+      }
+    }
+
+    // 定時檢查彈窗是否被關閉
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        console.log('用戶關閉了OAuth彈窗')
+        cleanup()
+        reject(new Error('用戶取消了授權'))
+      }
+    }, 1000)
+
+    // 清理函數
+    const cleanup = () => {
+      window.removeEventListener('message', messageHandler)
+      clearInterval(checkClosed)
+      if (!popup.closed) {
+        popup.close()
+      }
+    }
+
+    // 註冊消息監聽器
+    window.addEventListener('message', messageHandler)
+
+    // 設定超時（60秒）
+    setTimeout(() => {
+      if (!popup.closed) {
+        console.warn('OAuth超時')
+        cleanup()
+        reject(new Error('OAuth授權超時，請重試'))
+      }
+    }, 60000)
+  })
+}
+
+/**
+ * 重定向方式的 OAuth 處理（保持原有邏輯）
+ */
+const handleRedirectOAuth = (oauthUrl, router) => {
+  // 保存當前頁面狀態
+  const currentPath = router.currentRoute.value.fullPath
+  const returnPath = currentPath === '/login' ? '/' : currentPath
+
+  localStorage.setItem('oauth_return_path', returnPath)
+  console.log(`當前頁面: ${currentPath}, 登入後將跳轉到: ${returnPath}`)
+
+  // 直接重定向到 OAuth URL
+  console.log('開始重定向到 OAuth 提供者...')
+  window.location.href = oauthUrl
+
+  return Promise.resolve()
 }
 
 /**
@@ -136,12 +233,15 @@ const handleOAuthSuccess = async (token, userStore, toast, router) => {
 export const handleOAuthCallback = async (route, router, userStore, toast) => {
   const token = route.query.token
   const error = route.query.error
+  const needsUsername = route.query.needsUsername === 'true'
 
   console.log(
     '處理 OAuth 回調，token:',
     token ? token.substring(0, 20) + '...' : '無',
     'error:',
     error,
+    'needsUsername:',
+    needsUsername
   )
 
   if (error) {
@@ -163,6 +263,21 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
 
   if (token) {
     try {
+      if (needsUsername) {
+        // 需要選擇username，重定向到登入頁面並傳遞相關數據
+        const oauthData = {
+          token,
+          needsUsername: true,
+          provider: route.query.provider,
+          profile: route.query.profile ? JSON.parse(decodeURIComponent(route.query.profile)) : null,
+          userData: route.query.user ? JSON.parse(decodeURIComponent(route.query.user)) : null
+        }
+
+        localStorage.setItem('oauth_callback_data', JSON.stringify(oauthData))
+        router.replace('/login')
+        return
+      }
+
       await handleOAuthSuccess(token, userStore, toast, router)
 
       // 獲取保存的返回路徑
@@ -215,5 +330,41 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
       // 清除 URL 參數並回到首頁
       router.replace({ path: '/', query: {} })
     }
+  }
+}
+
+/**
+ * 處理來自localStorage的OAuth成功數據（用於沒有主視窗的情況）
+ * @param {object} userStore - Pinia 用戶 store  
+ * @param {object} toast - PrimeVue toast
+ * @param {object} router - Vue Router
+ */
+export const handleStoredOAuthSuccess = async (userStore, toast, router) => {
+  try {
+    const storedData = localStorage.getItem('oauth_success_data')
+    if (!storedData) return false
+
+    const { token, user, userId } = JSON.parse(storedData)
+    localStorage.removeItem('oauth_success_data')
+
+    // 登入用戶
+    userStore.login({
+      ...user,
+      token,
+      userId
+    })
+
+    toast.add({
+      severity: 'success',
+      summary: '登入成功',
+      detail: '歡迎回來！',
+      life: 3000,
+    })
+
+    return true
+  } catch (error) {
+    console.error('處理儲存的OAuth成功數據失敗:', error)
+    localStorage.removeItem('oauth_success_data')
+    return false
   }
 }
