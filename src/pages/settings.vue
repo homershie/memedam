@@ -1,5 +1,5 @@
 <template>
-  <div class="container p-8 mx-auto space-y-6">
+  <div class="container min-h-fit px-8 mb-20 mx-auto space-y-6">
     <!-- 使用 PrimeVue Tabs 的設定區塊 -->
     <div class="settings-tabs-container">
       <Tabs v-model:value="activeTabIndex" class="settings-tabs">
@@ -24,8 +24,8 @@
               <h2 class="text-3xl font-bold">帳號管理</h2>
               <p class="text-gray-600 mt-2">管理您的帳號安全設定</p>
 
-              <!-- 密碼變更 -->
-              <div class="space-y-4">
+              <!-- 使用者名稱變更 -->
+              <div class="space-y-4 mt-10">
                 <h3 class="text-lg font-medium">使用者名稱變更</h3>
                 <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
                   <div class="flex items-center justify-between">
@@ -56,7 +56,10 @@
                     </div>
                   </div>
                 </div>
+              </div>
 
+              <!-- 密碼變更 -->
+              <div class="space-y-4 mt-10">
                 <h3 class="text-lg font-medium">密碼變更</h3>
 
                 <!-- 如果沒有密碼，顯示提示訊息和設定密碼選項 -->
@@ -245,7 +248,7 @@
               </div>
 
               <!-- 電子信箱管理 -->
-              <div class="space-y-4">
+              <div class="space-y-4 mt-10">
                 <h3 class="text-lg font-medium">電子信箱管理</h3>
                 <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
                   <div class="flex items-center justify-between">
@@ -278,6 +281,13 @@
                         class="text-xs text-gray-500 dark:text-gray-400 mt-1"
                       >
                         請驗證您的電子信箱以使用完整功能
+                      </p>
+                      <p
+                        v-if="!userProfile.emailVerified"
+                        class="text-xs text-danger-600 dark:text-danger-400 mt-1"
+                      >
+                        <i class="pi pi-exclamation-triangle mr-1"></i>
+                        未完成郵件驗證的帳號將於1年後由系統刪除
                       </p>
                       <!-- 如果沒有電子信箱，顯示提示 -->
                       <p
@@ -323,7 +333,7 @@
               </div>
 
               <!-- 兩步驟驗證 -->
-              <div class="space-y-4">
+              <div class="space-y-4 mt-10">
                 <h3 class="text-lg font-medium">兩步驟驗證</h3>
                 <div class="bg-gray-100 rounded-lg p-4 dark:bg-gray-800">
                   <div class="flex items-center justify-between">
@@ -352,7 +362,7 @@
               </div>
 
               <!-- 社群帳號綁定 -->
-              <div class="space-y-4">
+              <div class="space-y-4 mt-10">
                 <h3 class="text-lg font-medium">社群帳號綁定</h3>
                 <div class="space-y-3">
                   <div
@@ -410,7 +420,7 @@
               </div>
 
               <!-- 刪除帳號 -->
-              <div class="space-y-4">
+              <div class="space-y-4 mt-10">
                 <h3 class="text-lg font-medium">刪除帳號</h3>
                 <div
                   class="bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-700 rounded-lg p-4"
@@ -510,7 +520,7 @@
                     </div>
                   </div>
                 </div>
-                <h3>個人資料</h3>
+                <h3 class="mt-10">個人資料</h3>
 
                 <!-- 基本資訊 -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -605,7 +615,7 @@
           <!-- 通知偏好 TabPanel -->
           <TabPanel value="2" class="settings-tab-panel">
             <div class="space-y-8">
-              <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+              <div class="space-y-4 mt-4">
                 <h2
                   class="text-2xl font-semibold text-gray-900 dark:text-white"
                 >
@@ -618,7 +628,7 @@
 
               <div class="space-y-6">
                 <!-- 推播通知 -->
-                <div class="space-y-4">
+                <div class="space-y-4 mt-10">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     推播通知
                   </h3>
@@ -644,7 +654,7 @@
                 </div>
 
                 <!-- 互動通知 -->
-                <div class="space-y-4">
+                <div class="space-y-4 mt-10">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     互動通知
                   </h3>
@@ -670,7 +680,7 @@
                 </div>
 
                 <!-- 內容通知 -->
-                <div class="space-y-4">
+                <div class="space-y-4 mt-10">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     內容通知
                   </h3>
@@ -711,7 +721,7 @@
           <!-- 內容偏好 TabPanel -->
           <TabPanel value="3" class="settings-tab-panel">
             <div class="space-y-8">
-              <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+              <div class="space-y-4 mt-4">
                 <h2
                   class="text-2xl font-semibold text-gray-900 dark:text-white"
                 >
@@ -724,7 +734,7 @@
 
               <div class="space-y-6">
                 <!-- 主題設定 -->
-                <div class="space-y-4">
+                <div class="space-y-4 mt-10">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     主題設定
                   </h3>
@@ -762,7 +772,7 @@
                 </div>
 
                 <!-- 內容分級 -->
-                <div class="space-y-4">
+                <div class="space-y-4 mt-10">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     內容分級篩選
                   </h3>
@@ -778,7 +788,7 @@
                       </span>
                     </div>
                     <p class="text-sm text-warning-700 dark:text-warning-300">
-                      內容分級篩選功能將在會員頁面提供，敬請期待。
+                      內容分級篩選功能未來將提供給付費會員使用，敬請期待。
                     </p>
                   </div>
                 </div>
@@ -2409,24 +2419,8 @@ const canSubmitUsernameChange = computed(() => {
 </script>
 
 <style scoped lang="scss">
-:deep(.p-error) {
-  color: var(--p-primary-500) !important;
-}
-
-:deep(.settings-tab-panel .pi-google) {
-  color: #4285f4 !important;
-}
-
-:deep(.settings-tab-panel .pi-facebook) {
-  color: #1877f2 !important;
-}
-
-:deep(.settings-tab-panel .pi-discord) {
-  color: #5865f2 !important;
-}
-
-:deep(.settings-tab-panel .pi-twitter) {
-  color: #1da1f2 !important;
+h3 {
+  @apply mt-6!;
 }
 
 /* Tabs 樣式群組 */
@@ -2454,14 +2448,6 @@ const canSubmitUsernameChange = computed(() => {
 
 .settings-tab.p-highlight {
   @apply text-primary-600 dark:text-primary-400 border-primary-600 dark:border-primary-400;
-}
-
-.settings-tab-panels {
-  @apply p-6;
-}
-
-.settings-tab-panel {
-  @apply space-y-8;
 }
 </style>
 
