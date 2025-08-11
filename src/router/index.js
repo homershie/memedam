@@ -12,21 +12,32 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
 
+  console.log('路由守衛檢查:', {
+    to: to.path,
+    from: from.path,
+    isLoggedIn: userStore.isLoggedIn,
+    token: userStore.token ? userStore.token.substring(0, 20) + '...' : '無',
+    requiresLogin: to.meta?.login === true,
+    requiresAdmin: to.meta?.admin === true,
+    isAdmin: userStore.isAdmin,
+  })
+
   // 檢查是否需要登入
   if (to.meta?.login === true && !userStore.isLoggedIn) {
-    // 需要登入但未登入，重定向到登入頁面
+    console.log('需要登入但未登入，重定向到登入頁面')
     next('/login')
     return
   }
 
   // 檢查是否需要管理員權限
   if (to.meta?.admin === true && !userStore.isAdmin) {
-    // 需要管理員權限但沒有權限，重定向到首頁
+    console.log('需要管理員權限但沒有權限，重定向到首頁')
     next('/')
     return
   }
 
   // 其他情況正常通過
+  console.log('路由守衛通過')
   next()
 })
 
