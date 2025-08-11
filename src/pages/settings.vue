@@ -839,11 +839,154 @@
         </div>
       </template>
     </Dialog>
+
+    <!-- 使用者名稱變更對話框 -->
+    <Dialog
+      v-model:visible="showUsernameDialog"
+      modal
+      header="變更使用者名稱"
+      :style="{ width: '600px' }"
+      :closable="false"
+    >
+      <div class="space-y-4">
+        <!-- 目前使用者名稱顯示 -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+          <p class="text-sm text-gray-600 dark:text-gray-400">目前使用者名稱</p>
+          <p class="text-lg font-medium text-gray-900 dark:text-white">
+            {{ userProfile.username }}
+          </p>
+        </div>
+
+        <!-- 變更限制提示 -->
+        <div
+          class="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700 rounded-lg p-3"
+        >
+          <div class="flex items-start space-x-2">
+            <i class="pi pi-info-circle text-warning-500 mt-0.5"></i>
+            <div>
+              <p
+                class="text-sm font-medium text-warning-800 dark:text-warning-200"
+              >
+                變更限制
+              </p>
+              <p class="text-sm text-warning-700 dark:text-warning-300 mt-1">
+                使用者名稱一個月只能變更一次，請謹慎選擇。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form @submit.prevent="changeUsername" class="space-y-4">
+          <!-- 新使用者名稱輸入 -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              新使用者名稱
+            </label>
+            <div class="flex space-x-2">
+              <InputText
+                v-model="usernameForm.newUsername"
+                placeholder="輸入新使用者名稱"
+                class="flex-1"
+                :class="{
+                  'p-invalid': usernameForm.errors.newUsername,
+                  'p-success': usernameForm.availability === true,
+                  'p-error': usernameForm.availability === false,
+                }"
+                @input="handleUsernameInput"
+                @blur="checkUsernameAvailability"
+              />
+              <Button
+                type="button"
+                label="檢查"
+                icon="pi pi-search"
+                severity="secondary"
+                :loading="usernameForm.checking"
+                :disabled="
+                  !usernameForm.newUsername ||
+                  usernameForm.newUsername === usernameForm.lastChecked
+                "
+                @click="checkUsernameAvailability"
+              />
+            </div>
+
+            <!-- 錯誤訊息 -->
+            <small v-if="usernameForm.errors.newUsername" class="p-error">
+              {{ usernameForm.errors.newUsername }}
+            </small>
+
+            <!-- 可用性狀態 -->
+            <div v-if="usernameForm.availability !== null" class="mt-2">
+              <div
+                v-if="usernameForm.availability === true"
+                class="flex items-center space-x-1 text-success-600 dark:text-success-400"
+              >
+                <i class="pi pi-check-circle text-sm"></i>
+                <span class="text-sm">此使用者名稱可以使用</span>
+              </div>
+              <div
+                v-else
+                class="flex items-center space-x-1 text-error-600 dark:text-error-400"
+              >
+                <i class="pi pi-times-circle text-sm"></i>
+                <span class="text-sm">此使用者名稱已被使用</span>
+              </div>
+            </div>
+
+            <!-- 格式提示 -->
+            <small class="text-gray-500 dark:text-gray-400">
+              使用者名稱長度需在 8-20
+              個字元之間，只能包含英文字母、數字、點號(.)、底線(_)和連字號(-)
+            </small>
+          </div>
+
+          <!-- 目前密碼確認 -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              目前密碼確認
+            </label>
+            <Password
+              v-model="usernameForm.currentPassword"
+              :feedback="false"
+              toggleMask
+              fluid
+              placeholder="輸入目前密碼"
+              :class="{ 'p-invalid': usernameForm.errors.currentPassword }"
+            />
+            <small v-if="usernameForm.errors.currentPassword" class="p-error">
+              {{ usernameForm.errors.currentPassword }}
+            </small>
+          </div>
+        </form>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end space-x-2">
+          <Button
+            label="取消"
+            severity="secondary"
+            @click="closeUsernameDialog"
+            class="btn-secondary"
+          />
+          <Button
+            label="變更使用者名稱"
+            icon="pi pi-check"
+            @click="changeUsername"
+            :loading="usernameForm.loading"
+            :disabled="!canSubmitUsernameChange"
+            class="btn-primary"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
@@ -874,6 +1017,7 @@ const activeTabIndex = ref('0')
 const showEmailDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showUnbindDialog = ref(false)
+const showUsernameDialog = ref(false)
 const selectedAccount = ref(null)
 const avatarInput = ref(null)
 
@@ -918,6 +1062,17 @@ const emailForm = reactive({
   currentPassword: '',
   loading: false,
   errors: {},
+})
+
+// 使用者名稱變更表單
+const usernameForm = reactive({
+  newUsername: '',
+  currentPassword: '',
+  loading: false,
+  checking: false,
+  errors: {},
+  availability: null, // null: 未檢查, true: 可用, false: 不可用
+  lastChecked: '', // 記錄最後檢查的 username
 })
 
 // 個人資料表單
@@ -1850,6 +2005,163 @@ const handleAvatarChange = async (event) => {
     }
   }
 }
+
+// 使用者名稱變更相關方法
+const handleUsernameInput = () => {
+  // 清除之前的檢查結果
+  usernameForm.availability = null
+  usernameForm.errors.newUsername = ''
+
+  // 基本格式驗證
+  if (usernameForm.newUsername) {
+    if (
+      usernameForm.newUsername.length < 8 ||
+      usernameForm.newUsername.length > 20
+    ) {
+      usernameForm.errors.newUsername = '使用者名稱長度需在 8-20 個字元之間'
+    } else if (!/^[a-zA-Z0-9._-]+$/.test(usernameForm.newUsername)) {
+      usernameForm.errors.newUsername =
+        '使用者名稱只能包含英文字母、數字、點號(.)、底線(_)和連字號(-)'
+    } else if (usernameForm.newUsername === userProfile.username) {
+      usernameForm.errors.newUsername = '新使用者名稱不能與目前使用者名稱相同'
+    }
+  }
+}
+
+const checkUsernameAvailability = async () => {
+  if (!usernameForm.newUsername) {
+    usernameForm.errors.newUsername = '請輸入使用者名稱'
+    usernameForm.availability = null
+    return
+  }
+
+  // 基本格式驗證
+  if (
+    usernameForm.newUsername.length < 8 ||
+    usernameForm.newUsername.length > 20
+  ) {
+    usernameForm.errors.newUsername = '使用者名稱長度需在 8-20 個字元之間'
+    usernameForm.availability = null
+    return
+  }
+
+  if (!/^[a-zA-Z0-9._-]+$/.test(usernameForm.newUsername)) {
+    usernameForm.errors.newUsername =
+      '使用者名稱只能包含英文字母、數字、點號(.)、底線(_)和連字號(-)'
+    usernameForm.availability = null
+    return
+  }
+
+  if (usernameForm.newUsername === userProfile.username) {
+    usernameForm.errors.newUsername = '新使用者名稱不能與目前使用者名稱相同'
+    usernameForm.availability = null
+    return
+  }
+
+  usernameForm.checking = true
+  usernameForm.errors.newUsername = ''
+  usernameForm.availability = null
+
+  try {
+    const response = await userService.checkUsernameAvailability(
+      usernameForm.newUsername,
+    )
+    usernameForm.availability = response.data.available
+    usernameForm.lastChecked = usernameForm.newUsername
+
+    if (!response.data.available) {
+      usernameForm.errors.newUsername = '此使用者名稱已被使用'
+    }
+  } catch (error) {
+    console.error('檢查使用者名稱可用性失敗:', error)
+    const errorMessage = error.response?.data?.message || '檢查失敗，請稍後再試'
+    usernameForm.errors.newUsername = errorMessage
+    usernameForm.availability = null
+  } finally {
+    usernameForm.checking = false
+  }
+}
+
+const changeUsername = async () => {
+  usernameForm.loading = true
+  usernameForm.errors = {}
+
+  // 驗證
+  if (!usernameForm.newUsername) {
+    usernameForm.errors.newUsername = '請輸入新使用者名稱'
+  } else if (usernameForm.availability !== true) {
+    usernameForm.errors.newUsername = '請先檢查使用者名稱是否可用'
+  }
+  if (!usernameForm.currentPassword) {
+    usernameForm.errors.currentPassword = '請輸入目前密碼'
+  }
+
+  if (Object.keys(usernameForm.errors).length > 0) {
+    usernameForm.loading = false
+    return
+  }
+
+  try {
+    // 呼叫 API 變更使用者名稱
+    const response = await userService.changeUsername({
+      username: usernameForm.newUsername,
+      currentPassword: usernameForm.currentPassword,
+    })
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: response.data?.message || '使用者名稱已成功變更',
+      life: 3000,
+    })
+
+    // 更新使用者資料中的使用者名稱
+    userProfile.username = usernameForm.newUsername
+
+    // 重新載入使用者資料以確保資料同步
+    await loadUserProfile()
+
+    showUsernameDialog.value = false
+    usernameForm.newUsername = ''
+    usernameForm.currentPassword = ''
+    usernameForm.lastChecked = ''
+    usernameForm.availability = null
+  } catch (error) {
+    console.error('使用者名稱變更失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '使用者名稱變更失敗，請稍後再試'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    usernameForm.loading = false
+  }
+}
+
+const closeUsernameDialog = () => {
+  showUsernameDialog.value = false
+  usernameForm.newUsername = ''
+  usernameForm.currentPassword = ''
+  usernameForm.lastChecked = ''
+  usernameForm.availability = null
+  usernameForm.errors = {}
+  usernameForm.checking = false
+}
+
+const canSubmitUsernameChange = computed(() => {
+  return (
+    usernameForm.newUsername &&
+    usernameForm.currentPassword &&
+    usernameForm.availability === true &&
+    !usernameForm.errors.newUsername &&
+    !usernameForm.errors.currentPassword
+  )
+})
 </script>
 
 <style scoped lang="scss">
