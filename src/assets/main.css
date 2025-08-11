@@ -47,7 +47,6 @@
   --p-tag-info-color: var(--p-info-100);
   --p-tag-info-background: var(--p-info-800);
 }
-
 html,
 body,
 #app {
@@ -124,6 +123,10 @@ a {
 
 .dark .p-tag[data-p='primary']:hover {
   background-color: var(--p-primary-500) !important;
+}
+
+.p-error {
+  color: var(--p-primary-500) !important;
 }
 
 @media (min-width: 1024px) {

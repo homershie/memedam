@@ -26,12 +26,35 @@
 
               <!-- 密碼變更 -->
               <div class="space-y-4">
-                <h3 class="text-lg font-medium">密碼變更</h3>
-                <form @submit.prevent="changePassword" class="space-y-4">
-                  <div class="grid grid-cols-1 gap-4">
+                <h3 class="text-lg font-medium">使用者名稱變更</h3>
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                  <div class="flex items-center justify-between">
                     <div>
+                      <p
+                        class="text-sm font-medium text-gray-900 dark:text-white"
+                      >
+                        {{ userProfile.username }}
+                      </p>
+                    </div>
+                    <div>
+                      <Button
+                        label="變更"
+                        icon="pi pi-pencil"
+                        severity="primary"
+                        size="small"
+                        @click="showUsernameDialog = true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <h3 class="text-lg font-medium">密碼變更</h3>
+
+                <form @submit.prevent="changePassword" class="space-y-4">
+                  <div class="flex items-center gap-4 flex-wrap md:flex-nowrap">
+                    <div class="w-full md:w-1/3">
                       <label
-                        class="block text-sm font-medium text-gray-700 mb-2"
+                        class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
                       >
                         目前密碼
                       </label>
@@ -40,7 +63,7 @@
                         :feedback="false"
                         toggleMask
                         placeholder="輸入目前密碼"
-                        class="w-full"
+                        fluid
                         :class="{
                           'p-invalid': passwordForm.errors.currentPassword,
                         }"
@@ -52,9 +75,9 @@
                         {{ passwordForm.errors.currentPassword }}
                       </small>
                     </div>
-                    <div>
+                    <div class="w-full md:w-1/3">
                       <label
-                        class="block text-sm font-medium text-gray-700 mb-2"
+                        class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
                       >
                         新密碼
                       </label>
@@ -62,8 +85,8 @@
                         v-model="passwordForm.newPassword"
                         :feedback="true"
                         toggleMask
+                        fluid
                         placeholder="輸入新密碼"
-                        class="w-full"
                         :class="{
                           'p-invalid': passwordForm.errors.newPassword,
                         }"
@@ -75,28 +98,31 @@
                         {{ passwordForm.errors.newPassword }}
                       </small>
                     </div>
+                    <div class="w-full md:w-1/3">
+                      <label
+                        class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+                      >
+                        確認新密碼
+                      </label>
+                      <Password
+                        v-model="passwordForm.confirmPassword"
+                        :feedback="false"
+                        toggleMask
+                        fluid
+                        placeholder="再次輸入新密碼"
+                        :class="{
+                          'p-invalid': passwordForm.errors.confirmPassword,
+                        }"
+                      />
+                      <small
+                        v-if="passwordForm.errors.confirmPassword"
+                        class="p-error"
+                      >
+                        {{ passwordForm.errors.confirmPassword }}
+                      </small>
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      確認新密碼
-                    </label>
-                    <Password
-                      v-model="passwordForm.confirmPassword"
-                      :feedback="false"
-                      toggleMask
-                      placeholder="再次輸入新密碼"
-                      class="w-full"
-                      :class="{
-                        'p-invalid': passwordForm.errors.confirmPassword,
-                      }"
-                    />
-                    <small
-                      v-if="passwordForm.errors.confirmPassword"
-                      class="p-error"
-                    >
-                      {{ passwordForm.errors.confirmPassword }}
-                    </small>
-                  </div>
+
                   <div class="flex justify-end">
                     <Button
                       type="submit"
@@ -172,7 +198,7 @@
               <!-- 兩步驟驗證 -->
               <div class="space-y-4">
                 <h3 class="text-lg font-medium">兩步驟驗證</h3>
-                <div class="bg-gray-100 rounded-lg p-4">
+                <div class="bg-gray-100 rounded-lg p-4 dark:bg-gray-800">
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-sm font-medium">Google Authenticator</p>
@@ -665,7 +691,7 @@
             v-model="emailForm.newEmail"
             type="email"
             placeholder="輸入新電子信箱"
-            class="w-full"
+            fluid
             :class="{ 'p-invalid': emailForm.errors.newEmail }"
           />
           <small v-if="emailForm.errors.newEmail" class="p-error">
@@ -682,8 +708,8 @@
             v-model="emailForm.currentPassword"
             :feedback="false"
             toggleMask
+            fluid
             placeholder="輸入目前密碼"
-            class="w-full"
             :class="{ 'p-invalid': emailForm.errors.currentPassword }"
           />
           <small v-if="emailForm.errors.currentPassword" class="p-error">
@@ -1827,127 +1853,30 @@ const handleAvatarChange = async (event) => {
 </script>
 
 <style scoped lang="scss">
-/* 按鈕樣式群組 */
-.btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white border-primary-600 hover:border-primary-700
-         focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
-         transition-colors duration-200 font-medium px-4 py-2 rounded-lg;
+:deep(.p-error) {
+  color: var(--p-primary-500) !important;
 }
 
-.btn-secondary {
-  @apply bg-secondary-100 hover:bg-secondary-200 text-secondary-700 border-secondary-300 hover:border-secondary-400
-         dark:bg-secondary-700 dark:hover:bg-secondary-600 dark:text-secondary-300 dark:border-secondary-600
-         dark:hover:border-secondary-500 focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2
-         transition-colors duration-200 font-medium px-4 py-2 rounded-lg;
+:deep(.settings-tab-panel .pi-google) {
+  color: #4285f4 !important;
 }
 
-.btn-danger {
-  @apply bg-danger-600 hover:bg-danger-700 text-white border-danger-600 hover:border-danger-700
-         focus:ring-2 focus:ring-danger-500 focus:ring-offset-2
-         transition-colors duration-200 font-medium px-4 py-2 rounded-lg;
+:deep(.settings-tab-panel .pi-facebook) {
+  color: #1877f2 !important;
 }
 
-.btn-warning {
-  @apply bg-warning-600 hover:bg-warning-700 text-white border-warning-600 hover:border-warning-700
-         focus:ring-2 focus:ring-warning-500 focus:ring-offset-2
-         transition-colors duration-200 font-medium px-4 py-2 rounded-lg;
+:deep(.settings-tab-panel .pi-discord) {
+  color: #5865f2 !important;
 }
 
-.btn-action {
-  @apply text-sm font-medium transition-colors duration-200;
+:deep(.settings-tab-panel .pi-twitter) {
+  color: #1da1f2 !important;
 }
 
-/* 表單樣式群組 */
-.form-input {
-  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600
-         rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500
-         dark:bg-gray-700 dark:text-white dark:placeholder-gray-400
-         transition-colors duration-200;
+/* Tabs 樣式群組 */
+.settings-tabs-container {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
 }
-
-.form-label {
-  @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
-}
-
-.form-error {
-  @apply text-danger-600 dark:text-danger-400 text-sm mt-1;
-}
-
-/* 狀態指示器樣式群組 */
-.status-verified {
-  @apply flex items-center space-x-2 text-success-600 dark:text-success-400;
-}
-
-.status-unverified {
-  @apply flex items-center space-x-2 text-warning-600 dark:text-warning-400;
-}
-
-.status-beta {
-  @apply text-xs bg-warning-100 text-warning-800 px-2 py-1 rounded-full
-         dark:bg-warning-900/20 dark:text-warning-300;
-}
-
-/* 警告區塊樣式群組 */
-.warning-block {
-  @apply bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-700
-         rounded-lg p-4;
-}
-
-.info-block {
-  @apply bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700
-         rounded-lg p-4;
-}
-
-.beta-block {
-  @apply bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700
-         rounded-lg p-4;
-}
-
-/* 社交帳號卡片樣式群組 */
-.social-account-card {
-  @apply flex items-center justify-between p-4 border border-gray-200
-         dark:border-gray-600 rounded-lg transition-colors duration-200
-         hover:bg-gray-50 dark:hover:bg-gray-700;
-}
-
-.social-account-info {
-  @apply flex items-center space-x-3;
-}
-
-.social-account-icon {
-  @apply text-xl;
-}
-
-.social-account-details {
-  @apply flex-1;
-}
-
-.social-account-name {
-  @apply font-medium text-gray-900 dark:text-white;
-}
-
-.social-account-email {
-  @apply text-sm text-gray-600 dark:text-gray-400;
-}
-
-/* 通知設定卡片樣式群組 */
-.notification-card {
-  @apply flex items-center justify-between p-4 border border-gray-200
-         dark:border-gray-600 rounded-lg transition-colors duration-200;
-}
-
-.notification-info {
-  @apply flex-1;
-}
-
-.notification-title {
-  @apply font-medium text-gray-900 dark:text-white;
-}
-
-.notification-description {
-  @apply text-sm text-gray-600 dark:text-gray-400;
-}
-
 /* Tabs 樣式群組 */
 .settings-tabs-container {
   @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
@@ -1977,82 +1906,6 @@ const handleAvatarChange = async (event) => {
 
 .settings-tab-panel {
   @apply space-y-8;
-}
-
-/* 深色模式適配 */
-@media (prefers-color-scheme: dark) {
-  .form-input {
-    @apply bg-gray-700 border-gray-600 text-white placeholder-gray-400;
-  }
-}
-
-/* 動畫效果群組 */
-.fade-enter-active,
-.fade-leave-active {
-  @apply transition-opacity duration-300;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  @apply opacity-0;
-}
-
-.slide-enter-active,
-.slide-leave-active {
-  @apply transition-transform duration-300;
-}
-
-.slide-enter-from {
-  @apply transform translate-x-full;
-}
-
-.slide-leave-to {
-  @apply transform -translate-x-full;
-}
-
-/* 載入狀態群組 */
-.loading-overlay {
-  @apply absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center
-         justify-center rounded-lg;
-}
-
-.loading-spinner {
-  @apply animate-spin h-6 w-6 text-primary-600;
-}
-
-/* 成功/錯誤狀態群組 */
-.success-state {
-  @apply text-success-600 dark:text-success-400;
-}
-
-.error-state {
-  @apply text-danger-600 dark:text-danger-400;
-}
-
-.warning-state {
-  @apply text-warning-600 dark:text-warning-400;
-}
-
-/* 無障礙設計群組 */
-.focus-visible {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
-}
-
-.sr-only {
-  @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
-}
-
-/* 響應式設計 */
-@media (max-width: 1024px) {
-  .container {
-    @apply px-4;
-  }
-}
-
-@media (max-width: 768px) {
-  .grid {
-    @apply grid-cols-1;
-  }
 }
 </style>
 

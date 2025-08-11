@@ -20,7 +20,7 @@
         <p class="text-gray-600 dark:text-gray-400">
           為了完成註冊，請選擇一個使用者名稱
         </p>
-        
+
         <!-- 建議的 username 列表 -->
         <div v-if="usernameSuggestions.length > 0" class="space-y-3">
           <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -32,16 +32,21 @@
               :key="suggestion"
               @click="selectSuggestedUsername(suggestion)"
               class="w-full px-3 py-2 text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
-              :class="{ 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20': selectedUsername === suggestion }"
+              :class="{
+                'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20':
+                  selectedUsername === suggestion,
+              }"
             >
               {{ suggestion }}
             </button>
           </div>
         </div>
-        
+
         <!-- 自定義 username 輸入 -->
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-900 dark:text-white">
+          <label
+            class="block text-sm font-medium text-gray-900 dark:text-white"
+          >
             或自定義使用者名稱：
           </label>
           <div class="relative">
@@ -53,34 +58,44 @@
               class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               :class="{
                 'border-red-500 focus:ring-red-500': usernameError,
-                'border-green-500 focus:ring-green-500': customUsername && !usernameError && !usernameChecking,
-                'pr-10': usernameChecking
+                'border-green-500 focus:ring-green-500':
+                  customUsername && !usernameError && !usernameChecking,
+                'pr-10': usernameChecking,
               }"
             />
-            
+
             <!-- 檢查狀態圖標 -->
-            <div v-if="usernameChecking" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div
+              v-if="usernameChecking"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2"
+            >
               <i class="pi pi-spin pi-spinner text-gray-400"></i>
             </div>
-            <div v-else-if="customUsername && !usernameError" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div
+              v-else-if="customUsername && !usernameError"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2"
+            >
               <i class="pi pi-check text-green-500"></i>
             </div>
-            <div v-else-if="usernameError" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div
+              v-else-if="usernameError"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2"
+            >
               <i class="pi pi-times text-red-500"></i>
             </div>
           </div>
-          
+
           <!-- 錯誤訊息 -->
           <small v-if="usernameError" class="text-red-500 text-xs">
             {{ usernameError }}
           </small>
-          
+
           <!-- 使用者名稱規則提示 -->
           <small class="text-gray-500 dark:text-gray-400 text-xs">
             8-20個字元，只能包含英文字母和數字
           </small>
         </div>
-        
+
         <!-- 操作按鈕 -->
         <div class="flex gap-3 pt-4">
           <button
@@ -95,7 +110,10 @@
             class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="!isUsernameValid || isConfirmingUsername"
           >
-            <i v-if="isConfirmingUsername" class="pi pi-spin pi-spinner mr-2"></i>
+            <i
+              v-if="isConfirmingUsername"
+              class="pi pi-spin pi-spinner mr-2"
+            ></i>
             確認
           </button>
         </div>
@@ -181,9 +199,9 @@ const validateUsername = (username) => {
 
 const checkUsernameAvailability = async (username) => {
   if (!username) return null
-  
+
   usernameChecking.value = true
-  
+
   try {
     const { data } = await userService.checkUsernameAvailability(username)
     return data
@@ -227,12 +245,16 @@ const selectSuggestedUsername = (username) => {
 }
 
 const isUsernameValid = computed(() => {
-  return !usernameError.value && (customUsername.value || selectedUsername.value) && !usernameChecking.value
+  return (
+    !usernameError.value &&
+    (customUsername.value || selectedUsername.value) &&
+    !usernameChecking.value
+  )
 })
 
 const confirmUsernameSelection = async () => {
   const finalUsername = customUsername.value || selectedUsername.value
-  
+
   if (!finalUsername) {
     usernameError.value = '請選擇一個使用者名稱'
     return
@@ -285,7 +307,7 @@ const completeSocialRegistration = async (username) => {
       ...oauthData.value,
       username,
     })
-    
+
     // 登入用戶
     user.login({
       ...data.user,
@@ -297,7 +319,7 @@ const completeSocialRegistration = async (username) => {
     isSuccess.value = true
     successMessage.value = '註冊成功'
     successDetail.value = '歡迎加入迷因典！正在跳轉到首頁...'
-    
+
     toast.add({
       severity: 'success',
       summary: '註冊成功',
@@ -324,18 +346,20 @@ const backToLogin = () => {
   router.push('/login')
 }
 
-
-
 // 處理OAuth回調數據
 const processOAuthCallback = async () => {
   console.log('OAuth 回調頁面載入，查詢參數:', route.query)
-  
+
   const token = route.query.token
   const error = route.query.error
-  const userData = route.query.user ? JSON.parse(decodeURIComponent(route.query.user)) : null
+  const userData = route.query.user
+    ? JSON.parse(decodeURIComponent(route.query.user))
+    : null
   const needsUsername = route.query.needsUsername === 'true'
   const provider = route.query.provider
-  const profile = route.query.profile ? JSON.parse(decodeURIComponent(route.query.profile)) : null
+  const profile = route.query.profile
+    ? JSON.parse(decodeURIComponent(route.query.profile))
+    : null
 
   if (error) {
     console.log('檢測到授權錯誤:', error)
@@ -357,19 +381,22 @@ const processOAuthCallback = async () => {
   if (needsUsername) {
     // 需要選擇username，顯示選擇介面
     processingMessage.value = '正在準備username選擇...'
-    
+
     // 存儲OAuth數據
     oauthData.value = {
       token,
       needsUsername: true,
       provider,
       profile,
-      userData: userData || {}
+      userData: userData || {},
     }
 
     try {
       // 獲取username建議
-      const { data } = await userService.previewUsernameSuggestions(provider, profile)
+      const { data } = await userService.previewUsernameSuggestions(
+        provider,
+        profile,
+      )
       usernameSuggestions.value = data.suggestions || []
     } catch (error) {
       console.error('獲取username建議失敗:', error)
@@ -412,7 +439,7 @@ const processOAuthCallback = async () => {
 const handleError = (error) => {
   isProcessing.value = false
   errorMessage.value = error
-  
+
   toast.add({
     severity: 'error',
     summary: '授權失敗',
