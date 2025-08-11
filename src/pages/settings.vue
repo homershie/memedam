@@ -35,6 +35,14 @@
                       >
                         {{ userProfile.username }}
                       </p>
+                      <!-- 如果沒有密碼，顯示提示 -->
+                      <p
+                        v-if="!userProfile.hasPassword"
+                        class="text-xs text-warning-600 dark:text-warning-400 mt-1"
+                      >
+                        <i class="pi pi-exclamation-triangle mr-1"></i>
+                        需要設定密碼才能變更使用者名稱
+                      </p>
                     </div>
                     <div>
                       <Button
@@ -42,6 +50,7 @@
                         icon="pi pi-pencil"
                         severity="primary"
                         size="small"
+                        :disabled="!userProfile.hasPassword"
                         @click="showUsernameDialog = true"
                       />
                     </div>
@@ -50,7 +59,107 @@
 
                 <h3 class="text-lg font-medium">密碼變更</h3>
 
-                <form @submit.prevent="changePassword" class="space-y-4">
+                <!-- 如果沒有密碼，顯示提示訊息和設定密碼選項 -->
+                <div v-if="!userProfile.hasPassword" class="space-y-4">
+                  <div
+                    class="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700 rounded-lg p-4"
+                  >
+                    <div class="flex items-start space-x-2">
+                      <i class="pi pi-info-circle text-warning-500 mt-0.5"></i>
+                      <div>
+                        <p
+                          class="text-sm font-medium text-warning-800 dark:text-warning-200"
+                        >
+                          社群帳號登入
+                        </p>
+                        <p
+                          class="text-sm text-warning-700 dark:text-warning-300 mt-1"
+                        >
+                          如果沒有設定密碼，無法使用變更使用者名稱和電子信箱等設定
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 設定密碼表單 -->
+                  <div
+                    class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg p-4"
+                  >
+                    <h4
+                      class="text-sm font-medium text-primary-800 dark:text-primary-200 mb-3"
+                    >
+                      設定密碼
+                    </h4>
+                    <form @submit.prevent="setPassword" class="space-y-4">
+                      <div
+                        class="flex items-center gap-4 flex-wrap md:flex-nowrap"
+                      >
+                        <div class="w-full md:w-1/2">
+                          <label
+                            class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+                          >
+                            新密碼
+                          </label>
+                          <Password
+                            v-model="passwordForm.newPassword"
+                            :feedback="true"
+                            toggleMask
+                            fluid
+                            placeholder="輸入新密碼"
+                            :class="{
+                              'p-invalid': passwordForm.errors.newPassword,
+                            }"
+                          />
+                          <small
+                            v-if="passwordForm.errors.newPassword"
+                            class="p-error"
+                          >
+                            {{ passwordForm.errors.newPassword }}
+                          </small>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                          <label
+                            class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+                          >
+                            確認新密碼
+                          </label>
+                          <Password
+                            v-model="passwordForm.confirmPassword"
+                            :feedback="false"
+                            toggleMask
+                            fluid
+                            placeholder="再次輸入新密碼"
+                            :class="{
+                              'p-invalid': passwordForm.errors.confirmPassword,
+                            }"
+                          />
+                          <small
+                            v-if="passwordForm.errors.confirmPassword"
+                            class="p-error"
+                          >
+                            {{ passwordForm.errors.confirmPassword }}
+                          </small>
+                        </div>
+                      </div>
+                      <div class="flex justify-end">
+                        <Button
+                          type="submit"
+                          label="設定密碼"
+                          icon="pi pi-key"
+                          :loading="passwordForm.loading"
+                          class="btn-primary"
+                        />
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- 如果有密碼，顯示密碼變更表單 -->
+                <form
+                  v-if="userProfile.hasPassword"
+                  @submit.prevent="changePassword"
+                  class="space-y-4"
+                >
                   <div class="flex items-center gap-4 flex-wrap md:flex-nowrap">
                     <div class="w-full md:w-1/3">
                       <label
@@ -170,6 +279,14 @@
                       >
                         請驗證您的電子信箱以使用完整功能
                       </p>
+                      <!-- 如果沒有密碼，顯示提示 -->
+                      <p
+                        v-if="!userProfile.hasPassword"
+                        class="text-xs text-warning-600 dark:text-warning-400 mt-1"
+                      >
+                        <i class="pi pi-exclamation-triangle mr-1"></i>
+                        需要設定密碼才能變更電子信箱
+                      </p>
                     </div>
                     <div class="flex space-x-2">
                       <Button
@@ -187,6 +304,7 @@
                         icon="pi pi-pencil"
                         severity="secondary"
                         size="small"
+                        :disabled="!userProfile.hasPassword"
                         @click="showEmailDialog = true"
                         class="btn-secondary"
                       />
@@ -698,7 +816,7 @@
             {{ emailForm.errors.newEmail }}
           </small>
         </div>
-        <div>
+        <div v-if="userProfile.hasPassword">
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
@@ -716,6 +834,25 @@
             {{ emailForm.errors.currentPassword }}
           </small>
         </div>
+        <!-- 如果沒有密碼，顯示提示 -->
+        <div
+          v-else
+          class="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700 rounded-lg p-3"
+        >
+          <div class="flex items-start space-x-2">
+            <i class="pi pi-exclamation-triangle text-warning-500 mt-0.5"></i>
+            <div>
+              <p
+                class="text-sm font-medium text-warning-800 dark:text-warning-200"
+              >
+                無法變更電子信箱
+              </p>
+              <p class="text-sm text-warning-700 dark:text-warning-300 mt-1">
+                社群帳號登入的用戶需要先設定密碼才能變更電子信箱
+              </p>
+            </div>
+          </div>
+        </div>
       </form>
       <template #footer>
         <div class="flex justify-end space-x-2">
@@ -730,6 +867,7 @@
             icon="pi pi-send"
             @click="changeEmail"
             :loading="emailForm.loading"
+            :disabled="!userProfile.hasPassword"
             class="btn-primary"
           />
         </div>
@@ -942,7 +1080,7 @@
           </div>
 
           <!-- 目前密碼確認 -->
-          <div>
+          <div v-if="userProfile.hasPassword">
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
@@ -960,6 +1098,25 @@
               {{ usernameForm.errors.currentPassword }}
             </small>
           </div>
+          <!-- 如果沒有密碼，顯示提示 -->
+          <div
+            v-else
+            class="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700 rounded-lg p-3"
+          >
+            <div class="flex items-start space-x-2">
+              <i class="pi pi-exclamation-triangle text-warning-500 mt-0.5"></i>
+              <div>
+                <p
+                  class="text-sm font-medium text-warning-800 dark:text-warning-200"
+                >
+                  無法變更使用者名稱
+                </p>
+                <p class="text-sm text-warning-700 dark:text-warning-300 mt-1">
+                  社群帳號登入的用戶需要先設定密碼才能變更使用者名稱
+                </p>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
 
@@ -976,7 +1133,7 @@
             icon="pi pi-check"
             @click="changeUsername"
             :loading="usernameForm.loading"
-            :disabled="!canSubmitUsernameChange"
+            :disabled="!canSubmitUsernameChange || !userProfile.hasPassword"
             class="btn-primary"
           />
         </div>
@@ -1039,6 +1196,7 @@ const userProfile = reactive({
   gender: '',
   birthday: null,
   bio: '',
+  hasPassword: false, // 新增：是否有密碼
 })
 
 // 重新發送驗證信狀態
@@ -1157,6 +1315,7 @@ const loadUserProfile = async () => {
       gender: userData.gender || '',
       birthday: userData.birthday ? new Date(userData.birthday) : null,
       bio: userData.bio || '',
+      hasPassword: userData.has_password || userData.hasPassword || false, // 新增：是否有密碼
     })
 
     // 載入通知設定（從後端）
@@ -1470,12 +1629,69 @@ const resendVerificationEmail = async () => {
   }
 }
 
+const setPassword = async () => {
+  passwordForm.loading = true
+  passwordForm.errors = {}
+
+  // 驗證
+  if (!passwordForm.newPassword) {
+    passwordForm.errors.newPassword = '請輸入新密碼'
+  } else if (passwordForm.newPassword.length < 8) {
+    passwordForm.errors.newPassword = '密碼長度至少 8 個字元'
+  }
+  if (!passwordForm.confirmPassword) {
+    passwordForm.errors.confirmPassword = '請確認新密碼'
+  } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    passwordForm.errors.confirmPassword = '密碼不一致'
+  }
+
+  if (Object.keys(passwordForm.errors).length > 0) {
+    passwordForm.loading = false
+    return
+  }
+
+  try {
+    // 呼叫 API 設定密碼
+    await userService.changePassword({
+      newPassword: passwordForm.newPassword,
+    })
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '密碼已成功設定',
+      life: 3000,
+    })
+
+    // 清空表單
+    passwordForm.newPassword = ''
+    passwordForm.confirmPassword = ''
+
+    // 重新載入使用者資料以更新 hasPassword 狀態
+    await loadUserProfile()
+  } catch (error) {
+    console.error('密碼設定失敗:', error)
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '密碼設定失敗，請稍後再試'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    passwordForm.loading = false
+  }
+}
+
 const changePassword = async () => {
   passwordForm.loading = true
   passwordForm.errors = {}
 
   // 驗證
-  if (!passwordForm.currentPassword) {
+  if (userProfile.hasPassword && !passwordForm.currentPassword) {
     passwordForm.errors.currentPassword = '請輸入目前密碼'
   }
   if (!passwordForm.newPassword) {
@@ -1496,10 +1712,16 @@ const changePassword = async () => {
 
   try {
     // 呼叫 API 變更密碼
-    await userService.changePassword({
-      currentPassword: passwordForm.currentPassword,
+    const passwordData = {
       newPassword: passwordForm.newPassword,
-    })
+    }
+
+    // 只有在有密碼的情況下才添加目前密碼參數
+    if (userProfile.hasPassword) {
+      passwordData.currentPassword = passwordForm.currentPassword
+    }
+
+    await userService.changePassword(passwordData)
 
     toast.add({
       severity: 'success',
@@ -1544,7 +1766,7 @@ const changeEmail = async () => {
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailForm.newEmail)) {
     emailForm.errors.newEmail = '請輸入有效的電子信箱格式'
   }
-  if (!emailForm.currentPassword) {
+  if (userProfile.hasPassword && !emailForm.currentPassword) {
     emailForm.errors.currentPassword = '請輸入目前密碼'
   }
 
@@ -1555,10 +1777,16 @@ const changeEmail = async () => {
 
   try {
     // 呼叫 API 變更電子信箱
-    const response = await userService.changeEmail({
+    const emailData = {
       newEmail: emailForm.newEmail,
-      currentPassword: emailForm.currentPassword,
-    })
+    }
+
+    // 只有在有密碼的情況下才添加密碼參數
+    if (userProfile.hasPassword) {
+      emailData.currentPassword = emailForm.currentPassword
+    }
+
+    const response = await userService.changeEmail(emailData)
 
     toast.add({
       severity: 'success',
@@ -2092,7 +2320,7 @@ const changeUsername = async () => {
   } else if (usernameForm.availability !== true) {
     usernameForm.errors.newUsername = '請先檢查使用者名稱是否可用'
   }
-  if (!usernameForm.currentPassword) {
+  if (userProfile.hasPassword && !usernameForm.currentPassword) {
     usernameForm.errors.currentPassword = '請輸入目前密碼'
   }
 
@@ -2103,10 +2331,16 @@ const changeUsername = async () => {
 
   try {
     // 呼叫 API 變更使用者名稱
-    const response = await userService.changeUsername({
+    const usernameData = {
       username: usernameForm.newUsername,
-      currentPassword: usernameForm.currentPassword,
-    })
+    }
+
+    // 只有在有密碼的情況下才添加密碼參數
+    if (userProfile.hasPassword) {
+      usernameData.currentPassword = usernameForm.currentPassword
+    }
+
+    const response = await userService.changeUsername(usernameData)
 
     toast.add({
       severity: 'success',
@@ -2155,6 +2389,7 @@ const closeUsernameDialog = () => {
 
 const canSubmitUsernameChange = computed(() => {
   return (
+    userProfile.hasPassword &&
     usernameForm.newUsername &&
     usernameForm.currentPassword &&
     usernameForm.availability === true &&

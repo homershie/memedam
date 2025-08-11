@@ -5,6 +5,17 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --color-primary-50: #fff5fc;
+  --color-primary-100: #ffebf9;
+  --color-primary-200: #ffccef;
+  --color-primary-300: #ffade2;
+  --color-primary-400: #ff70c1;
+  --color-primary-500: #ff3399;
+  --color-primary-600: #e62984;
+  --color-primary-700: #bf1d63;
+  --color-primary-800: #991248;
+  --color-primary-900: #730a31;
+  --color-primary-950: #4a041a;
   --color-secondary-50: #fdf7ff;
   --color-secondary-100: #faf0ff;
   --color-secondary-200: #efd4fc;
@@ -16,6 +27,19 @@
   --color-secondary-800: #4b2194;
   --color-secondary-900: #311270;
   --color-secondary-950: #1a0747;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
 }
 
 /* PrimeVue 自訂變數 */
