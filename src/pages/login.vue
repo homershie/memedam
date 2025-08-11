@@ -222,103 +222,6 @@
       </div>
     </div>
 
-    <!-- Username 選擇對話框 -->
-    <Dialog
-      v-model:visible="showUsernameSelection"
-      modal
-      :closable="false"
-      class="w-full max-w-md mx-4"
-      header="選擇您的使用者名稱"
-    >
-      <div class="space-y-6">
-        <!-- 提示文字 -->
-        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
-          為了完成註冊，請選擇一個使用者名稱
-        </p>
-        
-        <!-- 建議的 username 列表 -->
-        <div v-if="usernameSuggestions.length > 0" class="space-y-3">
-          <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-            建議的使用者名稱：
-          </h4>
-          <div class="space-y-2">
-            <button
-              v-for="suggestion in usernameSuggestions"
-              :key="suggestion"
-              @click="selectSuggestedUsername(suggestion)"
-              class="w-full px-3 py-2 text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
-              :class="{ 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20': selectedUsername === suggestion }"
-            >
-              {{ suggestion }}
-            </button>
-          </div>
-        </div>
-        
-        <!-- 自定義 username 輸入 -->
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-900 dark:text-white">
-            或自定義使用者名稱：
-          </label>
-          <div class="relative">
-            <InputText
-              v-model="customUsername"
-              @input="debouncedCheckUsername"
-              placeholder="輸入您想要的使用者名稱"
-              class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              :class="{
-                'border-red-500 focus:ring-red-500': usernameError,
-                'border-green-500 focus:ring-green-500': customUsername && !usernameError && !usernameChecking,
-                'pr-10': usernameChecking
-              }"
-            />
-            
-            <!-- 檢查狀態圖標 -->
-            <div v-if="usernameChecking" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <i class="pi pi-spin pi-spinner text-gray-400"></i>
-            </div>
-            <div v-else-if="customUsername && !usernameError" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <i class="pi pi-check text-green-500"></i>
-            </div>
-            <div v-else-if="usernameError" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <i class="pi pi-times text-red-500"></i>
-            </div>
-          </div>
-          
-          <!-- 錯誤訊息 -->
-          <small v-if="usernameError" class="text-red-500 text-xs">
-            {{ usernameError }}
-          </small>
-          
-          <!-- 使用者名稱規則提示 -->
-          <small class="text-gray-500 dark:text-gray-400 text-xs">
-            8-20個字元，只能包含英文字母和數字
-          </small>
-        </div>
-        
-        <!-- 操作按鈕 -->
-        <div class="flex gap-3 pt-4">
-          <Button
-            @click="cancelUsernameSelection"
-            class="flex-1"
-            severity="secondary"
-            outlined
-            :disabled="isConfirmingUsername"
-          >
-            取消
-          </Button>
-          <Button
-            @click="confirmUsernameSelection"
-            class="flex-1"
-            severity="primary"
-            :loading="isConfirmingUsername"
-            :disabled="!isUsernameValid || isConfirmingUsername"
-          >
-            確認
-          </Button>
-        </div>
-      </div>
-    </Dialog>
-
     <!-- 版權聲明 -->
     <div
       class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-500 dark:text-gray-400"
@@ -333,17 +236,14 @@
 
 defineOptions({ name: 'LoginPage' })
 
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Password from 'primevue/password'
-import Dialog from 'primevue/dialog'
-import { debounce } from 'lodash'
 import userService from '@/services/userService'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
-import { handleOAuthLogin, handleStoredOAuthSuccess } from '@/utils/oauthUtils'
 import { onMounted } from 'vue'
 
 const router = useRouter()
@@ -368,234 +268,6 @@ const errors = reactive({
   password: '',
   confirmPassword: '',
 })
-
-// Username 選擇相關
-const showUsernameSelection = ref(false)
-const usernameSuggestions = ref([])
-const customUsername = ref('')
-const selectedUsername = ref('')
-const usernameError = ref('')
-const usernameChecking = ref(false)
-const isConfirmingUsername = ref(false)
-const pendingOAuthData = ref(null) // 暫存OAuth回調數據
-
-// Username API 函數（修正版本）
-const previewUsernameSuggestions = async (provider, profile) => {
-  try {
-    const { data } = await userService.previewUsernameSuggestions(provider, profile)
-    return data.suggestions || []
-  } catch (error) {
-    console.error('預覽username建議失敗:', error)
-    return []
-  }
-}
-
-const checkUsernameAvailability = async (username) => {
-  if (!username) return null
-  
-  usernameChecking.value = true
-  
-  try {
-    const { data } = await userService.checkUsernameAvailability(username)
-    return data
-  } catch (error) {
-    console.error('檢查username可用性失敗:', error)
-    return { available: false, message: '檢查失敗，請稍後再試' }
-  } finally {
-    usernameChecking.value = false
-  }
-}
-
-// Username 驗證和處理
-const validateUsername = (username) => {
-  if (!username || username.trim() === '') {
-    return '使用者名稱不能為空'
-  }
-  if (username.length < 8) {
-    return '使用者名稱至少8個字元'
-  }
-  if (username.length > 20) {
-    return '使用者名稱最多20個字元'
-  }
-  if (!/^[A-Za-z0-9]+$/.test(username)) {
-    return '使用者名稱只能包含英文字母和數字'
-  }
-  return ''
-}
-
-const debouncedCheckUsername = debounce(async () => {
-  if (!customUsername.value) {
-    usernameError.value = ''
-    return
-  }
-
-  // 先進行基本驗證
-  const validationError = validateUsername(customUsername.value)
-  if (validationError) {
-    usernameError.value = validationError
-    return
-  }
-
-  // 檢查可用性
-  const result = await checkUsernameAvailability(customUsername.value)
-  if (result) {
-    if (!result.available) {
-      usernameError.value = result.message || '此使用者名稱已被使用'
-    } else {
-      usernameError.value = ''
-    }
-  }
-}, 500)
-
-const selectSuggestedUsername = (username) => {
-  selectedUsername.value = username
-  customUsername.value = username
-  usernameError.value = ''
-  usernameChecking.value = false
-}
-
-const confirmUsernameSelection = async () => {
-  const finalUsername = customUsername.value || selectedUsername.value
-  
-  if (!finalUsername) {
-    usernameError.value = '請選擇一個使用者名稱'
-    return
-  }
-
-  isConfirmingUsername.value = true
-
-  // 最終驗證
-  const validationError = validateUsername(finalUsername)
-  if (validationError) {
-    usernameError.value = validationError
-    isConfirmingUsername.value = false
-    return
-  }
-
-  try {
-    // 最終檢查可用性
-    const result = await checkUsernameAvailability(finalUsername)
-    if (!result || !result.available) {
-      usernameError.value = result?.message || '此使用者名稱已被使用'
-      isConfirmingUsername.value = false
-      return
-    }
-
-    // 完成OAuth註冊流程
-    if (pendingOAuthData.value) {
-      await completeSocialRegistration(finalUsername)
-    }
-  } catch (error) {
-    console.error('確認使用者名稱失敗:', error)
-    usernameError.value = '操作失敗，請稍後再試'
-  } finally {
-    isConfirmingUsername.value = false
-  }
-}
-
-const cancelUsernameSelection = () => {
-  showUsernameSelection.value = false
-  customUsername.value = ''
-  selectedUsername.value = ''
-  usernameError.value = ''
-  usernameChecking.value = false
-  pendingOAuthData.value = null
-  socialLoginLoading.value = false
-}
-
-const isUsernameValid = computed(() => {
-  return !usernameError.value && (customUsername.value || selectedUsername.value) && !usernameChecking.value
-})
-
-// 完成社群註冊流程（修正版本）
-const completeSocialRegistration = async (username) => {
-  try {
-    if (!pendingOAuthData.value) {
-      throw new Error('缺少OAuth數據')
-    }
-
-    // 調用後端API完成註冊
-    const { data } = await userService.completeSocialRegistration({
-      ...pendingOAuthData.value,
-      username,
-    })
-    
-    // 登入用戶
-    user.login({
-      ...data.user,
-      token: data.token,
-      userId: data.userId || data.user?._id,
-    })
-
-    showUsernameSelection.value = false
-    pendingOAuthData.value = null
-    socialLoginLoading.value = false
-    
-    toast.add({
-      severity: 'success',
-      summary: '註冊成功',
-      detail: '歡迎加入迷因典！',
-      life: 3000,
-    })
-
-    router.push('/')
-  } catch (error) {
-    console.error('完成社群註冊失敗:', error)
-    toast.add({
-      severity: 'error',
-      summary: '註冊失敗',
-      detail: error?.response?.data?.message || error.message || '請稍後再試',
-      life: 3000,
-    })
-  }
-}
-
-// 處理OAuth回調結果
-const handleOAuthCallback = async (oauthResult) => {
-  try {
-    console.log('處理OAuth回調結果:', oauthResult)
-    
-    if (oauthResult.needsUsername) {
-      // 需要選擇username，顯示選擇對話框
-      pendingOAuthData.value = oauthResult
-      
-      // 獲取username建議
-      const suggestions = await previewUsernameSuggestions(
-        oauthResult.provider,
-        oauthResult.profile
-      )
-      
-      usernameSuggestions.value = suggestions
-      showUsernameSelection.value = true
-      socialLoginLoading.value = false
-    } else {
-      // 用戶已存在，直接登入
-      user.login({
-        ...oauthResult.user,
-        token: oauthResult.token,
-        userId: oauthResult.userId || oauthResult.user?._id,
-      })
-
-      toast.add({
-        severity: 'success',
-        summary: '登入成功',
-        detail: '歡迎回來！',
-        life: 3000,
-      })
-
-      router.push('/')
-    }
-  } catch (error) {
-    console.error('處理OAuth回調失敗:', error)
-    socialLoginLoading.value = false
-    toast.add({
-      severity: 'error',
-      summary: '登入失敗',
-      detail: error.message || '請稍後再試',
-      life: 3000,
-    })
-  }
-}
 
 // 驗證函數
 const validateForm = () => {
@@ -723,7 +395,7 @@ const onSubmit = async () => {
   }
 }
 
-// 社群登入處理（優化後的版本）
+// 社群登入處理（修改為原視窗跳轉）
 const handleSocialLogin = async (provider) => {
   if (socialLoginLoading.value) return
 
@@ -731,50 +403,16 @@ const handleSocialLogin = async (provider) => {
 
   try {
     console.log(`開始 ${provider} 社群登入`)
-    
-    // 使用彈窗方式進行OAuth
-    const result = await handleOAuthLogin(provider, router, toast, true)
-    
-    if (result.success) {
-      if (result.needsUsername) {
-        // 需要選擇username，顯示選擇對話框
-        console.log('需要選擇username，顯示選擇對話框')
-        
-        pendingOAuthData.value = result.data
-        
-        // 獲取username建議
-        const suggestions = await previewUsernameSuggestions(
-          result.data.provider || provider,
-          result.data.profile
-        )
-        
-        usernameSuggestions.value = suggestions
-        showUsernameSelection.value = true
-        // 保持socialLoginLoading為true，直到用戶完成選擇
-      } else {
-        // 用戶已存在，直接登入
-        console.log('用戶已存在，直接登入')
-        
-        user.login({
-          ...result.data.user,
-          token: result.data.token,
-          userId: result.data.userId || result.data.user?._id,
-        })
 
-        toast.add({
-          severity: 'success',
-          summary: '登入成功',
-          detail: '歡迎回來！',
-          life: 3000,
-        })
+    // 直接跳轉到後端 OAuth 路由，不使用彈窗
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    const oauthUrl = `${baseUrl}/api/users/auth/${provider}`
 
-        socialLoginLoading.value = false
-        router.push('/')
-      }
-    }
+    // 使用原視窗跳轉
+    window.location.href = oauthUrl
   } catch (error) {
     console.error(`${provider} 登入失敗:`, error)
-    
+
     // 顯示錯誤訊息
     toast.add({
       severity: 'error',
@@ -782,51 +420,15 @@ const handleSocialLogin = async (provider) => {
       detail: error.message || `${provider} 登入過程中發生錯誤`,
       life: 5000,
     })
-    
+
     socialLoginLoading.value = false
   }
 }
 
-// 處理來自OAuth回調頁面的數據（通過URL參數或localStorage）
-const checkForOAuthCallback = () => {
-  try {
-    // 檢查URL參數中是否有OAuth回調數據
-    const urlParams = new URLSearchParams(window.location.search)
-    const oauthData = urlParams.get('oauth_data')
-    
-    if (oauthData) {
-      const parsedData = JSON.parse(decodeURIComponent(oauthData))
-      handleOAuthCallback(parsedData)
-      
-      // 清理URL參數
-      const url = new URL(window.location)
-      url.searchParams.delete('oauth_data')
-      window.history.replaceState({}, document.title, url.toString())
-      return
-    }
-    
-    // 檢查localStorage中是否有OAuth回調數據
-    const storedData = localStorage.getItem('oauth_callback_data')
-    if (storedData) {
-      const parsedData = JSON.parse(storedData)
-      localStorage.removeItem('oauth_callback_data')
-      handleOAuthCallback(parsedData)
-    }
-  } catch (error) {
-    console.error('檢查OAuth回調數據失敗:', error)
-  }
-}
-
-// 頁面載入時檢查OAuth回調
-onMounted(async () => {
-  // 先檢查是否有存儲的OAuth成功數據
-  const hasStoredSuccess = await handleStoredOAuthSuccess(user, toast, router)
-  if (hasStoredSuccess) {
-    return // 如果處理了存儲的成功數據，就不需要再檢查其他
-  }
-  
-  // 檢查OAuth回調數據
-  checkForOAuthCallback()
+// 頁面載入時的初始化
+onMounted(() => {
+  // 頁面載入時可以進行一些初始化操作
+  console.log('登入頁面已載入')
 })
 </script>
 

@@ -125,6 +125,16 @@ export default {
     return apiService.httpAuth.get('/api/username/suggestions')
   },
   
+  // 驗證 username 格式和可用性
+  validateUsername(username) {
+    return apiService.http.get(`/api/username/validate/${encodeURIComponent(username)}`)
+  },
+  
+  // 變更用戶的 username
+  changeUsername(data) {
+    return apiService.httpAuth.post('/api/username/change', data)
+  },
+  
   // 完成社群註冊
   completeSocialRegistration(data) {
     return apiService.http.post('/api/auth/social/complete', data)
