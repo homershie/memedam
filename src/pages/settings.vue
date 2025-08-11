@@ -279,6 +279,14 @@
                       >
                         請驗證您的電子信箱以使用完整功能
                       </p>
+                      <!-- 如果沒有電子信箱，顯示提示 -->
+                      <p
+                        v-if="!userProfile.email"
+                        class="text-xs text-warning-600 dark:text-warning-400 mt-1"
+                      >
+                        <i class="pi pi-exclamation-triangle mr-1"></i>
+                        沒有電子信箱，無法發送驗證信
+                      </p>
                       <!-- 如果沒有密碼，顯示提示 -->
                       <p
                         v-if="!userProfile.hasPassword"
@@ -295,6 +303,7 @@
                         icon="pi pi-send"
                         severity="warning"
                         size="small"
+                        :disabled="!userProfile.email"
                         @click="resendVerificationEmail"
                         :loading="isResendingVerification"
                         class="btn-secondary"
@@ -1594,7 +1603,7 @@ const resendVerificationEmail = async () => {
     toast.add({
       severity: 'error',
       summary: '發送失敗',
-      detail: '無法獲取電子信箱地址',
+      detail: '沒有電子信箱地址，無法發送驗證信',
       life: 3000,
     })
     return
