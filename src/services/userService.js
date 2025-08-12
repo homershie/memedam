@@ -54,6 +54,10 @@ export default {
   changePassword(data) {
     return apiService.httpAuth.post('/api/users/change-password', data)
   },
+  // 檢查密碼狀態
+  getPasswordStatus() {
+    return apiService.httpAuth.get('/api/users/password-status')
+  },
   forgotPassword(email) {
     return apiService.http.post('/api/users/forgot-password', { email })
   },

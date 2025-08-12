@@ -1309,8 +1309,10 @@ const loadUserProfile = async () => {
       gender: userData.gender || '',
       birthday: userData.birthday ? new Date(userData.birthday) : null,
       bio: userData.bio || '',
-      hasPassword: userData.has_password || userData.hasPassword || false, // 新增：是否有密碼
     })
+
+    // 獲取密碼狀態
+    await loadPasswordStatus()
 
     // 載入通知設定（從後端）
     if (userData.notificationSettings) {
@@ -1380,6 +1382,20 @@ const loadUserProfile = async () => {
       detail: errorMessage,
       life: 3000,
     })
+  }
+}
+
+// 載入密碼狀態
+const loadPasswordStatus = async () => {
+  try {
+    const response = await userService.getPasswordStatus()
+    if (response.data && response.data.success) {
+      userProfile.hasPassword = response.data.hasPassword
+    }
+  } catch (error) {
+    console.error('載入密碼狀態失敗:', error)
+    // 如果無法獲取密碼狀態，預設為 false
+    userProfile.hasPassword = false
   }
 }
 
