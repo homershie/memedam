@@ -18,7 +18,12 @@
       href="favicon/apple-touch-icon.png"
     />
     <meta name="apple-mobile-web-app-title" content="MemeDam" />
-    <link rel="manifest" href="favicon/site.webmanifest" />
+    <!-- 使用非阻塞式載入 site.webmanifest，避免在 OAuth 流程中造成問題 -->
+    <link
+      rel="manifest"
+      href="favicon/site.webmanifest"
+      crossorigin="anonymous"
+    />
     <title>迷因典 MemeDam</title>
 
     <!-- 字體 -->
@@ -28,6 +33,26 @@
       href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans+TC:wght@100..900&display=swap"
       rel="stylesheet"
     />
+
+    <!-- 添加 OAuth 流程優化腳本 -->
+    <script>
+      // 防止在 OAuth 流程中自動載入不必要的資源
+      if (
+        window.location.search.includes('code=') ||
+        window.location.search.includes('state=')
+      ) {
+        // 在 OAuth 回調頁面中，延遲載入非關鍵資源
+        document.addEventListener('DOMContentLoaded', function () {
+          // 延遲載入 webmanifest
+          setTimeout(function () {
+            const manifestLink = document.querySelector('link[rel="manifest"]')
+            if (manifestLink) {
+              manifestLink.href = manifestLink.href
+            }
+          }, 1000)
+        })
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

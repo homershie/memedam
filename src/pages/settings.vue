@@ -1139,6 +1139,16 @@
       </template>
     </Dialog>
 
+    <!-- OAuth 綁定對話框 -->
+    <OAuthBindingDialog
+      v-model:visible="showOAuthBindingDialog"
+      :provider="selectedAccount?.platform"
+      :provider-name="selectedAccount?.name"
+      :provider-icon="selectedAccount?.icon"
+      @binding-success="onOAuthBindingSuccess"
+      @binding-error="onOAuthBindingError"
+    />
+
     <!-- 使用者名稱變更對話框 -->
     <Dialog
       v-model:visible="showUsernameDialog"
@@ -1340,6 +1350,8 @@ import ThemeToggle from '@/components/ThemeToggle.vue'
 import userService from '@/services/userService'
 import uploadService from '@/services/uploadService'
 import verificationService from '@/services/verificationService'
+import { optimizeOAuthResourceLoading } from '@/utils/oauthUtils'
+import OAuthBindingDialog from '@/components/OAuthBindingDialog.vue'
 
 // PrimeVue 組件
 import Tabs from 'primevue/tabs'
@@ -1365,6 +1377,7 @@ const showEmailDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showUnbindDialog = ref(false)
 const showUsernameDialog = ref(false)
+const showOAuthBindingDialog = ref(false)
 const selectedAccount = ref(null)
 const avatarInput = ref(null)
 
@@ -1465,6 +1478,9 @@ onMounted(async () => {
   if (savedTheme) {
     preferences.themeMode = savedTheme
   }
+
+  // 優化 OAuth 流程中的資源載入
+  optimizeOAuthResourceLoading()
 
   // 載入使用者資料
   await loadUserProfile()
@@ -1731,34 +1747,6 @@ const loadBindStatus = async () => {
   } catch (error) {
     console.error('載入綁定狀態失敗:', error)
     // 不顯示錯誤訊息，因為這不是關鍵功能
-  }
-}
-
-// 初始化社群帳號綁定
-const initiateSocialBinding = async (account) => {
-  try {
-    // 第一步：調用認證端點獲取授權 URL
-    // 需要帶上 Authorization header（通過 httpAuth 自動處理）
-    const response = await userService.initBindAuth(account.platform)
-
-    if (response.data && response.data.authUrl) {
-      // 第二步：重定向到授權 URL
-      window.location.href = response.data.authUrl
-    } else {
-      throw new Error('初始化綁定流程失敗：未獲取到授權 URL')
-    }
-  } catch (error) {
-    console.error('初始化社群綁定失敗:', error)
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      '綁定失敗，請稍後再試'
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: errorMessage,
-      life: 3000,
-    })
   }
 }
 
@@ -2308,13 +2296,9 @@ const toggleSocialAccount = async (account) => {
     selectedAccount.value = account
     showUnbindDialog.value = true
   } else {
-    // 綁定邏輯 - 使用 OAuth 流程
-    account.loading = true
-    try {
-      await initiateSocialBinding(account)
-    } finally {
-      account.loading = false
-    }
+    // 綁定邏輯 - 使用新的 OAuth 對話框
+    selectedAccount.value = account
+    showOAuthBindingDialog.value = true
   }
 }
 
@@ -2691,6 +2675,24 @@ const closeUsernameDialog = () => {
   usernameForm.availability = null
   usernameForm.errors = {}
   usernameForm.checking = false
+}
+
+// OAuth 綁定成功處理
+const onOAuthBindingSuccess = async () => {
+  // 重新載入使用者資料以更新綁定狀態
+  await loadUserProfile()
+
+  // 清理選中的帳號
+  selectedAccount.value = null
+}
+
+// OAuth 綁定錯誤處理
+const onOAuthBindingError = (errorMessage) => {
+  console.error('OAuth 綁定失敗:', errorMessage)
+  // 錯誤訊息已經在對話框中顯示，這裡可以添加額外的處理邏輯
+
+  // 清理選中的帳號
+  selectedAccount.value = null
 }
 
 const canSubmitUsernameChange = computed(() => {

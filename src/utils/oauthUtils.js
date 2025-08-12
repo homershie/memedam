@@ -6,9 +6,16 @@
  * @param {boolean} usePopup - 是否使用彈窗方式，默認true
  * @returns {Promise} OAuth 登入結果
  */
-export const handleOAuthLogin = async (provider, router, toast, usePopup = true) => {
+export const handleOAuthLogin = async (
+  provider,
+  router,
+  toast,
+  usePopup = true,
+) => {
   try {
-    console.log(`開始 ${provider} OAuth 登入流程（${usePopup ? '彈窗' : '重定向'}方式）`)
+    console.log(
+      `開始 ${provider} OAuth 登入流程（${usePopup ? '彈窗' : '重定向'}方式）`,
+    )
 
     // 構建 OAuth URL
     let baseUrl = import.meta.env.VITE_API_URL
@@ -46,12 +53,12 @@ export const handleOAuthLogin = async (provider, router, toast, usePopup = true)
 const handlePopupOAuth = (oauthUrl, provider, _router, _toast) => {
   return new Promise((resolve, reject) => {
     console.log('開始彈窗 OAuth 流程')
-    
+
     // 彈窗設定
     const popup = window.open(
       oauthUrl,
       `${provider}_oauth`,
-      'width=500,height=600,scrollbars=yes,resizable=yes'
+      'width=500,height=600,scrollbars=yes,resizable=yes',
     )
 
     if (!popup) {
@@ -239,7 +246,7 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
     'error:',
     error,
     'needsUsername:',
-    needsUsername
+    needsUsername,
   )
 
   if (error) {
@@ -267,8 +274,12 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
           token,
           needsUsername: true,
           provider: route.query.provider,
-          profile: route.query.profile ? JSON.parse(decodeURIComponent(route.query.profile)) : null,
-          userData: route.query.user ? JSON.parse(decodeURIComponent(route.query.user)) : null
+          profile: route.query.profile
+            ? JSON.parse(decodeURIComponent(route.query.profile))
+            : null,
+          userData: route.query.user
+            ? JSON.parse(decodeURIComponent(route.query.user))
+            : null,
         }
 
         localStorage.setItem('oauth_callback_data', JSON.stringify(oauthData))
@@ -333,7 +344,7 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
 
 /**
  * 處理來自localStorage的OAuth成功數據（用於沒有主視窗的情況）
- * @param {object} userStore - Pinia 用戶 store  
+ * @param {object} userStore - Pinia 用戶 store
  * @param {object} toast - PrimeVue toast
  * @param {object} router - Vue Router
  */
@@ -349,7 +360,7 @@ export const handleStoredOAuthSuccess = async (userStore, toast, _router) => {
     userStore.login({
       ...user,
       token,
-      userId
+      userId,
     })
 
     toast.add({
@@ -364,5 +375,59 @@ export const handleStoredOAuthSuccess = async (userStore, toast, _router) => {
     console.error('處理儲存的OAuth成功數據失敗:', error)
     localStorage.removeItem('oauth_success_data')
     return false
+  }
+}
+
+/**
+ * 優化 OAuth 流程中的資源載入
+ * 防止在 OAuth 流程中載入不必要的資源導致流程中斷
+ */
+export const optimizeOAuthResourceLoading = () => {
+  // 檢查是否在 OAuth 流程中
+  const urlParams = new URLSearchParams(window.location.search)
+  const hasOAuthParams =
+    urlParams.get('code') ||
+    urlParams.get('state') ||
+    urlParams.get('provider') ||
+    urlParams.get('error') ||
+    urlParams.get('success') !== null
+
+  if (hasOAuthParams) {
+    console.log('檢測到 OAuth 流程，優化資源載入')
+
+    // 延遲載入非關鍵資源
+    setTimeout(() => {
+      // 延遲載入 webmanifest
+      const manifestLink = document.querySelector('link[rel="manifest"]')
+      if (manifestLink && !manifestLink.href.includes('data:')) {
+        const currentHref = manifestLink.href
+        manifestLink.remove()
+        const newLink = document.createElement('link')
+        newLink.rel = 'manifest'
+        newLink.href = currentHref
+        newLink.crossOrigin = 'anonymous'
+        document.head.appendChild(newLink)
+      }
+
+      // 延遲載入其他非關鍵資源
+      const nonCriticalLinks = document.querySelectorAll(
+        'link[rel="preconnect"]',
+      )
+      nonCriticalLinks.forEach((link) => {
+        if (
+          link.href.includes('fonts.googleapis.com') ||
+          link.href.includes('fonts.gstatic.com')
+        ) {
+          // 重新載入字體資源
+          const currentHref = link.href
+          link.remove()
+          const newLink = document.createElement('link')
+          newLink.rel = 'preconnect'
+          newLink.href = currentHref
+          newLink.crossOrigin = 'anonymous'
+          document.head.appendChild(newLink)
+        }
+      })
+    }, 2000)
   }
 }
