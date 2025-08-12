@@ -2707,7 +2707,7 @@ const canSubmitUsernameChange = computed(() => {
 
 <style scoped lang="scss">
 h3 {
-  @apply mt-6!;
+  margin-top: 1.5rem;
 }
 
 /* Tabs 樣式群組 */
