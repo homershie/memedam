@@ -276,12 +276,15 @@ function useDebounceFn(fn, delay) {
 }
 
 const handleResize = useDebounceFn(() => {
-  if (!canvasRef.value) return
+  if (!canvasRef.value || !containerRef.value) return
 
   const canvas = canvasRef.value
-  const { innerWidth, innerHeight } = window
-  canvas.width = innerWidth
-  canvas.height = innerHeight
+  const container = containerRef.value
+  const rect = container.getBoundingClientRect()
+
+  // 使用容器的實際尺寸而不是視窗尺寸
+  canvas.width = rect.width
+  canvas.height = rect.height
   center.value = [0.5 * canvas.width, 0.5 * canvas.height]
 }, 150)
 
@@ -301,13 +304,15 @@ watch(isDarkTheme, (newTheme) => {
 
 onMounted(() => {
   const canvas = canvasRef.value
-  if (!canvas) return
+  const container = containerRef.value
+  if (!canvas || !container) return
 
   ctx.value = canvas.getContext('2d')
   if (!ctx.value) return
 
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
+  const rect = container.getBoundingClientRect()
+  canvas.width = rect.width
+  canvas.height = rect.height
   center.value = [0.5 * canvas.width, 0.5 * canvas.height]
 
   const particlePropsLength = props.particleCount * PARTICLE_PROP_COUNT

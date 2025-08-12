@@ -1,10 +1,10 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div class="container mx-auto p-4 space-y-12">
+  <div class="w-full max-w-full px-4 space-y-12">
     <!-- 首頁標題與搜尋/上傳 -->
     <VortexBackground
-      content-class="flex items-center justify-center min-h-screen"
-      container-class="min-h-screen"
+      content-class="flex items-center justify-center min-h-180"
+      container-class="min-h-screen w-full overflow-hidden"
       :particle-count="700"
       :rangeY="400"
       :base-hue="220"

@@ -177,7 +177,7 @@
         :class="[
           'h-[calc(100vh-80px)] flex-col group transition-all duration-300 ease-in-out relative hidden lg:flex',
           sidebarVisible
-            ? 'w-1/6 opacity-100'
+            ? 'w-1/6 opacity-100 min-w-60'
             : 'w-0 opacity-0 overflow-hidden',
         ]"
         :style="{
@@ -307,7 +307,9 @@
               "
             >
               <!-- 固定按鈕 -->
-              <div class="flex items-center gap-6 h-[80px] px-4 bg-white">
+              <div
+                class="flex items-center gap-6 h-[80px] px-4 bg-white dark:bg-surface-900"
+              >
                 <Button
                   icon="pi pi-bars"
                   severity="contrast"

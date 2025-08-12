@@ -57,6 +57,8 @@
   --p-tag-secondary-background: var(--p-primary-500);
   --p-tag-info-color: var(--p-info-500);
   --p-tag-info-background: var(--p-info-100);
+  --p-tabs-tabpanel-background: transparent;
+  --p-tabs-tablist-background: transparent;
 }
 
 /* 強制深色模式使用 primary-500 */

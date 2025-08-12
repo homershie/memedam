@@ -1,5 +1,5 @@
 <template>
-  <div class="container min-h-fit px-8 mb-20 mx-auto space-y-6">
+  <div class="container min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6">
     <!-- 使用 PrimeVue Tabs 的設定區塊 -->
     <div class="settings-tabs-container">
       <Tabs v-model:value="activeTabIndex" class="settings-tabs">
@@ -21,11 +21,8 @@
           <!-- 帳號管理 TabPanel -->
           <TabPanel value="0" class="settings-tab-panel">
             <div class="space-y-4 mt-4">
-              <h2 class="text-3xl font-bold">帳號管理</h2>
-              <p class="text-gray-600 mt-2">管理您的帳號安全設定</p>
-
               <!-- 使用者名稱變更 -->
-              <div class="space-y-4 mt-10">
+              <div class="space-y-4 mt-4">
                 <h3 class="text-lg font-medium">使用者名稱變更</h3>
                 <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
                   <div class="flex items-center justify-between">
@@ -459,7 +456,7 @@
             <div class="space-y-8">
               <form @submit.prevent="updateProfile" class="space-y-6">
                 <!-- 頭像 -->
-                <div class="space-y-4">
+                <div class="space-y-4 mt-4">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     頭像
                   </h3>
@@ -615,20 +612,9 @@
           <!-- 通知偏好 TabPanel -->
           <TabPanel value="2" class="settings-tab-panel">
             <div class="space-y-8">
-              <div class="space-y-4 mt-4">
-                <h2
-                  class="text-2xl font-semibold text-gray-900 dark:text-white"
-                >
-                  通知偏好
-                </h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">
-                  管理您的通知設定
-                </p>
-              </div>
-
               <div class="space-y-6">
                 <!-- 推播通知 -->
-                <div class="space-y-4 mt-10">
+                <div class="space-y-4 mt-4">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     推播通知
                   </h3>
@@ -721,20 +707,9 @@
           <!-- 內容偏好 TabPanel -->
           <TabPanel value="3" class="settings-tab-panel">
             <div class="space-y-8">
-              <div class="space-y-4 mt-4">
-                <h2
-                  class="text-2xl font-semibold text-gray-900 dark:text-white"
-                >
-                  內容偏好
-                </h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">
-                  自訂您的使用體驗
-                </p>
-              </div>
-
               <div class="space-y-6">
                 <!-- 主題設定 -->
-                <div class="space-y-4 mt-10">
+                <div class="space-y-4 mt-4">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     主題設定
                   </h3>
