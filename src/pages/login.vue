@@ -12,7 +12,7 @@
             'text-gray-900 dark:text-white font-bold': activeTab === 'register',
             'text-gray-600 dark:text-gray-400': activeTab !== 'register',
           }"
-          @click="activeTab = 'register'"
+          @click="handleTabChange('register')"
         >
           註冊
           <div
@@ -26,7 +26,7 @@
             'text-gray-900 dark:text-white font-bold': activeTab === 'login',
             'text-gray-600 dark:text-gray-400': activeTab !== 'login',
           }"
-          @click="activeTab = 'login'"
+          @click="handleTabChange('login')"
         >
           登入
           <div
@@ -67,88 +67,159 @@
       </p>
 
       <!-- 表單 -->
-      <form @submit.prevent="onSubmit" class="space-y-6 mb-8">
+      <form
+        @submit.prevent="onSubmit"
+        class="space-y-6 mb-8"
+        :data-form-type="activeTab"
+        data-testid="login-form"
+        autocomplete="on"
+      >
+        <!-- 註冊時的使用者名稱欄位 -->
         <div v-if="activeTab === 'register'" class="space-y-2">
-          <label class="block text-sm font-medium text-gray-900 dark:text-white"
-            >使用者名稱*</label
+          <label
+            for="username"
+            class="block text-sm font-medium text-gray-900 dark:text-white"
           >
+            使用者名稱*
+          </label>
           <InputText
+            id="username"
             v-model="formData.username"
             name="username"
+            type="text"
             autocomplete="username"
-            class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            :class="{ 'border-red-500 focus:ring-red-500': errors.username }"
+            data-testid="username-input"
+            fluid
+            :class="{
+              'border-primary-500 focus:ring-primary-500': errors.username,
+            }"
             placeholder="請輸入使用者名稱"
+            required
+            aria-describedby="username-error"
+            aria-invalid="false"
           />
-          <small class="text-red-500 text-xs" v-if="errors.username">{{
-            errors.username
-          }}</small>
+          <small
+            id="username-error"
+            class="text-primary-500 text-xs"
+            v-if="errors.username"
+            role="alert"
+          >
+            {{ errors.username }}
+          </small>
         </div>
 
+        <!-- 電子信箱/帳號欄位 -->
         <div class="space-y-2">
           <label
+            :for="activeTab === 'register' ? 'email' : 'login'"
             class="block text-sm font-medium text-gray-900 dark:text-white"
-            >{{
-              activeTab === 'register' ? '電子信箱*' : '使用者名稱或電子信箱*'
-            }}</label
           >
+            {{
+              activeTab === 'register' ? '電子信箱*' : '使用者名稱或電子信箱*'
+            }}
+          </label>
           <InputText
+            :id="activeTab === 'register' ? 'email' : 'login'"
             v-model="formData.email"
+            :name="activeTab === 'register' ? 'email' : 'login'"
             :type="activeTab === 'register' ? 'email' : 'text'"
-            name="email"
             :autocomplete="activeTab === 'register' ? 'email' : 'username'"
-            class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            :class="{ 'border-red-500 focus:ring-red-500': errors.email }"
+            :data-testid="
+              activeTab === 'register' ? 'email-input' : 'login-input'
+            "
+            fluid
+            :class="{
+              'border-primary-500 focus:ring-primary-500': errors.email,
+            }"
             :placeholder="
               activeTab === 'register'
                 ? '請輸入電子信箱'
                 : '請輸入使用者名稱或電子信箱'
             "
+            required
+            :aria-describedby="
+              activeTab === 'register' ? 'email-error' : 'login-error'
+            "
+            :aria-invalid="!!errors.email"
           />
-          <small class="text-red-500 text-xs" v-if="errors.email">{{
-            errors.email
-          }}</small>
+          <small
+            :id="activeTab === 'register' ? 'email-error' : 'login-error'"
+            class="text-primary-500 text-xs"
+            v-if="errors.email"
+            role="alert"
+          >
+            {{ errors.email }}
+          </small>
         </div>
 
+        <!-- 密碼欄位 -->
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-900 dark:text-white"
-            >密碼*</label
+          <label
+            for="password"
+            class="block text-sm font-medium text-gray-900 dark:text-white"
           >
+            密碼*
+          </label>
           <Password
+            id="password"
             v-model="formData.password"
             name="password"
             :autocomplete="
               activeTab === 'register' ? 'new-password' : 'current-password'
             "
+            data-testid="password-input"
             class="w-full"
             :class="{ 'p-invalid': errors.password }"
             placeholder="請輸入密碼"
             :feedback="false"
             toggleMask
+            fluid
+            required
+            aria-describedby="password-error"
+            :aria-invalid="!!errors.password"
           />
-          <small class="text-red-500 text-xs" v-if="errors.password">{{
-            errors.password
-          }}</small>
+          <small
+            id="password-error"
+            class="text-primary-500 text-xs"
+            v-if="errors.password"
+            role="alert"
+          >
+            {{ errors.password }}
+          </small>
         </div>
 
-        <!-- 新增確認密碼欄位（僅註冊時顯示） -->
+        <!-- 確認密碼欄位（僅註冊時顯示） -->
         <div class="space-y-2" v-if="activeTab === 'register'">
-          <label class="block text-sm font-medium text-gray-900 dark:text-white"
-            >確認密碼*</label
+          <label
+            for="confirmPassword"
+            class="block text-sm font-medium text-gray-900 dark:text-white"
           >
+            確認密碼*
+          </label>
           <Password
+            id="confirmPassword"
             v-model="formData.confirmPassword"
             name="confirmPassword"
             autocomplete="new-password"
+            data-testid="confirm-password-input"
             class="w-full"
             :class="{ 'p-invalid': errors.confirmPassword }"
             placeholder="請再次輸入密碼"
             :feedback="false"
             toggleMask
+            fluid
+            required
+            aria-describedby="confirm-password-error"
+            :aria-invalid="!!errors.confirmPassword"
           />
-          <small class="text-red-500 text-xs" v-if="errors.confirmPassword">{{
-            errors.confirmPassword
-          }}</small>
+          <small
+            id="confirm-password-error"
+            class="text-primary-500 text-xs"
+            v-if="errors.confirmPassword"
+            role="alert"
+          >
+            {{ errors.confirmPassword }}
+          </small>
         </div>
 
         <Button
@@ -157,6 +228,8 @@
           severity="primary"
           :loading="isSubmitting"
           :disabled="isSubmitting"
+          data-testid="submit-button"
+          :aria-label="activeTab === 'register' ? '註冊帳號' : '登入帳號'"
         >
           {{ activeTab === 'register' ? '註冊' : '登入' }}
         </Button>
@@ -179,6 +252,8 @@
             @click="handleSocialLogin('google')"
             :disabled="socialLoginLoading"
             class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            aria-label="使用 Google 登入"
           >
             <i
               class="pi pi-google text-xl text-gray-700 dark:text-gray-300"
@@ -188,6 +263,8 @@
             @click="handleSocialLogin('facebook')"
             :disabled="socialLoginLoading"
             class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            aria-label="使用 Facebook 登入"
           >
             <i
               class="pi pi-facebook text-xl text-gray-700 dark:text-gray-300"
@@ -197,6 +274,8 @@
             @click="handleSocialLogin('twitter')"
             :disabled="socialLoginLoading"
             class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            aria-label="使用 Twitter 登入"
           >
             <i
               class="pi pi-twitter text-xl text-gray-700 dark:text-gray-300"
@@ -206,6 +285,8 @@
             @click="handleSocialLogin('discord')"
             :disabled="socialLoginLoading"
             class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            aria-label="使用 Discord 登入"
           >
             <i
               class="pi pi-discord text-xl text-gray-700 dark:text-gray-300"
@@ -236,7 +317,7 @@
 
 defineOptions({ name: 'LoginPage' })
 
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
@@ -250,8 +331,8 @@ const router = useRouter()
 const user = useUserStore()
 const toast = useToast()
 
-// 響應式數據
-const activeTab = ref('register')
+// 響應式數據 - 將預設頁面改為登入
+const activeTab = ref('login')
 const isSubmitting = ref(false)
 const socialLoginLoading = ref(false)
 
@@ -430,7 +511,86 @@ const handleSocialLogin = async (provider) => {
 onMounted(() => {
   // 頁面載入時可以進行一些初始化操作
   console.log('登入頁面已載入')
+
+  // 改善密碼管理工具的相容性
+  setupPasswordManagerCompatibility()
 })
+
+// 改善密碼管理工具相容性的函數
+const setupPasswordManagerCompatibility = () => {
+  // 監聽表單變化，更新 aria 屬性
+  watch(
+    () => errors,
+    (newErrors) => {
+      // 更新所有輸入欄位的 aria-invalid 屬性
+      const inputs = document.querySelectorAll('input, .p-password-input')
+      inputs.forEach((input) => {
+        const fieldName = input.name || input.id
+        if (fieldName && newErrors[fieldName]) {
+          input.setAttribute('aria-invalid', 'true')
+        } else {
+          input.setAttribute('aria-invalid', 'false')
+        }
+      })
+    },
+    { deep: true },
+  )
+
+  // 監聽表單提交，提供更好的密碼管理工具支援
+  const form = document.querySelector('form[data-testid="login-form"]')
+  if (form) {
+    form.addEventListener('submit', () => {
+      // 確保所有必填欄位都有值
+      const requiredInputs = form.querySelectorAll('[required]')
+      requiredInputs.forEach((input) => {
+        if (!input.value.trim()) {
+          input.setAttribute('aria-invalid', 'true')
+        }
+      })
+    })
+  }
+}
+
+// 重置表單
+const _resetForm = () => {
+  formData.username = ''
+  formData.email = ''
+  formData.password = ''
+  formData.confirmPassword = ''
+
+  // 清除錯誤
+  Object.keys(errors).forEach((key) => {
+    errors[key] = ''
+  })
+
+  // 重置 aria 屬性
+  const inputs = document.querySelectorAll('input, .p-password-input')
+  inputs.forEach((input) => {
+    input.setAttribute('aria-invalid', 'false')
+  })
+}
+
+// 切換表單類型時的處理
+const handleTabChange = (newTab) => {
+  activeTab.value = newTab
+
+  // 切換表單時重置錯誤狀態
+  Object.keys(errors).forEach((key) => {
+    errors[key] = ''
+  })
+
+  // 更新表單的 data-form-type 屬性
+  const form = document.querySelector('form[data-testid="login-form"]')
+  if (form) {
+    form.setAttribute('data-form-type', newTab)
+  }
+
+  // 重置 aria 屬性
+  const inputs = document.querySelectorAll('input, .p-password-input')
+  inputs.forEach((input) => {
+    input.setAttribute('aria-invalid', 'false')
+  })
+}
 </script>
 
 <style scoped lang="scss">

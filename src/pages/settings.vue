@@ -90,18 +90,28 @@
                     >
                       設定密碼
                     </h4>
-                    <form @submit.prevent="setPassword" class="space-y-4">
+                    <form
+                      @submit.prevent="setPassword"
+                      class="space-y-4"
+                      data-testid="set-password-form"
+                      autocomplete="on"
+                    >
                       <div
                         class="flex items-center gap-4 flex-wrap md:flex-nowrap"
                       >
                         <div class="w-full md:w-1/2">
                           <label
+                            for="new-password-set"
                             class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
                           >
                             新密碼
                           </label>
                           <Password
+                            id="new-password-set"
                             v-model="passwordForm.newPassword"
+                            name="newPassword"
+                            autocomplete="new-password"
+                            data-testid="new-password-set-input"
                             :feedback="true"
                             toggleMask
                             fluid
@@ -109,22 +119,32 @@
                             :class="{
                               'p-invalid': passwordForm.errors.newPassword,
                             }"
+                            required
+                            aria-describedby="new-password-set-error"
+                            :aria-invalid="!!passwordForm.errors.newPassword"
                           />
                           <small
+                            id="new-password-set-error"
                             v-if="passwordForm.errors.newPassword"
                             class="p-error"
+                            role="alert"
                           >
                             {{ passwordForm.errors.newPassword }}
                           </small>
                         </div>
                         <div class="w-full md:w-1/2">
                           <label
+                            for="confirm-password-set"
                             class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
                           >
                             確認新密碼
                           </label>
                           <Password
+                            id="confirm-password-set"
                             v-model="passwordForm.confirmPassword"
+                            name="confirmPassword"
+                            autocomplete="new-password"
+                            data-testid="confirm-password-set-input"
                             :feedback="false"
                             toggleMask
                             fluid
@@ -132,10 +152,17 @@
                             :class="{
                               'p-invalid': passwordForm.errors.confirmPassword,
                             }"
+                            required
+                            aria-describedby="confirm-password-set-error"
+                            :aria-invalid="
+                              !!passwordForm.errors.confirmPassword
+                            "
                           />
                           <small
+                            id="confirm-password-set-error"
                             v-if="passwordForm.errors.confirmPassword"
                             class="p-error"
+                            role="alert"
                           >
                             {{ passwordForm.errors.confirmPassword }}
                           </small>
@@ -148,6 +175,8 @@
                           icon="pi pi-key"
                           :loading="passwordForm.loading"
                           class="btn-primary"
+                          data-testid="set-password-button"
+                          aria-label="設定密碼"
                         />
                       </div>
                     </form>
@@ -159,16 +188,23 @@
                   v-if="userProfile.hasPassword"
                   @submit.prevent="changePassword"
                   class="space-y-4"
+                  data-testid="change-password-form"
+                  autocomplete="on"
                 >
                   <div class="flex items-center gap-4 flex-wrap md:flex-nowrap">
                     <div class="w-full md:w-1/3">
                       <label
+                        for="current-password"
                         class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
                       >
                         目前密碼
                       </label>
                       <Password
+                        id="current-password"
                         v-model="passwordForm.currentPassword"
+                        name="currentPassword"
+                        autocomplete="current-password"
+                        data-testid="current-password-input"
                         :feedback="false"
                         toggleMask
                         placeholder="輸入目前密碼"
@@ -176,22 +212,32 @@
                         :class="{
                           'p-invalid': passwordForm.errors.currentPassword,
                         }"
+                        required
+                        aria-describedby="current-password-error"
+                        :aria-invalid="!!passwordForm.errors.currentPassword"
                       />
                       <small
+                        id="current-password-error"
                         v-if="passwordForm.errors.currentPassword"
                         class="p-error"
+                        role="alert"
                       >
                         {{ passwordForm.errors.currentPassword }}
                       </small>
                     </div>
                     <div class="w-full md:w-1/3">
                       <label
+                        for="new-password-change"
                         class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
                       >
                         新密碼
                       </label>
                       <Password
+                        id="new-password-change"
                         v-model="passwordForm.newPassword"
+                        name="newPassword"
+                        autocomplete="new-password"
+                        data-testid="new-password-change-input"
                         :feedback="true"
                         toggleMask
                         fluid
@@ -199,33 +245,48 @@
                         :class="{
                           'p-invalid': passwordForm.errors.newPassword,
                         }"
+                        required
+                        aria-describedby="new-password-change-error"
+                        :aria-invalid="!!passwordForm.errors.newPassword"
                       />
                       <small
+                        id="new-password-change-error"
                         v-if="passwordForm.errors.newPassword"
                         class="p-error"
+                        role="alert"
                       >
                         {{ passwordForm.errors.newPassword }}
                       </small>
                     </div>
                     <div class="w-full md:w-1/3">
                       <label
+                        for="confirm-password-change"
                         class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
                       >
                         確認新密碼
                       </label>
                       <Password
+                        id="confirm-password-change"
                         v-model="passwordForm.confirmPassword"
+                        name="confirmPassword"
+                        autocomplete="new-password"
+                        data-testid="confirm-password-change-input"
                         :feedback="false"
                         toggleMask
-                        fluid
                         placeholder="再次輸入新密碼"
+                        fluid
                         :class="{
                           'p-invalid': passwordForm.errors.confirmPassword,
                         }"
+                        required
+                        aria-describedby="confirm-password-change-error"
+                        :aria-invalid="!!passwordForm.errors.confirmPassword"
                       />
                       <small
+                        id="confirm-password-change-error"
                         v-if="passwordForm.errors.confirmPassword"
                         class="p-error"
+                        role="alert"
                       >
                         {{ passwordForm.errors.confirmPassword }}
                       </small>
@@ -239,6 +300,8 @@
                       icon="pi pi-key"
                       :loading="passwordForm.loading"
                       class="btn-primary"
+                      data-testid="change-password-button"
+                      aria-label="變更密碼"
                     />
                   </div>
                 </form>
@@ -454,7 +517,12 @@
           <!-- 個人資訊 TabPanel -->
           <TabPanel value="1" class="settings-tab-panel">
             <div class="space-y-8">
-              <form @submit.prevent="updateProfile" class="space-y-6">
+              <form
+                @submit.prevent="updateProfile"
+                class="space-y-6"
+                data-testid="profile-form"
+                autocomplete="on"
+              >
                 <!-- 頭像 -->
                 <div class="space-y-4 mt-4">
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
@@ -484,6 +552,7 @@
                           size="small"
                           class="w-8 h-8 rounded-full"
                           @click="removeAvatar"
+                          aria-label="移除頭像"
                         />
                       </div>
                       <!-- 相機按鈕 -->
@@ -493,6 +562,7 @@
                         size="small"
                         class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full"
                         @click="$refs.avatarInput.click()"
+                        aria-label="上傳頭像"
                       />
 
                       <!-- 如果有暫存檔案，顯示預覽提示 -->
@@ -523,19 +593,30 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label
+                      for="display-name"
                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >
                       顯示名稱
                     </label>
                     <InputText
+                      id="display-name"
                       v-model="userProfile.displayName"
+                      name="displayName"
+                      type="text"
+                      autocomplete="name"
+                      data-testid="display-name-input"
                       placeholder="輸入顯示名稱"
                       class="w-full"
                       :class="{ 'p-invalid': profileForm.errors.displayName }"
+                      required
+                      aria-describedby="display-name-error"
+                      :aria-invalid="!!profileForm.errors.displayName"
                     />
                     <small
+                      id="display-name-error"
                       v-if="profileForm.errors.displayName"
                       class="p-error"
+                      role="alert"
                     >
                       {{ profileForm.errors.displayName }}
                     </small>
@@ -543,51 +624,90 @@
 
                   <div>
                     <label
+                      for="gender"
                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >
                       性別
                     </label>
                     <Dropdown
+                      id="gender"
                       v-model="userProfile.gender"
+                      name="gender"
                       :options="genderOptions"
                       optionLabel="label"
                       optionValue="value"
                       placeholder="選擇性別"
                       class="w-full"
+                      data-testid="gender-dropdown"
+                      aria-describedby="gender-error"
+                      :aria-invalid="!!profileForm.errors.gender"
                     />
+                    <small
+                      id="gender-error"
+                      v-if="profileForm.errors.gender"
+                      class="p-error"
+                      role="alert"
+                    >
+                      {{ profileForm.errors.gender }}
+                    </small>
                   </div>
 
                   <div>
                     <label
+                      for="birthday"
                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >
                       生日
                     </label>
                     <Calendar
+                      id="birthday"
                       v-model="userProfile.birthday"
+                      name="birthday"
                       dateFormat="yy-mm-dd"
                       placeholder="選擇生日"
                       class="w-full"
+                      data-testid="birthday-calendar"
+                      aria-describedby="birthday-error"
+                      :aria-invalid="!!profileForm.errors.birthday"
                     />
+                    <small
+                      id="birthday-error"
+                      v-if="profileForm.errors.birthday"
+                      class="p-error"
+                      role="alert"
+                    >
+                      {{ profileForm.errors.birthday }}
+                    </small>
                   </div>
                 </div>
 
                 <!-- 自我介紹 -->
                 <div>
                   <label
+                    for="bio"
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
                     自我介紹
                   </label>
                   <Textarea
+                    id="bio"
                     v-model="userProfile.bio"
+                    name="bio"
+                    data-testid="bio-textarea"
                     placeholder="寫下您的自我介紹..."
                     rows="4"
                     class="w-full"
                     :class="{ 'p-invalid': profileForm.errors.bio }"
+                    aria-describedby="bio-error"
+                    :aria-invalid="!!profileForm.errors.bio"
                   />
                   <div class="flex justify-between items-center mt-2">
-                    <small v-if="profileForm.errors.bio" class="p-error">
+                    <small
+                      id="bio-error"
+                      v-if="profileForm.errors.bio"
+                      class="p-error"
+                      role="alert"
+                    >
                       {{ profileForm.errors.bio }}
                     </small>
                     <small class="text-gray-500">
@@ -603,6 +723,8 @@
                     icon="pi pi-check"
                     :loading="profileForm.loading"
                     class="btn-primary"
+                    data-testid="save-profile-button"
+                    aria-label="儲存個人資料變更"
                   />
                 </div>
               </form>
@@ -792,39 +914,70 @@
       :style="{ width: '500px' }"
       :closable="false"
     >
-      <form @submit.prevent="changeEmail" class="space-y-4">
+      <form
+        @submit.prevent="changeEmail"
+        class="space-y-4"
+        data-testid="change-email-form"
+        autocomplete="on"
+      >
         <div>
           <label
+            for="new-email"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             新電子信箱
           </label>
           <InputText
+            id="new-email"
             v-model="emailForm.newEmail"
+            name="newEmail"
             type="email"
+            autocomplete="email"
+            data-testid="new-email-input"
             placeholder="輸入新電子信箱"
             fluid
             :class="{ 'p-invalid': emailForm.errors.newEmail }"
+            required
+            aria-describedby="new-email-error"
+            :aria-invalid="!!emailForm.errors.newEmail"
           />
-          <small v-if="emailForm.errors.newEmail" class="p-error">
+          <small
+            id="new-email-error"
+            v-if="emailForm.errors.newEmail"
+            class="p-error"
+            role="alert"
+          >
             {{ emailForm.errors.newEmail }}
           </small>
         </div>
         <div v-if="userProfile.hasPassword">
           <label
+            for="current-password-email"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             目前密碼確認
           </label>
           <Password
+            id="current-password-email"
             v-model="emailForm.currentPassword"
+            name="currentPassword"
+            autocomplete="current-password"
+            data-testid="current-password-email-input"
             :feedback="false"
             toggleMask
             fluid
             placeholder="輸入目前密碼"
             :class="{ 'p-invalid': emailForm.errors.currentPassword }"
+            required
+            aria-describedby="current-password-email-error"
+            :aria-invalid="!!emailForm.errors.currentPassword"
           />
-          <small v-if="emailForm.errors.currentPassword" class="p-error">
+          <small
+            id="current-password-email-error"
+            v-if="emailForm.errors.currentPassword"
+            class="p-error"
+            role="alert"
+          >
             {{ emailForm.errors.currentPassword }}
           </small>
         </div>
@@ -892,17 +1045,31 @@
         </div>
         <div>
           <label
+            for="delete-confirmation"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
-            輸入您的帳號名稱確認
+            輸入您的使用者名稱確認
           </label>
           <InputText
+            id="delete-confirmation"
             v-model="deleteForm.confirmation"
-            placeholder="輸入您的帳號名稱"
+            name="confirmation"
+            type="text"
+            autocomplete="username"
+            data-testid="delete-confirmation-input"
+            placeholder="輸入您的使用者名稱"
             class="w-full"
             :class="{ 'p-invalid': deleteForm.errors.confirmation }"
+            required
+            aria-describedby="delete-confirmation-error"
+            :aria-invalid="!!deleteForm.errors.confirmation"
           />
-          <small v-if="deleteForm.errors.confirmation" class="p-error">
+          <small
+            id="delete-confirmation-error"
+            v-if="deleteForm.errors.confirmation"
+            class="p-error"
+            role="alert"
+          >
             {{ deleteForm.errors.confirmation }}
           </small>
         </div>
@@ -1012,13 +1179,19 @@
           <!-- 新使用者名稱輸入 -->
           <div>
             <label
+              for="new-username"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               新使用者名稱
             </label>
             <div class="flex space-x-2">
               <InputText
+                id="new-username"
                 v-model="usernameForm.newUsername"
+                name="newUsername"
+                type="text"
+                autocomplete="username"
+                data-testid="new-username-input"
                 placeholder="輸入新使用者名稱"
                 class="flex-1"
                 :class="{
@@ -1028,6 +1201,9 @@
                 }"
                 @input="handleUsernameInput"
                 @blur="checkUsernameAvailability"
+                required
+                aria-describedby="new-username-error"
+                :aria-invalid="!!usernameForm.errors.newUsername"
               />
               <Button
                 type="button"
@@ -1040,11 +1216,18 @@
                   usernameForm.newUsername === usernameForm.lastChecked
                 "
                 @click="checkUsernameAvailability"
+                data-testid="check-username-button"
+                aria-label="檢查使用者名稱可用性"
               />
             </div>
 
             <!-- 錯誤訊息 -->
-            <small v-if="usernameForm.errors.newUsername" class="p-error">
+            <small
+              id="new-username-error"
+              v-if="usernameForm.errors.newUsername"
+              class="p-error"
+              role="alert"
+            >
               {{ usernameForm.errors.newUsername }}
             </small>
 
@@ -1076,19 +1259,32 @@
           <!-- 目前密碼確認 -->
           <div v-if="userProfile.hasPassword">
             <label
+              for="current-password-username"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               目前密碼確認
             </label>
             <Password
+              id="current-password-username"
               v-model="usernameForm.currentPassword"
+              name="currentPassword"
+              autocomplete="current-password"
+              data-testid="current-password-username-input"
               :feedback="false"
               toggleMask
               fluid
               placeholder="輸入目前密碼"
               :class="{ 'p-invalid': usernameForm.errors.currentPassword }"
+              required
+              aria-describedby="current-password-username-error"
+              :aria-invalid="!!usernameForm.errors.currentPassword"
             />
-            <small v-if="usernameForm.errors.currentPassword" class="p-error">
+            <small
+              id="current-password-username-error"
+              v-if="usernameForm.errors.currentPassword"
+              class="p-error"
+              role="alert"
+            >
               {{ usernameForm.errors.currentPassword }}
             </small>
           </div>
@@ -1137,7 +1333,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
@@ -1283,7 +1479,107 @@ onMounted(async () => {
 
   // 檢查是否有 OAuth 回調參數
   await handleOAuthCallback()
+
+  // 改善密碼管理工具的相容性
+  setupPasswordManagerCompatibility()
 })
+
+// 改善密碼管理工具相容性的函數
+const setupPasswordManagerCompatibility = () => {
+  // 監聽密碼表單錯誤變化，更新 ARIA 屬性
+  watch(
+    () => passwordForm.errors,
+    (newErrors) => {
+      // 更新所有密碼輸入欄位的 aria-invalid 屬性
+      const passwordInputs = document.querySelectorAll(
+        '.p-password-input, input[type="password"]',
+      )
+      passwordInputs.forEach((input) => {
+        const fieldName = input.name || input.id
+        if (fieldName && newErrors[fieldName]) {
+          input.setAttribute('aria-invalid', 'true')
+        } else {
+          input.setAttribute('aria-invalid', 'false')
+        }
+      })
+    },
+    { deep: true },
+  )
+
+  // 監聽電子信箱表單錯誤變化
+  watch(
+    () => emailForm.errors,
+    (newErrors) => {
+      const emailInputs = document.querySelectorAll(
+        'input[type="email"], .p-password-input',
+      )
+      emailInputs.forEach((input) => {
+        const fieldName = input.name || input.id
+        if (fieldName && newErrors[fieldName]) {
+          input.setAttribute('aria-invalid', 'true')
+        } else {
+          input.setAttribute('aria-invalid', 'false')
+        }
+      })
+    },
+    { deep: true },
+  )
+
+  // 監聽使用者名稱表單錯誤變化
+  watch(
+    () => usernameForm.errors,
+    (newErrors) => {
+      const usernameInputs = document.querySelectorAll(
+        'input[type="text"], .p-password-input',
+      )
+      usernameInputs.forEach((input) => {
+        const fieldName = input.name || input.id
+        if (fieldName && newErrors[fieldName]) {
+          input.setAttribute('aria-invalid', 'true')
+        } else {
+          input.setAttribute('aria-invalid', 'false')
+        }
+      })
+    },
+    { deep: true },
+  )
+
+  // 監聽個人資料表單錯誤變化
+  watch(
+    () => profileForm.errors,
+    (newErrors) => {
+      const profileInputs = document.querySelectorAll(
+        'input, textarea, .p-dropdown',
+      )
+      profileInputs.forEach((input) => {
+        const fieldName = input.name || input.id
+        if (fieldName && newErrors[fieldName]) {
+          input.setAttribute('aria-invalid', 'true')
+        } else {
+          input.setAttribute('aria-invalid', 'false')
+        }
+      })
+    },
+    { deep: true },
+  )
+
+  // 監聽刪除表單錯誤變化
+  watch(
+    () => deleteForm.errors,
+    (newErrors) => {
+      const deleteInputs = document.querySelectorAll('input')
+      deleteInputs.forEach((input) => {
+        const fieldName = input.name || input.id
+        if (fieldName && newErrors[fieldName]) {
+          input.setAttribute('aria-invalid', 'true')
+        } else {
+          input.setAttribute('aria-invalid', 'false')
+        }
+      })
+    },
+    { deep: true },
+  )
+}
 
 // 組件卸載時清理預覽 URL
 onUnmounted(() => {
