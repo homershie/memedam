@@ -463,17 +463,30 @@
                       >
                         已綁定
                       </span>
-                      <Button
-                        :label="account.connected ? '解除綁定' : '綁定帳號'"
-                        :icon="
-                          account.connected ? 'pi pi-unlink' : 'pi pi-link'
-                        "
-                        :severity="account.connected ? 'secondary' : 'primary'"
-                        :loading="account.loading"
-                        :disabled="account.loading"
-                        @click="toggleSocialAccount(account)"
-                        class="btn-action"
-                      />
+                      <div class="flex space-x-2">
+                        <Button
+                          :label="account.connected ? '解除綁定' : '綁定帳號'"
+                          :icon="
+                            account.connected ? 'pi pi-unlink' : 'pi pi-link'
+                          "
+                          :severity="
+                            account.connected ? 'secondary' : 'primary'
+                          "
+                          :loading="account.loading"
+                          :disabled="account.loading"
+                          @click="toggleSocialAccount(account)"
+                          class="btn-action"
+                        />
+                        <Button
+                          v-if="!account.connected"
+                          label="調試"
+                          icon="pi pi-bug"
+                          severity="info"
+                          size="small"
+                          @click="openDebugDialog(account)"
+                          class="btn-secondary"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1149,6 +1162,12 @@
       @binding-error="onOAuthBindingError"
     />
 
+    <!-- OAuth 調試對話框 -->
+    <OAuthDebugDialog
+      v-model:visible="showOAuthDebugDialog"
+      :provider="selectedAccount?.platform"
+    />
+
     <!-- 使用者名稱變更對話框 -->
     <Dialog
       v-model:visible="showUsernameDialog"
@@ -1352,6 +1371,7 @@ import uploadService from '@/services/uploadService'
 import verificationService from '@/services/verificationService'
 import { optimizeOAuthResourceLoading } from '@/utils/oauthUtils'
 import OAuthBindingDialog from '@/components/OAuthBindingDialog.vue'
+import OAuthDebugDialog from '@/components/OAuthDebugDialog.vue'
 
 // PrimeVue 組件
 import Tabs from 'primevue/tabs'
@@ -1378,6 +1398,7 @@ const showDeleteDialog = ref(false)
 const showUnbindDialog = ref(false)
 const showUsernameDialog = ref(false)
 const showOAuthBindingDialog = ref(false)
+const showOAuthDebugDialog = ref(false)
 const selectedAccount = ref(null)
 const avatarInput = ref(null)
 
@@ -2693,6 +2714,12 @@ const onOAuthBindingError = (errorMessage) => {
 
   // 清理選中的帳號
   selectedAccount.value = null
+}
+
+// 開啟調試對話框
+const openDebugDialog = (account) => {
+  selectedAccount.value = account
+  showOAuthDebugDialog.value = true
 }
 
 const canSubmitUsernameChange = computed(() => {

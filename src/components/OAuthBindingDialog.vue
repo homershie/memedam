@@ -201,10 +201,26 @@ const startBinding = async () => {
     // 調用認證端點獲取授權 URL
     const response = await userService.initBindAuth(props.provider)
 
+    // 調試信息
+    console.log('OAuth 綁定響應:', response.data)
+    console.log('授權 URL:', response.data?.authUrl)
+
     if (response.data && response.data.authUrl) {
+      // 檢查授權 URL 是否正確
+      const authUrl = response.data.authUrl
+      if (
+        !authUrl.startsWith('https://accounts.google.com') &&
+        !authUrl.includes('google.com/oauth') &&
+        !authUrl.includes('googleapis.com')
+      ) {
+        console.warn('警告：授權 URL 可能不正確:', authUrl)
+        error.value = '後端返回的授權 URL 格式不正確，請聯繫管理員'
+        return
+      }
+
       // 使用 window.open 開啟授權視窗
       authWindow.value = window.open(
-        response.data.authUrl,
+        authUrl,
         'oauth_auth',
         'width=500,height=600,scrollbars=yes,resizable=yes',
       )
@@ -240,10 +256,18 @@ const startBinding = async () => {
         life: 5000,
       })
     } else {
+      console.error('後端響應中沒有 authUrl:', response.data)
       throw new Error('初始化綁定流程失敗：未獲取到授權 URL')
     }
   } catch (err) {
     console.error('初始化社群綁定失敗:', err)
+    console.error('錯誤詳情:', {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+      url: err.config?.url,
+    })
+
     error.value =
       err.response?.data?.message ||
       err.response?.data?.error ||
