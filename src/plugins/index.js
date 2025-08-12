@@ -19,6 +19,9 @@ import Calendar from 'primevue/calendar'
 import Textarea from 'primevue/textarea'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import InputNumber from 'primevue/inputnumber'
 
 export function registerPlugins(app) {
   app
@@ -35,4 +38,7 @@ export function registerPlugins(app) {
     .component('Textarea', Textarea)
     .component('Dialog', Dialog)
     .component('InputSwitch', InputSwitch)
+    .component('DataTable', DataTable)
+    .component('Column', Column)
+    .component('InputNumber', InputNumber)
 }

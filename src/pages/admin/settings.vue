@@ -4,12 +4,7 @@ defineOptions({
   name: 'AdminSettings'
 })
 
-// Route meta for admin protection
-definePageMeta({
-  layout: 'admin',
-  admin: true,
-  title: '系統設定'
-})
+
 
 import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
@@ -120,3 +115,10 @@ const saveSettings = async () => {
     </div>
   </div>
 </template>
+
+<route lang="yaml">
+meta:
+  layout: admin
+  title: '系統設定'
+  admin: true
+</route>

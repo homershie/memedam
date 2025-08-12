@@ -18,7 +18,6 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.browser,
-        definePageMeta: 'readonly',
         defineOptions: 'readonly',
       },
     },

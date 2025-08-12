@@ -4,12 +4,7 @@ defineOptions({
   name: 'AdminTools'
 })
 
-// Route meta for admin protection
-definePageMeta({
-  layout: 'admin',
-  admin: true,
-  title: '管理工具'
-})
+
 </script>
 
 <template>
@@ -746,7 +741,7 @@ const getRecommendationSystemStatus = async () => {
 
 <route lang="yaml">
 meta:
-  title: '管理員工具'
+  layout: admin
+  title: '管理工具'
   admin: true
-  layout: 'admin'
 </route>

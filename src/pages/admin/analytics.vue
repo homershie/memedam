@@ -4,12 +4,7 @@ defineOptions({
   name: 'AdminAnalytics'
 })
 
-// Route meta for admin protection
-definePageMeta({
-  layout: 'admin',
-  admin: true,
-  title: '數據分析'
-})
+
 
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
@@ -106,3 +101,10 @@ onMounted(() => {
     </Card>
   </div>
 </template>
+
+<route lang="yaml">
+meta:
+  layout: admin
+  title: '數據分析'
+  admin: true
+</route>

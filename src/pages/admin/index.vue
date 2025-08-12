@@ -4,12 +4,7 @@ defineOptions({
   name: 'AdminDashboard'
 })
 
-// Route meta for admin protection
-definePageMeta({
-  layout: 'admin',
-  admin: true,
-  title: '管理儀表板'
-})
+
 import BestSellingWidget from '@/components/dashboard/BestSellingWidget.vue'
 import NotificationsWidget from '@/components/dashboard/NotificationsWidget.vue'
 import RecentSalesWidget from '@/components/dashboard/RecentSalesWidget.vue'
@@ -31,3 +26,10 @@ import StatsWidget from '@/components/dashboard/StatsWidget.vue'
     </div>
   </div>
 </template>
+
+<route lang="yaml">
+meta:
+  layout: admin
+  title: '管理儀表板'
+  admin: true
+</route>
