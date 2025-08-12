@@ -1,4 +1,10 @@
 <script setup>
+// Define component name to fix linter error
+defineOptions({
+  name: 'AdminMemes'
+})
+
+
 import { ProductService } from '@/service/ProductService';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
@@ -288,3 +294,10 @@ function getStatusLabel(status) {
         </Dialog>
     </div>
 </template>
+
+<route lang="yaml">
+meta:
+  layout: admin
+  title: '迷因管理'
+  admin: true
+</route>

@@ -1,5 +1,5 @@
 <script setup>
-import { useLayout } from '@/layout/composables/layout';
+import { useLayout } from '@/layouts/composables/layout';
 import AppConfigurator from './AppConfigurator.vue';
 
 const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
@@ -30,7 +30,7 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
                     </g>
                 </svg>
 
-                <span>SAKAI</span>
+                <span>迷因典管理</span>
             </router-link>
         </div>
 
@@ -61,16 +61,16 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
                     <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-calendar"></i>
-                        <span>Calendar</span>
+                        <i class="pi pi-bell"></i>
+                        <span>通知</span>
                     </button>
                     <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-inbox"></i>
-                        <span>Messages</span>
+                        <i class="pi pi-cog"></i>
+                        <span>設定</span>
                     </button>
                     <button type="button" class="layout-topbar-action">
                         <i class="pi pi-user"></i>
-                        <span>Profile</span>
+                        <span>個人資料</span>
                     </button>
                 </div>
             </div>

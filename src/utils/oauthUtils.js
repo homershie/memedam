@@ -1,5 +1,3 @@
-import { useUserStore } from '@/stores/userStore'
-
 /**
  * OAuth 登入處理函數（支援彈窗和重定向方式）
  * @param {string} provider - 社群平台 (google, facebook, discord, twitter)
@@ -45,7 +43,7 @@ export const handleOAuthLogin = async (provider, router, toast, usePopup = true)
 /**
  * 彈窗方式的 OAuth 處理
  */
-const handlePopupOAuth = (oauthUrl, provider, router, toast) => {
+const handlePopupOAuth = (oauthUrl, provider, _router, _toast) => {
   return new Promise((resolve, reject) => {
     console.log('開始彈窗 OAuth 流程')
     
@@ -155,7 +153,7 @@ const handleRedirectOAuth = (oauthUrl, router) => {
  * @param {object} toast - PrimeVue toast
  * @param {object} router - Vue Router
  */
-const handleOAuthSuccess = async (token, userStore, toast, router) => {
+const handleOAuthSuccess = async (token, userStore, toast, _router) => {
   try {
     console.log('開始處理 OAuth 成功，token:', token.substring(0, 20) + '...')
 
@@ -339,7 +337,7 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
  * @param {object} toast - PrimeVue toast
  * @param {object} router - Vue Router
  */
-export const handleStoredOAuthSuccess = async (userStore, toast, router) => {
+export const handleStoredOAuthSuccess = async (userStore, toast, _router) => {
   try {
     const storedData = localStorage.getItem('oauth_success_data')
     if (!storedData) return false

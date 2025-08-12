@@ -1,9 +1,14 @@
 <script setup>
-import { useLayout } from '@/layout/composables/layout'
+import { useLayout } from '@/layouts/composables/layout'
 import { computed, ref, watch } from 'vue'
 import AppFooter from './admin/AppFooter.vue'
 import AppSidebar from './admin/AppSidebar.vue'
 import AppTopbar from './admin/AppTopbar.vue'
+
+// Define component name to fix linter error
+defineOptions({
+  name: 'AdminLayout'
+})
 
 const { layoutConfig, layoutState, isSidebarActive } = useLayout()
 

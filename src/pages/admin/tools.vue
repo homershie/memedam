@@ -1,3 +1,12 @@
+<script setup>
+// Define component name to fix linter error
+defineOptions({
+  name: 'AdminTools'
+})
+
+
+</script>
+
 <template>
   <div class="admin-tools">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
@@ -732,7 +741,7 @@ const getRecommendationSystemStatus = async () => {
 
 <route lang="yaml">
 meta:
-  title: '管理員工具'
+  layout: admin
+  title: '管理工具'
   admin: true
-  layout: 'admin'
 </route>
