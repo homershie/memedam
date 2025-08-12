@@ -82,60 +82,75 @@ function checkActiveRoute(item) {
 </script>
 
 <template>
-  <li
-    :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }"
-  >
-    <div
-      v-if="root && item.visible !== false"
-      class="layout-menuitem-root-text"
-    >
-      {{ item.label }}
-    </div>
-    <a
-      v-if="(!item.to || item.items) && item.visible !== false"
-      :href="item.url"
-      @click="itemClick($event, item, index)"
-      :class="item.class"
-      :target="item.target"
-      tabindex="0"
-    >
-      <i :class="item.icon" class="layout-menuitem-icon"></i>
-      <span class="layout-menuitem-text">{{ item.label }}</span>
-      <i
-        class="pi pi-fw pi-angle-down layout-submenu-toggler"
-        v-if="item.items"
-      ></i>
-    </a>
+  <li class="menu-item">
     <router-link
       v-if="item.to && !item.items && item.visible !== false"
       @click="itemClick($event, item, index)"
-      :class="[item.class, { 'active-route': checkActiveRoute(item) }]"
+      :class="['menu-link', { active: checkActiveRoute(item) || item.active }]"
       tabindex="0"
       :to="item.to"
     >
-      <i :class="item.icon" class="layout-menuitem-icon"></i>
-      <span class="layout-menuitem-text">{{ item.label }}</span>
-      <i
-        class="pi pi-fw pi-angle-down layout-submenu-toggler"
-        v-if="item.items"
-      ></i>
+      <i :class="item.icon" class="menu-icon"></i>
+      <span class="menu-text">{{ item.label }}</span>
+      <span v-if="item.badge" class="menu-badge">{{ item.badge }}</span>
     </router-link>
-    <Transition
-      v-if="item.items && item.visible !== false"
-      name="layout-submenu"
-    >
-      <ul v-show="root ? true : isActiveMenu" class="layout-submenu">
-        <app-menu-item
-          v-for="(child, i) in item.items"
-          :key="child"
-          :index="i"
-          :item="child"
-          :parentItemKey="itemKey"
-          :root="false"
-        ></app-menu-item>
-      </ul>
-    </Transition>
   </li>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.menu-item {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  .menu-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 0.375rem;
+    margin: 0 0.5rem;
+    transition: all 0.2s;
+    position: relative;
+
+    &:hover {
+      background-color: var(--surface-hover, #f9fafb);
+    }
+
+    &.active {
+      background-color: var(--primary-50);
+      color: var(--primary-600);
+      font-weight: 500;
+
+      .menu-icon {
+        color: var(--primary-600);
+      }
+    }
+
+    .menu-icon {
+      font-size: 1.1rem;
+      color: var(--text-color-secondary, #6b7280);
+      width: 1.25rem;
+      text-align: center;
+    }
+
+    .menu-text {
+      flex: 1;
+      font-size: 0.875rem;
+    }
+
+    .menu-badge {
+      background-color: var(--surface-200, #f3f4f6);
+      color: var(--text-color-secondary, #6b7280);
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.125rem 0.5rem;
+      border-radius: 1rem;
+      min-width: 1.5rem;
+      text-align: center;
+    }
+  }
+}
+</style>
