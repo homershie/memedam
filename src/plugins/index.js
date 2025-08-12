@@ -22,6 +22,8 @@ import InputSwitch from 'primevue/inputswitch'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputNumber from 'primevue/inputnumber'
+import Chart from 'primevue/chart'
+import Menu from 'primevue/menu'
 
 export function registerPlugins(app) {
   app
@@ -41,4 +43,6 @@ export function registerPlugins(app) {
     .component('DataTable', DataTable)
     .component('Column', Column)
     .component('InputNumber', InputNumber)
+    .component('Chart', Chart)
+    .component('Menu', Menu)
 }
