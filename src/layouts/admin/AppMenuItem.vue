@@ -82,49 +82,38 @@ function checkActiveRoute(item) {
 </script>
 
 <template>
-  <li
-    :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }"
-  >
-    <div
-      v-if="root && item.visible !== false"
-      class="layout-menuitem-root-text"
-    >
+  <li :class="{ 'menu-item-root': root }">
+    <div v-if="root && item.visible !== false" class="menu-item-label">
       {{ item.label }}
     </div>
     <a
       v-if="(!item.to || item.items) && item.visible !== false"
       :href="item.url"
       @click="itemClick($event, item, index)"
-      :class="item.class"
+      :class="['menu-item-link', item.class]"
       :target="item.target"
       tabindex="0"
     >
-      <i :class="item.icon" class="layout-menuitem-icon"></i>
-      <span class="layout-menuitem-text">{{ item.label }}</span>
+      <i :class="[item.icon, 'menu-item-icon']"></i>
+      <span class="menu-item-text">{{ item.label }}</span>
       <i
-        class="pi pi-fw pi-angle-down layout-submenu-toggler"
+        class="pi pi-fw pi-angle-right menu-item-toggle"
+        :class="{ expanded: isActiveMenu }"
         v-if="item.items"
       ></i>
     </a>
     <router-link
       v-if="item.to && !item.items && item.visible !== false"
       @click="itemClick($event, item, index)"
-      :class="[item.class, { 'active-route': checkActiveRoute(item) }]"
+      :class="['menu-item-link', item.class, { 'router-link-active': checkActiveRoute(item) }]"
       tabindex="0"
       :to="item.to"
     >
-      <i :class="item.icon" class="layout-menuitem-icon"></i>
-      <span class="layout-menuitem-text">{{ item.label }}</span>
-      <i
-        class="pi pi-fw pi-angle-down layout-submenu-toggler"
-        v-if="item.items"
-      ></i>
+      <i :class="[item.icon, 'menu-item-icon']"></i>
+      <span class="menu-item-text">{{ item.label }}</span>
     </router-link>
-    <Transition
-      v-if="item.items && item.visible !== false"
-      name="layout-submenu"
-    >
-      <ul v-show="root ? true : isActiveMenu" class="layout-submenu">
+    <Transition name="menu-submenu">
+      <ul v-show="root ? true : isActiveMenu" class="menu-item-submenu">
         <app-menu-item
           v-for="(child, i) in item.items"
           :key="child"
@@ -138,4 +127,22 @@ function checkActiveRoute(item) {
   </li>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.menu-submenu-enter-active,
+.menu-submenu-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.menu-submenu-enter-from,
+.menu-submenu-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.menu-submenu-enter-to,
+.menu-submenu-leave-from {
+  opacity: 1;
+  max-height: 200px;
+}
+</style>

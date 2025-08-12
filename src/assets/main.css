@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
+@import './admin.css';
 
 /* 自訂深色模式變體定義 - 解決與其他變體的衝突 */
 @custom-variant dark (&:where(.dark, .dark *));

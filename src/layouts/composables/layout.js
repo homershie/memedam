@@ -35,7 +35,7 @@ export function useLayout() {
 
     const executeDarkModeToggle = () => {
         layoutConfig.darkTheme = !layoutConfig.darkTheme;
-        document.documentElement.classList.toggle('app-dark');
+        document.documentElement.classList.toggle('dark');
     };
 
     const toggleMenu = () => {
