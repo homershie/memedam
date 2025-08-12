@@ -1,8 +1,8 @@
-/* 管理介面專用樣式 */
+/* 管理介面基礎佈局樣式 - 只保留結構，顏色和尺寸由用戶自定義 */
 
 /* Layout Wrapper */
 .layout-wrapper {
-  @apply relative min-h-screen bg-gray-50 dark:bg-gray-900;
+  @apply relative min-h-screen;
 }
 
 /* Layout Overlay Classes */
@@ -15,7 +15,7 @@
 }
 
 .layout-static-inactive .layout-sidebar {
-  @apply -translate-x-full lg:translate-x-0 lg:w-16;
+  @apply -translate-x-full lg:translate-x-0;
 }
 
 .layout-overlay-active .layout-sidebar {
@@ -28,43 +28,39 @@
 
 /* Topbar Styles */
 .layout-topbar {
-  @apply fixed top-0 left-0 right-0 z-40 flex items-center justify-between h-16 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm;
+  @apply fixed top-0 left-0 right-0 z-40 flex items-center justify-between;
 }
 
 .layout-topbar-logo-container {
-  @apply flex items-center space-x-3;
+  @apply flex items-center;
 }
 
 .layout-menu-button {
-  @apply lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
+  @apply lg:hidden cursor-pointer;
 }
 
 .layout-topbar-logo {
-  @apply flex items-center space-x-2 text-xl font-bold text-primary-600 dark:text-primary-400;
-}
-
-.layout-topbar-logo svg {
-  @apply w-8 h-8;
+  @apply flex items-center;
 }
 
 .layout-topbar-actions {
-  @apply flex items-center space-x-2;
+  @apply flex items-center;
 }
 
 .layout-topbar-action {
-  @apply p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-0 bg-transparent cursor-pointer;
+  @apply cursor-pointer border-0 bg-transparent;
 }
 
 .layout-topbar-action-highlight {
-  @apply bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400;
+  /* 高亮樣式由用戶自定義 */
 }
 
 .layout-topbar-menu {
-  @apply flex items-center space-x-2;
+  @apply flex items-center;
 }
 
 .layout-topbar-menu-content {
-  @apply flex items-center space-x-2;
+  @apply flex items-center;
 }
 
 .layout-topbar-menu-button {
@@ -73,12 +69,12 @@
 
 /* Sidebar Styles */
 .layout-sidebar {
-  @apply fixed top-16 left-0 z-30 w-64 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 overflow-y-auto;
+  @apply fixed top-0 left-0 z-30 transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 overflow-y-auto;
 }
 
 /* Menu Styles */
 .layout-menu {
-  @apply p-4 space-y-2;
+  @apply p-4;
 }
 
 .layout-menu li {
@@ -86,7 +82,7 @@
 }
 
 .menu-separator {
-  @apply h-px bg-gray-200 dark:bg-gray-700 my-4;
+  @apply my-4;
 }
 
 /* Menu Item Styles */
@@ -95,20 +91,20 @@
 }
 
 .menu-item-label {
-  @apply px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider;
+  @apply px-3 py-2 text-xs font-semibold uppercase tracking-wider;
 }
 
 .menu-item-link {
-  @apply flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-underline;
+  @apply flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline;
 }
 
 .menu-item-link.router-link-active,
 .menu-item-link.router-link-exact-active {
-  @apply bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400;
+  /* 活躍狀態樣式由用戶自定義 */
 }
 
 .menu-item-icon {
-  @apply mr-3 flex-shrink-0 w-5 h-5;
+  @apply mr-3 flex-shrink-0;
 }
 
 .menu-item-text {
@@ -116,7 +112,7 @@
 }
 
 .menu-item-toggle {
-  @apply ml-2 flex-shrink-0 w-4 h-4 transition-transform duration-200;
+  @apply ml-2 flex-shrink-0 transition-transform duration-200;
 }
 
 .menu-item-toggle.expanded {
@@ -124,12 +120,12 @@
 }
 
 .menu-item-submenu {
-  @apply ml-6 mt-1 space-y-1;
+  @apply ml-6 mt-1;
 }
 
 /* Main Container */
 .layout-main-container {
-  @apply ml-0 lg:ml-64 pt-16 min-h-screen bg-gray-50 dark:bg-gray-900;
+  @apply ml-0 lg:ml-64 pt-16 min-h-screen;
 }
 
 .layout-main {
@@ -138,25 +134,25 @@
 
 /* Footer */
 .layout-footer {
-  @apply border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center text-sm text-gray-600 dark:text-gray-300;
+  @apply border-t p-4 text-center text-sm;
 }
 
 /* Layout Mask */
 .layout-mask {
-  @apply fixed inset-0 z-20 bg-black/50 lg:hidden;
+  @apply fixed inset-0 z-20 lg:hidden;
 }
 
 .layout-mask.animate-fadein {
-  @apply opacity-0 animate-pulse;
+  @apply opacity-0;
 }
 
 .layout-mask.animate-fadeout {
-  @apply opacity-100 animate-pulse;
+  @apply opacity-100;
 }
 
 /* Config Menu */
 .layout-config-menu {
-  @apply flex items-center space-x-2;
+  @apply flex items-center;
 }
 
 /* Responsive adjustments */
@@ -167,10 +163,6 @@
   
   .layout-sidebar {
     @apply shadow-xl;
-  }
-  
-  .layout-topbar {
-    @apply pl-16;
   }
   
   .layout-menu-button {
@@ -205,120 +197,54 @@
   animation: fadeout 150ms ease-in;
 }
 
-/* Dark theme adjustments */
-.dark .layout-wrapper {
-  @apply bg-gray-900;
-}
-
-.dark .layout-topbar {
-  @apply bg-gray-800 border-gray-700;
-}
-
-.dark .layout-sidebar {
-  @apply bg-gray-800 border-gray-700;
-}
-
-.dark .layout-main-container {
-  @apply bg-gray-900;
-}
-
-.dark .layout-footer {
-  @apply bg-gray-800 border-gray-700;
-}
-
-/* Additional styling for better UX */
-.layout-topbar,
-.layout-sidebar {
-  @apply scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent;
-}
-
-/* PrimeVue component overrides for admin */
-.p-toast {
-  @apply z-50;
-}
-
-.p-button.p-button-text {
-  @apply hover:bg-gray-100 dark:hover:bg-gray-700;
-}
-
-/* DataTable responsive styling */
-.p-datatable .p-datatable-wrapper {
-  @apply overflow-x-auto;
-}
-
-/* Chart container styling */
-.chart-container {
-  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
-}
-
-/* Stats widget styling */
-.stats-widget {
-  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
-}
-
-.stats-widget-icon {
-  @apply w-12 h-12 rounded-lg flex items-center justify-center text-white;
-}
-
-.stats-widget-content {
-  @apply flex-1;
-}
-
-.stats-widget-title {
-  @apply text-sm font-medium text-gray-600 dark:text-gray-400;
-}
-
-.stats-widget-value {
-  @apply text-2xl font-bold text-gray-900 dark:text-white;
-}
-
-.stats-widget-change {
-  @apply text-sm font-medium;
-}
-
-.stats-widget-change.positive {
-  @apply text-green-600 dark:text-green-400;
-}
-
-.stats-widget-change.negative {
-  @apply text-red-600 dark:text-red-400;
-}
-
-/* Loading states */
-.loading-skeleton {
-  @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
-}
-
-/* Admin page specific styling */
+/* Basic component structure */
 .admin-page-header {
   @apply mb-6;
 }
 
 .admin-page-title {
-  @apply text-2xl font-bold text-gray-900 dark:text-white mb-2;
+  @apply text-2xl font-bold mb-2;
 }
 
 .admin-page-description {
-  @apply text-gray-600 dark:text-gray-400;
+  /* 描述樣式由用戶自定義 */
 }
 
 .admin-content-card {
-  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+  @apply rounded-lg shadow-sm border p-6;
 }
 
 /* Table action buttons */
 .table-actions {
-  @apply flex items-center space-x-2;
+  @apply flex items-center;
 }
 
 .table-action-btn {
-  @apply p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
+  @apply p-2 rounded-md transition-colors;
 }
 
 .table-action-btn.danger {
-  @apply text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20;
+  /* 危險按鈕樣式由用戶自定義 */
 }
 
 .table-action-btn.success {
-  @apply text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20;
+  /* 成功按鈕樣式由用戶自定義 */
+}
+
+/* PrimeVue component overrides - 只保留必要的功能性樣式 */
+.p-toast {
+  @apply z-50;
+}
+
+.p-button.p-button-text {
+  /* 按鈕文字樣式由用戶自定義 */
+}
+
+.p-datatable .p-datatable-wrapper {
+  @apply overflow-x-auto;
+}
+
+/* Loading states */
+.loading-skeleton {
+  @apply animate-pulse rounded;
 }
