@@ -48,6 +48,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'primevue'],
+    include: ['vue', 'vue-router', 'pinia', 'primevue', 'chart.js'],
   },
 })

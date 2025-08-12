@@ -2,29 +2,41 @@
 <template>
   <div class="container mx-auto p-4 space-y-12">
     <!-- 首頁標題與搜尋/上傳 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h1>讓最新的迷因為生活增添風味</h1>
-      <p class="subtitle mt-1">
-        探索網友們精心整理的迷因，用互動的方式參與迷因的定義，讓自己成為最新穎最顛覆的迷因。
-      </p>
-      <div class="flex flex-wrap justify-center gap-2 mt-4">
-        <p>熱門關鍵字：</p>
-        <Tag
-          v-for="tag in topTags"
-          :key="tag._id"
-          :value="`#${tag.name}`"
-          severity="primary"
-          class="cursor-pointer"
-          @click="handleTagClick(tag)"
+    <VortexBackground
+      content-class="flex items-center justify-center min-h-screen"
+      container-class="min-h-screen"
+      :particle-count="700"
+      :rangeY="400"
+      :base-hue="220"
+      :base-speed="0.0"
+      :range-speed="1.5"
+      :base-radius="1"
+      :range-radius="2"
+    >
+      <div :class="heroStyles.containerClass">
+        <h1 :class="heroStyles.titleClass">讓最新的迷因為生活增添風味</h1>
+        <p :class="heroStyles.subtitleClass">
+          探索網友們精心整理的迷因，用互動的方式參與迷因的定義，讓自己成為最新穎最顛覆的迷因。
+        </p>
+        <div class="flex flex-wrap justify-center gap-2 mt-4 mb-8">
+          <p :class="heroStyles.keywordClass">熱門關鍵字：</p>
+          <Tag
+            v-for="tag in topTags"
+            :key="tag._id"
+            :value="`#${tag.name}`"
+            severity="primary"
+            class="cursor-pointer hover:scale-105 transition-transform"
+            @click="handleTagClick(tag)"
+          />
+        </div>
+        <Button
+          label="來去看看"
+          icon="pi pi-arrow-right"
+          class="ml-2 p-button-primary w-48 h-14 text-lg hover:scale-105 transition-transform shadow-lg"
+          @click="$router.push('/memes/all')"
         />
       </div>
-      <Button
-        label="來去看看"
-        icon="pi pi-arrow-right"
-        class="ml-2 p-button-primary w-48 h-14"
-        @click="$router.push('/memes/all')"
-      />
-    </div>
+    </VortexBackground>
 
     <!-- 贊助用戶橫條 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
@@ -248,7 +260,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
@@ -267,11 +279,30 @@ import userService from '@/services/userService'
 import followService from '@/services/followService'
 import MemeCard from '@/components/MemeCard.vue'
 import memeService from '@/services/memeService'
+import VortexBackground from '@/components/VortexBackground.vue'
+import { useThemeStore } from '@/stores/themeStore'
 
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
+
+// 計算 hero 區域的樣式
+const heroStyles = computed(() => ({
+  containerClass: themeStore.isDark
+    ? 'text-center text-white relative z-20'
+    : 'text-center text-gray-800 relative z-20',
+  titleClass: themeStore.isDark
+    ? 'text-4xl lg:text-6xl font-bold mb-6 text-white drop-shadow-2xl'
+    : 'text-4xl lg:text-6xl font-bold mb-6 text-gray-800 drop-shadow-2xl',
+  subtitleClass: themeStore.isDark
+    ? 'subtitle mt-1 text-lg lg:text-xl text-gray-100 mb-8 max-w-3xl mx-auto drop-shadow-lg'
+    : 'subtitle mt-1 text-lg lg:text-xl text-gray-600 mb-8 max-w-3xl mx-auto drop-shadow-lg',
+  keywordClass: themeStore.isDark
+    ? 'text-gray-200 font-medium'
+    : 'text-gray-600 font-medium',
+}))
 
 const topTags = ref([])
 const featuredMemes = ref([])
@@ -755,7 +786,7 @@ const handleOAuthCallbackOnMount = async () => {
 onMounted(async () => {
   // 處理 OAuth 回調
   await handleOAuthCallbackOnMount()
-  
+
   // 檢查每日迷因狀態
   await checkDailyMemeStatus()
   await Promise.all([loadTopTags(), loadFeaturedMemes(), loadActiveUsers()])
