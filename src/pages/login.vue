@@ -284,9 +284,9 @@ const validateForm = () => {
       errors.username = '使用者名稱至少8個字元'
     } else if (formData.username.length > 20) {
       errors.username = '使用者名稱最多20個字元'
-    } else if (!/^[a-zA-Z0-9._-]+$/.test(formData.username)) {
+    } else if (!/^[a-z0-9._-]+$/.test(formData.username)) {
       errors.username =
-        '使用者名稱只能包含英文字母、數字、點號(.)、底線(_)和連字號(-)'
+        '使用者名稱只能包含小寫英文字母、數字、點號(.)、底線(_)和連字號(-)'
     }
   }
 
