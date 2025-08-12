@@ -1,3 +1,17 @@
+<script setup>
+// Define component name to fix linter error
+defineOptions({
+  name: 'AdminTools'
+})
+
+// Route meta for admin protection
+definePageMeta({
+  layout: 'admin',
+  admin: true,
+  title: '管理工具'
+})
+</script>
+
 <template>
   <div class="admin-tools">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">

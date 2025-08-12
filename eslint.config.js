@@ -18,11 +18,19 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.browser,
+        definePageMeta: 'readonly',
+        defineOptions: 'readonly',
       },
     },
   },
 
   js.configs.recommended,
   ...pluginVue.configs['flat/essential'],
+  {
+    rules: {
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'vue/no-unused-vars': ['error', { ignorePattern: '^_' }],
+    },
+  },
   skipFormatting,
 ])
