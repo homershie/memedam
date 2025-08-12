@@ -2,6 +2,7 @@
 import { useLayout } from '@/layouts/composables/layout'
 import { onBeforeMount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import Badge from 'primevue/badge'
 
 const route = useRoute()
 
@@ -79,6 +80,24 @@ function itemClick(event, item) {
 function checkActiveRoute(item) {
   return route.path === item.to
 }
+
+// 處理 badge 配置
+function getBadgeProps(badge) {
+  if (!badge) return null
+
+  if (typeof badge === 'string') {
+    return { value: badge }
+  }
+
+  if (typeof badge === 'object') {
+    return {
+      value: badge.value,
+      severity: badge.severity || 'info',
+    }
+  }
+
+  return null
+}
 </script>
 
 <template>
@@ -90,9 +109,20 @@ function checkActiveRoute(item) {
       tabindex="0"
       :to="item.to"
     >
-      <i :class="item.icon" class="menu-icon"></i>
+      <!-- 自定義圖標組件 -->
+      <component
+        v-if="item.customIcon"
+        :is="item.customIcon"
+        class="menu-icon custom-icon"
+      />
+      <!-- PrimeVue 圖標 -->
+      <i v-else :class="item.icon" class="menu-icon"></i>
       <span class="menu-text">{{ item.label }}</span>
-      <span v-if="item.badge" class="menu-badge">{{ item.badge }}</span>
+      <Badge
+        v-if="item.badge"
+        v-bind="getBadgeProps(item.badge)"
+        class="menu-badge"
+      />
     </router-link>
   </li>
 </template>
@@ -108,7 +138,6 @@ function checkActiveRoute(item) {
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    color: var(--text-color);
     text-decoration: none;
     border-radius: 0.375rem;
     margin: 0 0.5rem;
@@ -131,25 +160,23 @@ function checkActiveRoute(item) {
 
     .menu-icon {
       font-size: 1.1rem;
-      color: var(--text-color-secondary, #6b7280);
       width: 1.25rem;
       text-align: center;
+
+      &.custom-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        flex-shrink: 0;
+      }
     }
 
     .menu-text {
       flex: 1;
-      font-size: 0.875rem;
+      font-size: 1rem;
     }
 
     .menu-badge {
-      background-color: var(--surface-200, #f3f4f6);
-      color: var(--text-color-secondary, #6b7280);
-      font-size: 0.75rem;
-      font-weight: 500;
-      padding: 0.125rem 0.5rem;
-      border-radius: 1rem;
-      min-width: 1.5rem;
-      text-align: center;
+      flex-shrink: 0;
     }
   }
 }

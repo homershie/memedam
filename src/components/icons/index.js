@@ -1,0 +1,20 @@
+// 現有圖標組件
+export { default as IconCommunity } from './IconCommunity.vue'
+export { default as IconDocumentation } from './IconDocumentation.vue'
+export { default as IconEcosystem } from './IconEcosystem.vue'
+export { default as IconSupport } from './IconSupport.vue'
+export { default as IconTooling } from './IconTooling.vue'
+
+// 新增的管理後台圖標組件
+export { default as IconTags } from './IconTags.vue'
+export { default as IconComments } from './IconComments.vue'
+export { default as IconBullhorn } from './IconBullhorn.vue'
+export { default as IconShield } from './IconShield.vue'
+export { default as IconFlag } from './IconFlag.vue'
+export { default as IconChartBar } from './IconChartBar.vue'
+export { default as IconChartLine } from './IconChartLine.vue'
+export { default as IconFlask } from './IconFlask.vue'
+export { default as IconUserEdit } from './IconUserEdit.vue'
+export { default as IconCog } from './IconCog.vue'
+export { default as IconWrench } from './IconWrench.vue'
+export { default as IconFileText } from './IconFileText.vue'
