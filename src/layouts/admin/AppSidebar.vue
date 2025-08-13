@@ -36,9 +36,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="layout-sidebar pb-10 bg-white dark:bg-black">
+  <div
+    class="layout-sidebar bg-white dark:bg-black group h-full overflow-y-hidden group-hover:overflow-y-auto flex flex-col border-r border-[var(--p-content-border-color)]"
+    style="scrollbar-gutter: stable; scrollbar-width: thin"
+  >
     <!-- 頂部區域：LOGO -->
-    <div class="layout-sidebar-header p-4">
+    <div class="layout-sidebar-header p-4 flex-shrink-0">
       <div class="flex justify-center items-center">
         <router-link to="/">
           <img
@@ -70,7 +73,7 @@ onUnmounted(() => {
     </div>
 
     <!-- 用戶資料區域 -->
-    <div class="flex flex-col items-center wrap gap-2 py-4">
+    <div class="flex flex-col items-center wrap gap-2 py-4 flex-shrink-0">
       <Avatar
         image="https://api.dicebear.com/9.x/notionists-neutral/svg?seed=admin001"
         shape="circle"
@@ -90,7 +93,9 @@ onUnmounted(() => {
     </div>
 
     <!-- 搜尋欄 -->
-    <div class="p-4">
+    <div
+      class="p-4 flex-shrink-0 border-b border-[var(--p-content-border-color)]"
+    >
       <InputGroup>
         <InputText placeholder="搜尋功能" />
         <InputGroupAddon>
@@ -99,12 +104,78 @@ onUnmounted(() => {
       </InputGroup>
     </div>
 
-    <!-- 選單 -->
-    <app-menu></app-menu>
+    <!-- 可捲動的選單區域 -->
+    <div
+      class="flex-1 overflow-y-hidden group-hover:overflow-y-auto"
+      style="scrollbar-gutter: stable; scrollbar-width: thin"
+    >
+      <app-menu></app-menu>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+/* 自訂捲動軸樣式 */
+.layout-sidebar {
+  /* Webkit 瀏覽器 (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.8);
+  }
+
+  /* 深色模式捲動軸 */
+  .dark &::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.5);
+  }
+
+  .dark &::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.8);
+  }
+}
+
+/* 選單區域的捲動軸樣式 */
+.layout-sidebar > div:last-child {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.8);
+  }
+
+  /* 深色模式捲動軸 */
+  .dark &::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.5);
+  }
+
+  .dark &::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.8);
+  }
+}
+
 .user-profile-section {
   padding: 1rem;
   display: flex;

@@ -31,7 +31,7 @@
     <Menubar
       v-else
       :model="[]"
-      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50"
+      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50 rounded-none border-0 border-b"
     >
       <template #start>
         <div class="flex items-center gap-6">
@@ -175,7 +175,7 @@
       <!-- 桌面版側邊欄 (lg 以上顯示) -->
       <div
         :class="[
-          'h-[calc(100vh-80px)] flex-col group transition-all duration-300 ease-in-out relative hidden lg:flex',
+          'bg-surface-0 dark:bg-surface-900 h-[calc(100vh-80px)] flex-col group transition-discrete duration-300 ease-in-out relative hidden lg:flex',
           sidebarVisible
             ? 'w-1/6 opacity-100 min-w-60'
             : 'w-0 opacity-0 overflow-hidden',
@@ -186,7 +186,7 @@
       >
         <div
           v-if="sidebarVisible"
-          class="flex-1 overflow-y-hidden group-hover:overflow-y-auto flex flex-col"
+          class="flex-1 overflow-y-hidden group-hover:overflow-y-auto flex flex-col border-r border-[var(--p-content-border-color)]"
           style="scrollbar-gutter: stable; scrollbar-width: thin"
         >
           <Menu :model="filteredMenuList" class="border-none px-4">
@@ -589,9 +589,6 @@ export default {
 </script>
 
 <style scoped>
-:deep(.p-menubar) {
-  border: none;
-}
 :deep(.p-menu-item-content) {
   padding-top: 0.2rem !important;
   padding-bottom: 0.2rem !important;
