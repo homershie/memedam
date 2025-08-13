@@ -109,6 +109,117 @@
           @click="testDirectGoogleOAuth"
           class="btn-secondary"
         />
+
+        <Button
+          label="顯示配置檢查清單"
+          icon="pi pi-list"
+          @click="showChecklist = !showChecklist"
+          class="btn-info"
+        />
+      </div>
+
+      <!-- 配置檢查清單 -->
+      <div
+        v-if="showChecklist && checklist"
+        class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4"
+      >
+        <h3 class="text-lg font-medium text-green-800 dark:text-green-200 mb-3">
+          {{ checklist.title }}
+        </h3>
+        <p class="text-sm text-green-700 dark:text-green-300 mb-4">
+          {{ checklist.description }}
+        </p>
+
+        <div class="space-y-4">
+          <div
+            v-for="step in checklist.steps"
+            :key="step.step"
+            class="border border-green-200 dark:border-green-600 rounded-lg p-3"
+          >
+            <h4 class="font-medium text-green-800 dark:text-green-200 mb-2">
+              步驟 {{ step.step }}: {{ step.title }}
+            </h4>
+
+            <ul
+              class="text-sm text-green-700 dark:text-green-300 space-y-1 mb-2"
+            >
+              <li
+                v-for="item in step.items"
+                :key="item"
+                class="flex items-start"
+              >
+                <span class="mr-2">□</span>
+                <span>{{ item }}</span>
+              </li>
+            </ul>
+
+            <div v-if="step.urls" class="mb-2">
+              <p class="text-xs text-green-600 dark:text-green-400 mb-1">
+                相關連結:
+              </p>
+              <div class="space-y-1">
+                <a
+                  v-for="url in step.urls"
+                  :key="url"
+                  :href="url"
+                  target="_blank"
+                  class="text-xs text-blue-600 dark:text-blue-400 hover:underline block"
+                >
+                  {{ url }}
+                </a>
+              </div>
+            </div>
+
+            <div v-if="step.requiredUris" class="mb-2">
+              <p class="text-xs text-green-600 dark:text-green-400 mb-1">
+                需要的重定向 URI:
+              </p>
+              <div class="space-y-1">
+                <div
+                  v-for="uri in step.requiredUris"
+                  :key="uri"
+                  class="text-xs font-mono bg-white dark:bg-gray-800 p-1 rounded border"
+                >
+                  {{ uri }}
+                </div>
+              </div>
+            </div>
+
+            <div v-if="step.notes" class="mb-2">
+              <p class="text-xs text-green-600 dark:text-green-400 mb-1">
+                注意事項:
+              </p>
+              <ul class="text-xs text-green-700 dark:text-green-300 space-y-1">
+                <li
+                  v-for="note in step.notes"
+                  :key="note"
+                  class="flex items-start"
+                >
+                  <span class="mr-2">💡</span>
+                  <span>{{ note }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded"
+        >
+          <h4 class="font-medium text-blue-800 dark:text-blue-200 mb-2">
+            建議:
+          </h4>
+          <ul class="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+            <li
+              v-for="recommendation in checklist.recommendations"
+              :key="recommendation"
+              class="flex items-start"
+            >
+              <span class="mr-2">💡</span>
+              <span>{{ recommendation }}</span>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <!-- 結果顯示 -->
@@ -137,6 +248,41 @@
           {{ debugError.diagnosis?.description || debugError.message }}
         </div>
 
+        <!-- 立即行動 -->
+        <div v-if="debugError.diagnosis?.immediateActions" class="mb-3">
+          <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">
+            立即行動:
+          </h5>
+          <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+            <li
+              v-for="action in debugError.diagnosis.immediateActions"
+              :key="action"
+              class="flex items-start"
+            >
+              <span class="mr-2">→</span>
+              <span>{{ action }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Google 政策要求 -->
+        <div v-if="debugError.diagnosis?.googlePolicyRequirements" class="mb-3">
+          <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">
+            Google OAuth 2.0 政策要求:
+          </h5>
+          <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+            <li
+              v-for="requirement in debugError.diagnosis
+                .googlePolicyRequirements"
+              :key="requirement"
+              class="flex items-start"
+            >
+              <span class="mr-2">✓</span>
+              <span>{{ requirement }}</span>
+            </li>
+          </ul>
+        </div>
+
         <!-- 解決方案 -->
         <div v-if="debugError.diagnosis?.solutions" class="mb-3">
           <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">
@@ -150,6 +296,23 @@
             >
               <span class="mr-2">•</span>
               <span>{{ solution }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Google 政策檢查 -->
+        <div v-if="debugError.diagnosis?.googlePolicyCheck" class="mb-3">
+          <h5 class="font-medium text-red-800 dark:text-red-200 mb-2">
+            Google 政策檢查清單:
+          </h5>
+          <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+            <li
+              v-for="check in debugError.diagnosis.googlePolicyCheck"
+              :key="check"
+              class="flex items-start"
+            >
+              <span class="mr-2">🔍</span>
+              <span>{{ check }}</span>
             </li>
           </ul>
         </div>
@@ -187,6 +350,7 @@ import {
   testOAuthConfig,
   diagnoseOAuthError,
   getRequiredRedirectUris,
+  getGoogleOAuthChecklist,
 } from '@/utils/oauthConfigChecker'
 
 // 組件名稱
@@ -215,6 +379,8 @@ const debugResult = ref(null)
 const debugError = ref(null)
 const configResult = ref(null)
 const redirectUris = ref([])
+const showChecklist = ref(false)
+const checklist = ref(null)
 
 // 全域 toast 服務
 const toast = useToast()
@@ -237,6 +403,7 @@ const runConfigCheck = async () => {
     const result = await testOAuthConfig()
     configResult.value = result
     redirectUris.value = getRequiredRedirectUris()
+    checklist.value = getGoogleOAuthChecklist()
 
     console.log('OAuth 配置檢查完成:', result)
   } catch (error) {
