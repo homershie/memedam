@@ -104,7 +104,7 @@ const loadReports = async () => {
         admin_comment: null,
       },
     ]
-  } catch (error) {
+  } catch {
     toast.add({
       severity: 'error',
       summary: '錯誤',

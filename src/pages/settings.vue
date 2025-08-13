@@ -847,7 +847,7 @@
                       </label>
                       <ThemeToggle
                         mode="dropdown"
-                        v-model="preferences.themeMode"
+                        v-model="themeMode"
                         @change="handleThemeChange"
                       />
                     </div>
@@ -1464,8 +1464,15 @@ const notificationForm = reactive({
 // 內容偏好（主題同步使用全域 store）
 const themeStore = useThemeStore()
 const preferences = reactive({
-  themeMode: themeStore.theme, // 與全域同步
   theme: 'default',
+})
+
+// 使用 computed 來確保與 themeStore 的同步
+const themeMode = computed({
+  get: () => themeStore.theme,
+  set: (val) => {
+    themeStore.setTheme(val)
+  },
 })
 
 const preferencesForm = reactive({
@@ -1474,14 +1481,13 @@ const preferencesForm = reactive({
 
 // 處理主題變化（同步到全域 store）
 const handleThemeChange = (newTheme) => {
-  preferences.themeMode = newTheme
   themeStore.setTheme(newTheme)
 }
 
 // 初始化主題設定
 onMounted(async () => {
-  // 初始化與全域主題同步
-  preferences.themeMode = themeStore.theme
+  // 移除重複的主題初始化，避免循環依賴
+  // preferences.themeMode 已經在 reactive 初始化時與 themeStore.theme 同步
 
   // 優化 OAuth 流程中的資源載入
   optimizeOAuthResourceLoading()
@@ -1650,14 +1656,21 @@ const loadUserProfile = async () => {
 
     // 載入偏好設定（從後端）
     if (userData.preferences) {
-      Object.assign(preferences, userData.preferences)
+      // 只載入非主題相關的偏好設定
+      if (userData.preferences.theme) {
+        preferences.theme = userData.preferences.theme
+      }
+      // 主題模式由 themeStore 管理，不從後端載入
     } else {
       // 如果後端沒有，嘗試從 localStorage 載入
       const savedPreferences = localStorage.getItem('userPreferences')
       if (savedPreferences) {
         try {
           const parsed = JSON.parse(savedPreferences)
-          Object.assign(preferences, parsed)
+          if (parsed.theme) {
+            preferences.theme = parsed.theme
+          }
+          // 主題模式由 themeStore 管理，不從 localStorage 載入
         } catch (e) {
           console.error('解析偏好設定失敗:', e)
         }
@@ -2263,12 +2276,14 @@ const savePreferences = async () => {
   preferencesForm.loading = true
 
   try {
-    // 儲存主題設定到 localStorage
-    localStorage.setItem('theme', preferences.themeMode)
+    // 主題設定已經由 themeStore 自動儲存到 localStorage
+    // 不需要手動儲存
 
     // 呼叫 API 儲存偏好設定
     await userService.updateMe({
-      preferences: preferences,
+      preferences: {
+        theme: preferences.theme, // 只儲存其他偏好設定
+      },
     })
 
     toast.add({

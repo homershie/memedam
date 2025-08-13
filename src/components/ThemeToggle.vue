@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 按鈕組模式 -->
-    <div v-if="mode === 'buttons'" class="flex items-center gap-2">
+    <div v-if="_props.mode === 'buttons'" class="flex items-center gap-2">
       <button
         @click="setTheme('light')"
         :class="[
@@ -43,7 +43,7 @@
     </div>
 
     <!-- 下拉選單模式 -->
-    <div v-else-if="mode === 'dropdown'" class="w-full">
+    <div v-else-if="_props.mode === 'dropdown'" class="w-full">
       <Dropdown
         v-model="theme"
         :options="themeOptions"
@@ -56,7 +56,7 @@
     </div>
 
     <!-- 單一按鈕模式（用於導覽列） -->
-    <div v-else-if="mode === 'single'" class="flex items-center">
+    <div v-else-if="_props.mode === 'single'" class="flex items-center">
       <button
         @click="toggleTheme"
         class="w-10 h-10 rounded-full transition-colors theme-toggle"
@@ -69,18 +69,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useThemeStore } from '@/stores/themeStore'
 
 // Props
-const props = defineProps({
+const _props = defineProps({
   mode: {
     type: String,
     default: 'buttons', // 'buttons', 'dropdown', 'single'
-  },
-  modelValue: {
-    type: String,
-    default: 'system',
   },
 })
 
@@ -106,23 +102,8 @@ const themeOptions = ref([
   { label: '根據系統設定', value: 'system' },
 ])
 
-// 與外部 v-model 同步（若父層提供值則覆寫 store）
-onMounted(() => {
-  const incoming = props.modelValue
-  if (incoming && incoming !== themeStore.theme) {
-    themeStore.setTheme(incoming)
-  }
-})
-
-// 當父層變更 modelValue 時，同步到 store
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    if (newValue && newValue !== themeStore.theme) {
-      themeStore.setTheme(newValue)
-    }
-  },
-)
+// 移除會導致循環依賴的邏輯
+// 組件完全依賴 themeStore 作為單一真相來源
 
 const setTheme = (newTheme) => {
   theme.value = newTheme
