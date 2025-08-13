@@ -23,6 +23,17 @@ import 'primeicons/primeicons.css'
 // 引入 Remix Icon
 import 'remixicon/fonts/remixicon.css'
 
+// 引入 Vue Gtag
+import { configure } from 'vue-gtag'
+
+// 設定 Vue Gtag
+configure({
+  tagId: 'G-7L0HW510TQ',
+  pageTracker: {
+    router,
+  },
+})
+
 const app = createApp(App)
 
 app.use(pinia)

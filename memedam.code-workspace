@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "D:/git/memedam_backend"
+		},
+		{
+			"path": "D:/git/memedam"
+		}
+	],
+	"settings": {
+		"postman.settings.dotenv-detection-notification-visibility": false
+	}
+}
