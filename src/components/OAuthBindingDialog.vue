@@ -164,7 +164,10 @@ const error = ref('')
 const authWindow = ref(null)
 const checkClosedInterval = ref(null)
 const callbackUrlCheckInterval = ref(null)
+const fallbackTimeout = ref(null)
 const callbackData = ref(null)
+const receivedCallback = ref(false)
+const receivedError = ref('')
 let messageListener = null
 
 // 全域 toast 服務
@@ -202,6 +205,10 @@ const resetState = () => {
   if (callbackUrlCheckInterval.value) {
     clearInterval(callbackUrlCheckInterval.value)
     callbackUrlCheckInterval.value = null
+  }
+  if (fallbackTimeout.value) {
+    clearTimeout(fallbackTimeout.value)
+    fallbackTimeout.value = null
   }
   if (messageListener) {
     window.removeEventListener('message', messageListener)
@@ -306,20 +313,38 @@ const startBinding = async () => {
         if (authWindow.value && authWindow.value.closed) {
           clearInterval(checkClosedInterval.value)
           checkClosedInterval.value = null
+          if (fallbackTimeout.value) {
+            clearTimeout(fallbackTimeout.value)
+            fallbackTimeout.value = null
+          }
 
-          // 授權視窗已關閉，通知父組件重新載入資料
-          emit('binding-success')
-
-          toast.add({
-            severity: 'success',
-            summary: '綁定完成',
-            detail: `${props.providerName} 帳號綁定流程已完成，請檢查綁定狀態`,
-            life: 3000,
-          })
+          if (receivedCallback.value && !receivedError.value) {
+            // 有收到成功回調
+            emit('binding-success')
+            toast.add({
+              severity: 'success',
+              summary: '綁定完成',
+              detail: `${props.providerName} 帳號綁定流程已完成，請檢查綁定狀態`,
+              life: 3000,
+            })
+          } else {
+            // 未收到回調或回調為錯誤，視為失敗/取消
+            const friendly = mapBindErrorMessage(
+              props.provider,
+              receivedError.value || '授權視窗已關閉，綁定未完成。',
+            )
+            emit('binding-error', friendly)
+            toast.add({
+              severity: 'error',
+              summary: '綁定失敗',
+              detail: friendly,
+              life: 6000,
+            })
+          }
 
           closeDialog()
         }
-      }, 1000)
+      }, 500)
 
       // 監聽小窗 postMessage 回傳
       messageListener = (event) => {
@@ -333,14 +358,26 @@ const startBinding = async () => {
             message: data?.message || null,
             success: data?.success || null,
           }
+          receivedCallback.value = true
+          receivedError.value = callbackData.value.error || ''
+          if (fallbackTimeout.value) {
+            clearTimeout(fallbackTimeout.value)
+            fallbackTimeout.value = null
+          }
+          // 依回調內容提示
+          const hasError =
+            !!callbackData.value.error || callbackData.value.success === 'false'
+          const friendly = hasError
+            ? mapBindErrorMessage(
+                props.provider,
+                callbackData.value.error || callbackData.value.message,
+              )
+            : '授權完成'
           toast.add({
-            severity: callbackData.value.error ? 'error' : 'success',
-            summary: '收到回調參數',
-            detail:
-              callbackData.value.error ||
-              callbackData.value.message ||
-              '授權完成',
-            life: 3000,
+            severity: hasError ? 'error' : 'success',
+            summary: hasError ? '綁定失敗' : '收到回調參數',
+            detail: friendly,
+            life: hasError ? 6000 : 3000,
           })
           if (authWindow.value && !authWindow.value.closed)
             authWindow.value.close()
@@ -370,11 +407,21 @@ const startBinding = async () => {
               success: sp.get('success'),
             }
             callbackData.value = data
+            receivedCallback.value = true
+            receivedError.value = data.error || ''
+            if (fallbackTimeout.value) {
+              clearTimeout(fallbackTimeout.value)
+              fallbackTimeout.value = null
+            }
+            const hasError = !!data.error || data.success === 'false'
+            const friendly = hasError
+              ? mapBindErrorMessage(props.provider, data.error || data.message)
+              : '授權完成'
             toast.add({
-              severity: data.error ? 'error' : 'success',
-              summary: '收到回調參數',
-              detail: data.error || data.message || '授權完成',
-              life: 3000,
+              severity: hasError ? 'error' : 'success',
+              summary: hasError ? '綁定失敗' : '收到回調參數',
+              detail: friendly,
+              life: hasError ? 6000 : 3000,
             })
           } catch {
             // 解析失敗時忽略，繼續等待下一次輪詢
@@ -385,6 +432,30 @@ const startBinding = async () => {
             authWindow.value.close()
         }
       }, 500)
+
+      // 後備關閉計時器：若未在期限內收到回調，主視窗顯示錯誤並關閉小窗
+      fallbackTimeout.value = setTimeout(() => {
+        if (authWindow.value && !authWindow.value.closed) {
+          try {
+            authWindow.value.close()
+          } catch {
+            /* no-op */
+          }
+        }
+        const friendly = mapBindErrorMessage(
+          props.provider,
+          receivedError.value || '未收到授權回調，可能綁定失敗。',
+        )
+        error.value = friendly
+        emit('binding-error', friendly)
+        toast.add({
+          severity: 'error',
+          summary: '綁定失敗',
+          detail: friendly,
+          life: 6000,
+        })
+        closeDialog()
+      }, 3000)
 
       toast.add({
         severity: 'info',
@@ -405,11 +476,10 @@ const startBinding = async () => {
       url: err.config?.url,
     })
 
-    error.value =
-      err.response?.data?.message ||
-      err.response?.data?.error ||
-      err.message ||
-      '綁定失敗，請稍後再試'
+    const status = err.response?.status
+    const raw =
+      err.response?.data?.message || err.response?.data?.error || err.message
+    error.value = mapBindErrorMessage(props.provider, raw, status)
 
     emit('binding-error', error.value)
   } finally {
@@ -427,6 +497,45 @@ const closeDialog = () => {
 onUnmounted(() => {
   cleanup()
 })
+
+// 綁定錯誤訊息格式化（與 settings 一致的規則）
+const mapBindErrorMessage = (provider, err, status) => {
+  const providerNameMap = {
+    google: 'Google',
+    facebook: 'Facebook',
+    discord: 'Discord',
+    twitter: 'Twitter',
+  }
+  const name = providerNameMap[provider] || '社群'
+  const text = typeof err === 'string' ? err : err?.message || ''
+
+  if (status === 409 || /已被其他用戶綁定|already bound/i.test(text)) {
+    return `此 ${name} 帳號已被其他用戶綁定。請改用其他 ${name} 帳號，或先至原帳號解除綁定後再重試。`
+  }
+  if (
+    status === 400 ||
+    /invalid state|state.*mismatch|bad request/i.test(text)
+  ) {
+    return '授權流程已過期或驗證碼不正確，請重新發起綁定。'
+  }
+  if (status === 401 || /unauthorized|未授權/i.test(text)) {
+    return '授權未通過或尚未登入，請先登入後再重試。'
+  }
+  if (status === 403 || /forbidden|權限不足/i.test(text)) {
+    return '您沒有執行此綁定操作的權限。'
+  }
+  if (status === 429 || /too many requests|rate limit/i.test(text)) {
+    return '操作過於頻繁，請稍後再試。'
+  }
+  if (status === 500 || /server error|internal/i.test(text)) {
+    return '伺服器發生錯誤，請稍後再試。'
+  }
+  if (/permission|scope|未授權存取/i.test(text)) {
+    return `未取得必要授權範圍，請在 ${name} 授權頁面允許必要的權限後再試。`
+  }
+
+  return text || '綁定失敗，請稍後再試'
+}
 </script>
 
 <style scoped lang="scss">

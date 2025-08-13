@@ -6,7 +6,7 @@
     <!-- 搜尋模式下的自定義佈局 -->
     <div
       v-if="isSearchMode"
-      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50 bg-white border-b border-gray-200 flex items-center"
+      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50 flex items-center"
     >
       <div class="flex items-center gap-4 w-full">
         <Button
@@ -111,7 +111,7 @@
         </div>
       </template>
       <template #end>
-        <div class="flex gap-2 items-center lg:gap-6">
+        <div class="flex gap-2 items-center lg:gap-4">
           <!-- 桌面版搜尋列 -->
           <div class="relative hidden md:block">
             <SearchBox @search="handleSearch" />
@@ -163,7 +163,7 @@
 
           <Button
             label="成為付費會員"
-            class="text-white rounded-lg hidden md:inline-flex"
+            class="text-white rounded-lg hidden lg:inline-flex"
             @click="$router.push('/premium')"
           />
         </div>

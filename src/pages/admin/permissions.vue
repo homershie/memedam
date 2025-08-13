@@ -94,7 +94,7 @@ const loadUsers = async () => {
         likeCount: 89,
       },
     ]
-  } catch (error) {
+  } catch {
     toast.add({
       severity: 'error',
       summary: '錯誤',

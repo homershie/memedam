@@ -105,7 +105,12 @@ function getBadgeProps(badge) {
     <router-link
       v-if="item.to && !item.items && item.visible !== false"
       @click="itemClick($event, item, index)"
-      :class="['menu-link', { active: checkActiveRoute(item) || item.active }]"
+      :class="[
+        'flex items-center gap-3 px-4! py-3! no-underline rounded-md mx-2 transition-all duration-200 relative hover:font-bold hover:bg-surface-200 dark:hover:bg-surface-700',
+        checkActiveRoute(item) || item.active
+          ? 'bg-surface-200 text-black font-bold dark:text-white dark:bg-surface-700'
+          : '',
+      ]"
       tabindex="0"
       :to="item.to"
     >
@@ -113,15 +118,18 @@ function getBadgeProps(badge) {
       <component
         v-if="item.customIcon"
         :is="item.customIcon"
-        class="menu-icon custom-icon"
+        class="menu-icon custom-icon w-5 h-5 shrink-0"
       />
       <!-- PrimeVue 圖標 -->
-      <i v-else :class="item.icon" class="menu-icon"></i>
-      <span class="menu-text">{{ item.label }}</span>
+      <i
+        v-else
+        :class="[item.icon, 'menu-icon text-[1.1rem] w-5 text-center']"
+      ></i>
+      <span class="menu-text flex-1 text-base">{{ item.label }}</span>
       <Badge
         v-if="item.badge"
         v-bind="getBadgeProps(item.badge)"
-        class="menu-badge"
+        class="menu-badge shrink-0"
       />
     </router-link>
   </li>
@@ -132,52 +140,5 @@ function getBadgeProps(badge) {
   list-style: none;
   margin: 0;
   padding: 0;
-
-  .menu-link {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    text-decoration: none;
-    border-radius: 0.375rem;
-    margin: 0 0.5rem;
-    transition: all 0.2s;
-    position: relative;
-
-    &:hover {
-      background-color: var(--surface-hover, #f9fafb);
-    }
-
-    &.active {
-      background-color: var(--primary-50);
-      color: var(--primary-600);
-      font-weight: 500;
-
-      .menu-icon {
-        color: var(--primary-600);
-      }
-    }
-
-    .menu-icon {
-      font-size: 1.1rem;
-      width: 1.25rem;
-      text-align: center;
-
-      &.custom-icon {
-        width: 1.25rem;
-        height: 1.25rem;
-        flex-shrink: 0;
-      }
-    }
-
-    .menu-text {
-      flex: 1;
-      font-size: 1rem;
-    }
-
-    .menu-badge {
-      flex-shrink: 0;
-    }
-  }
 }
 </style>

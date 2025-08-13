@@ -169,7 +169,6 @@ function isOutsideClicked(event) {
     left: 0;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
     scrollbar-gutter: stable;
     scrollbar-width: thin;
@@ -252,12 +251,12 @@ function isOutsideClicked(event) {
   .layout-menu-toggle-button {
     position: fixed;
     top: 1rem;
-    left: 1rem;
+    right: 2rem;
     z-index: 1000;
     width: 3rem;
     height: 3rem;
     border-radius: 50%;
-    background: var(--primary-color, #3b82f6);
+    background: var(--p-primary-500);
     color: white;
     border: none;
     cursor: pointer;
@@ -268,7 +267,7 @@ function isOutsideClicked(event) {
     transition: all 0.2s;
 
     &:hover {
-      background: var(--primary-600, #2563eb);
+      background: var(--p-primary-600);
       transform: scale(1.05);
     }
 

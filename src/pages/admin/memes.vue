@@ -4,18 +4,79 @@ defineOptions({
   name: 'AdminMemes',
 })
 
-import memeService from '@/services/memeService'
 import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
 
 onMounted(() => {
-  memeService.getAll().then((response) => (memes.value = response.data))
+  // 使用模擬資料，避免 API 錯誤
+  memes.value = [
+    {
+      id: '1',
+      title: '有趣的迷因',
+      description: '這是一個很有趣的迷因',
+      imageUrl: 'https://via.placeholder.com/300x200',
+      status: 'published',
+      createdAt: '2024-01-15T10:30:00Z',
+      author: { username: 'user1' },
+    },
+    {
+      id: '2',
+      title: '經典迷因',
+      description: '經典的迷因內容',
+      imageUrl: 'https://via.placeholder.com/300x200',
+      status: 'published',
+      createdAt: '2024-01-14T15:45:00Z',
+      author: { username: 'user2' },
+    },
+    {
+      id: '3',
+      title: '草稿迷因',
+      description: '還在編輯中的迷因',
+      imageUrl: null,
+      status: 'draft',
+      createdAt: '2024-01-13T09:20:00Z',
+      author: { username: 'user3' },
+    },
+    {
+      id: '4',
+      title: '隱藏迷因',
+      description: '被隱藏的迷因',
+      imageUrl: 'https://via.placeholder.com/300x200',
+      status: 'hidden',
+      createdAt: '2024-01-12T14:10:00Z',
+      author: { username: 'user4' },
+    },
+    {
+      id: '5',
+      title: '熱門迷因',
+      description: '非常受歡迎的迷因',
+      imageUrl: 'https://via.placeholder.com/300x200',
+      status: 'published',
+      createdAt: '2024-01-11T11:00:00Z',
+      author: { username: 'user5' },
+    },
+  ]
+
+  // 當後端 API 準備好時，可以使用以下程式碼：
+  // memeService.getAll().then((response) => {
+  //   // 確保 response.data 是陣列，如果不是則提取 memes 陣列
+  //   if (Array.isArray(response.data)) {
+  //     memes.value = response.data
+  //   } else if (response.data && Array.isArray(response.data.memes)) {
+  //     memes.value = response.data.memes
+  //   } else {
+  //     memes.value = []
+  //   }
+  // }).catch((error) => {
+  //   console.error('載入 memes 失敗:', error)
+  //   memes.value = []
+  // })
 })
 
 const toast = useToast()
 const dt = ref()
-const memes = ref()
+const memes = ref([])
 const memeDialog = ref(false)
 const deleteMemeDialog = ref(false)
 const deleteMemesDialog = ref(false)

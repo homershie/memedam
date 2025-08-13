@@ -26,7 +26,6 @@ const model = ref([
         icon: 'pi pi-fw pi-home',
         to: '/admin',
         badge: null,
-        active: true,
       },
     ],
   },

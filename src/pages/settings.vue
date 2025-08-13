@@ -467,7 +467,7 @@
                         <Button
                           :label="account.connected ? '解除綁定' : '綁定帳號'"
                           :icon="
-                            account.connected ? 'pi pi-unlink' : 'pi pi-link'
+                            account.connected ? 'pi pi-power-off' : 'pi pi-link'
                           "
                           :severity="
                             account.connected ? 'secondary' : 'primary'
@@ -476,15 +476,6 @@
                           :disabled="account.loading"
                           @click="toggleSocialAccount(account)"
                           class="btn-action"
-                        />
-                        <Button
-                          v-if="!account.connected"
-                          label="調試"
-                          icon="pi pi-bug"
-                          severity="info"
-                          size="small"
-                          @click="openDebugDialog(account)"
-                          class="btn-secondary"
                         />
                       </div>
                     </div>
@@ -496,15 +487,15 @@
               <div class="space-y-4 mt-10">
                 <h3 class="text-lg font-medium">刪除帳號</h3>
                 <div
-                  class="bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-700 rounded-lg p-4"
+                  class="bg-primary-50 dark:bg-primary-900/20 border border-primary-400 dark:border-primary-700 rounded-lg p-4"
                 >
                   <div class="flex items-start space-x-3">
                     <i
-                      class="pi pi-exclamation-triangle text-danger-500 mt-1"
+                      class="pi pi-exclamation-triangle text-primary-500 mt-1"
                     ></i>
                     <div class="flex-1">
                       <p
-                        class="text-sm font-medium text-danger-800 dark:text-danger-200"
+                        class="text-sm font-medium text-primary-800 dark:text-primary-200"
                       >
                         此操作不可恢復
                       </p>
@@ -516,7 +507,6 @@
                       <Button
                         label="刪除帳號"
                         icon="pi pi-trash"
-                        severity="danger"
                         @click="showDeleteDialog = true"
                         class="mt-3 btn-danger"
                       />
@@ -1162,12 +1152,6 @@
       @binding-error="onOAuthBindingError"
     />
 
-    <!-- OAuth 調試對話框 -->
-    <OAuthDebugDialog
-      v-model:visible="showOAuthDebugDialog"
-      :provider="selectedAccount?.platform"
-    />
-
     <!-- 使用者名稱變更對話框 -->
     <Dialog
       v-model:visible="showUsernameDialog"
@@ -1366,12 +1350,12 @@ import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { useThemeStore } from '@/stores/themeStore'
 import userService from '@/services/userService'
 import uploadService from '@/services/uploadService'
 import verificationService from '@/services/verificationService'
 import { optimizeOAuthResourceLoading } from '@/utils/oauthUtils'
 import OAuthBindingDialog from '@/components/OAuthBindingDialog.vue'
-import OAuthDebugDialog from '@/components/OAuthDebugDialog.vue'
 
 // PrimeVue 組件
 import Tabs from 'primevue/tabs'
@@ -1398,7 +1382,6 @@ const showDeleteDialog = ref(false)
 const showUnbindDialog = ref(false)
 const showUsernameDialog = ref(false)
 const showOAuthBindingDialog = ref(false)
-const showOAuthDebugDialog = ref(false)
 const selectedAccount = ref(null)
 const avatarInput = ref(null)
 
@@ -1478,9 +1461,10 @@ const notificationForm = reactive({
   loading: false,
 })
 
-// 內容偏好
+// 內容偏好（主題同步使用全域 store）
+const themeStore = useThemeStore()
 const preferences = reactive({
-  themeMode: 'system',
+  themeMode: themeStore.theme, // 與全域同步
   theme: 'default',
 })
 
@@ -1488,17 +1472,16 @@ const preferencesForm = reactive({
   loading: false,
 })
 
-// 處理主題變化
+// 處理主題變化（同步到全域 store）
 const handleThemeChange = (newTheme) => {
   preferences.themeMode = newTheme
+  themeStore.setTheme(newTheme)
 }
 
 // 初始化主題設定
 onMounted(async () => {
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme) {
-    preferences.themeMode = savedTheme
-  }
+  // 初始化與全域主題同步
+  preferences.themeMode = themeStore.theme
 
   // 優化 OAuth 流程中的資源載入
   optimizeOAuthResourceLoading()
@@ -2343,11 +2326,12 @@ const handleOAuthCallback = async () => {
         life: 3000,
       })
     } else {
+      const friendly = mapBindErrorMessage(oauthProvider, message)
       toast.add({
         severity: 'error',
         summary: '綁定失敗',
-        detail: message || '社群帳號綁定失敗',
-        life: 5000,
+        detail: friendly,
+        life: 6000,
       })
     }
 
@@ -2356,6 +2340,12 @@ const handleOAuthCallback = async () => {
 
     // 清理 URL 參數
     window.history.replaceState({}, document.title, window.location.pathname)
+    // 若是錯誤回調，嘗試關閉小視窗（由子視窗發送訊息或由後端統一 close）。
+    try {
+      window.postMessage({ type: 'oauth_parent_ack' }, window.location.origin)
+    } catch {
+      /* no-op */
+    }
     return
   }
 
@@ -2364,7 +2354,7 @@ const handleOAuthCallback = async () => {
     toast.add({
       severity: 'error',
       summary: 'OAuth 錯誤',
-      detail: `授權失敗: ${oauthError}`,
+      detail: mapBindErrorMessage(oauthProvider, oauthError),
       life: 5000,
     })
     // 清理 URL 參數
@@ -2402,20 +2392,65 @@ const handleOAuthCallback = async () => {
       window.history.replaceState({}, document.title, window.location.pathname)
     } catch (error) {
       console.error('OAuth 回調處理失敗:', error)
-      const errorMessage =
+      const status = error.response?.status
+      const raw =
         error.response?.data?.message ||
         error.response?.data?.error ||
-        '綁定失敗，請稍後再試'
+        error.message
+      const errorMessage = mapBindErrorMessage(oauthProvider, raw, status)
       toast.add({
         severity: 'error',
         summary: '綁定失敗',
         detail: errorMessage,
-        life: 5000,
+        life: 6000,
       })
       // 清理 URL 參數
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }
+}
+
+// 綁定錯誤訊息格式化
+const mapBindErrorMessage = (provider, err, status) => {
+  const providerNameMap = {
+    google: 'Google',
+    facebook: 'Facebook',
+    discord: 'Discord',
+    twitter: 'Twitter',
+  }
+  const name = providerNameMap[provider] || '社群'
+  const text = typeof err === 'string' ? err : err?.message || ''
+
+  // 常見狀態碼對應
+  if (status === 409 || /已被其他用戶綁定|already bound/i.test(text)) {
+    return `此 ${name} 帳號已被其他用戶綁定。請改用其他 ${name} 帳號，或先至原帳號解除綁定後再重試。`
+  }
+  if (
+    status === 400 ||
+    /invalid state|state.*mismatch|bad request/i.test(text)
+  ) {
+    return '授權流程已過期或驗證碼不正確，請重新發起綁定。'
+  }
+  if (status === 401 || /unauthorized|未授權/i.test(text)) {
+    return '授權未通過或尚未登入，請先登入後再重試。'
+  }
+  if (status === 403 || /forbidden|權限不足/i.test(text)) {
+    return '您沒有執行此綁定操作的權限。'
+  }
+  if (status === 429 || /too many requests|rate limit/i.test(text)) {
+    return '操作過於頻繁，請稍後再試。'
+  }
+  if (status === 500 || /server error|internal/i.test(text)) {
+    return '伺服器發生錯誤，請稍後再試。'
+  }
+
+  // 常見文案關鍵字
+  if (/permission|scope|未授權存取/i.test(text)) {
+    return `未取得必要授權範圍，請在 ${name} 授權頁面允許必要的權限後再試。`
+  }
+
+  // 預設回退
+  return text || '綁定失敗，請稍後再試'
 }
 
 const deleteAccount = async () => {
@@ -2717,10 +2752,7 @@ const onOAuthBindingError = (errorMessage) => {
 }
 
 // 開啟調試對話框
-const openDebugDialog = (account) => {
-  selectedAccount.value = account
-  showOAuthDebugDialog.value = true
-}
+// 已移除調試對話框與相關按鈕
 
 const canSubmitUsernameChange = computed(() => {
   return (

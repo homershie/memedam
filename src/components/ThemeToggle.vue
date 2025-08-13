@@ -59,7 +59,7 @@
     <div v-else-if="mode === 'single'" class="flex items-center">
       <button
         @click="toggleTheme"
-        class="w-8 h-8 rounded-full transition-colors theme-toggle"
+        class="w-10 h-10 rounded-full transition-colors theme-toggle"
         :title="getCurrentThemeTitle()"
       >
         <i :class="getCurrentThemeIcon()"></i>
@@ -69,7 +69,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
+import { useThemeStore } from '@/stores/themeStore'
 
 // Props
 const props = defineProps({
@@ -86,7 +87,17 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['update:modelValue', 'change'])
 
-const theme = ref(props.modelValue)
+const themeStore = useThemeStore()
+
+// 使用全域主題作為單一真相來源
+const theme = computed({
+  get: () => themeStore.theme,
+  set: (val) => {
+    themeStore.setTheme(val)
+    emit('update:modelValue', val)
+    emit('change', val)
+  },
+})
 
 // 主題選項
 const themeOptions = ref([
@@ -95,56 +106,23 @@ const themeOptions = ref([
   { label: '根據系統設定', value: 'system' },
 ])
 
-// 從 localStorage 讀取保存的主題設定
+// 與外部 v-model 同步（若父層提供值則覆寫 store）
 onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme) {
-    theme.value = savedTheme
-    applyTheme(savedTheme)
-  } else {
-    applyTheme(theme.value)
+  const incoming = props.modelValue
+  if (incoming && incoming !== themeStore.theme) {
+    themeStore.setTheme(incoming)
   }
 })
 
-// 監聽主題變化
-watch(theme, (newTheme) => {
-  localStorage.setItem('theme', newTheme)
-  applyTheme(newTheme)
-  emit('update:modelValue', newTheme)
-  emit('change', newTheme)
-})
-
-// 監聽 props 變化
+// 當父層變更 modelValue 時，同步到 store
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue !== theme.value) {
-      theme.value = newValue
+    if (newValue && newValue !== themeStore.theme) {
+      themeStore.setTheme(newValue)
     }
   },
 )
-
-const applyTheme = (selectedTheme) => {
-  const root = document.documentElement
-
-  // 移除所有主題類別
-  root.classList.remove('light', 'dark')
-
-  if (selectedTheme === 'system') {
-    // 使用系統偏好
-    const prefersDark = window.matchMedia(
-      '(prefers-color-scheme: dark)',
-    ).matches
-    if (prefersDark) {
-      root.classList.add('dark')
-    } else {
-      root.classList.add('light')
-    }
-  } else {
-    // 使用使用者選擇的主題
-    root.classList.add(selectedTheme)
-  }
-}
 
 const setTheme = (newTheme) => {
   theme.value = newTheme
@@ -188,15 +166,7 @@ const getCurrentThemeTitle = () => {
   }
 }
 
-// 監聽系統主題變化
-onMounted(() => {
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-  mediaQuery.addEventListener('change', () => {
-    if (theme.value === 'system') {
-      applyTheme('system')
-    }
-  })
-})
+// 監聽系統主題變化交由 themeStore 處理（在 App.vue initTheme 中）
 </script>
 
 <style scoped lang="scss">

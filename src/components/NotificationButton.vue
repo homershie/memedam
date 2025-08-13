@@ -1,22 +1,31 @@
 <template>
   <div class="relative">
-    <!-- 通知按鈕 -->
+    <!-- 通知按鈕（使用 OverlayBadge 顯示未讀） -->
+    <OverlayBadge
+      v-if="unreadCount > 0"
+      :value="unreadCount > 99 ? '99+' : unreadCount.toString()"
+      severity="danger"
+      size="small"
+    >
+      <Button
+        @click="toggleNotifications"
+        severity="contrast"
+        class="p-button-text rounded-full w-10 h-10"
+        :title="'通知'"
+        ref="notificationBtn"
+      >
+        <i class="pi pi-bell"></i>
+      </Button>
+    </OverlayBadge>
     <Button
+      v-else
       @click="toggleNotifications"
       severity="contrast"
-      class="p-button-text rounded-full relative"
+      class="p-button-text rounded-full w-10 h-10"
       :title="'通知'"
       ref="notificationBtn"
     >
       <i class="pi pi-bell"></i>
-      <!-- 未讀通知徽章 -->
-      <Badge
-        v-if="unreadCount > 0"
-        :value="unreadCount > 99 ? '99+' : unreadCount.toString()"
-        severity="danger"
-        class="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-xs"
-        style="transform: scale(0.8)"
-      />
     </Button>
 
     <!-- 通知彈出框 -->
@@ -40,13 +49,13 @@
               全部已讀
             </Button>
             <Button
-              @click="refreshNotifications"
+              @click="removeAllNotifications"
               size="small"
-              severity="secondary"
               class="text-xs"
-              :disabled="loading"
+              :disabled="deletingAll || loading || notifications.length === 0"
             >
-              <i class="pi pi-refresh" :class="{ 'animate-spin': loading }"></i>
+              <i class="pi pi-trash mr-1"></i>
+              全部移除
             </Button>
           </div>
         </div>
@@ -73,8 +82,11 @@
             <div
               v-for="notification in notifications"
               :key="notification._id"
-              class="p-3 hover:bg-gray-50 transition-colors cursor-pointer"
-              :class="{ 'bg-blue-50': !notification.read }"
+              class="p-3 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors cursor-pointer"
+              :class="{
+                'bg-primary-50 dark:bg-primary-900/20': !notification.read,
+              }"
+              @mouseenter="handleHoverMarkRead(notification)"
               @click="handleNotificationClick(notification)"
             >
               <div class="flex items-start gap-3">
@@ -82,7 +94,7 @@
                 <div class="flex-shrink-0">
                   <i
                     :class="getNotificationIcon(notification.type)"
-                    class="text-lg text-blue-500"
+                    class="text-lg text-primary-500"
                   ></i>
                 </div>
 
@@ -100,19 +112,9 @@
                     <!-- 操作按鈕 -->
                     <div class="flex gap-1">
                       <Button
-                        v-if="!notification.read"
-                        @click.stop="markAsRead(notification._id)"
-                        size="small"
-                        severity="secondary"
-                        class="p-1 text-xs"
-                        :disabled="markingRead.includes(notification._id)"
-                      >
-                        <i class="pi pi-check"></i>
-                      </Button>
-                      <Button
                         @click.stop="deleteNotification(notification._id)"
                         size="small"
-                        severity="danger"
+                        severity="primary"
                         class="p-1 text-xs"
                         :disabled="deleting.includes(notification._id)"
                       >
@@ -124,7 +126,7 @@
 
                 <!-- 未讀指示點 -->
                 <div v-if="!notification.read" class="flex-shrink-0">
-                  <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -156,7 +158,7 @@ import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
 import Button from 'primevue/button'
 import Popover from 'primevue/popover'
-import Badge from 'primevue/badge'
+import OverlayBadge from 'primevue/overlaybadge'
 import ProgressSpinner from 'primevue/progressspinner'
 import notificationService from '@/services/notificationService'
 
@@ -170,6 +172,7 @@ const loading = ref(false)
 const markingRead = ref([])
 const markingAllRead = ref(false)
 const deleting = ref([])
+const deletingAll = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const unreadCount = ref(0)
@@ -242,7 +245,7 @@ const updateUnreadCount = () => {
   unreadCount.value = notifications.value.filter((n) => !n.read).length
 }
 
-const markAsRead = async (notificationId) => {
+const markAsRead = async (notificationId, options = {}) => {
   // 檢查用戶是否已登入
   if (!user.isLoggedIn) {
     return
@@ -263,11 +266,13 @@ const markAsRead = async (notificationId) => {
       updateUnreadCount()
     }
 
-    toast.add({
-      severity: 'success',
-      summary: '已標記為已讀',
-      life: 2000,
-    })
+    if (!options.silent) {
+      toast.add({
+        severity: 'success',
+        summary: '已標記為已讀',
+        life: 2000,
+      })
+    }
   } catch (error) {
     console.error('標記已讀失敗:', error)
     toast.add({
@@ -279,6 +284,13 @@ const markAsRead = async (notificationId) => {
   } finally {
     markingRead.value = markingRead.value.filter((id) => id !== notificationId)
   }
+}
+
+// 滑鼠移入即標記為已讀（靜默）
+const handleHoverMarkRead = (notification) => {
+  if (!notification || notification.read) return
+  if (markingRead.value.includes(notification._id)) return
+  markAsRead(notification._id, { silent: true })
 }
 
 const markAllAsRead = async () => {
@@ -353,12 +365,42 @@ const deleteNotification = async (notificationId) => {
   }
 }
 
-const refreshNotifications = () => {
-  fetchNotifications()
-}
+// 已移除手動重新整理按鈕，避免重複讀取
 
 const loadMore = () => {
   fetchNotifications(true)
+}
+
+const removeAllNotifications = async () => {
+  // 檢查用戶是否已登入
+  if (!user.isLoggedIn) return
+  if (deletingAll.value || loading.value) return
+
+  deletingAll.value = true
+  try {
+    await notificationService.removeBatch()
+    // 清空列表與狀態
+    notifications.value = []
+    currentPage.value = 1
+    totalPages.value = 1
+    updateUnreadCount()
+
+    toast.add({
+      severity: 'success',
+      summary: '已全部移除',
+      life: 2000,
+    })
+  } catch (error) {
+    console.error('全部移除通知失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: '無法移除所有通知',
+      life: 3000,
+    })
+  } finally {
+    deletingAll.value = false
+  }
 }
 
 const handleNotificationClick = (notification) => {
@@ -447,7 +489,6 @@ onMounted(() => {
 <style scoped>
 .line-clamp-2 {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

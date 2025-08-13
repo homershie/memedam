@@ -81,6 +81,15 @@ body,
   overflow: hidden;
 }
 
+/* Mobile: allow page-level vertical scrolling */
+@media (max-width: 991px) {
+  html,
+  body,
+  #app {
+    overflow-y: auto;
+  }
+}
+
 body {
   font-family:
     'Jost',
@@ -108,47 +117,38 @@ body {
 }
 
 h1 {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-5xl font-bold text-gray-900 dark:text-white;
 }
 
 h2 {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-4xl font-bold text-gray-900 dark:text-white;
 }
 
 h3 {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-3xl font-semibold text-gray-900 dark:text-white;
 }
 
 h4 {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-2xl font-semibold text-gray-900 dark:text-white;
 }
 
 h5 {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-xl font-semibold text-gray-900 dark:text-white;
 }
 
 h6 {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-lg font-semibold text-gray-900 dark:text-white;
 }
 
 p {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-gray-800 text-base dark:text-gray-300;
 }
 
 .subtitle {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-base text-gray-800 dark:text-gray-400;
 }
 
 a {
-  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply decoration-0 text-surface-800 transition-all p-1 dark:text-surface-300;
 }
 
