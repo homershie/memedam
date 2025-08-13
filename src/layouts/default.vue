@@ -187,11 +187,7 @@
         <div
           v-if="sidebarVisible"
           class="flex-1 overflow-y-hidden group-hover:overflow-y-auto flex flex-col"
-          style="
-            scrollbar-gutter: stable;
-            scrollbar-width: thin;
-            overflow-overlay: auto;
-          "
+          style="scrollbar-gutter: stable; scrollbar-width: thin"
         >
           <Menu :model="filteredMenuList" class="border-none px-4">
             <template #item="{ item, props }">
@@ -300,11 +296,7 @@
             <!-- 行動版選單 -->
             <div
               class="flex-1 overflow-y-hidden group-hover:overflow-y-auto w-[280px]"
-              style="
-                scrollbar-gutter: stable;
-                scrollbar-width: thin;
-                overflow-overlay: auto;
-              "
+              style="scrollbar-gutter: stable; scrollbar-width: thin"
             >
               <!-- 固定按鈕 -->
               <div
@@ -388,11 +380,7 @@
               <Menu
                 :model="filteredMenuList"
                 class="border-none px-4 pb-2 h-[calc(100%-80px)] overflow-y-hidden hover:overflow-y-auto"
-                style="
-                  scrollbar-gutter: stable;
-                  scrollbar-width: thin;
-                  overflow-overlay: auto;
-                "
+                style="scrollbar-gutter: stable; scrollbar-width: thin"
               >
                 <template #item="{ item, props }">
                   <div v-if="item.separator" class="my-2 border-t"></div>

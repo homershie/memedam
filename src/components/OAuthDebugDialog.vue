@@ -327,6 +327,68 @@
           }}</pre>
         </details>
       </div>
+
+      <!-- 回調參數監看 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+        >
+          <h4 class="text-sm font-medium mb-2">當前頁面查詢參數</h4>
+          <div class="text-xs space-y-1">
+            <div>
+              <strong>state:</strong> {{ routeQueryData?.state || '—' }}
+            </div>
+            <div><strong>code:</strong> {{ routeQueryData?.code || '—' }}</div>
+            <div>
+              <strong>success:</strong> {{ routeQueryData?.success || '—' }}
+            </div>
+            <div>
+              <strong>error:</strong> {{ routeQueryData?.error || '—' }}
+            </div>
+            <div>
+              <strong>message:</strong> {{ routeQueryData?.message || '—' }}
+            </div>
+          </div>
+          <div class="mt-2">
+            <Button
+              size="small"
+              label="重新讀取"
+              @click="readCurrentRouteQuery"
+              class="btn-secondary"
+            />
+          </div>
+        </div>
+        <div
+          class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+        >
+          <h4 class="text-sm font-medium mb-2">最近收到的小窗回傳</h4>
+          <div class="text-xs space-y-1">
+            <div>
+              <strong>state:</strong> {{ popupCallbackData?.state || '—' }}
+            </div>
+            <div>
+              <strong>code:</strong> {{ popupCallbackData?.code || '—' }}
+            </div>
+            <div>
+              <strong>success:</strong> {{ popupCallbackData?.success || '—' }}
+            </div>
+            <div>
+              <strong>error:</strong> {{ popupCallbackData?.error || '—' }}
+            </div>
+            <div>
+              <strong>message:</strong> {{ popupCallbackData?.message || '—' }}
+            </div>
+          </div>
+          <div class="mt-2 flex space-x-2">
+            <Button
+              size="small"
+              label="清除"
+              @click="popupCallbackData = null"
+              class="btn-secondary"
+            />
+          </div>
+        </div>
+      </div>
     </div>
 
     <template #footer>
@@ -343,7 +405,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import userService from '@/services/userService'
 import {
@@ -381,12 +443,12 @@ const configResult = ref(null)
 const redirectUris = ref([])
 const showChecklist = ref(false)
 const checklist = ref(null)
+const routeQueryData = ref(null)
+const popupCallbackData = ref(null)
+let messageListener = null
 
 // 全域 toast 服務
 const toast = useToast()
-
-// API URL
-const apiUrl = import.meta.env.VITE_API_URL || '未設定'
 
 // 處理 visible 屬性更新
 const updateVisible = (newValue) => {
@@ -394,6 +456,8 @@ const updateVisible = (newValue) => {
   if (newValue) {
     // 對話框開啟時自動執行配置檢查
     runConfigCheck()
+    // 讀取當前路由查詢參數
+    readCurrentRouteQuery()
   }
 }
 
@@ -408,6 +472,22 @@ const runConfigCheck = async () => {
     console.log('OAuth 配置檢查完成:', result)
   } catch (error) {
     console.error('配置檢查失敗:', error)
+  }
+}
+
+// 讀取當前路由查詢參數
+const readCurrentRouteQuery = () => {
+  try {
+    const sp = new URLSearchParams(window.location.search)
+    routeQueryData.value = {
+      state: sp.get('state'),
+      code: sp.get('code'),
+      error: sp.get('error'),
+      message: sp.get('message'),
+      success: sp.get('success'),
+    }
+  } catch {
+    routeQueryData.value = null
   }
 }
 
@@ -428,19 +508,29 @@ const testApiEndpoint = async () => {
     if (response.data?.authUrl) {
       // 檢查授權 URL 格式
       const authUrl = response.data.authUrl
-      if (!authUrl.startsWith('https://accounts.google.com')) {
+      if (authUrl.startsWith('/api/')) {
+        // 這是後端初始化端點，正常
         toast.add({
-          severity: 'warning',
-          summary: '授權 URL 格式異常',
-          detail: '授權 URL 不是 Google OAuth 格式',
-          life: 5000,
+          severity: 'success',
+          summary: 'API 測試成功',
+          detail: `獲取到初始化端點: ${authUrl}`,
+          life: 3000,
         })
-      } else {
+      } else if (authUrl.startsWith('https://accounts.google.com')) {
+        // 這是直接的 Google OAuth URL
         toast.add({
           severity: 'success',
           summary: 'API 測試成功',
           detail: `獲取到授權 URL: ${authUrl.substring(0, 50)}...`,
           life: 3000,
+        })
+      } else {
+        // 其他格式的 URL
+        toast.add({
+          severity: 'warning',
+          summary: '授權 URL 格式異常',
+          detail: '授權 URL 格式不預期',
+          life: 5000,
         })
       }
     } else {
@@ -511,6 +601,41 @@ const closeDialog = () => {
   debugError.value = null
   emit('update:visible', false)
 }
+
+// 監聽小窗 postMessage 回傳
+onMounted(() => {
+  messageListener = (event) => {
+    if (event.origin !== window.location.origin) return
+    const { type, data } = event.data || {}
+    if (type === 'oauth_callback') {
+      popupCallbackData.value = {
+        state: data?.state || null,
+        code: data?.code || null,
+        error: data?.error || null,
+        message: data?.message || null,
+        success: data?.success || null,
+      }
+      toast.add({
+        severity: popupCallbackData.value.error ? 'error' : 'success',
+        summary: '收到回調參數',
+        detail:
+          popupCallbackData.value.error ||
+          popupCallbackData.value.message ||
+          '授權完成',
+        life: 3000,
+      })
+    }
+  }
+  window.addEventListener('message', messageListener)
+  readCurrentRouteQuery()
+})
+
+onUnmounted(() => {
+  if (messageListener) {
+    window.removeEventListener('message', messageListener)
+    messageListener = null
+  }
+})
 </script>
 
 <style scoped lang="scss">

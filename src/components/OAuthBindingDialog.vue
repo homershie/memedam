@@ -72,6 +72,21 @@
           點擊下方按鈕開始綁定流程
         </p>
       </div>
+
+      <!-- 回調參數顯示 -->
+      <div
+        v-if="callbackData"
+        class="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-left"
+      >
+        <h4 class="text-sm font-medium mb-2">回調參數</h4>
+        <div class="text-xs space-y-1">
+          <div><strong>state:</strong> {{ callbackData.state || '—' }}</div>
+          <div><strong>code:</strong> {{ callbackData.code || '—' }}</div>
+          <div><strong>success:</strong> {{ callbackData.success || '—' }}</div>
+          <div><strong>error:</strong> {{ callbackData.error || '—' }}</div>
+          <div><strong>message:</strong> {{ callbackData.message || '—' }}</div>
+        </div>
+      </div>
     </div>
 
     <template #footer>
@@ -113,6 +128,7 @@
 import { ref, watch, onUnmounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import userService from '@/services/userService'
+import { useUserStore } from '@/stores/userStore'
 
 // 組件名稱
 defineOptions({
@@ -147,6 +163,9 @@ const loading = ref(false)
 const error = ref('')
 const authWindow = ref(null)
 const checkClosedInterval = ref(null)
+const callbackUrlCheckInterval = ref(null)
+const callbackData = ref(null)
+let messageListener = null
 
 // 全域 toast 服務
 const toast = useToast()
@@ -175,9 +194,18 @@ const resetState = () => {
   loading.value = false
   error.value = ''
   authWindow.value = null
+  callbackData.value = null
   if (checkClosedInterval.value) {
     clearInterval(checkClosedInterval.value)
     checkClosedInterval.value = null
+  }
+  if (callbackUrlCheckInterval.value) {
+    clearInterval(callbackUrlCheckInterval.value)
+    callbackUrlCheckInterval.value = null
+  }
+  if (messageListener) {
+    window.removeEventListener('message', messageListener)
+    messageListener = null
   }
 }
 
@@ -189,6 +217,14 @@ const cleanup = () => {
   }
   if (authWindow.value && !authWindow.value.closed) {
     authWindow.value.close()
+  }
+  if (callbackUrlCheckInterval.value) {
+    clearInterval(callbackUrlCheckInterval.value)
+    callbackUrlCheckInterval.value = null
+  }
+  if (messageListener) {
+    window.removeEventListener('message', messageListener)
+    messageListener = null
   }
 }
 
@@ -208,19 +244,55 @@ const startBinding = async () => {
     if (response.data && response.data.authUrl) {
       // 檢查授權 URL 是否正確
       const authUrl = response.data.authUrl
-      if (
-        !authUrl.startsWith('https://accounts.google.com') &&
-        !authUrl.includes('google.com/oauth') &&
-        !authUrl.includes('googleapis.com')
+
+      // 如果是後端初始化端點，直接使用
+      if (authUrl.startsWith('/api/')) {
+        console.log('使用後端初始化端點:', authUrl)
+      }
+      // 如果是直接的 Google OAuth URL，也允許使用
+      else if (
+        authUrl.startsWith('https://accounts.google.com') ||
+        authUrl.includes('google.com/oauth') ||
+        authUrl.includes('googleapis.com')
       ) {
-        console.warn('警告：授權 URL 可能不正確:', authUrl)
+        console.log('使用直接的 Google OAuth URL:', authUrl)
+      }
+      // 其他格式的 URL
+      else {
+        console.warn('警告：授權 URL 格式不預期:', authUrl)
         error.value = '後端返回的授權 URL 格式不正確，請聯繫管理員'
         return
       }
 
+      // 構建完整的 URL
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+      const fullAuthUrl = authUrl.startsWith('http')
+        ? authUrl
+        : `${baseUrl}${authUrl}`
+
+      console.log('開啟授權視窗:', fullAuthUrl)
+
+      // 添加認證 token 到 URL（優先從 Pinia store 獲取）
+      const userStore = useUserStore()
+      const token =
+        userStore.token ||
+        localStorage.getItem('token') ||
+        sessionStorage.getItem('token')
+      const finalUrl = token
+        ? `${fullAuthUrl}${fullAuthUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`
+        : fullAuthUrl
+
+      console.log('最終授權 URL:', finalUrl)
+      console.log('Token 來源:', {
+        fromStore: !!userStore.token,
+        fromLocalStorage: !!localStorage.getItem('token'),
+        fromSessionStorage: !!sessionStorage.getItem('token'),
+        tokenLength: token ? token.length : 0,
+      })
+
       // 使用 window.open 開啟授權視窗
       authWindow.value = window.open(
-        authUrl,
+        finalUrl,
         'oauth_auth',
         'width=500,height=600,scrollbars=yes,resizable=yes',
       )
@@ -248,6 +320,71 @@ const startBinding = async () => {
           closeDialog()
         }
       }, 1000)
+
+      // 監聽小窗 postMessage 回傳
+      messageListener = (event) => {
+        if (event.origin !== window.location.origin) return
+        const { type, data } = event.data || {}
+        if (type === 'oauth_callback') {
+          callbackData.value = {
+            state: data?.state || null,
+            code: data?.code || null,
+            error: data?.error || null,
+            message: data?.message || null,
+            success: data?.success || null,
+          }
+          toast.add({
+            severity: callbackData.value.error ? 'error' : 'success',
+            summary: '收到回調參數',
+            detail:
+              callbackData.value.error ||
+              callbackData.value.message ||
+              '授權完成',
+            life: 3000,
+          })
+          if (authWindow.value && !authWindow.value.closed)
+            authWindow.value.close()
+        }
+      }
+      window.addEventListener('message', messageListener)
+
+      // 同源回調頁時，直接讀取小窗 URL 查詢參數
+      callbackUrlCheckInterval.value = setInterval(() => {
+        if (!authWindow.value || authWindow.value.closed) return
+        let href
+        try {
+          href = authWindow.value.location.href
+        } catch {
+          // 跨網域期間不可讀
+          return
+        }
+        if (href && href.startsWith(window.location.origin)) {
+          try {
+            const url = new URL(href)
+            const sp = url.searchParams
+            const data = {
+              state: sp.get('state'),
+              code: sp.get('code'),
+              error: sp.get('error'),
+              message: sp.get('message'),
+              success: sp.get('success'),
+            }
+            callbackData.value = data
+            toast.add({
+              severity: data.error ? 'error' : 'success',
+              summary: '收到回調參數',
+              detail: data.error || data.message || '授權完成',
+              life: 3000,
+            })
+          } catch {
+            // 解析失敗時忽略，繼續等待下一次輪詢
+          }
+          clearInterval(callbackUrlCheckInterval.value)
+          callbackUrlCheckInterval.value = null
+          if (authWindow.value && !authWindow.value.closed)
+            authWindow.value.close()
+        }
+      }, 500)
 
       toast.add({
         severity: 'info',

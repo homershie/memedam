@@ -1,14 +1,14 @@
 <template>
   <div class="container min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6">
     <!-- 使用 PrimeVue Tabs 的設定區塊 -->
-    <div class="settings-tabs-container">
-      <Tabs v-model:value="activeTabIndex" class="settings-tabs">
-        <TabList class="settings-tab-list">
+    <div class="rounded-lg">
+      <Tabs v-model:value="activeTabIndex" class="w-full">
+        <TabList>
           <Tab
             v-for="(section, index) in sections"
             :key="section.id"
             :value="String(index)"
-            class="settings-tab"
+            class="px-6 py-4 text-gray-700 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400 hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-200 font-medium cursor-pointer"
           >
             <div class="flex items-center space-x-3">
               <i :class="section.icon" class="text-lg"></i>
@@ -17,9 +17,9 @@
           </Tab>
         </TabList>
 
-        <TabPanels class="settings-tab-panels">
+        <TabPanels>
           <!-- 帳號管理 TabPanel -->
-          <TabPanel value="0" class="settings-tab-panel">
+          <TabPanel value="0">
             <div class="space-y-4 mt-4">
               <!-- 使用者名稱變更 -->
               <div class="space-y-4 mt-4">
@@ -528,7 +528,7 @@
           </TabPanel>
 
           <!-- 個人資訊 TabPanel -->
-          <TabPanel value="1" class="settings-tab-panel">
+          <TabPanel value="1">
             <div class="space-y-8">
               <form
                 @submit.prevent="updateProfile"
@@ -745,7 +745,7 @@
           </TabPanel>
 
           <!-- 通知偏好 TabPanel -->
-          <TabPanel value="2" class="settings-tab-panel">
+          <TabPanel value="2">
             <div class="space-y-8">
               <div class="space-y-6">
                 <!-- 推播通知 -->
@@ -840,7 +840,7 @@
           </TabPanel>
 
           <!-- 內容偏好 TabPanel -->
-          <TabPanel value="3" class="settings-tab-panel">
+          <TabPanel value="3">
             <div class="space-y-8">
               <div class="space-y-6">
                 <!-- 主題設定 -->
@@ -1514,7 +1514,7 @@ onMounted(async () => {
     return
   }
 
-  // 檢查是否有 OAuth 回調參數
+  // 處理 OAuth 回調
   await handleOAuthCallback()
 
   // 改善密碼管理工具的相容性
@@ -2737,33 +2737,6 @@ const canSubmitUsernameChange = computed(() => {
 <style scoped lang="scss">
 h3 {
   margin-top: 1.5rem;
-}
-
-/* Tabs 樣式群組 */
-.settings-tabs-container {
-  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
-}
-/* Tabs 樣式群組 */
-.settings-tabs-container {
-  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
-}
-
-.settings-tabs {
-  @apply w-full;
-}
-
-.settings-tab-list {
-  @apply border-b border-gray-200 dark:border-gray-700;
-}
-
-.settings-tab {
-  @apply px-6 py-4 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400
-         border-b-2 border-transparent hover:border-primary-300 dark:hover:border-primary-600
-         transition-all duration-200 font-medium cursor-pointer;
-}
-
-.settings-tab.p-highlight {
-  @apply text-primary-600 dark:text-primary-400 border-primary-600 dark:border-primary-400;
 }
 </style>
 

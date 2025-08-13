@@ -163,8 +163,6 @@ function isOutsideClicked(event) {
 
   .layout-sidebar {
     width: 280px;
-    background: var(--surface-card, #ffffff);
-    border-right: 1px solid var(--surface-border, #e5e7eb);
     overflow-y: auto;
     height: 100vh;
     position: fixed;
@@ -173,6 +171,8 @@ function isOutsideClicked(event) {
     z-index: 1000;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
   }
 
   .layout-mask {
