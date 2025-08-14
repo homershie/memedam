@@ -128,13 +128,6 @@ const model = ref([
     label: '系統管理',
     items: [
       {
-        label: '系統設定',
-        icon: 'pi pi-fw pi-cog',
-        to: '/admin/settings',
-        badge: null,
-        customIcon: IconCog,
-      },
-      {
         label: '維護工具',
         icon: 'pi pi-fw pi-wrench',
         to: '/admin/tools',

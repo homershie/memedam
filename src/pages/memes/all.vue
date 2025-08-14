@@ -14,11 +14,11 @@
 
     <!-- 熱門標籤 -->
     <div class="flex flex-wrap gap-2 mb-6 justify-center">
-      <Tag
+      <CustomTag
         v-for="tag in topTags"
         :key="tag._id"
         :value="`#${tag.name}`"
-        :severity="isTagSelected(tag) ? 'secondary' : 'primary'"
+        :severity="isTagSelected(tag) ? 'featured' : 'primary'"
         class="cursor-pointer"
         @click="onTagClick(tag)"
       />
@@ -30,11 +30,11 @@
       class="flex items-center justify-center gap-2 mb-4"
     >
       <p class="text-sm!">已篩選：</p>
-      <Tag
+      <CustomTag
         v-for="tag in selectedTags"
         :key="tag._id"
         :value="`#${tag.name}`"
-        severity="secondary"
+        severity="featured"
         class="cursor-pointer"
         @click="removeTag(tag)"
       />
@@ -130,8 +130,8 @@ import memeService from '@/services/memeService'
 import userService from '@/services/userService'
 import tagService from '@/services/tagService'
 import recommendationService from '@/services/recommendationService'
-import Tag from 'primevue/tag'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
+import CustomTag from '@/components/CustomTag.vue'
 
 const route = useRoute()
 const router = useRouter()

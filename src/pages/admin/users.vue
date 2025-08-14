@@ -35,9 +35,9 @@ const statuses = ref([
 ])
 
 const roles = ref([
-  { label: '管理員', value: 'admin' },
+  { label: '首席迷因長', value: 'admin' },
   { label: '一般用戶', value: 'user' },
-  { label: '版主', value: 'moderator' },
+  { label: '營銷經理', value: 'manager' },
 ])
 
 const loadUsers = async () => {
@@ -84,9 +84,9 @@ const loadUsers = async () => {
       },
       {
         id: 4,
-        username: 'moderator1',
-        email: 'mod@memedam.com',
-        role: 'moderator',
+        username: 'manager1',
+        email: 'manager@memedam.com',
+        role: 'manager',
         status: 'active',
         createdAt: '2024-01-08T00:00:00Z',
         lastLogin: '2024-01-15T11:45:00Z',
@@ -94,7 +94,7 @@ const loadUsers = async () => {
         likeCount: 89,
       },
     ]
-  } catch (error) {
+  } catch {
     toast.add({
       severity: 'error',
       summary: '錯誤',
@@ -215,7 +215,7 @@ function getStatusLabel(status) {
     case 'banned':
       return 'danger'
     case 'pending':
-      return 'warning'
+      return 'warn'
     default:
       return null
   }
@@ -225,10 +225,10 @@ function getRoleLabel(role) {
   switch (role) {
     case 'admin':
       return 'danger'
-    case 'moderator':
-      return 'warning'
+    case 'manager':
+      return 'warn'
     case 'user':
-      return 'info'
+      return 'secondary'
     default:
       return null
   }
@@ -269,7 +269,7 @@ function unbanUser(userId) {
           <Button
             label="新增用戶"
             icon="pi pi-plus"
-            severity="secondary"
+            severity="primary"
             class="mr-2"
             @click="openNew"
           />
@@ -301,6 +301,7 @@ function unbanUser(userId) {
         :rows="10"
         :filters="filters"
         :loading="loading"
+        tableStyle="width: 100%; table-layout: auto;"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         :rowsPerPageOptions="[5, 10, 25]"
         currentPageReportTemplate="顯示第 {first} 到 {last} 項，共 {totalRecords} 個用戶"
@@ -348,9 +349,9 @@ function unbanUser(userId) {
             <Tag
               :value="
                 slotProps.data.role === 'admin'
-                  ? '管理員'
-                  : slotProps.data.role === 'moderator'
-                    ? '版主'
+                  ? '首席迷因長'
+                  : slotProps.data.role === 'manager'
+                    ? '營銷經理'
                     : '一般用戶'
               "
               :severity="getRoleLabel(slotProps.data.role)"
@@ -403,6 +404,7 @@ function unbanUser(userId) {
               icon="pi pi-pencil"
               outlined
               rounded
+              severity="success"
               class="mr-2"
               @click="editUser(slotProps.data)"
             />
@@ -428,7 +430,7 @@ function unbanUser(userId) {
               icon="pi pi-trash"
               outlined
               rounded
-              severity="danger"
+              severity="secondary"
               @click="confirmDeleteUser(slotProps.data)"
             />
           </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import AppMenu from './AppMenu.vue'
+import NotificationButton from '@/components/NotificationButton.vue'
 
 const isDesktop = ref(true)
 const isDark = ref(document.documentElement.classList.contains('dark'))
@@ -84,10 +85,14 @@ onUnmounted(() => {
       <div class="flex flex-col items-center gap-2">
         <div class="text-lg mb-0">管理者A</div>
         <div class="flex items-center gap-2">
-          <Button icon="pi pi-cog" severity="secondary" rounded />
-          <OverlayBadge value="4" severity="primary" size="small">
-            <Button icon="pi pi-bell" severity="secondary" rounded />
-          </OverlayBadge>
+          <Button
+            icon="pi pi-cog"
+            severity="contrast"
+            class="p-button-text rounded-full w-10 h-10"
+            title="系統設定"
+            @click="$router.push('/admin/settings')"
+          />
+          <NotificationButton />
         </div>
       </div>
     </div>
@@ -106,7 +111,7 @@ onUnmounted(() => {
 
     <!-- 可捲動的選單區域 -->
     <div
-      class="flex-1 overflow-y-hidden group-hover:overflow-y-auto"
+      class="pb-10 flex-1 overflow-y-hidden group-hover:overflow-y-auto"
       style="scrollbar-gutter: stable; scrollbar-width: thin"
     >
       <app-menu></app-menu>

@@ -107,7 +107,7 @@ const loadAnalytics = async () => {
         { device: '平板', percentage: 13 },
       ],
     }
-  } catch (error) {
+  } catch {
     toast.add({
       severity: 'error',
       summary: '錯誤',

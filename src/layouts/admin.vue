@@ -1,7 +1,6 @@
 <script setup>
 import { useLayout } from '@/layouts/composables/layout'
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
-import AppFooter from './admin/AppFooter.vue'
 import AppSidebar from './admin/AppSidebar.vue'
 
 // Define component name to fix linter error
@@ -135,7 +134,6 @@ function isOutsideClicked(event) {
       <div class="layout-main">
         <router-view></router-view>
       </div>
-      <app-footer></app-footer>
     </div>
   </div>
   <Toast />
@@ -193,12 +191,14 @@ function isOutsideClicked(event) {
   &.layout-static {
     .layout-main-container {
       margin-left: 280px;
+      width: calc(100% - 280px);
     }
   }
 
   &.layout-static-inactive {
     .layout-main-container {
       margin-left: 0;
+      width: 100%;
     }
 
     .layout-sidebar {
@@ -218,7 +218,7 @@ function isOutsideClicked(event) {
     }
   }
 
-  @media (max-width: 991px) {
+  @media (max-width: 1024px) {
     .layout-sidebar {
       transform: translateX(-100%);
       transition: transform 0.3s;

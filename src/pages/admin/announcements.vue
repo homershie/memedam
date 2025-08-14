@@ -1,7 +1,7 @@
 <script setup>
 // Define component name to fix linter error
 defineOptions({
-  name: 'AdminAnnouncements'
+  name: 'AdminAnnouncements',
 })
 
 import { FilterMatchMode } from '@primevue/core/api'
@@ -53,12 +53,12 @@ const loadAnnouncements = async () => {
     // TODO: 整合實際的公告服務
     // const response = await announcementService.getAll()
     // announcements.value = response.data.announcements
-    
+
     // 暫時模擬數據
     announcements.value = [
-      { 
-        id: 1, 
-        title: '系統維護通知', 
+      {
+        id: 1,
+        title: '系統維護通知',
         content: '系統將於今晚 2:00-4:00 進行維護，期間可能無法正常使用服務。',
         type: 'maintenance',
         priority: 'important',
@@ -67,11 +67,11 @@ const loadAnnouncements = async () => {
         author: 'admin',
         created_at: '2024-01-15T10:30:00Z',
         published_at: '2024-01-15T10:30:00Z',
-        view_count: 1234
+        view_count: 1234,
       },
-      { 
-        id: 2, 
-        title: '新功能上線', 
+      {
+        id: 2,
+        title: '新功能上線',
         content: '我們新增了標籤搜尋功能，讓您更容易找到喜歡的迷因！',
         type: 'update',
         priority: 'normal',
@@ -80,11 +80,11 @@ const loadAnnouncements = async () => {
         author: 'admin',
         created_at: '2024-01-14T15:20:00Z',
         published_at: '2024-01-14T16:00:00Z',
-        view_count: 890
+        view_count: 890,
       },
-      { 
-        id: 3, 
-        title: '春節活動', 
+      {
+        id: 3,
+        title: '春節活動',
         content: '春節期間將舉辦特別活動，敬請期待！',
         type: 'event',
         priority: 'urgent',
@@ -93,11 +93,11 @@ const loadAnnouncements = async () => {
         author: 'admin',
         created_at: '2024-01-13T12:45:00Z',
         published_at: null,
-        view_count: 0
+        view_count: 0,
       },
-      { 
-        id: 4, 
-        title: '使用條款更新', 
+      {
+        id: 4,
+        title: '使用條款更新',
         content: '我們更新了使用條款，請用戶詳閱。',
         type: 'general',
         priority: 'normal',
@@ -106,7 +106,7 @@ const loadAnnouncements = async () => {
         author: 'admin',
         created_at: '2024-01-10T09:15:00Z',
         published_at: '2024-01-10T09:15:00Z',
-        view_count: 567
+        view_count: 567,
       },
     ]
   } catch (error) {
@@ -114,7 +114,7 @@ const loadAnnouncements = async () => {
       severity: 'error',
       summary: '錯誤',
       detail: '載入公告數據失敗',
-      life: 3000
+      life: 3000,
     })
   } finally {
     loading.value = false
@@ -126,7 +126,7 @@ function openNew() {
     status: 'draft',
     priority: 'normal',
     type: 'general',
-    is_pinned: false
+    is_pinned: false,
   }
   submitted.value = false
   announcementDialog.value = true
@@ -140,9 +140,13 @@ function hideDialog() {
 function saveAnnouncement() {
   submitted.value = true
 
-  if (announcement?.value.title?.trim() && announcement?.value.content?.trim()) {
+  if (
+    announcement?.value.title?.trim() &&
+    announcement?.value.content?.trim()
+  ) {
     if (announcement.value.id) {
-      announcements.value[findIndexById(announcement.value.id)] = announcement.value
+      announcements.value[findIndexById(announcement.value.id)] =
+        announcement.value
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -182,7 +186,9 @@ function confirmDeleteAnnouncement(announcementItem) {
 }
 
 function deleteAnnouncement() {
-  announcements.value = announcements.value.filter((val) => val.id !== announcement.value.id)
+  announcements.value = announcements.value.filter(
+    (val) => val.id !== announcement.value.id,
+  )
   deleteAnnouncementDialog.value = false
   announcement.value = {}
   toast.add({
@@ -222,7 +228,9 @@ function confirmDeleteSelected() {
 }
 
 function deleteSelectedAnnouncements() {
-  announcements.value = announcements.value.filter((val) => !selectedAnnouncements.value.includes(val))
+  announcements.value = announcements.value.filter(
+    (val) => !selectedAnnouncements.value.includes(val),
+  )
   deleteAnnouncementsDialog.value = false
   selectedAnnouncements.value = null
   toast.add({
@@ -238,7 +246,7 @@ function getStatusLabel(status) {
     case 'published':
       return 'success'
     case 'draft':
-      return 'warning'
+      return 'info'
     case 'archived':
       return 'secondary'
     default:
@@ -249,11 +257,11 @@ function getStatusLabel(status) {
 function getPriorityLabel(priority) {
   switch (priority) {
     case 'urgent':
-      return 'danger'
+      return 'primary'
     case 'important':
-      return 'warning'
+      return 'warn'
     case 'normal':
-      return 'info'
+      return 'secondary'
     default:
       return null
   }
@@ -264,9 +272,9 @@ function getTypeLabel(type) {
     case 'maintenance':
       return 'danger'
     case 'update':
-      return 'info'
+      return 'warn'
     case 'event':
-      return 'success'
+      return 'info'
     case 'general':
       return 'secondary'
     default:
@@ -278,7 +286,8 @@ function publishAnnouncement(announcementId) {
   const announcementIndex = findIndexById(announcementId)
   if (announcementIndex !== -1) {
     announcements.value[announcementIndex].status = 'published'
-    announcements.value[announcementIndex].published_at = new Date().toISOString()
+    announcements.value[announcementIndex].published_at =
+      new Date().toISOString()
     toast.add({
       severity: 'success',
       summary: '成功',
@@ -304,8 +313,11 @@ function unpublishAnnouncement(announcementId) {
 function togglePinAnnouncement(announcementId) {
   const announcementIndex = findIndexById(announcementId)
   if (announcementIndex !== -1) {
-    announcements.value[announcementIndex].is_pinned = !announcements.value[announcementIndex].is_pinned
-    const action = announcements.value[announcementIndex].is_pinned ? '置頂' : '取消置頂'
+    announcements.value[announcementIndex].is_pinned =
+      !announcements.value[announcementIndex].is_pinned
+    const action = announcements.value[announcementIndex].is_pinned
+      ? '置頂'
+      : '取消置頂'
     toast.add({
       severity: 'success',
       summary: '成功',
@@ -316,7 +328,10 @@ function togglePinAnnouncement(announcementId) {
 }
 
 function batchPublish() {
-  if (!selectedAnnouncements.value || selectedAnnouncements.value.length === 0) {
+  if (
+    !selectedAnnouncements.value ||
+    selectedAnnouncements.value.length === 0
+  ) {
     toast.add({
       severity: 'warn',
       summary: '警告',
@@ -326,10 +341,10 @@ function batchPublish() {
     return
   }
 
-  selectedAnnouncements.value.forEach(announcement => {
+  selectedAnnouncements.value.forEach((announcement) => {
     publishAnnouncement(announcement.id)
   })
-  
+
   selectedAnnouncements.value = null
   toast.add({
     severity: 'success',
@@ -348,14 +363,14 @@ function batchPublish() {
           <Button
             label="新增公告"
             icon="pi pi-plus"
-            severity="secondary"
+            severity="primary"
             class="mr-2"
             @click="openNew"
           />
           <Button
             label="批量發布"
             icon="pi pi-check"
-            severity="success"
+            severity="secondary"
             class="mr-2"
             @click="batchPublish"
             :disabled="!selectedAnnouncements || !selectedAnnouncements.length"
@@ -363,7 +378,7 @@ function batchPublish() {
           <Button
             label="刪除"
             icon="pi pi-trash"
-            severity="danger"
+            severity="secondary"
             @click="confirmDeleteSelected"
             :disabled="!selectedAnnouncements || !selectedAnnouncements.length"
           />
@@ -418,30 +433,29 @@ function batchPublish() {
           sortable
           style="min-width: 4rem"
         ></Column>
-        <Column
-          field="title"
-          header="標題"
-          sortable
-          style="min-width: 16rem"
-        >
+        <Column field="title" header="標題" sortable style="min-width: 16rem">
           <template #body="slotProps">
             <div class="flex items-center gap-2">
               <span>{{ slotProps.data.title }}</span>
-              <i v-if="slotProps.data.is_pinned" class="pi pi-thumbtack text-orange-500"></i>
+              <i
+                v-if="slotProps.data.is_pinned"
+                class="pi pi-thumbtack text-orange-500"
+              ></i>
             </div>
           </template>
         </Column>
-        <Column
-          field="type"
-          header="類型"
-          sortable
-          style="min-width: 10rem"
-        >
+        <Column field="type" header="類型" sortable style="min-width: 10rem">
           <template #body="slotProps">
             <Tag
-              :value="slotProps.data.type === 'maintenance' ? '系統維護' : 
-                      slotProps.data.type === 'update' ? '功能更新' : 
-                      slotProps.data.type === 'event' ? '活動通知' : '一般公告'"
+              :value="
+                slotProps.data.type === 'maintenance'
+                  ? '系統維護'
+                  : slotProps.data.type === 'update'
+                    ? '功能更新'
+                    : slotProps.data.type === 'event'
+                      ? '活動通知'
+                      : '一般公告'
+              "
               :severity="getTypeLabel(slotProps.data.type)"
             />
           </template>
@@ -454,22 +468,27 @@ function batchPublish() {
         >
           <template #body="slotProps">
             <Tag
-              :value="slotProps.data.priority === 'urgent' ? '緊急' : 
-                      slotProps.data.priority === 'important' ? '重要' : '一般'"
+              :value="
+                slotProps.data.priority === 'urgent'
+                  ? '緊急'
+                  : slotProps.data.priority === 'important'
+                    ? '重要'
+                    : '一般'
+              "
               :severity="getPriorityLabel(slotProps.data.priority)"
             />
           </template>
         </Column>
-        <Column
-          field="status"
-          header="狀態"
-          sortable
-          style="min-width: 10rem"
-        >
+        <Column field="status" header="狀態" sortable style="min-width: 10rem">
           <template #body="slotProps">
             <Tag
-              :value="slotProps.data.status === 'published' ? '已發布' : 
-                      slotProps.data.status === 'draft' ? '草稿' : '已下架'"
+              :value="
+                slotProps.data.status === 'published'
+                  ? '已發布'
+                  : slotProps.data.status === 'draft'
+                    ? '草稿'
+                    : '已下架'
+              "
               :severity="getStatusLabel(slotProps.data.status)"
             />
           </template>
@@ -487,7 +506,9 @@ function batchPublish() {
           style="min-width: 12rem"
         >
           <template #body="slotProps">
-            {{ new Date(slotProps.data.created_at).toLocaleDateString('zh-TW') }}
+            {{
+              new Date(slotProps.data.created_at).toLocaleDateString('zh-TW')
+            }}
           </template>
         </Column>
         <Column
@@ -497,7 +518,13 @@ function batchPublish() {
           style="min-width: 12rem"
         >
           <template #body="slotProps">
-            {{ slotProps.data.published_at ? new Date(slotProps.data.published_at).toLocaleDateString('zh-TW') : '-' }}
+            {{
+              slotProps.data.published_at
+                ? new Date(slotProps.data.published_at).toLocaleDateString(
+                    'zh-TW',
+                  )
+                : '-'
+            }}
           </template>
         </Column>
         <Column :exportable="false" style="min-width: 16rem">
@@ -528,7 +555,9 @@ function batchPublish() {
               @click="unpublishAnnouncement(slotProps.data.id)"
             />
             <Button
-              :icon="slotProps.data.is_pinned ? 'pi pi-thumbtack' : 'pi pi-thumbtack'"
+              :icon="
+                slotProps.data.is_pinned ? 'pi pi-thumbtack' : 'pi pi-thumbtack'
+              "
               outlined
               rounded
               :severity="slotProps.data.is_pinned ? 'warning' : 'secondary'"

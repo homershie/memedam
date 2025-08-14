@@ -53,10 +53,12 @@
   --p-button-text-info-color: var(--p-secondary-600);
   --p-tag-primary-color: var(--p-primary-500);
   --p-tag-primary-background: var(--p-primary-100);
-  --p-tag-secondary-color: var(--p-primary-50);
-  --p-tag-secondary-background: var(--p-primary-500);
   --p-tag-info-color: var(--p-info-500);
   --p-tag-info-background: var(--p-info-100);
+  --p-tag-warn-color: var(--p-warn-800);
+  --p-tag-warn-background: var(--p-warn-300);
+  --p-tag-danger-color: var(--p-danger-500);
+  --p-tag-danger-background: var(--p-danger-100);
   --p-tabs-tabpanel-background: transparent;
   --p-tabs-tablist-background: transparent;
 }
@@ -68,10 +70,14 @@
   --p-button-text-info-color: var(--p-secondary-400);
   --p-tag-primary-color: var(--p-primary-100);
   --p-tag-primary-background: var(--p-primary-800);
-  --p-tag-secondary-color: var(--p-primary-500);
-  --p-tag-secondary-background: var(--p-primary-50);
+  --p-tag-secondary-color: var(--p-surface-100);
+  --p-tag-secondary-background: var(--p-surface-800);
   --p-tag-info-color: var(--p-info-100);
   --p-tag-info-background: var(--p-info-800);
+  --p-tag-warn-color: var(--p-warn-200);
+  --p-tag-warn-background: var(--p-warn-900);
+  --p-tag-danger-color: var(--p-danger-100);
+  --p-tag-danger-background: var(--p-danger-800);
 }
 html,
 body,

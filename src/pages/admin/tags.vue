@@ -313,7 +313,7 @@ function categoryNameById(id) {
           <Button
             label="新增"
             icon="pi pi-plus"
-            severity="secondary"
+            severity="primary"
             class="mr-2"
             @click="openNew"
           />
@@ -367,6 +367,7 @@ function categoryNameById(id) {
       >
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
+            <h4 class="m-0">標籤管理</h4>
             <div class="flex gap-2">
               <Dropdown
                 v-model="filters.categoryId.value"
@@ -448,6 +449,7 @@ function categoryNameById(id) {
               icon="pi pi-pencil"
               outlined
               rounded
+              severity="success"
               class="mr-2"
               @click="editTag(data)"
             />
@@ -463,7 +465,7 @@ function categoryNameById(id) {
               icon="pi pi-trash"
               outlined
               rounded
-              severity="danger"
+              severity="secondary"
               @click="confirmDeleteTag(data)"
             />
           </template>

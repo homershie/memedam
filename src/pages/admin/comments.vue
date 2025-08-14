@@ -6,6 +6,7 @@ defineOptions({
 import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
+import CustomTag from '@/components/CustomTag.vue'
 
 const toast = useToast()
 const dt = ref()
@@ -232,7 +233,7 @@ function getStatusSeverity(status) {
     case 'hidden':
       return 'secondary'
     case 'pending':
-      return 'warning'
+      return 'warn'
     case 'flagged':
       return 'danger'
     default:
@@ -246,13 +247,6 @@ function getStatusSeverity(status) {
     <div class="card">
       <Toolbar class="mb-6">
         <template #start>
-          <Button
-            label="新增評論"
-            icon="pi pi-plus"
-            severity="secondary"
-            class="mr-2"
-            @click="openNew"
-          />
           <Button
             label="刪除"
             icon="pi pi-trash"
@@ -328,7 +322,7 @@ function getStatusSeverity(status) {
         </Column>
         <Column field="status" header="狀態" sortable style="min-width: 10rem">
           <template #body="{ data }">
-            <Tag
+            <CustomTag
               :value="
                 data.status === 'visible'
                   ? '可見'
@@ -364,6 +358,7 @@ function getStatusSeverity(status) {
               icon="pi pi-pencil"
               outlined
               rounded
+              severity="success"
               class="mr-2"
               @click="editComment(data)"
             />
@@ -389,7 +384,7 @@ function getStatusSeverity(status) {
               icon="pi pi-trash"
               outlined
               rounded
-              severity="danger"
+              severity="secondary"
               @click="confirmDeleteComment(data)"
             />
           </template>

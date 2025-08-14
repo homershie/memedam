@@ -4,7 +4,6 @@
     <OverlayBadge
       v-if="unreadCount > 0"
       :value="unreadCount > 99 ? '99+' : unreadCount.toString()"
-      severity="danger"
       size="small"
     >
       <Button

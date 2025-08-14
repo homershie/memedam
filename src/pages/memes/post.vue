@@ -10,7 +10,7 @@
           <!-- 迷因標題 -->
           <div class="field">
             <label for="title" class="block font-semibold mb-2">
-              迷因標題 <span class="text-red-500">*</span>
+              迷因標題 <span class="text-danger-500">*</span>
             </label>
             <InputText
               id="title"
@@ -29,7 +29,7 @@
           <!-- 迷因型態 -->
           <div class="field">
             <label for="type" class="block font-semibold mb-2">
-              迷因型態 <span class="text-red-500">*</span>
+              迷因型態 <span class="text-danger-500">*</span>
             </label>
             <Dropdown
               id="type"
@@ -49,7 +49,7 @@
           <!-- 迷因內容簡介 -->
           <div class="field">
             <label for="content" class="block font-semibold mb-2">
-              迷因內容簡介 <span class="text-red-500">*</span>
+              迷因內容簡介 <span class="text-danger-500">*</span>
             </label>
             <Textarea
               id="content"
@@ -77,7 +77,7 @@
             <label class="block font-semibold mb-2">
               <i :class="getTypeIcon(form.type)" class="mr-1"></i>
               {{ getMediaLabel(form.type) }}
-              <span class="text-red-500">*</span>
+              <span class="text-danger-500">*</span>
             </label>
 
             <!-- 圖片上傳 -->
@@ -135,7 +135,7 @@
                   />
                   <div
                     v-if="imagePreviewError"
-                    class="text-center text-red-500 p-4"
+                    class="text-center text-danger-500 p-4"
                   >
                     <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
                     <p>圖片載入失敗，請檢查連結是否正確</p>
