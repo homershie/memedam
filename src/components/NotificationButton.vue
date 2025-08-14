@@ -186,9 +186,8 @@ const hasMore = computed(() => currentPage.value < totalPages.value)
 // 方法
 const toggleNotifications = (event) => {
   notificationPopover.value.toggle(event)
-  if (!notifications.value.length) {
-    fetchNotifications()
-  }
+  // 每次點擊都重新請求，避免遺漏新訊息
+  fetchNotifications()
 }
 
 const fetchNotifications = async (append = false) => {

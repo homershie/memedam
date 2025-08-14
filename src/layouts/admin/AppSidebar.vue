@@ -2,17 +2,23 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import AppMenu from './AppMenu.vue'
 import NotificationButton from '@/components/NotificationButton.vue'
+import { useUserStore } from '@/stores/userStore'
+import userService from '@/services/userService'
 
 const isDesktop = ref(true)
 const isDark = ref(document.documentElement.classList.contains('dark'))
 let themeObserver
+
+// 使用者資訊
+const displayName = ref('')
+const avatarUrl = ref('')
 
 // 響應式螢幕寬度檢測
 const updateScreenSize = () => {
   isDesktop.value = window.innerWidth > 991
 }
 
-onMounted(() => {
+onMounted(async () => {
   updateScreenSize()
   window.addEventListener('resize', updateScreenSize)
 
@@ -28,6 +34,26 @@ onMounted(() => {
     }
   })
   themeObserver.observe(document.documentElement, { attributes: true })
+
+  // 載入目前使用者資訊以顯示頭像與名稱
+  try {
+    const userStore = useUserStore()
+    if (userStore.isLoggedIn) {
+      const { data } = await userService.getMe()
+      const user = data?.user || data
+      const name = user?.display_name || user?.username || ''
+      const avatar =
+        user?.avatarUrl ||
+        (user?.username
+          ? `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${encodeURIComponent(user.username)}`
+          : '')
+
+      displayName.value = name
+      avatarUrl.value = avatar
+    }
+  } catch (e) {
+    console.error('載入使用者資料失敗：', e)
+  }
 })
 
 onUnmounted(() => {
@@ -76,14 +102,17 @@ onUnmounted(() => {
     <!-- 用戶資料區域 -->
     <div class="flex flex-col items-center wrap gap-2 py-4 flex-shrink-0">
       <Avatar
-        image="https://api.dicebear.com/9.x/notionists-neutral/svg?seed=admin001"
+        :image="
+          avatarUrl ||
+          'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=admin001'
+        "
         shape="circle"
         size="xlarge"
         class="border-2 border-gray-200"
       />
 
       <div class="flex flex-col items-center gap-2">
-        <div class="text-lg mb-0">管理者A</div>
+        <div class="text-lg mb-0">{{ displayName || '管理者' }}</div>
         <div class="flex items-center gap-2">
           <Button
             icon="pi pi-cog"

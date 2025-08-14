@@ -542,14 +542,15 @@ const followUser = async (userId, index) => {
   }
 }
 
-// 載入精選迷因
+// 載入精選迷因（以推薦排序，僅顯示 is_featured 為 true 的項目）
 const loadFeaturedMemes = async () => {
   try {
     loading.value = true
 
     const response =
       await recommendationService.getInfiniteScrollRecommendations({
-        limit: 3, // 只取前3筆
+        // 拉大清單再前端篩選，確保能取到足夠的精選
+        limit: 50,
         page: 1,
         clear_cache: true,
       })
@@ -579,9 +580,15 @@ const loadFeaturedMemes = async () => {
       }
     }
 
+    // 僅保留 is_featured 為 true 的迷因，並依推薦順序取前 3 筆
+    const featuredOnly = recommendations.filter((m) =>
+      Boolean(m && m.is_featured),
+    )
+    const topFeatured = featuredOnly.slice(0, 3)
+
     // 為每個迷因載入作者資訊
     const memesWithAuthors = await Promise.all(
-      recommendations.map(async (meme) => {
+      topFeatured.map(async (meme) => {
         try {
           if (meme.author_id) {
             const authorId =

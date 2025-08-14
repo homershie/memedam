@@ -1,20 +1,11 @@
 <template>
   <div class="container mx-auto p-4 space-y-12">
-    <!-- 頁面標題 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h1 class="text-5xl font-bold">關於迷因典</h1>
-      <p class="text-base mt-1 text-center max-w-2xl">
-        迷因典是一個專注於迷因文化的平台，致力於為用戶提供最新、最有趣的迷因內容。
-        我們相信迷因不僅是娛樂，更是現代文化的重要組成部分。
-      </p>
-    </div>
-
     <!-- 關於迷因典區塊 -->
     <div
       class="mb-4 px-4 py-16 flex flex-col lg:flex-row items-center gap-8 lg:px-32"
     >
       <div class="flex-1 space-y-6">
-        <h2 class="text-3xl font-bold">關於迷因典</h2>
+        <h1 class="text-5xl font-bold">關於迷因典</h1>
         <div class="space-y-4 text-base text-gray-600">
           <p>
             迷因典成立於2024年，是一個專注於迷因文化的社群平台。我們的使命是為迷因愛好者提供一個自由、開放、友善的分享空間，讓每個人都能參與到迷因文化的創造與傳播中。

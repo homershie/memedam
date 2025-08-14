@@ -70,13 +70,6 @@ const model = ref([
         to: '/admin/users',
         badge: null,
       },
-      {
-        label: '權限管理',
-        icon: 'pi pi-fw pi-shield',
-        to: '/admin/permissions',
-        badge: null,
-        customIcon: IconShield,
-      },
     ],
   },
   {

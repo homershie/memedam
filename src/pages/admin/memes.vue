@@ -7,6 +7,8 @@ defineOptions({
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode } from '@primevue/core/api'
+import memeService from '@/services/memeService'
+import TextMemeCard from '@/components/TextMemeCard.vue'
 
 const toast = useToast()
 
@@ -15,6 +17,9 @@ const dt = ref()
 const loading = ref(false)
 const memes = ref([])
 const selectedMemes = ref([])
+const totalRecords = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 // 對話框
 const memeDialog = ref(false)
@@ -28,11 +33,13 @@ const submitted = ref(false)
 // 篩選器
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  status: { value: null, matchMode: FilterMatchMode.EQUALS },
-  type: { value: null, matchMode: FilterMatchMode.EQUALS },
+  status: { value: '', matchMode: FilterMatchMode.EQUALS },
+  type: { value: '', matchMode: FilterMatchMode.EQUALS },
 })
 
-const statuses = [
+// 篩選選單（含「全部」）
+const filterStatuses = [
+  { label: '全部', value: '' },
   { label: '公開', value: 'public' },
   { label: '草稿', value: 'draft' },
   { label: '隱藏', value: 'hidden' },
@@ -40,111 +47,195 @@ const statuses = [
   { label: '已刪除', value: 'deleted' },
 ]
 
-const types = [
+const filterTypes = [
+  { label: '全部', value: '' },
   { label: '文字', value: 'text' },
   { label: '圖片', value: 'image' },
   { label: '影片', value: 'video' },
   { label: '音訊', value: 'audio' },
 ]
 
-// 載入假資料
+// 表單選單（不含「全部」）
+const formStatuses = [
+  { label: '公開', value: 'public' },
+  { label: '草稿', value: 'draft' },
+  { label: '隱藏', value: 'hidden' },
+  { label: '封鎖', value: 'banned' },
+  { label: '已刪除', value: 'deleted' },
+]
+
+const formTypes = [
+  { label: '文字', value: 'text' },
+  { label: '圖片', value: 'image' },
+  { label: '影片', value: 'video' },
+  { label: '音訊', value: 'audio' },
+]
+
+// 載入真實數據
 const loadData = async () => {
   loading.value = true
   try {
-    memes.value = [
-      {
-        id: 'M-1001',
-        title: '有趣的迷因',
-        type: 'image',
-        content: '這是一個很有趣的迷因',
-        image_url: 'https://via.placeholder.com/300x200',
-        status: 'public',
-        author: { username: 'user1', display_name: '用戶一' },
-        views: 1240,
-        like_count: 86,
-        comment_count: 12,
-        hot_score: 95,
-        tags_cache: ['搞笑', '動物'],
-        nsfw: false,
-        pinned: false,
-        is_featured: true,
-        createdAt: '2024-01-15T10:30:00Z',
-      },
-      {
-        id: 'M-1002',
-        title: '經典迷因',
-        type: 'text',
-        content: '經典的迷因內容',
-        status: 'public',
-        author: { username: 'user2', display_name: '用戶二' },
-        views: 856,
-        like_count: 45,
-        comment_count: 8,
-        hot_score: 72,
-        tags_cache: ['經典', '梗圖'],
-        nsfw: false,
-        pinned: false,
-        is_featured: false,
-        createdAt: '2024-01-14T15:45:00Z',
-      },
-      {
-        id: 'M-1003',
-        title: '草稿迷因',
-        type: 'image',
-        content: '還在編輯中的迷因',
-        image_url: null,
-        status: 'draft',
-        author: { username: 'user3', display_name: '用戶三' },
-        views: 0,
-        like_count: 0,
-        comment_count: 0,
-        hot_score: 0,
-        tags_cache: [],
-        nsfw: false,
-        pinned: false,
-        is_featured: false,
-        createdAt: '2024-01-13T09:20:00Z',
-      },
-      {
-        id: 'M-1004',
-        title: '隱藏迷因',
-        type: 'video',
-        content: '被隱藏的迷因',
-        video_url: 'https://example.com/video.mp4',
-        status: 'hidden',
-        author: { username: 'user4', display_name: '用戶四' },
-        views: 320,
-        like_count: 23,
-        comment_count: 5,
-        hot_score: 45,
-        tags_cache: ['影片'],
-        nsfw: false,
-        pinned: false,
-        is_featured: false,
-        createdAt: '2024-01-12T14:10:00Z',
-      },
-      {
-        id: 'M-1005',
-        title: '熱門迷因',
-        type: 'image',
-        content: '非常受歡迎的迷因',
-        image_url: 'https://via.placeholder.com/300x200',
-        status: 'public',
-        author: { username: 'user5', display_name: '用戶五' },
-        views: 2156,
-        like_count: 156,
-        comment_count: 28,
-        hot_score: 128,
-        tags_cache: ['熱門', '搞笑'],
-        nsfw: false,
-        pinned: true,
-        is_featured: true,
-        createdAt: '2024-01-11T11:00:00Z',
-      },
-    ]
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value,
+      sort: 'createdAt',
+      order: 'desc',
+    }
+
+    // 添加篩選條件（只有非空值且不是"全部"才添加）
+    if (filters.value.status.value && filters.value.status.value !== '') {
+      params.status = filters.value.status.value
+    }
+    if (filters.value.type.value && filters.value.type.value !== '') {
+      params.type = filters.value.type.value
+    }
+    if (
+      filters.value.global.value &&
+      filters.value.global.value.trim() !== ''
+    ) {
+      params.search = filters.value.global.value.trim()
+    }
+
+    // 若為「全部」條件（無類型、無狀態、無搜尋），強制走傳統查詢以避免進階搜尋邏輯干擾
+    const isAll =
+      (!filters.value.type.value || filters.value.type.value === '') &&
+      (!filters.value.status.value || filters.value.status.value === '') &&
+      (!filters.value.global.value || filters.value.global.value.trim() === '')
+    if (isAll) params.useAdvancedSearch = false
+
+    const response = await memeService.getAll(params)
+
+    // 處理後端API響應格式
+    if (response.data && response.data.memes) {
+      memes.value = response.data.memes
+      totalRecords.value = response.data.pagination?.total || 0
+    } else if (Array.isArray(response.data)) {
+      // 如果直接返回陣列（向後相容）
+      memes.value = response.data
+      totalRecords.value = response.data.length
+    } else {
+      memes.value = []
+      totalRecords.value = 0
+    }
+
+    // 清除選擇
+    selectedMemes.value = []
+  } catch (error) {
+    console.error('載入迷因數據失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '載入迷因數據失敗',
+      life: 3000,
+    })
+    // 載入假資料作為備用
+    loadFallbackData()
   } finally {
     loading.value = false
   }
+}
+
+// 備用假資料
+const loadFallbackData = () => {
+  memes.value = [
+    {
+      _id: 'M-1001',
+      id: 'M-1001',
+      title: '有趣的迷因',
+      type: 'image',
+      content: '這是一個很有趣的迷因',
+      image_url: 'https://via.placeholder.com/300x200',
+      status: 'public',
+      author: { username: 'user1', display_name: '用戶一' },
+      views: 1240,
+      like_count: 86,
+      comment_count: 12,
+      hot_score: 95.3,
+      tags_cache: ['搞笑', '動物'],
+      nsfw: false,
+      pinned: false,
+      is_featured: true,
+      createdAt: '2024-01-15T10:30:00Z',
+    },
+    {
+      _id: 'M-1002',
+      id: 'M-1002',
+      title: '經典迷因',
+      type: 'text',
+      content: '經典的迷因內容',
+      status: 'public',
+      author: { username: 'user2', display_name: '用戶二' },
+      views: 856,
+      like_count: 45,
+      comment_count: 8,
+      hot_score: 72.8,
+      tags_cache: ['經典', '梗圖'],
+      nsfw: false,
+      pinned: false,
+      is_featured: false,
+      createdAt: '2024-01-14T15:45:00Z',
+    },
+    {
+      _id: 'M-1003',
+      id: 'M-1003',
+      title: '草稿迷因',
+      type: 'image',
+      content: '還在編輯中的迷因',
+      image_url: null,
+      status: 'draft',
+      author: { username: 'user3', display_name: '用戶三' },
+      views: 0,
+      like_count: 0,
+      comment_count: 0,
+      hot_score: 0,
+      tags_cache: [],
+      nsfw: false,
+      pinned: false,
+      is_featured: false,
+      createdAt: '2024-01-13T09:20:00Z',
+    },
+    {
+      _id: 'M-1004',
+      id: 'M-1004',
+      title: '隱藏迷因',
+      type: 'video',
+      content: '被隱藏的迷因',
+      video_url: 'https://example.com/video.mp4',
+      status: 'hidden',
+      author: { username: 'user4', display_name: '用戶四' },
+      views: 320,
+      like_count: 23,
+      comment_count: 5,
+      hot_score: 45.1,
+      tags_cache: ['影片'],
+      nsfw: false,
+      pinned: false,
+      is_featured: false,
+      createdAt: '2024-01-12T14:10:00Z',
+    },
+    {
+      _id: 'M-1005',
+      id: 'M-1005',
+      title: '熱門迷因',
+      type: 'image',
+      content: '非常受歡迎的迷因',
+      image_url: 'https://via.placeholder.com/300x200',
+      status: 'public',
+      author: { username: 'user5', display_name: '用戶五' },
+      views: 2156,
+      like_count: 156,
+      comment_count: 28,
+      hot_score: 128.7,
+      tags_cache: ['熱門', '搞笑'],
+      nsfw: false,
+      pinned: true,
+      is_featured: true,
+      createdAt: '2024-01-11T11:00:00Z',
+    },
+  ]
+  totalRecords.value = memes.value.length
+  // 清除選擇
+  selectedMemes.value = []
 }
 
 onMounted(async () => {
@@ -168,37 +259,44 @@ function hideDialog() {
   submitted.value = false
 }
 
-function saveMeme() {
+async function saveMeme() {
   submitted.value = true
   const current = meme.value
   if (!current?.title?.trim()) return
 
-  if (current.id) {
-    memes.value[findIndexById(current.id)] = { ...current }
+  try {
+    if (current._id) {
+      // 更新現有迷因
+      await memeService.update(current._id, current)
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '迷因已更新',
+        life: 3000,
+      })
+    } else {
+      // 建立新迷因
+      await memeService.create(current)
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '迷因已建立',
+        life: 3000,
+      })
+    }
+
+    memeDialog.value = false
+    meme.value = {}
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('儲存迷因失敗:', error)
     toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '迷因已更新',
-      life: 3000,
-    })
-  } else {
-    current.id = createId()
-    current.createdAt = new Date().toISOString()
-    current.views = 0
-    current.like_count = 0
-    current.comment_count = 0
-    current.hot_score = 0
-    memes.value.push({ ...current })
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '迷因已建立',
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '儲存迷因失敗',
       life: 3000,
     })
   }
-
-  memeDialog.value = false
-  meme.value = {}
 }
 
 function editMeme(row) {
@@ -211,66 +309,147 @@ function confirmDeleteMeme(row) {
   deleteMemeDialog.value = true
 }
 
-function deleteMeme() {
-  memes.value = memes.value.filter((m) => m.id !== meme.value.id)
-  deleteMemeDialog.value = false
-  meme.value = {}
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '迷因已刪除',
-    life: 3000,
-  })
+async function deleteMeme() {
+  try {
+    await memeService.remove(meme.value._id)
+    deleteMemeDialog.value = false
+    meme.value = {}
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '迷因已刪除',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('刪除迷因失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '刪除迷因失敗',
+      life: 3000,
+    })
+  }
 }
 
 function confirmDeleteSelected() {
   deleteMemesDialog.value = true
 }
 
-function deleteSelectedMemes() {
-  memes.value = memes.value.filter((m) => !selectedMemes.value?.includes(m))
-  selectedMemes.value = []
-  deleteMemesDialog.value = false
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '已刪除選取迷因',
-    life: 3000,
-  })
-}
-
-function toggleStatus(row) {
-  const statusMap = {
-    public: 'hidden',
-    hidden: 'draft',
-    draft: 'public',
-    banned: 'public',
-    deleted: 'public',
+async function deleteSelectedMemes() {
+  try {
+    const ids = selectedMemes.value.map((m) => m._id)
+    // 後端未提供批次刪除端點，逐一刪除
+    await Promise.all(ids.map((id) => memeService.remove(id)))
+    selectedMemes.value = []
+    deleteMemesDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '已刪除選取迷因',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('批量刪除失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '批量刪除失敗',
+      life: 3000,
+    })
   }
-  row.status = statusMap[row.status] || 'public'
 }
 
-function togglePinned(row) {
-  row.pinned = !row.pinned
+async function toggleStatus(row) {
+  try {
+    const statusMap = {
+      public: 'hidden',
+      hidden: 'draft',
+      draft: 'public',
+      banned: 'public',
+      deleted: 'public',
+    }
+    const newStatus = statusMap[row.status] || 'public'
+
+    // 使用標準更新端點
+    await memeService.update(row._id, { status: newStatus })
+    row.status = newStatus
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '狀態已更新',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('切換狀態失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '切換狀態失敗',
+      life: 3000,
+    })
+  }
 }
 
-function exportCSV() {
-  dt.value?.exportCSV()
+async function togglePinned(row) {
+  try {
+    const nextPinned = !row.pinned
+    await memeService.update(row._id, { pinned: nextPinned })
+    row.pinned = nextPinned
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: row.pinned ? '已置頂' : '已取消置頂',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('切換置頂狀態失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '切換置頂狀態失敗',
+      life: 3000,
+    })
+  }
 }
 
-// 工具
-function findIndexById(id) {
-  return memes.value.findIndex((m) => m.id === id)
+async function exportCSV() {
+  try {
+    const response = await memeService.exportMemes({
+      page: currentPage.value,
+      limit: pageSize.value,
+    })
+
+    // 創建下載連結
+    const blob = new Blob([response.data], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `memes-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '數據已匯出',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('匯出失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '匯出失敗',
+      life: 3000,
+    })
+  }
 }
 
-function createId() {
-  let id = ''
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (let i = 0; i < 6; i++)
-    id += chars.charAt(Math.floor(Math.random() * chars.length))
-  return `M-${id}`
-}
-
+// 工具函數
 function getStatusLabel(status) {
   switch (status) {
     case 'public':
@@ -301,6 +480,26 @@ function getTypeLabel(type) {
     default:
       return null
   }
+}
+
+// 格式化熱度分數
+function formatHotScore(score) {
+  if (score === null || score === undefined) return '0.0'
+  return Number(score).toFixed(1)
+}
+
+// 分頁事件處理
+function onPageChange(event) {
+  // PrimeVue 傳回的 event: { first, rows, page }
+  pageSize.value = event.rows
+  currentPage.value = event.page + 1
+  loadData()
+}
+
+// 篩選器變更處理
+function onFilterChange() {
+  currentPage.value = 1
+  loadData()
 }
 </script>
 
@@ -340,6 +539,7 @@ function getTypeLabel(type) {
             <InputText
               v-model="filters['global'].value"
               placeholder="搜尋迷因..."
+              @input="onFilterChange"
             />
           </IconField>
         </template>
@@ -349,13 +549,17 @@ function getTypeLabel(type) {
         ref="dt"
         :value="memes"
         v-model:selection="selectedMemes"
-        dataKey="id"
+        dataKey="_id"
         :loading="loading"
+        lazy
         paginator
-        :rows="10"
-        :filters="filters"
-        :rowsPerPageOptions="[5, 10, 25]"
+        :totalRecords="totalRecords"
+        :rows="pageSize"
+        :first="(currentPage - 1) * pageSize"
+        :rowsPerPageOptions="[5, 10, 25, 50]"
         currentPageReportTemplate="顯示第 {first} 到 {last} 項，共 {totalRecords} 個迷因"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        @page="onPageChange"
       >
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -363,17 +567,19 @@ function getTypeLabel(type) {
             <div class="flex gap-2">
               <Dropdown
                 v-model="filters.type.value"
-                :options="types"
+                :options="filterTypes"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="按類型篩選"
+                @change="onFilterChange"
               />
               <Dropdown
                 v-model="filters.status.value"
-                :options="statuses"
+                :options="filterStatuses"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="按狀態篩選"
+                @change="onFilterChange"
               />
             </div>
           </div>
@@ -436,9 +642,15 @@ function getTypeLabel(type) {
             />
             <div
               v-else-if="data.type === 'text'"
-              class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center"
+              class="w-16 h-16 overflow-hidden"
             >
-              <i class="pi pi-file-text text-gray-400"></i>
+              <TextMemeCard
+                :title="data.title || (data.content || '').slice(0, 20)"
+                size="small"
+                :hoverEffect="false"
+                variant="pastel"
+                :adminPreview="true"
+              />
             </div>
             <div
               v-else-if="data.type === 'video'"
@@ -482,7 +694,11 @@ function getTypeLabel(type) {
           header="熱度"
           sortable
           style="min-width: 6rem"
-        />
+        >
+          <template #body="{ data }">{{
+            formatHotScore(data.hot_score)
+          }}</template>
+        </Column>
         <Column field="status" header="狀態" sortable style="min-width: 8rem">
           <template #body="{ data }">
             <Tag
@@ -522,7 +738,7 @@ function getTypeLabel(type) {
               @click="editMeme(data)"
             />
             <Button
-              icon="pi pi-power-off"
+              icon="pi pi-tag"
               outlined
               rounded
               class="mr-2"
@@ -534,7 +750,7 @@ function getTypeLabel(type) {
               outlined
               rounded
               class="mr-2"
-              :severity="data.pinned ? 'danger' : 'secondary'"
+              :severity="data.pinned ? 'warn' : 'secondary'"
               @click="togglePinned(data)"
             />
             <Button
@@ -576,7 +792,7 @@ function getTypeLabel(type) {
           <Dropdown
             id="type"
             v-model="meme.type"
-            :options="types"
+            :options="formTypes"
             optionLabel="label"
             optionValue="value"
             placeholder="選擇類型"
@@ -619,7 +835,7 @@ function getTypeLabel(type) {
           <Dropdown
             id="status"
             v-model="meme.status"
-            :options="statuses"
+            :options="formStatuses"
             optionLabel="label"
             optionValue="value"
             placeholder="選擇狀態"

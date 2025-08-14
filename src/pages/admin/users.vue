@@ -7,6 +7,7 @@ defineOptions({
 import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
+import userService from '@/services/userService'
 
 onMounted(() => {
   loadUsers()
@@ -27,11 +28,16 @@ const filters = ref({
 })
 const submitted = ref(false)
 const loading = ref(false)
+const totalRecords = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 const statuses = ref([
   { label: '正常', value: 'active' },
   { label: '封禁', value: 'banned' },
   { label: '待驗證', value: 'pending' },
+  { label: '停權', value: 'suspended' },
+  { label: '已刪除', value: 'deleted' },
 ])
 
 const roles = ref([
@@ -43,67 +49,105 @@ const roles = ref([
 const loadUsers = async () => {
   loading.value = true
   try {
-    // TODO: 整合實際的用戶服務
-    // const response = await userService.getAll()
-    // users.value = response.data.users
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value,
+    }
 
-    // 暫時模擬數據
-    users.value = [
-      {
-        id: 1,
-        username: 'admin',
-        email: 'admin@memedam.com',
-        role: 'admin',
-        status: 'active',
-        createdAt: '2024-01-01T00:00:00Z',
-        lastLogin: '2024-01-15T10:30:00Z',
-        memeCount: 0,
-        likeCount: 0,
-      },
-      {
-        id: 2,
-        username: 'user1',
-        email: 'user1@example.com',
-        role: 'user',
-        status: 'active',
-        createdAt: '2024-01-10T00:00:00Z',
-        lastLogin: '2024-01-15T09:15:00Z',
-        memeCount: 15,
-        likeCount: 45,
-      },
-      {
-        id: 3,
-        username: 'user2',
-        email: 'user2@example.com',
-        role: 'user',
-        status: 'banned',
-        createdAt: '2024-01-05T00:00:00Z',
-        lastLogin: '2024-01-14T16:20:00Z',
-        memeCount: 8,
-        likeCount: 12,
-      },
-      {
-        id: 4,
-        username: 'manager1',
-        email: 'manager@memedam.com',
-        role: 'manager',
-        status: 'active',
-        createdAt: '2024-01-08T00:00:00Z',
-        lastLogin: '2024-01-15T11:45:00Z',
-        memeCount: 25,
-        likeCount: 89,
-      },
-    ]
-  } catch {
+    // 添加篩選條件
+    if (filters.value.status.value) {
+      params.status = filters.value.status.value
+    }
+    if (filters.value.role.value) {
+      params.role = filters.value.role.value
+    }
+    if (filters.value.global.value) {
+      params.search = filters.value.global.value
+    }
+
+    const response = await userService.getAll(params)
+
+    const rawUsers =
+      response.data && response.data.users
+        ? response.data.users
+        : response.data || []
+    users.value = rawUsers.map((u) => ({
+      ...u,
+      id: u.id ?? u._id ?? u.user_id,
+      memeCount: u.memeCount ?? u.meme_count ?? 0,
+      lastLogin: u.lastLogin ?? u.last_login_at ?? null,
+    }))
+    totalRecords.value = response.data?.pagination?.total || users.value.length
+  } catch (error) {
+    console.error('載入用戶數據失敗:', error)
     toast.add({
       severity: 'error',
       summary: '錯誤',
       detail: '載入用戶數據失敗',
       life: 3000,
     })
+    // 載入假資料作為備用
+    loadFallbackData()
   } finally {
     loading.value = false
   }
+}
+
+// 備用假資料
+const loadFallbackData = () => {
+  users.value = [
+    {
+      id: 1,
+      username: 'admin',
+      email: 'admin@memedam.com',
+      role: 'admin',
+      status: 'active',
+      createdAt: '2024-01-01T00:00:00Z',
+      lastLogin: '2024-01-15T10:30:00Z',
+      memeCount: 0,
+      likeCount: 0,
+    },
+    {
+      id: 2,
+      username: 'user1',
+      email: 'user1@example.com',
+      role: 'user',
+      status: 'active',
+      createdAt: '2024-01-10T00:00:00Z',
+      lastLogin: '2024-01-15T09:15:00Z',
+      memeCount: 15,
+      likeCount: 45,
+    },
+    {
+      id: 3,
+      username: 'user2',
+      email: 'user2@example.com',
+      role: 'user',
+      status: 'banned',
+      createdAt: '2024-01-05T00:00:00Z',
+      lastLogin: '2024-01-14T16:20:00Z',
+      memeCount: 8,
+      likeCount: 12,
+    },
+    {
+      id: 4,
+      username: 'manager1',
+      email: 'manager@memedam.com',
+      role: 'manager',
+      status: 'active',
+      createdAt: '2024-01-08T00:00:00Z',
+      lastLogin: '2024-01-15T11:45:00Z',
+      memeCount: 25,
+      likeCount: 89,
+    },
+  ]
+  totalRecords.value = users.value.length
+}
+
+function formatDate(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('zh-TW')
 }
 
 function openNew() {
@@ -117,32 +161,41 @@ function hideDialog() {
   submitted.value = false
 }
 
-function saveUser() {
+async function saveUser() {
   submitted.value = true
 
   if (user?.value.username?.trim() && user?.value.email?.trim()) {
-    if (user.value.id) {
-      users.value[findIndexById(user.value.id)] = user.value
+    try {
+      if (user.value.id) {
+        await userService.update(user.value.id, user.value)
+        toast.add({
+          severity: 'success',
+          summary: '成功',
+          detail: '用戶已更新',
+          life: 3000,
+        })
+      } else {
+        await userService.create(user.value)
+        toast.add({
+          severity: 'success',
+          summary: '成功',
+          detail: '用戶已建立',
+          life: 3000,
+        })
+      }
+
+      userDialog.value = false
+      user.value = {}
+      await loadUsers() // 重新載入數據
+    } catch (error) {
+      console.error('儲存用戶失敗:', error)
       toast.add({
-        severity: 'success',
-        summary: '成功',
-        detail: '用戶已更新',
-        life: 3000,
-      })
-    } else {
-      user.value.id = createId()
-      user.value.createdAt = new Date().toISOString()
-      users.value.push(user.value)
-      toast.add({
-        severity: 'success',
-        summary: '成功',
-        detail: '用戶已建立',
+        severity: 'error',
+        summary: '錯誤',
+        detail: error.response?.data?.message || '儲存用戶失敗',
         life: 3000,
       })
     }
-
-    userDialog.value = false
-    user.value = {}
   }
 }
 
@@ -156,16 +209,27 @@ function confirmDeleteUser(userItem) {
   deleteUserDialog.value = true
 }
 
-function deleteUser() {
-  users.value = users.value.filter((val) => val.id !== user.value.id)
-  deleteUserDialog.value = false
-  user.value = {}
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '用戶已刪除',
-    life: 3000,
-  })
+async function deleteUser() {
+  try {
+    await userService.remove(user.value.id)
+    deleteUserDialog.value = false
+    user.value = {}
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '用戶已刪除',
+      life: 3000,
+    })
+    await loadUsers() // 重新載入數據
+  } catch (error) {
+    console.error('刪除用戶失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '刪除用戶失敗',
+      life: 3000,
+    })
+  }
 }
 
 function findIndexById(id) {
@@ -179,33 +243,72 @@ function findIndexById(id) {
   return index
 }
 
-function createId() {
-  let id = ''
-  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (var i = 0; i < 5; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return id
-}
+// 移除未使用的 createId 以避免 linter 錯誤
 
-function exportCSV() {
-  dt.value.exportCSV()
+async function exportCSV() {
+  try {
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value,
+    }
+    if (filters.value.status.value) params.status = filters.value.status.value
+    if (filters.value.role.value) params.role = filters.value.role.value
+    if (filters.value.global.value) params.search = filters.value.global.value
+
+    const response = await userService.exportUsers(params)
+
+    // 創建下載連結
+    const blob = new Blob([response.data], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `users-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '數據已匯出',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('匯出失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '匯出失敗',
+      life: 3000,
+    })
+  }
 }
 
 function confirmDeleteSelected() {
   deleteUsersDialog.value = true
 }
 
-function deleteSelectedUsers() {
-  users.value = users.value.filter((val) => !selectedUsers.value.includes(val))
-  deleteUsersDialog.value = false
-  selectedUsers.value = null
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '選取的用戶已刪除',
-    life: 3000,
-  })
+async function deleteSelectedUsers() {
+  try {
+    const ids = selectedUsers.value.map((u) => u.id)
+    await userService.batchDelete(ids)
+    deleteUsersDialog.value = false
+    selectedUsers.value = null
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '選取的用戶已刪除',
+      life: 3000,
+    })
+    await loadUsers() // 重新載入數據
+  } catch (error) {
+    console.error('批量刪除失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '批量刪除失敗',
+      life: 3000,
+    })
+  }
 }
 
 function getStatusLabel(status) {
@@ -216,6 +319,10 @@ function getStatusLabel(status) {
       return 'danger'
     case 'pending':
       return 'warn'
+    case 'suspended':
+      return 'warn'
+    case 'deleted':
+      return 'secondary'
     default:
       return null
   }
@@ -234,27 +341,49 @@ function getRoleLabel(role) {
   }
 }
 
-function banUser(userId) {
-  const userIndex = findIndexById(userId)
-  if (userIndex !== -1) {
-    users.value[userIndex].status = 'banned'
+async function banUser(userId) {
+  try {
+    await userService.banUser(userId, '管理員封禁')
+    const userIndex = findIndexById(userId)
+    if (userIndex !== -1) {
+      users.value[userIndex].status = 'banned'
+    }
     toast.add({
       severity: 'success',
       summary: '成功',
       detail: '用戶已被封禁',
       life: 3000,
     })
+  } catch (error) {
+    console.error('封禁用戶失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '封禁用戶失敗',
+      life: 3000,
+    })
   }
 }
 
-function unbanUser(userId) {
-  const userIndex = findIndexById(userId)
-  if (userIndex !== -1) {
-    users.value[userIndex].status = 'active'
+async function unbanUser(userId) {
+  try {
+    await userService.unbanUser(userId)
+    const userIndex = findIndexById(userId)
+    if (userIndex !== -1) {
+      users.value[userIndex].status = 'active'
+    }
     toast.add({
       severity: 'success',
       summary: '成功',
       detail: '用戶已解除封禁',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('解除封禁失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '解除封禁失敗',
       life: 3000,
     })
   }
@@ -330,7 +459,7 @@ function unbanUser(userId) {
           field="id"
           header="ID"
           sortable
-          style="min-width: 4rem"
+          style="min-width: 3rem"
         ></Column>
         <Column
           field="username"
@@ -366,7 +495,11 @@ function unbanUser(userId) {
                   ? '正常'
                   : slotProps.data.status === 'banned'
                     ? '封禁'
-                    : '待驗證'
+                    : slotProps.data.status === 'suspended'
+                      ? '停權'
+                      : slotProps.data.status === 'deleted'
+                        ? '已刪除'
+                        : '待驗證'
               "
               :severity="getStatusLabel(slotProps.data.status)"
             />
@@ -385,7 +518,7 @@ function unbanUser(userId) {
           style="min-width: 12rem"
         >
           <template #body="slotProps">
-            {{ new Date(slotProps.data.createdAt).toLocaleDateString('zh-TW') }}
+            {{ formatDate(slotProps.data.createdAt) }}
           </template>
         </Column>
         <Column
@@ -395,7 +528,7 @@ function unbanUser(userId) {
           style="min-width: 12rem"
         >
           <template #body="slotProps">
-            {{ new Date(slotProps.data.lastLogin).toLocaleDateString('zh-TW') }}
+            {{ formatDate(slotProps.data.lastLogin) }}
           </template>
         </Column>
         <Column :exportable="false" style="min-width: 16rem">

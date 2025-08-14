@@ -53,7 +53,8 @@ export default {
   },
   getAll(params = {}) {
     const processedParams = processParams(params)
-    return apiService.http.get('/api/memes', { params: processedParams })
+    // 使用帶權杖的客戶端，讓後端可辨識管理者並放寬狀態限制
+    return apiService.httpAuth.get('/api/memes', { params: processedParams })
   },
   // 新增：使用標籤名稱進行基本篩選
   getByTags(tagNames, params = {}) {
@@ -171,5 +172,70 @@ export default {
       `/api/memes/${id}/proposals/${proposalId}/reject`,
       data,
     )
+  },
+
+  // 新增：取得迷因統計
+  getStats(params = {}) {
+    return apiService.httpAuth.get('/api/memes/stats', { params })
+  },
+
+  // 新增：批量操作
+  batchUpdate(ids, data) {
+    return apiService.httpAuth.put('/api/memes/batch-update', { ids, data })
+  },
+
+  // 新增：批量刪除
+  batchDelete(ids) {
+    return apiService.httpAuth.delete('/api/memes/batch-delete', {
+      data: { ids },
+    })
+  },
+
+  // 新增：內容審核
+  approve(memeId) {
+    return apiService.httpAuth.put(`/api/memes/${memeId}/approve`)
+  },
+
+  // 新增：拒絕內容
+  reject(memeId, reason) {
+    return apiService.httpAuth.put(`/api/memes/${memeId}/reject`, { reason })
+  },
+
+  // 新增：取得待審核內容
+  getPendingApproval(params = {}) {
+    return apiService.httpAuth.get('/api/memes/pending-approval', { params })
+  },
+
+  // 新增：取得內容分析
+  getAnalytics(memeId) {
+    return apiService.httpAuth.get(`/api/memes/${memeId}/analytics`)
+  },
+
+  // 新增：更新標籤
+  updateTags(memeId, tags) {
+    return apiService.httpAuth.put(`/api/memes/${memeId}/tags`, { tags })
+  },
+
+  // 新增：切換狀態
+  toggleStatus(memeId, status) {
+    return apiService.httpAuth.put(`/api/memes/${memeId}/status`, { status })
+  },
+
+  // 新增：切換置頂狀態
+  togglePinned(memeId) {
+    return apiService.httpAuth.put(`/api/memes/${memeId}/toggle-pinned`)
+  },
+
+  // 新增：切換推薦狀態
+  toggleFeatured(memeId) {
+    return apiService.httpAuth.put(`/api/memes/${memeId}/toggle-featured`)
+  },
+
+  // 新增：匯出迷因數據
+  exportMemes(params = {}) {
+    return apiService.httpAuth.get('/api/memes/export', {
+      params,
+      responseType: 'blob',
+    })
   },
 }

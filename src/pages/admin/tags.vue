@@ -7,6 +7,7 @@ defineOptions({
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode } from '@primevue/core/api'
+import tagService from '@/services/tagService'
 
 const toast = useToast()
 
@@ -14,8 +15,10 @@ const toast = useToast()
 const dt = ref()
 const loading = ref(false)
 const tags = ref([])
-const categories = ref([])
 const selectedTags = ref([])
+const totalRecords = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 // 對話框
 const tagDialog = ref(false)
@@ -31,7 +34,6 @@ const submitted = ref(false)
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   status: { value: null, matchMode: FilterMatchMode.EQUALS },
-  categoryId: { value: null, matchMode: FilterMatchMode.EQUALS },
 })
 
 const statuses = [
@@ -39,98 +41,146 @@ const statuses = [
   { label: '封存', value: 'archived' },
 ]
 
-// 載入假資料
+// 載入真實數據
 const loadData = async () => {
   loading.value = true
   try {
-    categories.value = [
-      { id: 'cat-general', name: '一般', slug: 'general' },
-      { id: 'cat-topic', name: '主題', slug: 'topic' },
-      { id: 'cat-style', name: '風格', slug: 'style' },
-    ]
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value,
+    }
 
-    tags.value = [
-      {
-        id: 'T-1006',
-        name: '搞笑',
-        slug: 'funny',
-        categoryId: 'cat-style',
-        color: '#42A5F5',
-        status: 'active',
-        usageCount: 124,
-        aliases: ['好笑', '逗趣'],
-        description: '與幽默相關的內容',
-        createdAt: '2024-01-11T08:12:00Z',
-      },
-      {
-        id: 'T-1005',
-        name: '動物',
-        slug: 'animals',
-        categoryId: 'cat-topic',
-        color: '#66BB6A',
-        status: 'active',
-        usageCount: 86,
-        aliases: [],
-        description: '與動物相關',
-        createdAt: '2024-01-12T09:40:00Z',
-      },
-      {
-        id: 'T-1004',
-        name: '政治',
-        slug: 'politics',
-        categoryId: 'cat-topic',
-        color: '#EF5350',
-        status: 'archived',
-        usageCount: 42,
-        aliases: ['政事'],
-        description: '',
-        createdAt: '2024-01-10T15:22:00Z',
-      },
-      {
-        id: 'T-1003',
-        name: '經典',
-        slug: 'classic',
-        categoryId: 'cat-general',
-        color: '#AB47BC',
-        status: 'active',
-        usageCount: 210,
-        aliases: ['名場面'],
-        description: '歷久不衰的梗',
-        createdAt: '2024-01-09T11:00:00Z',
-      },
-      {
-        id: 'T-1002',
-        name: '潮流',
-        slug: 'trendy',
-        categoryId: 'cat-style',
-        color: '#FFA726',
-        status: 'active',
-        usageCount: 168,
-        aliases: [],
-        description: '',
-        createdAt: '2024-01-09T10:30:00Z',
-      },
-      {
-        id: 'T-1001',
-        name: '梗圖',
-        slug: 'meme',
-        categoryId: 'cat-general',
-        color: '#78909C',
-        status: 'active',
-        usageCount: 132,
-        aliases: ['迷因'],
-        description: '迷因相關',
-        createdAt: '2024-01-08T21:05:00Z',
-      },
-    ]
+    // 添加篩選條件
+    if (filters.value.status.value) {
+      params.status = filters.value.status.value
+    }
+
+    if (filters.value.global.value) {
+      params.search = filters.value.global.value
+    }
+
+    const tagsResponse = await tagService.getAll(params)
+
+    const rawTags =
+      (tagsResponse.data && tagsResponse.data.tags) ||
+      (Array.isArray(tagsResponse.data) ? tagsResponse.data : [])
+
+    // 將後端回傳欄位正規化為前端需要的鍵值
+    tags.value = rawTags.map((t) => ({
+      id: t.id || t._id,
+      _id: t._id || t.id,
+      name: t.name || '',
+      slug: t.slug || '',
+      status: t.status || 'active',
+      usageCount: t.usageCount || 0,
+      aliases: Array.isArray(t.aliases) ? t.aliases : [],
+      createdAt: t.createdAt || t.updatedAt || new Date().toISOString(),
+    }))
+
+    totalRecords.value =
+      (tagsResponse.data && tagsResponse.data.pagination?.total) ||
+      tags.value.length
+
+    // 無分類載入
+  } catch (error) {
+    console.error('載入標籤數據失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '載入標籤數據失敗',
+      life: 3000,
+    })
+    // 載入假資料作為備用
+    loadFallbackData()
   } finally {
     loading.value = false
   }
 }
 
+// 備用假資料
+const loadFallbackData = () => {
+  tags.value = [
+    {
+      id: 'T-1006',
+      name: '搞笑',
+      slug: 'funny',
+
+      status: 'active',
+      usageCount: 124,
+      aliases: ['好笑', '逗趣'],
+      createdAt: '2024-01-11T08:12:00Z',
+    },
+    {
+      id: 'T-1005',
+      name: '動物',
+      slug: 'animals',
+
+      status: 'active',
+      usageCount: 86,
+      aliases: [],
+      createdAt: '2024-01-12T09:40:00Z',
+    },
+    {
+      id: 'T-1004',
+      name: '政治',
+      slug: 'politics',
+
+      status: 'archived',
+      usageCount: 42,
+      aliases: ['政事'],
+      createdAt: '2024-01-10T15:22:00Z',
+    },
+    {
+      id: 'T-1003',
+      name: '經典',
+      slug: 'classic',
+
+      status: 'active',
+      usageCount: 210,
+      aliases: ['名場面'],
+      createdAt: '2024-01-09T11:00:00Z',
+    },
+    {
+      id: 'T-1002',
+      name: '潮流',
+      slug: 'trendy',
+
+      status: 'active',
+      usageCount: 168,
+      aliases: [],
+      createdAt: '2024-01-09T10:30:00Z',
+    },
+    {
+      id: 'T-1001',
+      name: '梗圖',
+      slug: 'meme',
+
+      status: 'active',
+      usageCount: 132,
+      aliases: ['迷因'],
+      createdAt: '2024-01-08T21:05:00Z',
+    },
+  ]
+  totalRecords.value = tags.value.length
+}
+
 onMounted(async () => {
   await loadData()
 })
+
+// 分頁事件處理
+function onPageChange(event) {
+  // PrimeVue 傳回的 event: { first, rows, page }
+  pageSize.value = event.rows
+  currentPage.value = event.page + 1
+  loadData()
+}
+
+// 篩選器變更處理
+function onFilterChange() {
+  currentPage.value = 1
+  loadData()
+}
 
 function openNew() {
   tag.value = { status: 'active' }
@@ -143,38 +193,49 @@ function hideDialog() {
   submitted.value = false
 }
 
-function saveTag() {
+async function saveTag() {
   submitted.value = true
   const current = tag.value
   if (!current?.name?.trim()) return
 
-  // 建立缺省值
-  if (!current.slug?.trim()) current.slug = slugify(current.name)
-  if (!current.color?.trim()) current.color = '#999999'
+  try {
+    // 建立缺省值
+    if (!current.slug?.trim()) current.slug = slugify(current.name)
 
-  if (current.id) {
-    tags.value[findIndexById(current.id)] = { ...current }
+    if (current.id) {
+      // 更新現有標籤
+      current.aliases = parseAliases(current.aliases)
+      await tagService.update(current.id, current)
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '標籤已更新',
+        life: 3000,
+      })
+    } else {
+      // 建立新標籤
+      current.aliases = parseAliases(current.aliases)
+      await tagService.create(current)
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '標籤已建立',
+        life: 3000,
+      })
+    }
+
+    tagDialog.value = false
+    tag.value = {}
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('儲存標籤失敗:', error)
     toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '標籤已更新',
-      life: 3000,
-    })
-  } else {
-    current.id = createId()
-    current.createdAt = new Date().toISOString()
-    current.aliases = parseAliases(current.aliases)
-    tags.value.push({ ...current })
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '標籤已建立',
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '儲存標籤失敗',
       life: 3000,
     })
   }
-
-  tagDialog.value = false
-  tag.value = {}
 }
 
 function editTag(row) {
@@ -188,40 +249,109 @@ function confirmDeleteTag(row) {
   deleteTagDialog.value = true
 }
 
-function deleteTag() {
-  tags.value = tags.value.filter((t) => t.id !== tag.value.id)
-  deleteTagDialog.value = false
-  tag.value = {}
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '標籤已刪除',
-    life: 3000,
-  })
+async function deleteTag() {
+  try {
+    await tagService.remove(tag.value.id)
+    deleteTagDialog.value = false
+    tag.value = {}
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '標籤已刪除',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('刪除標籤失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '刪除標籤失敗',
+      life: 3000,
+    })
+  }
 }
 
 function confirmDeleteSelected() {
   deleteTagsDialog.value = true
 }
 
-function deleteSelectedTags() {
-  tags.value = tags.value.filter((t) => !selectedTags.value?.includes(t))
-  selectedTags.value = []
-  deleteTagsDialog.value = false
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '已刪除選取標籤',
-    life: 3000,
-  })
+async function deleteSelectedTags() {
+  try {
+    const ids = selectedTags.value.map((t) => t.id)
+    await tagService.batchDelete(ids)
+    selectedTags.value = []
+    deleteTagsDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '已刪除選取標籤',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('批量刪除失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '批量刪除失敗',
+      life: 3000,
+    })
+  }
 }
 
-function toggleStatus(row) {
-  row.status = row.status === 'active' ? 'archived' : 'active'
+async function toggleStatus(row) {
+  try {
+    await tagService.toggleStatus(row.id)
+    row.status = row.status === 'active' ? 'archived' : 'active'
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '狀態已更新',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('切換狀態失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '切換狀態失敗',
+      life: 3000,
+    })
+  }
 }
 
-function exportCSV() {
-  dt.value?.exportCSV()
+async function exportCSV() {
+  try {
+    const response = await tagService.exportTags({
+      page: currentPage.value,
+      limit: pageSize.value,
+    })
+
+    // 創建下載連結
+    const blob = new Blob([response.data], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `tags-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '數據已匯出',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('匯出失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '匯出失敗',
+      life: 3000,
+    })
+  }
 }
 
 // 合併：保留第一個為主，其餘轉入 aliases
@@ -238,49 +368,36 @@ function openMerge() {
   mergeDialog.value = true
 }
 
-function mergeSelectedTags() {
+async function mergeSelectedTags() {
   const list = selectedTags.value || []
   if (list.length < 2) return
-  const primary = list[0]
-  const rest = list.slice(1)
 
-  // 合併 aliases 與 usageCount
-  const aliasSet = new Set([
-    ...(primary.aliases || []),
-    ...rest.flatMap((t) => t.aliases || []),
-    ...rest.map((t) => t.name),
-  ])
-  primary.aliases = Array.from(aliasSet)
-  primary.usageCount =
-    (primary.usageCount || 0) +
-    rest.reduce((sum, t) => sum + (t.usageCount || 0), 0)
+  try {
+    const primary = list[0]
+    const secondaryIds = list.slice(1).map((t) => t.id)
 
-  // 移除被合併者
-  const idsToRemove = new Set(rest.map((t) => t.id))
-  tags.value = tags.value.filter((t) => !idsToRemove.has(t.id))
-  selectedTags.value = []
-  mergeDialog.value = false
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '標籤已合併',
-    life: 3000,
-  })
+    await tagService.mergeTags(primary.id, secondaryIds)
+    selectedTags.value = []
+    mergeDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '標籤已合併',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('合併標籤失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '合併標籤失敗',
+      life: 3000,
+    })
+  }
 }
 
 // 工具
-function findIndexById(id) {
-  return tags.value.findIndex((t) => t.id === id)
-}
-
-function createId() {
-  let id = ''
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (let i = 0; i < 6; i++)
-    id += chars.charAt(Math.floor(Math.random() * chars.length))
-  return id
-}
-
 function slugify(text) {
   return (text || '')
     .toString()
@@ -300,9 +417,7 @@ function parseAliases(val) {
     .filter(Boolean)
 }
 
-function categoryNameById(id) {
-  return categories.value.find((c) => c.id === id)?.name || '-'
-}
+//
 </script>
 
 <template>
@@ -348,6 +463,7 @@ function categoryNameById(id) {
             <InputText
               v-model="filters['global'].value"
               placeholder="搜尋標籤..."
+              @input="onFilterChange"
             />
           </IconField>
         </template>
@@ -359,29 +475,28 @@ function categoryNameById(id) {
         v-model:selection="selectedTags"
         dataKey="id"
         :loading="loading"
+        lazy
         paginator
-        :rows="10"
+        :totalRecords="totalRecords"
+        :rows="pageSize"
+        :first="(currentPage - 1) * pageSize"
         :filters="filters"
-        :rowsPerPageOptions="[5, 10, 25]"
+        :rowsPerPageOptions="[5, 10, 25, 50]"
         currentPageReportTemplate="顯示第 {first} 到 {last} 項，共 {totalRecords} 個標籤"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        @page="onPageChange"
       >
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
             <h4 class="m-0">標籤管理</h4>
             <div class="flex gap-2">
               <Dropdown
-                v-model="filters.categoryId.value"
-                :options="categories"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="按分類篩選"
-              />
-              <Dropdown
                 v-model="filters.status.value"
                 :options="statuses"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="按狀態篩選"
+                @change="onFilterChange"
               />
             </div>
           </div>
@@ -392,28 +507,9 @@ function categoryNameById(id) {
           style="width: 3rem"
           :exportable="false"
         />
-        <Column field="name" header="名稱" sortable style="min-width: 14rem">
-          <template #body="{ data }">
-            <div class="flex items-center gap-2">
-              <span
-                class="inline-block w-3 h-3 rounded"
-                :style="{ backgroundColor: data.color || '#999' }"
-              ></span>
-              <span class="font-medium">{{ data.name }}</span>
-            </div>
-          </template>
-        </Column>
+        <Column field="name" header="名稱" sortable style="min-width: 14rem" />
         <Column field="slug" header="Slug" sortable style="min-width: 12rem" />
-        <Column
-          field="categoryId"
-          header="分類"
-          sortable
-          style="min-width: 10rem"
-        >
-          <template #body="{ data }">{{
-            categoryNameById(data.categoryId)
-          }}</template>
-        </Column>
+
         <Column
           field="usageCount"
           header="使用次數"
@@ -454,7 +550,7 @@ function categoryNameById(id) {
               @click="editTag(data)"
             />
             <Button
-              icon="pi pi-power-off"
+              icon="pi pi-tags"
               outlined
               rounded
               class="mr-2"
@@ -504,27 +600,7 @@ function categoryNameById(id) {
             fluid
           />
         </div>
-        <div>
-          <label for="category" class="block font-bold mb-3">分類</label>
-          <Dropdown
-            id="category"
-            v-model="tag.categoryId"
-            :options="categories"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="選擇分類"
-            fluid
-          />
-        </div>
-        <div>
-          <label for="color" class="block font-bold mb-3">顏色（HEX）</label>
-          <InputText
-            id="color"
-            v-model.trim="tag.color"
-            placeholder="#888888"
-            fluid
-          />
-        </div>
+
         <div>
           <label for="status" class="block font-bold mb-3">狀態</label>
           <Dropdown
@@ -542,10 +618,6 @@ function categoryNameById(id) {
             >別名（以逗號分隔）</label
           >
           <Textarea id="aliases" v-model.trim="tag.aliases" rows="2" fluid />
-        </div>
-        <div>
-          <label for="desc" class="block font-bold mb-3">描述</label>
-          <Textarea id="desc" v-model.trim="tag.description" rows="3" fluid />
         </div>
       </div>
       <template #footer>

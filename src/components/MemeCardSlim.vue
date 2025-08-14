@@ -152,12 +152,8 @@
         />
       </div>
 
-      <p class="mb-4" v-if="meme.content">
-        {{
-          meme.content.length > 100
-            ? meme.content.substring(0, 100) + '...'
-            : meme.content
-        }}
+      <p class="mb-4 multi-line-clamp-5" v-if="meme.content">
+        {{ meme.content }}
       </p>
 
       <Divider class="my-2" />
@@ -582,5 +578,15 @@ const showDeleteConfirm = (event) => {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
+}
+
+/* 多行截斷：限制 5 行，超出以省略號顯示 */
+.multi-line-clamp-5 {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
 }
 </style>

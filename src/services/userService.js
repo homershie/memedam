@@ -18,8 +18,8 @@ export default {
   create(data) {
     return apiService.http.post('/api/users', data)
   },
-  getAll() {
-    return apiService.httpAuth.get('/api/users')
+  getAll(params = {}) {
+    return apiService.httpAuth.get('/api/users', { params })
   },
   get(id) {
     return apiService.httpAuth.get(`/api/users/${id}`)
@@ -149,4 +149,62 @@ export default {
   },
 
   getActiveUsers,
+
+  // 新增：取得用戶統計
+  getStats(userId) {
+    return apiService.httpAuth.get(`/api/users/${userId}/stats`)
+  },
+
+  // 新增：取得所有用戶統計
+  getAllStats(params = {}) {
+    return apiService.httpAuth.get('/api/users/stats', { params })
+  },
+
+  // 新增：批量操作
+  batchUpdate(ids, data) {
+    return apiService.httpAuth.put('/api/users/batch-update', { ids, data })
+  },
+
+  // 新增：批量刪除
+  batchDelete(ids) {
+    return apiService.httpAuth.delete('/api/users/batch-delete', {
+      data: { ids },
+    })
+  },
+
+  // 新增：封鎖用戶
+  banUser(userId, reason) {
+    return apiService.httpAuth.put(`/api/users/${userId}/ban`, { reason })
+  },
+
+  // 新增：解除封鎖
+  unbanUser(userId) {
+    return apiService.httpAuth.put(`/api/users/${userId}/unban`)
+  },
+
+  // 新增：更新用戶角色
+  updateRole(userId, role) {
+    return apiService.httpAuth.put(`/api/users/${userId}/role`, { role })
+  },
+
+  // 新增：取得用戶活動
+  getUserActivity(userId, params = {}) {
+    return apiService.httpAuth.get(`/api/users/${userId}/activity`, { params })
+  },
+
+  // 取得活躍用戶（公開端點，已在檔案開頭提供 getActiveUsers(limit) 版本）
+  // 保留前面的 `getActiveUsers` 匯出，避免覆蓋。
+
+  // 新增：取得新註冊用戶
+  getNewUsers(params = {}) {
+    return apiService.httpAuth.get('/api/users/new', { params })
+  },
+
+  // 新增：匯出用戶數據
+  exportUsers(params = {}) {
+    return apiService.httpAuth.get('/api/users/export', {
+      params,
+      responseType: 'blob',
+    })
+  },
 }

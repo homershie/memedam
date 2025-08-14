@@ -78,6 +78,8 @@
   --p-tag-warn-background: var(--p-warn-900);
   --p-tag-danger-color: var(--p-danger-100);
   --p-tag-danger-background: var(--p-danger-800);
+  --p-button-outlined-warn-border-color: var(--p-warn-700);
+  --p-button-outlined-warn-color: var(--p-warn-400);
 }
 html,
 body,
