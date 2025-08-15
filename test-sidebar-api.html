@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>側邊欄 API 測試</title>
+</head>
+<body>
+    <h1>側邊欄 API 測試</h1>
+    <button onclick="testTemplates()">測試模板列表</button>
+    <button onclick="testTemplate()">測試特定模板</button>
+    <div id="result"></div>
+
+    <script>
+        async function testTemplates() {
+            try {
+                const response = await fetch('/api/sidebar/templates');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">錯誤: ' + error.message + '</p>';
+            }
+        }
+
+        async function testTemplate() {
+            try {
+                const response = await fetch('/api/sidebar/templates/default');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">錯誤: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -6,7 +6,7 @@
     <!-- 搜尋模式下的自定義佈局 -->
     <div
       v-if="isSearchMode"
-      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50 flex items-center"
+      class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50 flex items-center bg-[var(--p-menubar-background)] border-b border-b-surface-700"
     >
       <div class="flex items-center gap-4 w-full">
         <Button
@@ -34,7 +34,7 @@
       class="px-4 w-full h-[80px] top-0 fixed right-0 left-0 z-50 rounded-none border-0 border-b"
     >
       <template #start>
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2 sm:gap-6">
           <Button
             icon="pi pi-bars"
             severity="contrast"
@@ -119,52 +119,79 @@
 
           <!-- 手機版搜尋按鈕 -->
           <Button
-            icon="pi pi-search"
-            severity="secondary"
-            class="p-button-text rounded-lg md:hidden"
             @click="enterSearchMode"
-          />
+            severity="contrast"
+            class="p-button-text rounded-full w-10 h-10"
+            title="搜尋"
+          >
+            <i class="pi pi-search"></i>
+          </Button>
 
           <!-- Menu Items -->
           <Button
             v-if="user.isLoggedIn"
             label="投稿"
             severity="secondary"
-            class="p-button-text rounded-lg hidden md:inline-flex"
+            class="p-button-text rounded-lg hidden lg:inline-flex"
             @click="$router.push('/memes/post')"
           />
           <Button
             v-if="!user.isLoggedIn"
             label="登入"
             severity="secondary"
-            class="p-button-text rounded-lg"
+            class="p-button-text rounded-lg hidden lg:inline-flex"
             @click="$router.push('/login')"
           />
           <Button
             v-if="user.isLoggedIn && user.isAdmin"
             label="管理"
             severity="secondary"
-            class="p-button-text rounded-lg hidden md:inline-flex"
+            class="p-button-text rounded-lg hidden lg:inline-flex"
             @click="$router.push('/admin')"
           />
           <Button
             v-if="user.isLoggedIn"
             label="登出"
             severity="secondary"
-            class="p-button-text rounded-lg"
+            class="p-button-text rounded-lg hidden lg:inline-flex"
             @click="logout"
           />
 
           <!-- 通知按鈕（僅登入用戶可見） -->
-          <NotificationButton v-if="user.isLoggedIn" />
+          <NotificationButton
+            v-if="user.isLoggedIn"
+            class="hidden sm:inline-flex"
+          />
 
           <!-- 主題切換按鈕 -->
-          <ThemeToggle mode="single" />
+          <ThemeToggle mode="single" class="hidden sm:inline-flex" />
+
+          <!-- 手機板登入登出按鈕 -->
+          <div class="inline-flex lg:hidden">
+            <Button
+              v-if="user.isLoggedIn"
+              @click="logout"
+              severity="contrast"
+              class="p-button-text rounded-full w-10 h-10"
+              title="登出"
+            >
+              <i class="pi pi-sign-out"></i>
+            </Button>
+            <Button
+              v-else
+              @click="$router.push('/login')"
+              severity="contrast"
+              class="p-button-text rounded-full w-10 h-10"
+              title="登入"
+            >
+              <i class="pi pi-sign-in"></i>
+            </Button>
+          </div>
 
           <!-- 個人頁面按鈕 -->
           <div
             v-if="user.isLoggedIn"
-            class="cursor-pointer rounded-full hidden lg:inline-flex w-10 h-10 overflow-hidden hover:brightness-90 dark:hover:brightness-110 transition-all duration-300"
+            class="cursor-pointer rounded-full inline-flex w-10 h-10 overflow-hidden hover:scale-110 transition-all duration-300"
             @click="$router.push(`/users/${user.userId}`)"
           >
             <img
@@ -309,7 +336,7 @@
             >
               <!-- 固定按鈕 -->
               <div
-                class="flex items-center gap-6 h-[80px] px-4 bg-white dark:bg-surface-900"
+                class="flex items-center gap-2 sm:gap-6 h-[80px] px-4 bg-white dark:bg-surface-900"
               >
                 <Button
                   icon="pi pi-bars"

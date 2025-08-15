@@ -32,7 +32,7 @@
     </div>
 
     <!-- 主要內容 -->
-    <div v-else class="bg-white overflow-hidden">
+    <div v-else class="overflow-hidden">
       <div class="text-center py-6">
         <h1 class="text-3xl font-bold text-gray-800">編輯迷因</h1>
         <p class="text-gray-600 mt-2">修改你的迷因內容</p>
@@ -151,7 +151,7 @@
               </div>
               <div v-if="form.image_url || uploadedImageUrl" class="mt-3">
                 <label class="block text-sm font-medium mb-2">預覽</label>
-                <div class="border rounded-lg p-2 bg-gray-50">
+                <div class="border rounded-lg p-2">
                   <img
                     :src="uploadedImageUrl || form.image_url"
                     alt="圖片預覽"

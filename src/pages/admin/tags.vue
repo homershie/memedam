@@ -37,8 +37,10 @@ const filters = ref({
 })
 
 const statuses = [
+  { label: '全部', value: null },
   { label: '啟用', value: 'active' },
   { label: '封存', value: 'archived' },
+  { label: '已刪除', value: 'deleted' },
 ]
 
 // 載入真實數據
@@ -524,8 +526,20 @@ function parseAliases(val) {
         <Column field="status" header="狀態" sortable style="min-width: 8rem">
           <template #body="{ data }">
             <Tag
-              :value="data.status === 'active' ? '啟用' : '封存'"
-              :severity="data.status === 'active' ? 'success' : 'secondary'"
+              :value="
+                data.status === 'active'
+                  ? '啟用'
+                  : data.status === 'archived'
+                    ? '封存'
+                    : '已刪除'
+              "
+              :severity="
+                data.status === 'active'
+                  ? 'success'
+                  : data.status === 'archived'
+                    ? 'secondary'
+                    : 'danger'
+              "
             />
           </template>
         </Column>

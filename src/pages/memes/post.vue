@@ -1,9 +1,9 @@
 <template>
   <div class="container mx-auto">
-    <div class="bg-white overflow-hidden">
+    <div class="overflow-hidden">
       <div class="text-center py-6">
         <h1 class="text-3xl font-bold text-gray-800">投稿迷因</h1>
-        <p class="text-gray-600 mt-2">分享你的創意，讓大家一起歡樂！</p>
+        <p class="mt-2">分享你的創意，讓大家一起歡樂！</p>
       </div>
       <div class="p-6">
         <form @submit.prevent="handleSubmit" class="space-y-6">

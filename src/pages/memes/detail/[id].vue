@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-[calc(100vh-100px)]">
     <!-- 載入狀態 -->
     <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
       <ProgressSpinner />
@@ -10,9 +10,11 @@
       v-else-if="error"
       class="flex justify-center items-center min-h-[400px]"
     >
-      <Card class="p-6 text-center">
+      <Card class="p-6 text-center" unstyled>
         <template #content>
-          <i class="pi pi-exclamation-triangle text-6xl text-red-400 mb-4"></i>
+          <i
+            class="pi pi-exclamation-triangle text-6xl text-primary-400 mb-4"
+          ></i>
           <h2 class="text-2xl font-bold text-gray-800 mb-2">載入失敗</h2>
           <p class="text-gray-600 mb-4">{{ error }}</p>
           <Button label="重新載入" @click="loadMeme" />
@@ -25,9 +27,13 @@
       <div class="flex gap-6 max-w-[1400px] mx-auto">
         <!-- 左側主要內容 -->
         <div class="flex-1 space-y-6">
-          <!-- 標題區域 -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-start justify-between mb-4">
+          <!-- 標題和內容展示區 -->
+          <div
+            id="content"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+          >
+            <!-- 標題區域 -->
+            <div class="flex items-start justify-between mb-6">
               <div class="flex-1">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
                   {{ meme.title }}
@@ -59,6 +65,14 @@
                   @click="editMeme"
                 />
                 <Button
+                  v-if="canEdit"
+                  icon="pi pi-cog"
+                  label="側邊欄"
+                  severity="secondary"
+                  size="small"
+                  @click="showSidebarEditor"
+                />
+                <Button
                   icon="pi pi-share-alt"
                   severity="secondary"
                   size="small"
@@ -68,8 +82,30 @@
               </div>
             </div>
 
+            <!-- 手機版基本資訊 -->
+            <div v-if="!isDesktop" class="border-t pt-4 mb-6">
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span class="font-medium text-gray-600">類型：</span
+                  >{{ typeDisplayName }}
+                </div>
+                <div>
+                  <span class="font-medium text-gray-600">按讚：</span
+                  >{{ likesCount }}
+                </div>
+                <div>
+                  <span class="font-medium text-gray-600">瀏覽：</span
+                  >{{ viewCount }}
+                </div>
+                <div>
+                  <span class="font-medium text-gray-600">評論：</span
+                  >{{ commentsCount }}
+                </div>
+              </div>
+            </div>
+
             <!-- 快速導航 -->
-            <nav class="border-t pt-4">
+            <nav class="border-t pt-4 mb-6">
               <ScrollPanel style="width: 100%; height: 50px">
                 <div class="flex space-x-6 text-sm">
                   <a href="#content" class="text-blue-600 hover:underline"
@@ -90,10 +126,8 @@
                 </div>
               </ScrollPanel>
             </nav>
-          </div>
 
-          <!-- 內容展示區 -->
-          <div id="content" class="bg-white rounded-lg shadow p-6">
+            <!-- 內容展示區 -->
             <div class="text-center mb-6">
               <!-- 圖片類型 -->
               <div v-if="meme.type === 'image' && meme.image_url" class="mb-4">
@@ -185,8 +219,12 @@
               </div>
             </div>
 
-            <!-- 內容描述 -->
-            <div v-if="meme.content" class="prose max-w-none">
+            <!-- 內容描述 - 使用 detail_markdown 欄位 -->
+            <div v-if="meme.detail_markdown" class="prose max-w-none">
+              <div v-html="renderMarkdown(meme.detail_markdown)"></div>
+            </div>
+            <!-- 如果沒有 detail_markdown，則顯示原本的 content -->
+            <div v-else-if="meme.content" class="prose max-w-none">
               <p class="text-gray-700 leading-relaxed">{{ meme.content }}</p>
             </div>
 
@@ -226,7 +264,10 @@
           </div>
 
           <!-- 詳細資訊 -->
-          <div id="details" class="bg-white rounded-lg shadow p-6">
+          <div
+            id="details"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+          >
             <h2 class="text-xl font-bold text-gray-900 mb-4">詳細資訊</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -324,8 +365,58 @@
             </div>
           </div>
 
+          <!-- 手機板相關迷因 -->
+          <div
+            v-if="!isDesktop"
+            id="related"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+          >
+            <h2 class="text-xl font-bold text-gray-900 mb-4">相關迷因</h2>
+            <div v-if="relatedMemes.length > 0" class="space-y-3">
+              <div
+                v-for="relatedMeme in relatedMemes"
+                :key="relatedMeme._id"
+                class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded cursor-pointer border"
+                @click="navigateToMeme(relatedMeme)"
+              >
+                <div
+                  class="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0"
+                >
+                  <img
+                    v-if="relatedMeme.image_url"
+                    :src="relatedMeme.image_url"
+                    :alt="relatedMeme.title"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center text-gray-400"
+                  >
+                    <i class="pi pi-image"></i>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">
+                    {{ relatedMeme.title }}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    {{ relatedMeme.likes_count || 0 }} 讚 •
+                    {{ relatedMeme.view_count || 0 }} 瀏覽
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center py-8 text-gray-500">
+              <i class="pi pi-image text-4xl mb-2"></i>
+              <p>暫無相關迷因</p>
+            </div>
+          </div>
+
           <!-- 討論區 -->
-          <div id="comments" class="bg-white rounded-lg shadow p-6">
+          <div
+            id="comments"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+          >
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xl font-bold text-gray-900">
                 討論 ({{ commentsCount }})
@@ -368,7 +459,10 @@
           </div>
 
           <!-- 版本歷史 -->
-          <div id="versions" class="bg-white rounded-lg shadow p-6">
+          <div
+            id="versions"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+          >
             <h2 class="text-xl font-bold text-gray-900 mb-4">版本歷史</h2>
             <div v-if="versions.length > 0" class="space-y-3">
               <div
@@ -399,13 +493,13 @@
           </div>
         </div>
 
-        <!-- 右側資訊欄 -->
-        <div class="w-80 space-y-6">
+        <!-- 右側資訊欄 - 僅桌面版顯示 -->
+        <div v-if="isDesktop" class="w-80 space-y-6 s">
           <!-- 迷因資訊框 -->
-          <Card class="shadow">
+          <Card class="shadow dark:bg-surface-800" v-if="!sidebarData">
             <template #title>
               <div
-                class="text-lg font-bold text-center bg-gray-100 -m-6 mb-4 p-3"
+                class="text-lg font-bold text-center rounded-t-lg -m-6 mb-4 p-3"
               >
                 {{ meme.title }}
               </div>
@@ -493,8 +587,15 @@
             </template>
           </Card>
 
+          <!-- 自定義側邊欄 -->
+          <div
+            v-if="sidebarData"
+            class="p-4 rounded-lg dark:bg-surface-800"
+            v-html="sidebarHtml"
+          ></div>
+
           <!-- 相關迷因 -->
-          <Card class="shadow" id="related">
+          <Card class="shadow dark:bg-surface-800" id="related">
             <template #title>
               <div class="text-lg font-bold">相關迷因</div>
             </template>
@@ -539,7 +640,7 @@
           </Card>
 
           <!-- 工具箱 -->
-          <Card class="shadow">
+          <Card class="shadow dark:bg-surface-800">
             <template #title>
               <div class="text-lg font-bold">工具</div>
             </template>
@@ -616,6 +717,21 @@
         @cancel="showCommentDialog = false"
       />
     </Dialog>
+
+    <!-- 側邊欄編輯器對話框 -->
+    <Dialog
+      v-model:visible="showSidebarEditorDialog"
+      header="編輯側邊欄"
+      :style="{ width: '900px', maxHeight: '80vh' }"
+      :modal="true"
+    >
+      <SidebarEditor
+        :meme-id="memeId"
+        :initial-data="sidebarEditorData"
+        @update="onSidebarUpdate"
+        @save="onSidebarSave"
+      />
+    </Dialog>
   </div>
 </template>
 
@@ -640,6 +756,7 @@ import Paginator from 'primevue/paginator'
 import TextMemeCard from '@/components/TextMemeCard.vue'
 import CommentForm from '@/components/CommentForm.vue'
 import CommentItem from '@/components/CommentItem.vue'
+import SidebarEditor from '@/components/SidebarEditor.vue'
 
 // 服務
 import memeService from '@/services/memeService'
@@ -652,6 +769,8 @@ import shareService from '@/services/shareService'
 import memeVersionService from '@/services/memeVersionService'
 import userService from '@/services/userService'
 import viewService from '@/services/viewService'
+import sidebarService from '@/services/sidebarService'
+import recommendationService from '@/services/recommendationService'
 
 // 工具函數
 import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
@@ -695,6 +814,12 @@ const totalComments = ref(0)
 const showCommentDialog = ref(false)
 const replyToComment = ref(null)
 
+// 側邊欄相關
+const sidebarData = ref(null)
+const sidebarHtml = ref('')
+const showSidebarEditorDialog = ref(false)
+const sidebarEditorData = ref({})
+
 // 瀏覽統計
 const viewCount = ref(0)
 const viewStats = ref({
@@ -709,6 +834,14 @@ const viewStats = ref({
 // 其他
 const shareMenuRef = ref(null)
 const isDev = isDevelopment()
+
+// 桌面版判斷
+const isDesktop = ref(false)
+
+// 檢查螢幕尺寸
+const checkScreenSize = () => {
+  isDesktop.value = window.innerWidth >= 1024 // lg breakpoint
+}
 
 // 計算屬性
 const memeId = computed(() => route.params.id)
@@ -793,6 +926,24 @@ const canEdit = computed(() => {
 
 const shareOptions = computed(() => getShareOptions())
 
+// 渲染 Markdown 內容
+const renderMarkdown = (markdown) => {
+  if (!markdown) return ''
+
+  // 簡單的 Markdown 渲染（可以根據需要擴展）
+  return markdown
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 粗體
+    .replace(/\*(.*?)\*/g, '<em>$1</em>') // 斜體
+    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>') // 行內代碼
+    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>') // 三級標題
+    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>') // 二級標題
+    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>') // 一級標題
+    .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>') // 無序列表
+    .replace(/^\d+\. (.*$)/gim, '<li class="ml-4">$1</li>') // 有序列表
+    .replace(/\n\n/g, '</p><p class="mt-4">') // 段落
+    .replace(/^(.+)$/gm, '<p class="leading-relaxed">$1</p>') // 一般文字
+}
+
 // 載入迷因資料
 const loadMeme = async () => {
   try {
@@ -853,6 +1004,7 @@ const loadMeme = async () => {
         loadRelatedMemes(),
         loadVersions(),
         loadViewStats(),
+        loadSidebarData(),
       ])
     } else {
       error.value = '找不到該迷因'
@@ -991,21 +1143,71 @@ const loadComments = async () => {
 // 載入相關迷因
 const loadRelatedMemes = async () => {
   try {
-    // 基於標籤找相關迷因
-    if (tags.value.length > 0) {
-      const tagNames = tags.value.map((tag) => tag.name)
-      const response = await memeService.getByTags(tagNames, { limit: 5 })
-      if (response.data) {
-        // 處理可能的嵌套數據結構
-        const memesData = response.data.data || response.data
-        const memesArray = Array.isArray(memesData) ? memesData : []
-        relatedMemes.value = memesArray
-          .filter((item) => getMemeId(item) !== memeId.value)
-          .slice(0, 5)
+    console.log('開始載入相關迷因，memeId:', memeId.value)
+
+    // 使用推薦服務取得相似迷因
+    const response = await recommendationService.getSimilarRecommendations(
+      memeId.value,
+      {
+        limit: 5,
+      },
+    )
+
+    console.log('推薦服務回應:', response)
+
+    if (
+      response.data &&
+      response.data.data &&
+      response.data.data.recommendations
+    ) {
+      // 處理推薦服務的回應
+      const recommendations = response.data.data.recommendations
+      const memesArray = Array.isArray(recommendations) ? recommendations : []
+      relatedMemes.value = memesArray
+        .filter((item) => getMemeId(item) !== memeId.value)
+        .slice(0, 5)
+
+      console.log('設定相關迷因:', relatedMemes.value)
+    } else {
+      console.log('推薦服務沒有結果，嘗試回退到標籤推薦')
+      // 如果推薦服務沒有結果，回退到基於標籤的推薦
+      if (tags.value.length > 0) {
+        const tagNames = tags.value.map((tag) => tag.name)
+        const fallbackResponse = await memeService.getByTags(tagNames, {
+          limit: 5,
+        })
+        if (fallbackResponse.data) {
+          const memesData = fallbackResponse.data.data || fallbackResponse.data
+          const memesArray = Array.isArray(memesData) ? memesData : []
+          relatedMemes.value = memesArray
+            .filter((item) => getMemeId(item) !== memeId.value)
+            .slice(0, 5)
+          console.log('回退標籤推薦結果:', relatedMemes.value)
+        }
       }
     }
   } catch (error) {
     console.error('載入相關迷因失敗:', error)
+    // 錯誤時也嘗試回退到標籤推薦
+    try {
+      if (tags.value.length > 0) {
+        const tagNames = tags.value.map((tag) => tag.name)
+        const fallbackResponse = await memeService.getByTags(tagNames, {
+          limit: 5,
+        })
+        if (fallbackResponse.data) {
+          const memesData = fallbackResponse.data.data || fallbackResponse.data
+          const memesArray = Array.isArray(memesData) ? memesData : []
+          relatedMemes.value = memesArray
+            .filter((item) => getMemeId(item) !== memeId.value)
+            .slice(0, 5)
+          console.log('錯誤回退標籤推薦結果:', relatedMemes.value)
+        }
+      }
+    } catch (fallbackError) {
+      console.error('回退推薦也失敗:', fallbackError)
+      relatedMemes.value = []
+    }
   }
 }
 
@@ -1072,6 +1274,33 @@ const loadViewStats = async () => {
     }
   } catch (error) {
     console.error('載入瀏覽統計失敗:', error)
+  }
+}
+
+// 載入側邊欄資料
+const loadSidebarData = async () => {
+  try {
+    const response = await sidebarService.getMemeSidebar(memeId.value)
+    if (response.data) {
+      sidebarData.value = response.data.data
+      sidebarHtml.value = response.data.renderedHtml
+      sidebarEditorData.value = {
+        template: response.data.template,
+        data: response.data.data,
+      }
+    }
+  } catch (error) {
+    console.error('載入側邊欄資料失敗:', error)
+    console.error('錯誤詳情:', error.response?.data || error.message)
+
+    // 檢查是否是 404 錯誤（迷因不存在）
+    if (error.response?.status === 404) {
+      console.log('迷因不存在或沒有側邊欄資料，使用預設值')
+    }
+
+    // 如果沒有側邊欄資料，使用預設值
+    sidebarData.value = null
+    sidebarHtml.value = ''
   }
 }
 
@@ -1222,6 +1451,28 @@ const handleShare = async (platform) => {
 // 其他功能
 const editMeme = () => {
   router.push(`/memes/edit/${memeId.value}`)
+}
+
+const showSidebarEditor = () => {
+  showSidebarEditorDialog.value = true
+}
+
+const onSidebarUpdate = (data) => {
+  // 即時更新預覽
+  sidebarEditorData.value = data
+}
+
+const onSidebarSave = async (_data) => {
+  // 保存成功後更新側邊欄顯示
+  await loadSidebarData()
+  showSidebarEditorDialog.value = false
+
+  toast.add({
+    severity: 'success',
+    summary: '成功',
+    detail: '側邊欄已更新',
+    life: 3000,
+  })
 }
 
 const reportMeme = () => {
@@ -1398,6 +1649,10 @@ onMounted(() => {
 
   loadMeme()
 
+  // 監聽螢幕尺寸變化
+  checkScreenSize()
+  window.addEventListener('resize', checkScreenSize)
+
   // 監聽頁面離開事件
   window.addEventListener('beforeunload', recordPageLeave)
   window.addEventListener('pagehide', recordPageLeave)
@@ -1411,6 +1666,7 @@ onUnmounted(() => {
     recordPageLeave()
   }
 
+  window.removeEventListener('resize', checkScreenSize)
   window.removeEventListener('beforeunload', recordPageLeave)
   window.removeEventListener('pagehide', recordPageLeave)
 })
@@ -1435,24 +1691,6 @@ export default {
 /* 平滑滾動 */
 html {
   scroll-behavior: smooth;
-}
-
-/* 自定義滾動條 */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
 }
 
 /* 表格樣式 */
