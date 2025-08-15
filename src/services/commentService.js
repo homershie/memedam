@@ -30,16 +30,21 @@ export default {
 
   // 獲取指定迷因的所有留言
   getByMemeId(memeId, params = {}) {
-    return this.getAll({ meme_id: memeId, ...params })
+    return this.getAll({ meme_id: memeId, status: 'normal', ...params })
   },
 
   // 獲取主留言（沒有 parent_id 的留言）
   getMainComments(memeId, params = {}) {
-    return this.getAll({ meme_id: memeId, parent_id: null, ...params })
+    return this.getAll({
+      meme_id: memeId,
+      parent_id: null,
+      status: 'normal',
+      ...params,
+    })
   },
 
   // 獲取指定留言的回復
   getReplies(parentId, params = {}) {
-    return this.getAll({ parent_id: parentId, ...params })
+    return this.getAll({ parent_id: parentId, status: 'normal', ...params })
   },
 }

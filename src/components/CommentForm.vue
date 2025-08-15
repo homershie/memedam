@@ -121,6 +121,12 @@ const handleMentionSelected = (user) => {
 const handleCancel = () => {
   content.value = ''
   mentionedUsers.value = []
+
+  // 清空 MentionInput 組件的內容
+  if (mentionInputRef.value) {
+    mentionInputRef.value.clear()
+  }
+
   emit('cancel')
 }
 
@@ -142,6 +148,17 @@ const handleSubmit = async () => {
         severity: 'warn',
         summary: '提示',
         detail: `留言內容不能超過 ${props.maxLength} 字`,
+        life: 3000,
+      })
+      return
+    }
+
+    // 檢查用戶是否已登入
+    if (!userStore.userId) {
+      toast.add({
+        severity: 'warn',
+        summary: '提示',
+        detail: '請先登入後再發表留言',
         life: 3000,
       })
       return
@@ -177,6 +194,11 @@ const handleSubmit = async () => {
       // 清空表單
       content.value = ''
       mentionedUsers.value = []
+
+      // 清空 MentionInput 組件的內容
+      if (mentionInputRef.value) {
+        mentionInputRef.value.clear()
+      }
 
       // 通知父組件
       emit('submitted', response.data)

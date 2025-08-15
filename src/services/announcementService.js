@@ -8,12 +8,12 @@ export default {
 
   // 取得所有公告
   getAll(params = {}) {
-    return apiService.http.get('/api/announcements', { params })
+    return apiService.httpAuth.get('/api/announcements', { params })
   },
 
   // 取得指定公告
   get(id) {
-    return apiService.http.get(`/api/announcements/${id}`)
+    return apiService.httpAuth.get(`/api/announcements/${id}`)
   },
 
   // 更新公告
@@ -25,4 +25,6 @@ export default {
   remove(id) {
     return apiService.httpAuth.delete(`/api/announcements/${id}`)
   },
+
+
 }

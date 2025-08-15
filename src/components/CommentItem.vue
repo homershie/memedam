@@ -49,6 +49,26 @@
             >
               · 已編輯
             </span>
+            <!-- 狀態提示 -->
+            <span
+              v-if="comment.status !== 'normal'"
+              class="ml-2 px-2 py-1 text-xs rounded-full"
+              :class="{
+                'bg-red-100 text-red-700': comment.status === 'deleted',
+                'bg-yellow-100 text-yellow-700': comment.status === 'hidden',
+                'bg-orange-100 text-orange-700': comment.status === 'banned',
+              }"
+            >
+              {{
+                comment.status === 'deleted'
+                  ? '已刪除'
+                  : comment.status === 'hidden'
+                    ? '已隱藏'
+                    : comment.status === 'banned'
+                      ? '已封鎖'
+                      : comment.status
+              }}
+            </span>
           </div>
         </div>
       </div>
@@ -127,7 +147,10 @@
     </div>
 
     <!-- 回復和點讚區域 -->
-    <div v-if="!isEditing && !isReply" class="mt-3 flex items-center gap-4">
+    <div
+      v-if="!isEditing && !isReply && comment.status === 'normal'"
+      class="mt-3 flex items-center gap-4"
+    >
       <!-- 回復按鈕 -->
       <Button
         label="回復"
@@ -248,16 +271,24 @@ const getUserInfo = (comment) => {
 const canEdit = computed(() => {
   const currentUserId = getId(userStore.userId)
   const commentUserId = getId(getUserInfo(props.comment)._id)
-  return currentUserId && commentUserId && currentUserId === commentUserId
+  // 只有狀態為 normal 的評論才能編輯
+  return (
+    currentUserId &&
+    commentUserId &&
+    currentUserId === commentUserId &&
+    props.comment.status === 'normal'
+  )
 })
 
 const canDelete = computed(() => {
   const currentUserId = getId(userStore.userId)
   const commentUserId = getId(getUserInfo(props.comment)._id)
   const role = userStore.role
+  // 只有狀態為 normal 的評論才能刪除
   return (
-    role === 'admin' ||
-    (currentUserId && commentUserId && currentUserId === commentUserId)
+    (role === 'admin' ||
+      (currentUserId && commentUserId && currentUserId === commentUserId)) &&
+    props.comment.status === 'normal'
   )
 })
 

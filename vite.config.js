@@ -13,7 +13,10 @@ export default defineConfig({
   plugins: [
     vue(),
     Pages(),
-    Layouts(),
+    Layouts({
+      layoutsDirs: 'src/layouts',
+      defaultLayout: 'default',
+    }),
     Components({
       resolvers: [PrimeVueResolver()],
     }),

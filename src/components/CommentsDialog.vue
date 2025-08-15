@@ -77,10 +77,10 @@ const isLoading = ref(false)
 const memeData = dialogRef.value.data
 const memeId = memeData.memeId
 
-// 計算屬性 - 主留言（沒有 parent_id 的留言）
+// 計算屬性 - 主留言（沒有 parent_id 的留言，且狀態為 normal）
 const mainComments = computed(() => {
   return allComments.value
-    .filter((comment) => !comment.parent_id)
+    .filter((comment) => !comment.parent_id && comment.status === 'normal')
     .sort(
       (a, b) =>
         new Date(b.createdAt || b.created_at) -
@@ -88,18 +88,19 @@ const mainComments = computed(() => {
     )
 })
 
-// 計算屬性 - 總留言數（包含回復）
+// 計算屬性 - 總留言數（只計算狀態為 normal 的評論）
 const totalCommentsCount = computed(() => {
-  return allComments.value.length
+  return allComments.value.filter((comment) => comment.status === 'normal')
+    .length
 })
 
-// 獲取指定留言的回復
+// 獲取指定留言的回復（只顯示狀態為 normal 的回復）
 const getRepliesForComment = (commentId) => {
   return allComments.value
     .filter((comment) => {
       const parentId = getId(comment.parent_id)
       const targetId = getId(commentId)
-      return parentId === targetId
+      return parentId === targetId && comment.status === 'normal'
     })
     .sort(
       (a, b) =>

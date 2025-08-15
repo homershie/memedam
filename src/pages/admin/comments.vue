@@ -38,18 +38,18 @@ const filters = ref({
 // 篩選選單（含「全部」）
 const filterStatuses = [
   { label: '全部', value: '' },
-  { label: '可見', value: 'visible' },
+  { label: '正常', value: 'normal' },
   { label: '隱藏', value: 'hidden' },
-  { label: '待審核', value: 'pending' },
-  { label: '已標記', value: 'flagged' },
+  { label: '已刪除', value: 'deleted' },
+  { label: '已封鎖', value: 'banned' },
 ]
 
 // 表單選單（不含「全部」）
 const formStatuses = [
-  { label: '可見', value: 'visible' },
+  { label: '正常', value: 'normal' },
   { label: '隱藏', value: 'hidden' },
-  { label: '待審核', value: 'pending' },
-  { label: '已標記', value: 'flagged' },
+  { label: '已刪除', value: 'deleted' },
+  { label: '已封鎖', value: 'banned' },
 ]
 
 // 載入真實數據
@@ -77,7 +77,15 @@ const loadData = async () => {
     const response = await commentService.getAll(params)
 
     // 處理後端API響應格式
-    if (response.data && response.data.comments) {
+    if (
+      response.data &&
+      response.data.data &&
+      Array.isArray(response.data.data)
+    ) {
+      // API 返回 { success: true, data: [...], pagination: {...}, error: null } 格式
+      comments.value = response.data.data
+      totalRecords.value = response.data.pagination?.total || 0
+    } else if (response.data && response.data.comments) {
       comments.value = response.data.comments
       totalRecords.value = response.data.pagination?.total || 0
     } else if (Array.isArray(response.data)) {
@@ -111,58 +119,42 @@ const loadFallbackData = () => {
   comments.value = [
     {
       _id: 'C-1001',
-      id: 'C-1001',
+      meme_id: 'M-1001',
       content: '這個迷因太好笑了！',
-      meme: {
-        _id: 'M-1001',
-        title: '經典迷因 1',
-      },
-      author: { username: 'user1', display_name: '用戶一' },
-      status: 'visible',
-      likeCount: 12,
-      replyCount: 2,
+      user_id: { username: 'user1', display_name: '用戶一' },
+      status: 'normal',
+      like_count: 12,
+      reply_count: 2,
       createdAt: '2024-01-14T10:30:00Z',
     },
     {
       _id: 'C-1000',
-      id: 'C-1000',
+      meme_id: 'M-1002',
       content: '內容有點不妥，已檢舉。',
-      meme: {
-        _id: 'M-1002',
-        title: '熱門迷因 2',
-      },
-      author: { username: 'user2', display_name: '用戶二' },
-      status: 'flagged',
-      likeCount: 1,
-      replyCount: 0,
+      user_id: { username: 'user2', display_name: '用戶二' },
+      status: 'banned',
+      like_count: 1,
+      reply_count: 0,
       createdAt: '2024-01-13T15:12:00Z',
     },
     {
       _id: 'C-0999',
-      id: 'C-0999',
+      meme_id: 'M-1003',
       content: '請問有原圖嗎？',
-      meme: {
-        _id: 'M-1003',
-        title: '冷門迷因 3',
-      },
-      author: { username: 'user3', display_name: '用戶三' },
-      status: 'pending',
-      likeCount: 0,
-      replyCount: 1,
+      user_id: { username: 'user3', display_name: '用戶三' },
+      status: 'deleted',
+      like_count: 0,
+      reply_count: 1,
       createdAt: '2024-01-12T08:45:00Z',
     },
     {
       _id: 'C-0998',
-      id: 'C-0998',
+      meme_id: 'M-1004',
       content: '已隱藏的測試評論',
-      meme: {
-        _id: 'M-1004',
-        title: '經典迷因 4',
-      },
-      author: { username: 'moderator', display_name: '版主' },
+      user_id: { username: 'moderator', display_name: '版主' },
       status: 'hidden',
-      likeCount: 0,
-      replyCount: 0,
+      like_count: 0,
+      reply_count: 0,
       createdAt: '2024-01-11T21:05:00Z',
     },
   ]
@@ -176,7 +168,7 @@ onMounted(async () => {
 
 function openNew() {
   comment.value = {
-    status: 'visible',
+    status: 'normal',
   }
   submitted.value = false
   commentDialog.value = true
@@ -315,10 +307,10 @@ async function hideOne(commentId) {
 
 async function unhideOne(commentId) {
   try {
-    await commentService.update(commentId, { status: 'visible' })
+    await commentService.update(commentId, { status: 'normal' })
     const idx = comments.value.findIndex((c) => c._id === commentId)
     if (idx !== -1) {
-      comments.value[idx].status = 'visible'
+      comments.value[idx].status = 'normal'
     }
     toast.add({
       severity: 'success',
@@ -373,16 +365,16 @@ async function exportCSV() {
 // 工具函數
 function getStatusSeverity(status) {
   switch (status) {
-    case 'visible':
+    case 'normal':
       return 'success'
     case 'hidden':
       return 'secondary'
-    case 'pending':
-      return 'warn'
-    case 'flagged':
+    case 'deleted':
+      return 'danger'
+    case 'banned':
       return 'danger'
     default:
-      return null
+      return 'info'
   }
 }
 
@@ -459,6 +451,7 @@ function onFilterChange() {
         currentPageReportTemplate="顯示第 {first} 到 {last} 項，共 {totalRecords} 則評論"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         @page="onPageChange"
+        :showCurrentPageReport="true"
       >
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -491,44 +484,44 @@ function onFilterChange() {
           </template>
         </Column>
         <Column
-          field="meme.title"
-          header="迷因"
+          field="meme_id"
+          header="迷因ID"
           sortable
           style="min-width: 12rem"
         >
-          <template #body="{ data }">{{
-            data.meme?.title || '未知迷因'
-          }}</template>
+          <template #body="{ data }">{{ data.meme_id || '未知迷因' }}</template>
         </Column>
-        <Column field="author" header="作者" sortable style="min-width: 10rem">
+        <Column field="user_id" header="作者" sortable style="min-width: 10rem">
           <template #body="{ data }">{{
-            data.author?.display_name || data.author?.username || '未知'
+            data.user_id?.display_name || data.user_id?.username || '未知'
           }}</template>
         </Column>
         <Column field="status" header="狀態" sortable style="min-width: 10rem">
           <template #body="{ data }">
             <CustomTag
               :value="
-                data.status === 'visible'
-                  ? '可見'
+                data.status === 'normal'
+                  ? '正常'
                   : data.status === 'hidden'
                     ? '隱藏'
-                    : data.status === 'pending'
-                      ? '待審核'
-                      : '已標記'
+                    : data.status === 'deleted'
+                      ? '已刪除'
+                      : data.status === 'banned'
+                        ? '已封鎖'
+                        : data.status
               "
               :severity="getStatusSeverity(data.status)"
             />
           </template>
         </Column>
         <Column
-          field="likeCount"
+          field="like_count"
           header="讚"
           sortable
           style="min-width: 6rem"
         />
         <Column
-          field="replyCount"
+          field="reply_count"
           header="回覆"
           sortable
           style="min-width: 6rem"

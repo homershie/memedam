@@ -33,51 +33,39 @@ const submitted = ref(false)
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   status: { value: '', matchMode: FilterMatchMode.EQUALS },
-  priority: { value: '', matchMode: FilterMatchMode.EQUALS },
-  type: { value: '', matchMode: FilterMatchMode.EQUALS },
+  category: { value: '', matchMode: FilterMatchMode.EQUALS },
 })
 
 // 篩選選單（含「全部」）
 const filterStatuses = [
   { label: '全部', value: '' },
   { label: '草稿', value: 'draft' },
-  { label: '已發布', value: 'published' },
-  { label: '已下架', value: 'archived' },
+  { label: '已發布', value: 'public' },
+  { label: '隱藏', value: 'hidden' },
+  { label: '已刪除', value: 'deleted' },
 ]
 
-const filterPriorities = [
+const filterCategories = [
   { label: '全部', value: '' },
-  { label: '一般', value: 'normal' },
-  { label: '重要', value: 'important' },
-  { label: '緊急', value: 'urgent' },
-]
-
-const filterTypes = [
-  { label: '全部', value: '' },
-  { label: '一般公告', value: 'general' },
-  { label: '系統維護', value: 'maintenance' },
-  { label: '功能更新', value: 'update' },
-  { label: '活動通知', value: 'event' },
+  { label: '系統', value: 'system' },
+  { label: '活動', value: 'activity' },
+  { label: '更新', value: 'update' },
+  { label: '其他', value: 'other' },
 ]
 
 // 表單選單（不含「全部」）
 const formStatuses = [
   { label: '草稿', value: 'draft' },
-  { label: '已發布', value: 'published' },
-  { label: '已下架', value: 'archived' },
+  { label: '已發布', value: 'public' },
+  { label: '隱藏', value: 'hidden' },
+  { label: '已刪除', value: 'deleted' },
 ]
 
-const formPriorities = [
-  { label: '一般', value: 'normal' },
-  { label: '重要', value: 'important' },
-  { label: '緊急', value: 'urgent' },
-]
-
-const formTypes = [
-  { label: '一般公告', value: 'general' },
-  { label: '系統維護', value: 'maintenance' },
-  { label: '功能更新', value: 'update' },
-  { label: '活動通知', value: 'event' },
+const formCategories = [
+  { label: '系統', value: 'system' },
+  { label: '活動', value: 'activity' },
+  { label: '更新', value: 'update' },
+  { label: '其他', value: 'other' },
 ]
 
 // 載入真實數據
@@ -87,37 +75,35 @@ const loadData = async () => {
     const params = {
       page: currentPage.value,
       limit: pageSize.value,
-      sort: 'createdAt',
-      order: 'desc',
     }
 
     // 添加篩選條件
     if (filters.value.status.value && filters.value.status.value !== '') {
       params.status = filters.value.status.value
+    } else {
+      // 如果沒有選擇狀態，不傳送 status 參數，讓後端返回所有狀態
     }
-    if (filters.value.priority.value && filters.value.priority.value !== '') {
-      params.priority = filters.value.priority.value
-    }
-    if (filters.value.type.value && filters.value.type.value !== '') {
-      params.type = filters.value.type.value
+    if (filters.value.category.value && filters.value.category.value !== '') {
+      params.category = filters.value.category.value
     }
     if (
       filters.value.global.value &&
       filters.value.global.value.trim() !== ''
     ) {
-      params.search = filters.value.global.value.trim()
+      params.q = filters.value.global.value.trim()
     }
 
     const response = await announcementService.getAll(params)
 
     // 處理後端API響應格式
-    if (response.data && response.data.announcements) {
-      announcements.value = response.data.announcements
-      totalRecords.value = response.data.pagination?.total || 0
-    } else if (Array.isArray(response.data)) {
-      // 如果直接返回陣列（向後相容）
-      announcements.value = response.data
-      totalRecords.value = response.data.length
+    if (
+      response.data &&
+      response.data.success &&
+      Array.isArray(response.data.data)
+    ) {
+      announcements.value = response.data.data
+      totalRecords.value =
+        response.data.pagination?.total || response.data.data.length
     } else {
       announcements.value = []
       totalRecords.value = 0
@@ -130,7 +116,7 @@ const loadData = async () => {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '載入公告數據失敗',
+      detail: error.response?.data?.error || '載入公告數據失敗',
       life: 3000,
     })
     // 載入假資料作為備用
@@ -148,56 +134,48 @@ const loadFallbackData = () => {
       id: 1,
       title: '系統維護通知',
       content: '系統將於今晚 2:00-4:00 進行維護，期間可能無法正常使用服務。',
-      type: 'maintenance',
-      priority: 'important',
-      status: 'published',
-      is_pinned: true,
-      author: 'admin',
-      created_at: '2024-01-15T10:30:00Z',
-      published_at: '2024-01-15T10:30:00Z',
-      view_count: 1234,
+      category: 'system',
+      status: 'public',
+      pinned: true,
+      author_id: 'admin',
+      createdAt: '2024-01-15T10:30:00Z',
+      updatedAt: '2024-01-15T10:30:00Z',
     },
     {
       _id: 2,
       id: 2,
       title: '新功能上線',
       content: '我們新增了標籤搜尋功能，讓您更容易找到喜歡的迷因！',
-      type: 'update',
-      priority: 'normal',
-      status: 'published',
-      is_pinned: false,
-      author: 'admin',
-      created_at: '2024-01-14T15:20:00Z',
-      published_at: '2024-01-14T16:00:00Z',
-      view_count: 890,
+      category: 'update',
+      status: 'public',
+      pinned: false,
+      author_id: 'admin',
+      createdAt: '2024-01-14T15:20:00Z',
+      updatedAt: '2024-01-14T16:00:00Z',
     },
     {
       _id: 3,
       id: 3,
       title: '春節活動',
       content: '春節期間將舉辦特別活動，敬請期待！',
-      type: 'event',
-      priority: 'urgent',
+      category: 'activity',
       status: 'draft',
-      is_pinned: false,
-      author: 'admin',
-      created_at: '2024-01-13T12:45:00Z',
-      published_at: null,
-      view_count: 0,
+      pinned: false,
+      author_id: 'admin',
+      createdAt: '2024-01-13T12:45:00Z',
+      updatedAt: '2024-01-13T12:45:00Z',
     },
     {
       _id: 4,
       id: 4,
       title: '使用條款更新',
       content: '我們更新了使用條款，請用戶詳閱。',
-      type: 'general',
-      priority: 'normal',
-      status: 'archived',
-      is_pinned: false,
-      author: 'admin',
-      created_at: '2024-01-10T09:15:00Z',
-      published_at: '2024-01-10T09:15:00Z',
-      view_count: 567,
+      category: 'other',
+      status: 'hidden',
+      pinned: false,
+      author_id: 'admin',
+      createdAt: '2024-01-10T09:15:00Z',
+      updatedAt: '2024-01-10T09:15:00Z',
     },
   ]
   totalRecords.value = announcements.value.length
@@ -211,9 +189,8 @@ onMounted(async () => {
 function openNew() {
   announcement.value = {
     status: 'draft',
-    priority: 'normal',
-    type: 'general',
-    is_pinned: false,
+    category: 'system',
+    pinned: false,
   }
   submitted.value = false
   announcementDialog.value = true
@@ -242,12 +219,7 @@ async function saveAnnouncement() {
       })
     } else {
       // 建立新公告
-      current.created_at = new Date().toISOString()
-      current.author = 'admin'
-      current.view_count = 0
-      if (current.status === 'published') {
-        current.published_at = new Date().toISOString()
-      }
+      // 後端會自動處理 author_id 和時間戳
       await announcementService.create(current)
       toast.add({
         severity: 'success',
@@ -265,7 +237,7 @@ async function saveAnnouncement() {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: error.response?.data?.message || '儲存公告失敗',
+      detail: error.response?.data?.error || '儲存公告失敗',
       life: 3000,
     })
   }
@@ -298,7 +270,7 @@ async function deleteAnnouncement() {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: error.response?.data?.message || '刪除公告失敗',
+      detail: error.response?.data?.error || '刪除公告失敗',
       life: 3000,
     })
   }
@@ -327,7 +299,7 @@ async function deleteSelectedAnnouncements() {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: error.response?.data?.message || '批量刪除失敗',
+      detail: error.response?.data?.error || '批量刪除失敗',
       life: 3000,
     })
   }
@@ -336,13 +308,11 @@ async function deleteSelectedAnnouncements() {
 async function publishAnnouncement(announcementId) {
   try {
     await announcementService.update(announcementId, {
-      status: 'published',
-      published_at: new Date().toISOString(),
+      status: 'public',
     })
     const idx = announcements.value.findIndex((a) => a._id === announcementId)
     if (idx !== -1) {
-      announcements.value[idx].status = 'published'
-      announcements.value[idx].published_at = new Date().toISOString()
+      announcements.value[idx].status = 'public'
     }
     toast.add({
       severity: 'success',
@@ -355,7 +325,7 @@ async function publishAnnouncement(announcementId) {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: error.response?.data?.message || '發布公告失敗',
+      detail: error.response?.data?.error || '發布公告失敗',
       life: 3000,
     })
   }
@@ -363,10 +333,10 @@ async function publishAnnouncement(announcementId) {
 
 async function unpublishAnnouncement(announcementId) {
   try {
-    await announcementService.update(announcementId, { status: 'archived' })
+    await announcementService.update(announcementId, { status: 'hidden' })
     const idx = announcements.value.findIndex((a) => a._id === announcementId)
     if (idx !== -1) {
-      announcements.value[idx].status = 'archived'
+      announcements.value[idx].status = 'hidden'
     }
     toast.add({
       severity: 'success',
@@ -379,7 +349,7 @@ async function unpublishAnnouncement(announcementId) {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: error.response?.data?.message || '下架公告失敗',
+      detail: error.response?.data?.error || '下架公告失敗',
       life: 3000,
     })
   }
@@ -390,11 +360,11 @@ async function togglePinAnnouncement(announcementId) {
     const idx = announcements.value.findIndex((a) => a._id === announcementId)
     if (idx === -1) return
 
-    const newPinnedState = !announcements.value[idx].is_pinned
+    const newPinnedState = !announcements.value[idx].pinned
     await announcementService.update(announcementId, {
-      is_pinned: newPinnedState,
+      pinned: newPinnedState,
     })
-    announcements.value[idx].is_pinned = newPinnedState
+    announcements.value[idx].pinned = newPinnedState
 
     const action = newPinnedState ? '置頂' : '取消置頂'
     toast.add({
@@ -408,14 +378,17 @@ async function togglePinAnnouncement(announcementId) {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: error.response?.data?.message || '切換置頂狀態失敗',
+      detail: error.response?.data?.error || '切換置頂狀態失敗',
       life: 3000,
     })
   }
 }
 
 async function batchPublish() {
-  if (!selectedAnnouncements.value || selectedAnnouncements.value.length === 0) {
+  if (
+    !selectedAnnouncements.value ||
+    selectedAnnouncements.value.length === 0
+  ) {
     toast.add({
       severity: 'warn',
       summary: '警告',
@@ -444,40 +417,7 @@ async function batchPublish() {
     toast.add({
       severity: 'error',
       summary: '錯誤',
-      detail: '批量發布失敗',
-      life: 3000,
-    })
-  }
-}
-
-async function exportCSV() {
-  try {
-    const response = await announcementService.exportAnnouncements({
-      page: currentPage.value,
-      limit: pageSize.value,
-    })
-
-    // 創建下載連結
-    const blob = new Blob([response.data], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `announcements-${new Date().toISOString().split('T')[0]}.csv`
-    link.click()
-    window.URL.revokeObjectURL(url)
-
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '數據已匯出',
-      life: 3000,
-    })
-  } catch (error) {
-    console.error('匯出失敗:', error)
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: '匯出失敗',
+      detail: error.response?.data?.error || '批量發布失敗',
       life: 3000,
     })
   }
@@ -486,39 +426,28 @@ async function exportCSV() {
 // 工具函數
 function getStatusLabel(status) {
   switch (status) {
-    case 'published':
+    case 'public':
       return 'success'
     case 'draft':
       return 'info'
-    case 'archived':
+    case 'hidden':
       return 'secondary'
-    default:
-      return null
-  }
-}
-
-function getPriorityLabel(priority) {
-  switch (priority) {
-    case 'urgent':
-      return 'primary'
-    case 'important':
-      return 'warn'
-    case 'normal':
-      return 'secondary'
-    default:
-      return null
-  }
-}
-
-function getTypeLabel(type) {
-  switch (type) {
-    case 'maintenance':
+    case 'deleted':
       return 'danger'
-    case 'update':
+    default:
+      return null
+  }
+}
+
+function getCategoryLabel(category) {
+  switch (category) {
+    case 'system':
+      return 'danger'
+    case 'activity':
       return 'warn'
-    case 'event':
+    case 'update':
       return 'info'
-    case 'general':
+    case 'other':
       return 'secondary'
     default:
       return null
@@ -569,13 +498,6 @@ function onFilterChange() {
         </template>
 
         <template #end>
-          <Button
-            label="匯出"
-            icon="pi pi-upload"
-            severity="secondary"
-            class="mr-2"
-            @click="exportCSV"
-          />
           <IconField>
             <InputIcon>
               <i class="pi pi-search" />
@@ -611,19 +533,11 @@ function onFilterChange() {
             <h4 class="m-0">公告管理</h4>
             <div class="flex gap-2">
               <Dropdown
-                v-model="filters.type.value"
-                :options="filterTypes"
+                v-model="filters.category.value"
+                :options="filterCategories"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="按類型篩選"
-                @change="onFilterChange"
-              />
-              <Dropdown
-                v-model="filters.priority.value"
-                :options="filterPriorities"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="按優先級篩選"
+                placeholder="按分類篩選"
                 @change="onFilterChange"
               />
               <Dropdown
@@ -648,44 +562,30 @@ function onFilterChange() {
             <div class="flex items-center gap-2">
               <span>{{ slotProps.data.title }}</span>
               <i
-                v-if="slotProps.data.is_pinned"
+                v-if="slotProps.data.pinned"
                 class="pi pi-thumbtack text-orange-500"
               ></i>
             </div>
           </template>
         </Column>
-        <Column field="type" header="類型" sortable style="min-width: 10rem">
-          <template #body="slotProps">
-            <Tag
-              :value="
-                slotProps.data.type === 'maintenance'
-                  ? '系統維護'
-                  : slotProps.data.type === 'update'
-                    ? '功能更新'
-                    : slotProps.data.type === 'event'
-                      ? '活動通知'
-                      : '一般公告'
-              "
-              :severity="getTypeLabel(slotProps.data.type)"
-            />
-          </template>
-        </Column>
         <Column
-          field="priority"
-          header="優先級"
+          field="category"
+          header="分類"
           sortable
           style="min-width: 10rem"
         >
           <template #body="slotProps">
             <Tag
               :value="
-                slotProps.data.priority === 'urgent'
-                  ? '緊急'
-                  : slotProps.data.priority === 'important'
-                    ? '重要'
-                    : '一般'
+                slotProps.data.category === 'system'
+                  ? '系統'
+                  : slotProps.data.category === 'activity'
+                    ? '活動'
+                    : slotProps.data.category === 'update'
+                      ? '更新'
+                      : '其他'
               "
-              :severity="getPriorityLabel(slotProps.data.priority)"
+              :severity="getCategoryLabel(slotProps.data.category)"
             />
           </template>
         </Column>
@@ -693,48 +593,37 @@ function onFilterChange() {
           <template #body="slotProps">
             <Tag
               :value="
-                slotProps.data.status === 'published'
+                slotProps.data.status === 'public'
                   ? '已發布'
                   : slotProps.data.status === 'draft'
                     ? '草稿'
-                    : '已下架'
+                    : slotProps.data.status === 'hidden'
+                      ? '隱藏'
+                      : '已刪除'
               "
               :severity="getStatusLabel(slotProps.data.status)"
             />
           </template>
         </Column>
+
         <Column
-          field="view_count"
-          header="瀏覽數"
-          sortable
-          style="min-width: 8rem"
-        ></Column>
-        <Column
-          field="created_at"
+          field="createdAt"
           header="建立時間"
           sortable
           style="min-width: 12rem"
         >
           <template #body="slotProps">
-            {{
-              new Date(slotProps.data.created_at).toLocaleDateString('zh-TW')
-            }}
+            {{ new Date(slotProps.data.createdAt).toLocaleDateString('zh-TW') }}
           </template>
         </Column>
         <Column
-          field="published_at"
-          header="發布時間"
+          field="updatedAt"
+          header="更新時間"
           sortable
           style="min-width: 12rem"
         >
           <template #body="slotProps">
-            {{
-              slotProps.data.published_at
-                ? new Date(slotProps.data.published_at).toLocaleDateString(
-                    'zh-TW',
-                  )
-                : '-'
-            }}
+            {{ new Date(slotProps.data.updatedAt).toLocaleDateString('zh-TW') }}
           </template>
         </Column>
         <Column :exportable="false" style="min-width: 16rem">
@@ -756,7 +645,7 @@ function onFilterChange() {
               @click="publishAnnouncement(slotProps.data._id)"
             />
             <Button
-              v-if="slotProps.data.status === 'published'"
+              v-if="slotProps.data.status === 'public'"
               icon="pi pi-times"
               outlined
               rounded
@@ -766,11 +655,11 @@ function onFilterChange() {
             />
             <Button
               :icon="
-                slotProps.data.is_pinned ? 'pi pi-thumbtack' : 'pi pi-thumbtack'
+                slotProps.data.pinned ? 'pi pi-thumbtack' : 'pi pi-thumbtack'
               "
               outlined
               rounded
-              :severity="slotProps.data.is_pinned ? 'warning' : 'secondary'"
+              :severity="slotProps.data.pinned ? 'warning' : 'secondary'"
               class="mr-2"
               @click="togglePinAnnouncement(slotProps.data._id)"
             />
@@ -822,28 +711,16 @@ function onFilterChange() {
             >內容為必填項目。</small
           >
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="type" class="block font-bold mb-3">類型</label>
+            <label for="category" class="block font-bold mb-3">分類</label>
             <Dropdown
-              id="type"
-              v-model="announcement.type"
-              :options="formTypes"
+              id="category"
+              v-model="announcement.category"
+              :options="formCategories"
               optionLabel="label"
               optionValue="value"
-              placeholder="選擇類型"
-              fluid
-            ></Dropdown>
-          </div>
-          <div>
-            <label for="priority" class="block font-bold mb-3">優先級</label>
-            <Dropdown
-              id="priority"
-              v-model="announcement.priority"
-              :options="formPriorities"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="選擇優先級"
+              placeholder="選擇分類"
               fluid
             ></Dropdown>
           </div>
@@ -861,7 +738,7 @@ function onFilterChange() {
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <InputSwitch v-model="announcement.is_pinned" />
+          <InputSwitch v-model="announcement.pinned" />
           <label class="text-sm">置頂公告</label>
         </div>
       </div>
