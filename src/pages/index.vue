@@ -53,6 +53,11 @@
       </div>
     </div>
 
+    <!-- 廣告 -->
+    <div v-if="!isVipUser" class="flex justify-center items-center my-8">
+      <AdInline />
+    </div>
+
     <!-- 公告欄 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
       <h2 class="text-center">公告欄</h2>
@@ -256,6 +261,11 @@
         </div>
       </div>
     </div>
+
+    <!-- 廣告 -->
+    <div v-if="!isVipUser" class="flex justify-center items-center my-8">
+      <AdInline />
+    </div>
   </div>
 </template>
 
@@ -281,12 +291,18 @@ import MemeCard from '@/components/MemeCard.vue'
 import memeService from '@/services/memeService'
 import VortexBackground from '@/components/VortexBackground.vue'
 import { useThemeStore } from '@/stores/themeStore'
+import AdInline from '@/components/AdInline.vue'
 
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
 const themeStore = useThemeStore()
+
+// VIP 用戶判定
+const isVipUser = computed(() => {
+  return userStore.role === 'vip'
+})
 
 // 計算 hero 區域的樣式
 const heroStyles = computed(() => ({

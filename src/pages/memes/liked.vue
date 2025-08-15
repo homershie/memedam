@@ -58,14 +58,16 @@
 
     <!-- 迷因列表 -->
     <div v-else-if="memes.length > 0" class="space-y-6 pb-10">
-      <MemeCard
-        v-for="meme in memes"
-        :key="meme.id"
-        :meme="meme"
-        @tag-click="onTagClick"
-        @show-comments="onShowComments"
-        @deleted="loadMemes"
-      />
+      <template v-for="(meme, index) in memes" :key="meme.id">
+        <MemeCard
+          :meme="meme"
+          @tag-click="onTagClick"
+          @show-comments="onShowComments"
+          @deleted="loadMemes"
+        />
+        <!-- 每8則迷因插入一個廣告 -->
+        <AdInline v-if="(index + 1) % 8 === 0 && !isVipUser" />
+      </template>
     </div>
 
     <!-- 空狀態 -->
@@ -123,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import MemeCard from '@/components/MemeCard.vue'
 import Button from 'primevue/button'
@@ -132,6 +134,7 @@ import Dialog from 'primevue/dialog'
 import userService from '@/services/userService'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 import CustomTag from '@/components/CustomTag.vue'
+import AdInline from '@/components/AdInline.vue'
 
 // 新增推薦服務和用戶存儲
 import recommendationService from '@/services/recommendationService'
@@ -139,6 +142,11 @@ import { useUserStore } from '@/stores/userStore'
 
 const toast = useToast()
 const userStore = useUserStore()
+
+// VIP 用戶判定
+const isVipUser = computed(() => {
+  return userStore.role === 'vip'
+})
 
 // 響應式數據
 const memes = ref([])

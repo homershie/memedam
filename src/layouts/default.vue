@@ -161,6 +161,28 @@
           <!-- 主題切換按鈕 -->
           <ThemeToggle mode="single" />
 
+          <!-- 個人頁面按鈕 -->
+          <div
+            v-if="user.isLoggedIn"
+            class="cursor-pointer rounded-full hidden lg:inline-flex w-10 h-10 overflow-hidden hover:brightness-90 dark:hover:brightness-110 transition-all duration-300"
+            @click="$router.push(`/users/${user.userId}`)"
+          >
+            <img
+              v-if="userProfile && userProfile.avatarUrl"
+              :src="userProfile.avatarUrl"
+              :alt="userProfile.display_name || userProfile.username"
+              class="w-full h-full object-cover rounded-full border-1 border-gray-200 dark:border-gray-800"
+              @error="handleImageError"
+            />
+            <div
+              v-else
+              class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full"
+            >
+              <i class="pi pi-user text-lg" />
+            </div>
+          </div>
+
+          <!-- 成為付費會員按鈕 -->
           <Button
             label="成為付費會員"
             class="text-white rounded-lg hidden lg:inline-flex"
@@ -177,7 +199,7 @@
         :class="[
           'bg-surface-0 dark:bg-surface-900 h-[calc(100vh-80px)] flex-col group transition-discrete duration-300 ease-in-out relative hidden lg:flex',
           sidebarVisible
-            ? 'w-1/6 opacity-100 min-w-60'
+            ? 'w-1/6 max-w-[280px] opacity-100 min-w-60'
             : 'w-0 opacity-0 overflow-hidden',
         ]"
         :style="{
@@ -225,25 +247,12 @@
               </template>
             </template>
             <template #end>
-              <!-- Google Adsense 佔位符 -->
-              <div class="flex justify-center items-center my-2">
-                <div
-                  style="
-                    width: 150px;
-                    height: 600px;
-                    background: #e5e7eb;
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #888;
-                    font-size: 14px;
-                    border: 1px dashed #bbb;
-                    margin: 10px;
-                  "
-                >
-                  150x600<br />Google Ad
-                </div>
+              <!-- Google Adsense 廣告 - VIP 用戶不顯示 -->
+              <div
+                v-if="!isVipUser"
+                class="flex justify-center items-center my-2"
+              >
+                <AdSidebar />
               </div>
               <Divider />
               <div class="text-s mb-10">
@@ -453,7 +462,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
@@ -467,12 +476,14 @@ import Divider from 'primevue/divider'
 import SearchBox from '@/components/SearchBox.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import NotificationButton from '@/components/NotificationButton.vue'
+import AdSidebar from '@/components/AdSidebar.vue'
 
 const user = useUserStore()
 const router = useRouter()
 const toast = useToast()
 const sidebarVisible = ref(true)
 const mobileSidebarVisible = ref(false)
+const userProfile = ref(null)
 
 // 響應式數據
 const isSearchMode = ref(false)
@@ -519,7 +530,7 @@ const exitSearchMode = () => {
 const menuList = [
   { label: '首頁', icon: 'pi pi-home', route: '/' },
   { label: '關於迷因典', icon: 'pi pi-info-circle', route: '/about' },
-  { label: '聯絡首席迷因長', icon: 'pi pi-envelope', route: '/contact' },
+  { label: '聯絡迷因長', icon: 'pi pi-envelope', route: '/contact' },
   { label: '贊助飲料', icon: 'pi pi-gift', route: '/donate' },
   { separator: true },
   { label: '探索' },
@@ -544,6 +555,11 @@ const menuList = [
   },
   { separator: true },
 ]
+
+// VIP 用戶判定
+const isVipUser = computed(() => {
+  return user.role === 'vip'
+})
 
 const filteredMenuList = computed(() => {
   const filtered = menuList.filter((item) => {
@@ -573,12 +589,52 @@ const logout = async () => {
     console.error(error)
   }
   user.logout()
+  userProfile.value = null
   toast.add({
     severity: 'success',
     summary: '登出成功！',
     life: 3000,
   })
   router.push('/')
+}
+
+// 獲取使用者資料
+const fetchUserProfile = async () => {
+  if (user.isLoggedIn) {
+    try {
+      const response = await userService.getMe()
+      userProfile.value = response.data.user
+      console.log('獲取到的使用者資料:', userProfile.value)
+    } catch (error) {
+      console.error('獲取使用者資料失敗:', error)
+    }
+  }
+}
+
+// 監聽登入狀態變化
+watch(
+  () => user.isLoggedIn,
+  (newValue) => {
+    if (newValue) {
+      fetchUserProfile()
+    } else {
+      userProfile.value = null
+    }
+  },
+)
+
+// 組件掛載時獲取使用者資料
+onMounted(() => {
+  if (user.isLoggedIn) {
+    fetchUserProfile()
+  }
+})
+
+// 處理圖片載入錯誤
+const handleImageError = (event) => {
+  console.error('頭像圖片載入失敗:', event.target.src)
+  // 可以設定一個預設圖片或隱藏圖片元素
+  event.target.style.display = 'none'
 }
 </script>
 
