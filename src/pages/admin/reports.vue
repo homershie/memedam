@@ -7,117 +7,191 @@ defineOptions({
 import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
-
-onMounted(() => {
-  loadReports()
-})
+import reportService from '@/services/reportService'
 
 const toast = useToast()
+
+// 表格與狀態
 const dt = ref()
+const loading = ref(false)
 const reports = ref([])
+const selectedReports = ref([])
+const totalRecords = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 對話框
 const reportDialog = ref(false)
 const deleteReportDialog = ref(false)
 const deleteReportsDialog = ref(false)
+
+// 表單資料
 const report = ref({})
-const selectedReports = ref()
+const submitted = ref(false)
+
+// 篩選器
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  status: { value: null, matchMode: FilterMatchMode.EQUALS },
-  type: { value: null, matchMode: FilterMatchMode.EQUALS },
+  status: { value: '', matchMode: FilterMatchMode.EQUALS },
+  type: { value: '', matchMode: FilterMatchMode.EQUALS },
 })
-const submitted = ref(false)
-const loading = ref(false)
 
-const statuses = ref([
+// 篩選選單（含「全部」）
+const filterStatuses = [
+  { label: '全部', value: '' },
   { label: '待處理', value: 'pending' },
   { label: '已處理', value: 'processed' },
   { label: '已駁回', value: 'rejected' },
-])
+]
 
-const types = ref([
+const filterTypes = [
+  { label: '全部', value: '' },
   { label: '迷因', value: 'meme' },
   { label: '評論', value: 'comment' },
   { label: '用戶', value: 'user' },
-])
+]
+
+// 表單選單（不含「全部」）
+const formStatuses = [
+  { label: '待處理', value: 'pending' },
+  { label: '已處理', value: 'processed' },
+  { label: '已駁回', value: 'rejected' },
+]
+
+const formTypes = [
+  { label: '迷因', value: 'meme' },
+  { label: '評論', value: 'comment' },
+  { label: '用戶', value: 'user' },
+]
 
 const reasons = ref(['不當內容', '仇恨言論', '垃圾訊息', '版權問題', '其他'])
 
-const loadReports = async () => {
+// 載入真實數據
+const loadData = async () => {
   loading.value = true
   try {
-    // TODO: 整合實際的檢舉服務
-    // const response = await reportService.getAll()
-    // reports.value = response.data.reports
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value,
+      sort: 'createdAt',
+      order: 'desc',
+    }
 
-    // 暫時模擬數據
-    reports.value = [
-      {
-        id: 1,
-        type: 'meme',
-        target_id: 123,
-        target_title: '有趣的迷因',
-        reason: '不當內容',
-        status: 'pending',
-        reporter: 'user1',
-        reporter_email: 'user1@example.com',
-        created_at: '2024-01-15T10:30:00Z',
-        processed_at: null,
-        admin_comment: null,
-      },
-      {
-        id: 2,
-        type: 'comment',
-        target_id: 456,
-        target_title: '這很有趣',
-        reason: '仇恨言論',
-        status: 'processed',
-        reporter: 'user2',
-        reporter_email: 'user2@example.com',
-        created_at: '2024-01-14T15:20:00Z',
-        processed_at: '2024-01-15T09:00:00Z',
-        admin_comment: '已處理，內容已移除',
-      },
-      {
-        id: 3,
-        type: 'meme',
-        target_id: 789,
-        target_title: '創意迷因',
-        reason: '垃圾訊息',
-        status: 'rejected',
-        reporter: 'user3',
-        reporter_email: 'user3@example.com',
-        created_at: '2024-01-13T12:45:00Z',
-        processed_at: '2024-01-14T14:30:00Z',
-        admin_comment: '檢舉理由不充分',
-      },
-      {
-        id: 4,
-        type: 'user',
-        target_id: 101,
-        target_title: 'spam_user',
-        reason: '垃圾訊息',
-        status: 'pending',
-        reporter: 'user4',
-        reporter_email: 'user4@example.com',
-        created_at: '2024-01-15T08:15:00Z',
-        processed_at: null,
-        admin_comment: null,
-      },
-    ]
-  } catch {
+    // 添加篩選條件
+    if (filters.value.status.value && filters.value.status.value !== '') {
+      params.status = filters.value.status.value
+    }
+    if (filters.value.type.value && filters.value.type.value !== '') {
+      params.type = filters.value.type.value
+    }
+    if (
+      filters.value.global.value &&
+      filters.value.global.value.trim() !== ''
+    ) {
+      params.search = filters.value.global.value.trim()
+    }
+
+    const response = await reportService.getAll(params)
+
+    // 處理後端API響應格式
+    if (response.data && response.data.reports) {
+      reports.value = response.data.reports
+      totalRecords.value = response.data.pagination?.total || 0
+    } else if (Array.isArray(response.data)) {
+      // 如果直接返回陣列（向後相容）
+      reports.value = response.data
+      totalRecords.value = response.data.length
+    } else {
+      reports.value = []
+      totalRecords.value = 0
+    }
+
+    // 清除選擇
+    selectedReports.value = []
+  } catch (error) {
+    console.error('載入檢舉數據失敗:', error)
     toast.add({
       severity: 'error',
       summary: '錯誤',
       detail: '載入檢舉數據失敗',
       life: 3000,
     })
+    // 載入假資料作為備用
+    loadFallbackData()
   } finally {
     loading.value = false
   }
 }
 
+// 備用假資料
+const loadFallbackData = () => {
+  reports.value = [
+    {
+      _id: 1,
+      id: 1,
+      type: 'meme',
+      target_id: 123,
+      target_title: '有趣的迷因',
+      reason: '不當內容',
+      status: 'pending',
+      reporter: { username: 'user1', email: 'user1@example.com' },
+      created_at: '2024-01-15T10:30:00Z',
+      processed_at: null,
+      admin_comment: null,
+    },
+    {
+      _id: 2,
+      id: 2,
+      type: 'comment',
+      target_id: 456,
+      target_title: '這很有趣',
+      reason: '仇恨言論',
+      status: 'processed',
+      reporter: { username: 'user2', email: 'user2@example.com' },
+      created_at: '2024-01-14T15:20:00Z',
+      processed_at: '2024-01-15T09:00:00Z',
+      admin_comment: '已處理，內容已移除',
+    },
+    {
+      _id: 3,
+      id: 3,
+      type: 'meme',
+      target_id: 789,
+      target_title: '創意迷因',
+      reason: '垃圾訊息',
+      status: 'rejected',
+      reporter: { username: 'user3', email: 'user3@example.com' },
+      created_at: '2024-01-13T12:45:00Z',
+      processed_at: '2024-01-14T14:30:00Z',
+      admin_comment: '檢舉理由不充分',
+    },
+    {
+      _id: 4,
+      id: 4,
+      type: 'user',
+      target_id: 101,
+      target_title: 'spam_user',
+      reason: '垃圾訊息',
+      status: 'pending',
+      reporter: { username: 'user4', email: 'user4@example.com' },
+      created_at: '2024-01-15T08:15:00Z',
+      processed_at: null,
+      admin_comment: null,
+    },
+  ]
+  totalRecords.value = reports.value.length
+  selectedReports.value = []
+}
+
+onMounted(async () => {
+  await loadData()
+})
+
 function openNew() {
-  report.value = {}
+  report.value = {
+    status: 'pending',
+    type: 'meme',
+  }
   submitted.value = false
   reportDialog.value = true
 }
@@ -127,12 +201,16 @@ function hideDialog() {
   submitted.value = false
 }
 
-function saveReport() {
+async function saveReport() {
   submitted.value = true
+  const current = report.value
 
-  if (report?.value.type && report?.value.reason?.trim()) {
-    if (report.value.id) {
-      reports.value[findIndexById(report.value.id)] = report.value
+  if (!current?.type || !current?.reason?.trim()) return
+
+  try {
+    if (current._id) {
+      // 更新現有檢舉
+      await reportService.update(current._id, current)
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -140,9 +218,9 @@ function saveReport() {
         life: 3000,
       })
     } else {
-      report.value.id = createId()
-      report.value.created_at = new Date().toISOString()
-      reports.value.push(report.value)
+      // 建立新檢舉
+      current.created_at = new Date().toISOString()
+      await reportService.create(current)
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -153,73 +231,188 @@ function saveReport() {
 
     reportDialog.value = false
     report.value = {}
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('儲存檢舉失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '儲存檢舉失敗',
+      life: 3000,
+    })
   }
 }
 
-function editReport(reportItem) {
-  report.value = { ...reportItem }
+function editReport(row) {
+  report.value = { ...row }
   reportDialog.value = true
 }
 
-function confirmDeleteReport(reportItem) {
-  report.value = reportItem
+function confirmDeleteReport(row) {
+  report.value = row
   deleteReportDialog.value = true
 }
 
-function deleteReport() {
-  reports.value = reports.value.filter((val) => val.id !== report.value.id)
-  deleteReportDialog.value = false
-  report.value = {}
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '檢舉已刪除',
-    life: 3000,
-  })
-}
-
-function findIndexById(id) {
-  let index = -1
-  for (let i = 0; i < reports.value.length; i++) {
-    if (reports.value[i].id === id) {
-      index = i
-      break
-    }
+async function deleteReport() {
+  try {
+    await reportService.remove(report.value._id)
+    deleteReportDialog.value = false
+    report.value = {}
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '檢舉已刪除',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('刪除檢舉失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '刪除檢舉失敗',
+      life: 3000,
+    })
   }
-  return index
-}
-
-function createId() {
-  let id = ''
-  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (var i = 0; i < 5; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return id
-}
-
-function exportCSV() {
-  dt.value.exportCSV()
 }
 
 function confirmDeleteSelected() {
   deleteReportsDialog.value = true
 }
 
-function deleteSelectedReports() {
-  reports.value = reports.value.filter(
-    (val) => !selectedReports.value.includes(val),
-  )
-  deleteReportsDialog.value = false
-  selectedReports.value = null
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '選取的檢舉已刪除',
-    life: 3000,
-  })
+async function deleteSelectedReports() {
+  try {
+    const ids = selectedReports.value.map((r) => r._id)
+    // 後端未提供批次刪除端點，逐一刪除
+    await Promise.all(ids.map((id) => reportService.remove(id)))
+    selectedReports.value = []
+    deleteReportsDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '已刪除選取檢舉',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('批量刪除失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '批量刪除失敗',
+      life: 3000,
+    })
+  }
 }
 
+async function processReport(reportId, action, comment) {
+  try {
+    await reportService.update(reportId, {
+      status: action,
+      admin_comment: comment,
+      processed_at: new Date().toISOString(),
+    })
+
+    const idx = reports.value.findIndex((r) => r._id === reportId)
+    if (idx !== -1) {
+      reports.value[idx].status = action
+      reports.value[idx].admin_comment = comment
+      reports.value[idx].processed_at = new Date().toISOString()
+    }
+
+    const actionText = action === 'processed' ? '處理' : '駁回'
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: `檢舉已${actionText}`,
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('處理檢舉失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '處理檢舉失敗',
+      life: 3000,
+    })
+  }
+}
+
+async function batchProcessReports(action) {
+  if (!selectedReports.value || selectedReports.value.length === 0) {
+    toast.add({
+      severity: 'warn',
+      summary: '警告',
+      detail: '請先選擇要處理的檢舉',
+      life: 3000,
+    })
+    return
+  }
+
+  try {
+    await Promise.all(
+      selectedReports.value.map((report) =>
+        processReport(
+          report._id,
+          action,
+          `批量${action === 'processed' ? '處理' : '駁回'}`,
+        ),
+      ),
+    )
+
+    selectedReports.value = []
+    const actionText = action === 'processed' ? '處理' : '駁回'
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: `已批量${actionText}檢舉`,
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('批量處理失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '批量處理失敗',
+      life: 3000,
+    })
+  }
+}
+
+async function exportCSV() {
+  try {
+    const response = await reportService.exportReports({
+      page: currentPage.value,
+      limit: pageSize.value,
+    })
+
+    // 創建下載連結
+    const blob = new Blob([response.data], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `reports-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '數據已匯出',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('匯出失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '匯出失敗',
+      life: 3000,
+    })
+  }
+}
+
+// 工具函數
 function getStatusLabel(status) {
   switch (status) {
     case 'pending':
@@ -246,50 +439,17 @@ function getTypeLabel(type) {
   }
 }
 
-function processReport(reportId, action, comment) {
-  const reportIndex = findIndexById(reportId)
-  if (reportIndex !== -1) {
-    reports.value[reportIndex].status = action
-    reports.value[reportIndex].processed_at = new Date().toISOString()
-    reports.value[reportIndex].admin_comment = comment
-
-    const actionText =
-      action === 'processed' ? '處理' : action === 'rejected' ? '駁回' : '處理'
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: `檢舉已${actionText}`,
-      life: 3000,
-    })
-  }
+// 分頁事件處理
+function onPageChange(event) {
+  pageSize.value = event.rows
+  currentPage.value = event.page + 1
+  loadData()
 }
 
-function batchProcessReports(action) {
-  if (!selectedReports.value || selectedReports.value.length === 0) {
-    toast.add({
-      severity: 'warn',
-      summary: '警告',
-      detail: '請先選擇要處理的檢舉',
-      life: 3000,
-    })
-    return
-  }
-
-  selectedReports.value.forEach((report) => {
-    processReport(
-      report.id,
-      action,
-      `批量${action === 'processed' ? '處理' : '駁回'}`,
-    )
-  })
-
-  selectedReports.value = null
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: `已批量${action === 'processed' ? '處理' : '駁回'} ${selectedReports.value.length} 個檢舉`,
-    life: 3000,
-  })
+// 篩選器變更處理
+function onFilterChange() {
+  currentPage.value = 1
+  loadData()
 }
 </script>
 
@@ -301,7 +461,7 @@ function batchProcessReports(action) {
           <Button
             label="新增檢舉"
             icon="pi pi-plus"
-            severity="secondary"
+            severity="primary"
             class="mr-2"
             @click="openNew"
           />
@@ -335,36 +495,60 @@ function batchProcessReports(action) {
             label="匯出"
             icon="pi pi-upload"
             severity="secondary"
-            @click="exportCSV($event)"
+            class="mr-2"
+            @click="exportCSV"
           />
+          <IconField>
+            <InputIcon>
+              <i class="pi pi-search" />
+            </InputIcon>
+            <InputText
+              v-model="filters['global'].value"
+              placeholder="搜尋檢舉..."
+              @input="onFilterChange"
+            />
+          </IconField>
         </template>
       </Toolbar>
 
       <DataTable
         ref="dt"
-        v-model:selection="selectedReports"
         :value="reports"
-        dataKey="id"
-        :paginator="true"
-        :rows="10"
-        :filters="filters"
+        v-model:selection="selectedReports"
+        dataKey="_id"
         :loading="loading"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        :rowsPerPageOptions="[5, 10, 25]"
+        lazy
+        paginator
+        :totalRecords="totalRecords"
+        :rows="pageSize"
+        :first="(currentPage - 1) * pageSize"
+        :filters="filters"
+        :rowsPerPageOptions="[5, 10, 25, 50]"
         currentPageReportTemplate="顯示第 {first} 到 {last} 項，共 {totalRecords} 個檢舉"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        @page="onPageChange"
       >
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
-            <h4 class="m-0">管理檢舉</h4>
-            <IconField>
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText
-                v-model="filters['global'].value"
-                placeholder="搜尋檢舉..."
+            <h4 class="m-0">檢舉管理</h4>
+            <div class="flex gap-2">
+              <Dropdown
+                v-model="filters.type.value"
+                :options="filterTypes"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="按類型篩選"
+                @change="onFilterChange"
               />
-            </IconField>
+              <Dropdown
+                v-model="filters.status.value"
+                :options="filterStatuses"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="按狀態篩選"
+                @change="onFilterChange"
+              />
+            </div>
           </div>
         </template>
 
@@ -372,12 +556,6 @@ function batchProcessReports(action) {
           selectionMode="multiple"
           style="width: 3rem"
           :exportable="false"
-        ></Column>
-        <Column
-          field="id"
-          header="ID"
-          sortable
-          style="min-width: 4rem"
         ></Column>
         <Column field="type" header="類型" sortable style="min-width: 8rem">
           <template #body="slotProps">
@@ -416,7 +594,11 @@ function batchProcessReports(action) {
           header="檢舉者"
           sortable
           style="min-width: 10rem"
-        ></Column>
+        >
+          <template #body="slotProps">
+            {{ slotProps.data.reporter?.username || '未知' }}
+          </template>
+        </Column>
         <Column field="status" header="狀態" sortable style="min-width: 10rem">
           <template #body="slotProps">
             <Tag
@@ -475,7 +657,7 @@ function batchProcessReports(action) {
               rounded
               severity="success"
               class="mr-2"
-              @click="processReport(slotProps.data.id, 'processed', '已處理')"
+              @click="processReport(slotProps.data._id, 'processed', '已處理')"
             />
             <Button
               v-if="slotProps.data.status === 'pending'"
@@ -484,7 +666,7 @@ function batchProcessReports(action) {
               rounded
               severity="warning"
               class="mr-2"
-              @click="processReport(slotProps.data.id, 'rejected', '已駁回')"
+              @click="processReport(slotProps.data._id, 'rejected', '已駁回')"
             />
             <Button
               icon="pi pi-trash"
@@ -498,6 +680,7 @@ function batchProcessReports(action) {
       </DataTable>
     </div>
 
+    <!-- 新增/編輯對話框 -->
     <Dialog
       v-model:visible="reportDialog"
       :style="{ width: '500px' }"
@@ -507,15 +690,15 @@ function batchProcessReports(action) {
       <div class="flex flex-col gap-6">
         <div>
           <label for="type" class="block font-bold mb-3">檢舉類型</label>
-          <Select
+          <Dropdown
             id="type"
             v-model="report.type"
-            :options="types"
+            :options="formTypes"
             optionLabel="label"
             optionValue="value"
             placeholder="選擇類型"
             fluid
-          ></Select>
+          ></Dropdown>
         </div>
         <div>
           <label for="target_id" class="block font-bold mb-3">目標ID</label>
@@ -551,15 +734,15 @@ function batchProcessReports(action) {
         </div>
         <div>
           <label for="status" class="block font-bold mb-3">狀態</label>
-          <Select
+          <Dropdown
             id="status"
             v-model="report.status"
-            :options="statuses"
+            :options="formStatuses"
             optionLabel="label"
             optionValue="value"
             placeholder="選擇狀態"
             fluid
-          ></Select>
+          ></Dropdown>
         </div>
         <div>
           <label for="admin_comment" class="block font-bold mb-3"
@@ -580,6 +763,7 @@ function batchProcessReports(action) {
       </template>
     </Dialog>
 
+    <!-- 單筆刪除確認 -->
     <Dialog
       v-model:visible="deleteReportDialog"
       :style="{ width: '450px' }"
@@ -603,6 +787,7 @@ function batchProcessReports(action) {
       </template>
     </Dialog>
 
+    <!-- 多筆刪除確認 -->
     <Dialog
       v-model:visible="deleteReportsDialog"
       :style="{ width: '450px' }"

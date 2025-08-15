@@ -7,119 +7,206 @@ defineOptions({
 import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
-
-onMounted(() => {
-  loadAnnouncements()
-})
+import announcementService from '@/services/announcementService'
 
 const toast = useToast()
+
+// 表格與狀態
 const dt = ref()
+const loading = ref(false)
 const announcements = ref([])
+const selectedAnnouncements = ref([])
+const totalRecords = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 對話框
 const announcementDialog = ref(false)
 const deleteAnnouncementDialog = ref(false)
 const deleteAnnouncementsDialog = ref(false)
+
+// 表單資料
 const announcement = ref({})
-const selectedAnnouncements = ref()
+const submitted = ref(false)
+
+// 篩選器
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  status: { value: null, matchMode: FilterMatchMode.EQUALS },
-  priority: { value: null, matchMode: FilterMatchMode.EQUALS },
+  status: { value: '', matchMode: FilterMatchMode.EQUALS },
+  priority: { value: '', matchMode: FilterMatchMode.EQUALS },
+  type: { value: '', matchMode: FilterMatchMode.EQUALS },
 })
-const submitted = ref(false)
-const loading = ref(false)
 
-const statuses = ref([
+// 篩選選單（含「全部」）
+const filterStatuses = [
+  { label: '全部', value: '' },
   { label: '草稿', value: 'draft' },
   { label: '已發布', value: 'published' },
   { label: '已下架', value: 'archived' },
-])
+]
 
-const priorities = ref([
+const filterPriorities = [
+  { label: '全部', value: '' },
   { label: '一般', value: 'normal' },
   { label: '重要', value: 'important' },
   { label: '緊急', value: 'urgent' },
-])
+]
 
-const types = ref([
+const filterTypes = [
+  { label: '全部', value: '' },
   { label: '一般公告', value: 'general' },
   { label: '系統維護', value: 'maintenance' },
   { label: '功能更新', value: 'update' },
   { label: '活動通知', value: 'event' },
-])
+]
 
-const loadAnnouncements = async () => {
+// 表單選單（不含「全部」）
+const formStatuses = [
+  { label: '草稿', value: 'draft' },
+  { label: '已發布', value: 'published' },
+  { label: '已下架', value: 'archived' },
+]
+
+const formPriorities = [
+  { label: '一般', value: 'normal' },
+  { label: '重要', value: 'important' },
+  { label: '緊急', value: 'urgent' },
+]
+
+const formTypes = [
+  { label: '一般公告', value: 'general' },
+  { label: '系統維護', value: 'maintenance' },
+  { label: '功能更新', value: 'update' },
+  { label: '活動通知', value: 'event' },
+]
+
+// 載入真實數據
+const loadData = async () => {
   loading.value = true
   try {
-    // TODO: 整合實際的公告服務
-    // const response = await announcementService.getAll()
-    // announcements.value = response.data.announcements
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value,
+      sort: 'createdAt',
+      order: 'desc',
+    }
 
-    // 暫時模擬數據
-    announcements.value = [
-      {
-        id: 1,
-        title: '系統維護通知',
-        content: '系統將於今晚 2:00-4:00 進行維護，期間可能無法正常使用服務。',
-        type: 'maintenance',
-        priority: 'important',
-        status: 'published',
-        is_pinned: true,
-        author: 'admin',
-        created_at: '2024-01-15T10:30:00Z',
-        published_at: '2024-01-15T10:30:00Z',
-        view_count: 1234,
-      },
-      {
-        id: 2,
-        title: '新功能上線',
-        content: '我們新增了標籤搜尋功能，讓您更容易找到喜歡的迷因！',
-        type: 'update',
-        priority: 'normal',
-        status: 'published',
-        is_pinned: false,
-        author: 'admin',
-        created_at: '2024-01-14T15:20:00Z',
-        published_at: '2024-01-14T16:00:00Z',
-        view_count: 890,
-      },
-      {
-        id: 3,
-        title: '春節活動',
-        content: '春節期間將舉辦特別活動，敬請期待！',
-        type: 'event',
-        priority: 'urgent',
-        status: 'draft',
-        is_pinned: false,
-        author: 'admin',
-        created_at: '2024-01-13T12:45:00Z',
-        published_at: null,
-        view_count: 0,
-      },
-      {
-        id: 4,
-        title: '使用條款更新',
-        content: '我們更新了使用條款，請用戶詳閱。',
-        type: 'general',
-        priority: 'normal',
-        status: 'archived',
-        is_pinned: false,
-        author: 'admin',
-        created_at: '2024-01-10T09:15:00Z',
-        published_at: '2024-01-10T09:15:00Z',
-        view_count: 567,
-      },
-    ]
+    // 添加篩選條件
+    if (filters.value.status.value && filters.value.status.value !== '') {
+      params.status = filters.value.status.value
+    }
+    if (filters.value.priority.value && filters.value.priority.value !== '') {
+      params.priority = filters.value.priority.value
+    }
+    if (filters.value.type.value && filters.value.type.value !== '') {
+      params.type = filters.value.type.value
+    }
+    if (
+      filters.value.global.value &&
+      filters.value.global.value.trim() !== ''
+    ) {
+      params.search = filters.value.global.value.trim()
+    }
+
+    const response = await announcementService.getAll(params)
+
+    // 處理後端API響應格式
+    if (response.data && response.data.announcements) {
+      announcements.value = response.data.announcements
+      totalRecords.value = response.data.pagination?.total || 0
+    } else if (Array.isArray(response.data)) {
+      // 如果直接返回陣列（向後相容）
+      announcements.value = response.data
+      totalRecords.value = response.data.length
+    } else {
+      announcements.value = []
+      totalRecords.value = 0
+    }
+
+    // 清除選擇
+    selectedAnnouncements.value = []
   } catch (error) {
+    console.error('載入公告數據失敗:', error)
     toast.add({
       severity: 'error',
       summary: '錯誤',
       detail: '載入公告數據失敗',
       life: 3000,
     })
+    // 載入假資料作為備用
+    loadFallbackData()
   } finally {
     loading.value = false
   }
 }
+
+// 備用假資料
+const loadFallbackData = () => {
+  announcements.value = [
+    {
+      _id: 1,
+      id: 1,
+      title: '系統維護通知',
+      content: '系統將於今晚 2:00-4:00 進行維護，期間可能無法正常使用服務。',
+      type: 'maintenance',
+      priority: 'important',
+      status: 'published',
+      is_pinned: true,
+      author: 'admin',
+      created_at: '2024-01-15T10:30:00Z',
+      published_at: '2024-01-15T10:30:00Z',
+      view_count: 1234,
+    },
+    {
+      _id: 2,
+      id: 2,
+      title: '新功能上線',
+      content: '我們新增了標籤搜尋功能，讓您更容易找到喜歡的迷因！',
+      type: 'update',
+      priority: 'normal',
+      status: 'published',
+      is_pinned: false,
+      author: 'admin',
+      created_at: '2024-01-14T15:20:00Z',
+      published_at: '2024-01-14T16:00:00Z',
+      view_count: 890,
+    },
+    {
+      _id: 3,
+      id: 3,
+      title: '春節活動',
+      content: '春節期間將舉辦特別活動，敬請期待！',
+      type: 'event',
+      priority: 'urgent',
+      status: 'draft',
+      is_pinned: false,
+      author: 'admin',
+      created_at: '2024-01-13T12:45:00Z',
+      published_at: null,
+      view_count: 0,
+    },
+    {
+      _id: 4,
+      id: 4,
+      title: '使用條款更新',
+      content: '我們更新了使用條款，請用戶詳閱。',
+      type: 'general',
+      priority: 'normal',
+      status: 'archived',
+      is_pinned: false,
+      author: 'admin',
+      created_at: '2024-01-10T09:15:00Z',
+      published_at: '2024-01-10T09:15:00Z',
+      view_count: 567,
+    },
+  ]
+  totalRecords.value = announcements.value.length
+  selectedAnnouncements.value = []
+}
+
+onMounted(async () => {
+  await loadData()
+})
 
 function openNew() {
   announcement.value = {
@@ -137,16 +224,16 @@ function hideDialog() {
   submitted.value = false
 }
 
-function saveAnnouncement() {
+async function saveAnnouncement() {
   submitted.value = true
+  const current = announcement.value
 
-  if (
-    announcement?.value.title?.trim() &&
-    announcement?.value.content?.trim()
-  ) {
-    if (announcement.value.id) {
-      announcements.value[findIndexById(announcement.value.id)] =
-        announcement.value
+  if (!current?.title?.trim() || !current?.content?.trim()) return
+
+  try {
+    if (current._id) {
+      // 更新現有公告
+      await announcementService.update(current._id, current)
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -154,14 +241,14 @@ function saveAnnouncement() {
         life: 3000,
       })
     } else {
-      announcement.value.id = createId()
-      announcement.value.created_at = new Date().toISOString()
-      announcement.value.author = 'admin'
-      announcement.value.view_count = 0
-      if (announcement.value.status === 'published') {
-        announcement.value.published_at = new Date().toISOString()
+      // 建立新公告
+      current.created_at = new Date().toISOString()
+      current.author = 'admin'
+      current.view_count = 0
+      if (current.status === 'published') {
+        current.published_at = new Date().toISOString()
       }
-      announcements.value.push(announcement.value)
+      await announcementService.create(current)
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -172,75 +259,231 @@ function saveAnnouncement() {
 
     announcementDialog.value = false
     announcement.value = {}
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('儲存公告失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '儲存公告失敗',
+      life: 3000,
+    })
   }
 }
 
-function editAnnouncement(announcementItem) {
-  announcement.value = { ...announcementItem }
+function editAnnouncement(row) {
+  announcement.value = { ...row }
   announcementDialog.value = true
 }
 
-function confirmDeleteAnnouncement(announcementItem) {
-  announcement.value = announcementItem
+function confirmDeleteAnnouncement(row) {
+  announcement.value = row
   deleteAnnouncementDialog.value = true
 }
 
-function deleteAnnouncement() {
-  announcements.value = announcements.value.filter(
-    (val) => val.id !== announcement.value.id,
-  )
-  deleteAnnouncementDialog.value = false
-  announcement.value = {}
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '公告已刪除',
-    life: 3000,
-  })
-}
-
-function findIndexById(id) {
-  let index = -1
-  for (let i = 0; i < announcements.value.length; i++) {
-    if (announcements.value[i].id === id) {
-      index = i
-      break
-    }
+async function deleteAnnouncement() {
+  try {
+    await announcementService.remove(announcement.value._id)
+    deleteAnnouncementDialog.value = false
+    announcement.value = {}
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '公告已刪除',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('刪除公告失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '刪除公告失敗',
+      life: 3000,
+    })
   }
-  return index
-}
-
-function createId() {
-  let id = ''
-  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (var i = 0; i < 5; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return id
-}
-
-function exportCSV() {
-  dt.value.exportCSV()
 }
 
 function confirmDeleteSelected() {
   deleteAnnouncementsDialog.value = true
 }
 
-function deleteSelectedAnnouncements() {
-  announcements.value = announcements.value.filter(
-    (val) => !selectedAnnouncements.value.includes(val),
-  )
-  deleteAnnouncementsDialog.value = false
-  selectedAnnouncements.value = null
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '選取的公告已刪除',
-    life: 3000,
-  })
+async function deleteSelectedAnnouncements() {
+  try {
+    const ids = selectedAnnouncements.value.map((a) => a._id)
+    // 後端未提供批次刪除端點，逐一刪除
+    await Promise.all(ids.map((id) => announcementService.remove(id)))
+    selectedAnnouncements.value = []
+    deleteAnnouncementsDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '已刪除選取公告',
+      life: 3000,
+    })
+    await loadData() // 重新載入數據
+  } catch (error) {
+    console.error('批量刪除失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '批量刪除失敗',
+      life: 3000,
+    })
+  }
 }
 
+async function publishAnnouncement(announcementId) {
+  try {
+    await announcementService.update(announcementId, {
+      status: 'published',
+      published_at: new Date().toISOString(),
+    })
+    const idx = announcements.value.findIndex((a) => a._id === announcementId)
+    if (idx !== -1) {
+      announcements.value[idx].status = 'published'
+      announcements.value[idx].published_at = new Date().toISOString()
+    }
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '公告已發布',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('發布公告失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '發布公告失敗',
+      life: 3000,
+    })
+  }
+}
+
+async function unpublishAnnouncement(announcementId) {
+  try {
+    await announcementService.update(announcementId, { status: 'archived' })
+    const idx = announcements.value.findIndex((a) => a._id === announcementId)
+    if (idx !== -1) {
+      announcements.value[idx].status = 'archived'
+    }
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '公告已下架',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('下架公告失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '下架公告失敗',
+      life: 3000,
+    })
+  }
+}
+
+async function togglePinAnnouncement(announcementId) {
+  try {
+    const idx = announcements.value.findIndex((a) => a._id === announcementId)
+    if (idx === -1) return
+
+    const newPinnedState = !announcements.value[idx].is_pinned
+    await announcementService.update(announcementId, {
+      is_pinned: newPinnedState,
+    })
+    announcements.value[idx].is_pinned = newPinnedState
+
+    const action = newPinnedState ? '置頂' : '取消置頂'
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: `公告已${action}`,
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('切換置頂狀態失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: error.response?.data?.message || '切換置頂狀態失敗',
+      life: 3000,
+    })
+  }
+}
+
+async function batchPublish() {
+  if (!selectedAnnouncements.value || selectedAnnouncements.value.length === 0) {
+    toast.add({
+      severity: 'warn',
+      summary: '警告',
+      detail: '請先選擇要發布的公告',
+      life: 3000,
+    })
+    return
+  }
+
+  try {
+    await Promise.all(
+      selectedAnnouncements.value.map((announcement) =>
+        publishAnnouncement(announcement._id),
+      ),
+    )
+
+    selectedAnnouncements.value = []
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '已批量發布公告',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('批量發布失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '批量發布失敗',
+      life: 3000,
+    })
+  }
+}
+
+async function exportCSV() {
+  try {
+    const response = await announcementService.exportAnnouncements({
+      page: currentPage.value,
+      limit: pageSize.value,
+    })
+
+    // 創建下載連結
+    const blob = new Blob([response.data], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `announcements-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '數據已匯出',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('匯出失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '匯出失敗',
+      life: 3000,
+    })
+  }
+}
+
+// 工具函數
 function getStatusLabel(status) {
   switch (status) {
     case 'published':
@@ -282,76 +525,17 @@ function getTypeLabel(type) {
   }
 }
 
-function publishAnnouncement(announcementId) {
-  const announcementIndex = findIndexById(announcementId)
-  if (announcementIndex !== -1) {
-    announcements.value[announcementIndex].status = 'published'
-    announcements.value[announcementIndex].published_at =
-      new Date().toISOString()
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '公告已發布',
-      life: 3000,
-    })
-  }
+// 分頁事件處理
+function onPageChange(event) {
+  pageSize.value = event.rows
+  currentPage.value = event.page + 1
+  loadData()
 }
 
-function unpublishAnnouncement(announcementId) {
-  const announcementIndex = findIndexById(announcementId)
-  if (announcementIndex !== -1) {
-    announcements.value[announcementIndex].status = 'archived'
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '公告已下架',
-      life: 3000,
-    })
-  }
-}
-
-function togglePinAnnouncement(announcementId) {
-  const announcementIndex = findIndexById(announcementId)
-  if (announcementIndex !== -1) {
-    announcements.value[announcementIndex].is_pinned =
-      !announcements.value[announcementIndex].is_pinned
-    const action = announcements.value[announcementIndex].is_pinned
-      ? '置頂'
-      : '取消置頂'
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: `公告已${action}`,
-      life: 3000,
-    })
-  }
-}
-
-function batchPublish() {
-  if (
-    !selectedAnnouncements.value ||
-    selectedAnnouncements.value.length === 0
-  ) {
-    toast.add({
-      severity: 'warn',
-      summary: '警告',
-      detail: '請先選擇要發布的公告',
-      life: 3000,
-    })
-    return
-  }
-
-  selectedAnnouncements.value.forEach((announcement) => {
-    publishAnnouncement(announcement.id)
-  })
-
-  selectedAnnouncements.value = null
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: `已批量發布 ${selectedAnnouncements.value.length} 個公告`,
-    life: 3000,
-  })
+// 篩選器變更處理
+function onFilterChange() {
+  currentPage.value = 1
+  loadData()
 }
 </script>
 
@@ -389,36 +573,68 @@ function batchPublish() {
             label="匯出"
             icon="pi pi-upload"
             severity="secondary"
-            @click="exportCSV($event)"
+            class="mr-2"
+            @click="exportCSV"
           />
+          <IconField>
+            <InputIcon>
+              <i class="pi pi-search" />
+            </InputIcon>
+            <InputText
+              v-model="filters['global'].value"
+              placeholder="搜尋公告..."
+              @input="onFilterChange"
+            />
+          </IconField>
         </template>
       </Toolbar>
 
       <DataTable
         ref="dt"
-        v-model:selection="selectedAnnouncements"
         :value="announcements"
-        dataKey="id"
-        :paginator="true"
-        :rows="10"
-        :filters="filters"
+        v-model:selection="selectedAnnouncements"
+        dataKey="_id"
         :loading="loading"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        :rowsPerPageOptions="[5, 10, 25]"
+        lazy
+        paginator
+        :totalRecords="totalRecords"
+        :rows="pageSize"
+        :first="(currentPage - 1) * pageSize"
+        :filters="filters"
+        :rowsPerPageOptions="[5, 10, 25, 50]"
         currentPageReportTemplate="顯示第 {first} 到 {last} 項，共 {totalRecords} 個公告"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        @page="onPageChange"
       >
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
-            <h4 class="m-0">管理公告</h4>
-            <IconField>
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText
-                v-model="filters['global'].value"
-                placeholder="搜尋公告..."
+            <h4 class="m-0">公告管理</h4>
+            <div class="flex gap-2">
+              <Dropdown
+                v-model="filters.type.value"
+                :options="filterTypes"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="按類型篩選"
+                @change="onFilterChange"
               />
-            </IconField>
+              <Dropdown
+                v-model="filters.priority.value"
+                :options="filterPriorities"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="按優先級篩選"
+                @change="onFilterChange"
+              />
+              <Dropdown
+                v-model="filters.status.value"
+                :options="filterStatuses"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="按狀態篩選"
+                @change="onFilterChange"
+              />
+            </div>
           </div>
         </template>
 
@@ -426,12 +642,6 @@ function batchPublish() {
           selectionMode="multiple"
           style="width: 3rem"
           :exportable="false"
-        ></Column>
-        <Column
-          field="id"
-          header="ID"
-          sortable
-          style="min-width: 4rem"
         ></Column>
         <Column field="title" header="標題" sortable style="min-width: 16rem">
           <template #body="slotProps">
@@ -543,7 +753,7 @@ function batchPublish() {
               rounded
               severity="success"
               class="mr-2"
-              @click="publishAnnouncement(slotProps.data.id)"
+              @click="publishAnnouncement(slotProps.data._id)"
             />
             <Button
               v-if="slotProps.data.status === 'published'"
@@ -552,7 +762,7 @@ function batchPublish() {
               rounded
               severity="warning"
               class="mr-2"
-              @click="unpublishAnnouncement(slotProps.data.id)"
+              @click="unpublishAnnouncement(slotProps.data._id)"
             />
             <Button
               :icon="
@@ -562,7 +772,7 @@ function batchPublish() {
               rounded
               :severity="slotProps.data.is_pinned ? 'warning' : 'secondary'"
               class="mr-2"
-              @click="togglePinAnnouncement(slotProps.data.id)"
+              @click="togglePinAnnouncement(slotProps.data._id)"
             />
             <Button
               icon="pi pi-trash"
@@ -576,6 +786,7 @@ function batchPublish() {
       </DataTable>
     </div>
 
+    <!-- 新增/編輯對話框 -->
     <Dialog
       v-model:visible="announcementDialog"
       :style="{ width: '600px' }"
@@ -614,39 +825,39 @@ function batchPublish() {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label for="type" class="block font-bold mb-3">類型</label>
-            <Select
+            <Dropdown
               id="type"
               v-model="announcement.type"
-              :options="types"
+              :options="formTypes"
               optionLabel="label"
               optionValue="value"
               placeholder="選擇類型"
               fluid
-            ></Select>
+            ></Dropdown>
           </div>
           <div>
             <label for="priority" class="block font-bold mb-3">優先級</label>
-            <Select
+            <Dropdown
               id="priority"
               v-model="announcement.priority"
-              :options="priorities"
+              :options="formPriorities"
               optionLabel="label"
               optionValue="value"
               placeholder="選擇優先級"
               fluid
-            ></Select>
+            ></Dropdown>
           </div>
           <div>
             <label for="status" class="block font-bold mb-3">狀態</label>
-            <Select
+            <Dropdown
               id="status"
               v-model="announcement.status"
-              :options="statuses"
+              :options="formStatuses"
               optionLabel="label"
               optionValue="value"
               placeholder="選擇狀態"
               fluid
-            ></Select>
+            ></Dropdown>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -661,6 +872,7 @@ function batchPublish() {
       </template>
     </Dialog>
 
+    <!-- 單筆刪除確認 -->
     <Dialog
       v-model:visible="deleteAnnouncementDialog"
       :style="{ width: '450px' }"
@@ -684,6 +896,7 @@ function batchPublish() {
       </template>
     </Dialog>
 
+    <!-- 多筆刪除確認 -->
     <Dialog
       v-model:visible="deleteAnnouncementsDialog"
       :style="{ width: '450px' }"
