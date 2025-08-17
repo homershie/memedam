@@ -47,6 +47,7 @@
               text
               severity="contrast"
               class="justify-start w-full"
+              @click="showReportDialog"
             />
             <Button
               v-if="canDelete"
@@ -253,6 +254,19 @@
       </div>
     </template>
   </Card>
+
+  <!-- 檢舉對話框 -->
+  <ReportDialog
+    v-model:visible="reportDialogVisible"
+    target-type="meme"
+    :target-id="memeId"
+    :target-info="{
+      type: 'meme',
+      title: meme.title,
+      author: meme.author?.display_name || meme.author?.username
+    }"
+    @submitted="handleReportSubmitted"
+  />
 </template>
 
 <script setup>
@@ -270,6 +284,7 @@ import OverlayPanel from 'primevue/overlaypanel'
 import ConfirmPopup from 'primevue/confirmpopup'
 import TextMemeCard from './TextMemeCard.vue'
 import CommentsDialog from './CommentsDialog.vue'
+import ReportDialog from './ReportDialog.vue'
 import { useUserStore } from '@/stores/userStore'
 import likeService from '@/services/likeService'
 import dislikeService from '@/services/dislikeService'
@@ -277,6 +292,7 @@ import collectionService from '@/services/collectionService'
 import shareService from '@/services/shareService'
 import memeTagService from '@/services/memeTagService'
 import memeService from '@/services/memeService'
+import reportService from '@/services/reportService'
 
 // 工具函數
 import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
@@ -297,6 +313,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['tag-click', 'show-comments', 'deleted'])
+
+// 檢舉相關
+const reportDialogVisible = ref(false)
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -751,6 +770,20 @@ const showDeleteConfirm = (event) => {
       }
     },
   })
+}
+
+// 顯示檢舉對話框
+const showReportDialog = () => {
+  if (!requireLogin(userStore, toast)) {
+    return
+  }
+  reportDialogVisible.value = true
+}
+
+// 處理檢舉提交
+const handleReportSubmitted = (reportData) => {
+  console.log('檢舉已提交:', reportData)
+  // 可以在這裡添加額外的處理邏輯
 }
 </script>
 

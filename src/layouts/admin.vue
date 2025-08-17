@@ -136,7 +136,6 @@ function isOutsideClicked(event) {
       </div>
     </div>
   </div>
-  <Toast />
 </template>
 
 <style lang="scss" scoped>

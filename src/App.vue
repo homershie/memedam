@@ -1,5 +1,6 @@
 <template>
   <RouterView />
+  <ConfirmDialog />
 </template>
 
 <script setup>

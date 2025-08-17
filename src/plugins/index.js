@@ -24,6 +24,22 @@ import Column from 'primevue/column'
 import InputNumber from 'primevue/inputnumber'
 import Chart from 'primevue/chart'
 import Menu from 'primevue/menu'
+import Toolbar from 'primevue/toolbar'
+import { useConfirm } from 'primevue/useconfirm'
+import { useDialog } from 'primevue/usedialog'
+import { useToast } from 'primevue/usetoast'
+import { FilterMatchMode } from '@primevue/core/api'
+import Tooltip from 'primevue/tooltip'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import ProgressSpinner from 'primevue/progressspinner'
+import Paginator from 'primevue/paginator'
+import ConfirmPopup from 'primevue/confirmpopup'
+import OverlayPanel from 'primevue/overlaypanel'
+import Divider from 'primevue/divider'
+import Avatar from 'primevue/avatar'
+import Image from 'primevue/image'
+import ConfirmDialog from 'primevue/confirmdialog'
 
 export function registerPlugins(app) {
   app
@@ -45,4 +61,24 @@ export function registerPlugins(app) {
     .component('InputNumber', InputNumber)
     .component('Chart', Chart)
     .component('Menu', Menu)
+    .component('Toolbar', Toolbar)
+    .component('IconField', IconField)
+    .component('InputIcon', InputIcon)
+    .component('ProgressSpinner', ProgressSpinner)
+    .component('Paginator', Paginator)
+    .component('ConfirmPopup', ConfirmPopup)
+    .component('OverlayPanel', OverlayPanel)
+    .component('Divider', Divider)
+    .component('Avatar', Avatar)
+    .component('Image', Image)
+    .component('ConfirmDialog', ConfirmDialog)
+
+  // 全域提供 composables
+  app.provide('useConfirm', useConfirm)
+  app.provide('useDialog', useDialog)
+  app.provide('useToast', useToast)
+  app.provide('FilterMatchMode', FilterMatchMode)
+
+  // 註冊全域指令
+  app.directive('tooltip', Tooltip)
 }

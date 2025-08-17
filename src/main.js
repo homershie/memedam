@@ -38,7 +38,9 @@ const app = createApp(App)
 
 app.use(pinia)
 app.use(router)
-app.use(ToastService)
+app.use(ToastService, {
+  position: 'bottom-right',
+})
 app.use(DialogService)
 app.use(ConfirmationService)
 app.use(PrimeVue, {

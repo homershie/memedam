@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col w-full relative">
-    <Toast position="bottom-right" />
     <DynamicDialog />
 
     <!-- 搜尋模式下的自定義佈局 -->

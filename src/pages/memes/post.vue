@@ -352,7 +352,6 @@
       </div>
     </div>
   </div>
-  <Toast />
 </template>
 
 <script setup>

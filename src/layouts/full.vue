@@ -74,7 +74,6 @@
     </div>
     <!-- slot for page content -->
     <router-view />
-    <Toast position="bottom-right" />
   </div>
 </template>
 
@@ -92,10 +91,6 @@ import Toast from 'primevue/toast'
   justify-content: start;
   position: relative;
   padding-top: 60px;
-}
-
-:deep(.p-toast) {
-  z-index: 1000;
 }
 
 /* Logo 在深色模式下的顏色轉換 */
