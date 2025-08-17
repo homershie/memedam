@@ -41,6 +41,11 @@ export default {
     return apiService.httpAuth.get('/api/reports/stats', { params })
   },
 
+  // 取得詳細檢舉統計（管理員統計頁面）
+  getDetailedStats(params = {}) {
+    return apiService.httpAuth.get('/api/reports/stats/detailed', { params })
+  },
+
   // 取得用戶自己的檢舉統計
   getUserStats() {
     return apiService.httpAuth.get('/api/reports/my/stats')

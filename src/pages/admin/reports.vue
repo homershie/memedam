@@ -608,7 +608,7 @@ async function exportCSV() {
 function getStatusLabel(status) {
   switch (status) {
     case 'pending':
-      return 'warning'
+      return 'warn'
     case 'processed':
       return 'success'
     case 'rejected':

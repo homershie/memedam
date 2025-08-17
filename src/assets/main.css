@@ -27,6 +27,28 @@
   --color-secondary-800: #4b2194;
   --color-secondary-900: #311270;
   --color-secondary-950: #1a0747;
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-success-950: #0d3624;
+  --color-warn-50: #fffbeb;
+  --color-warn-100: #fef3c7;
+  --color-warn-200: #fde68a;
+  --color-warn-300: #fcd34d;
+  --color-warn-400: #fbbf24;
+  --color-warn-500: #f59e0b;
+  --color-warn-600: #d97706;
+  --color-warn-700: #b45309;
+  --color-warn-800: #92400e;
+  --color-warn-900: #78350f;
+  --color-warn-950: #451a03;
   --color-white: #ffffff;
   --color-black: #000000;
   --color-gray-50: #f9fafb;
@@ -40,6 +62,17 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
   --color-gray-950: #030712;
+  --color-purple-50: #fdf7ff;
+  --color-purple-100: #faf0ff;
+  --color-purple-200: #efd4fc;
+  --color-purple-300: #e4bbfc;
+  --color-purple-400: #c789fa;
+  --color-purple-500: #a259f7;
+  --color-purple-600: #8b47de;
+  --color-purple-700: #6b32ba;
+  --color-purple-800: #4b2194;
+  --color-purple-900: #311270;
+  --color-purple-950: #1a0747;
 }
 
 /* PrimeVue 自訂變數 */
