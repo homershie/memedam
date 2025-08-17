@@ -7,6 +7,7 @@ defineOptions({
 import { ref, reactive } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
 import adminService from '@/services/adminService'
 import { useToast } from 'primevue/usetoast'
 
@@ -29,10 +30,43 @@ const loading = reactive({
   getCountStatistics: false,
   getHotScoreStatistics: false,
   getRecommendationSystemStatus: false,
+  getMaintenanceStatus: false,
+  createTestReports: false,
+  getContentBasedStatistics: false,
+  getCollaborativeFilteringStatistics: false,
+  updateRecommendationConfig: false,
+  updateContentBasedConfig: false,
+  updateCollaborativeFilteringConfig: false,
+  getSystemPerformanceStats: false,
+  getDatabaseStats: false,
+  cleanupExpiredCache: false,
+  rebuildIndexes: false,
 })
 
 // 結果記錄
 const results = ref([])
+
+// 配置數據
+const configData = reactive({
+  recommendation: {
+    contentBasedWeight: 0.6,
+    collaborativeWeight: 0.4,
+    updateInterval: 24,
+  },
+  contentBased: {
+    similarityThreshold: 0.3,
+    maxRecommendations: 10,
+    updateInterval: 12,
+  },
+  collaborativeFiltering: {
+    minCommonItems: 3,
+    maxNeighbors: 20,
+    updateInterval: 6,
+  },
+})
+
+// 清理天數
+const cleanupDays = ref(30)
 
 // 添加結果
 const addResult = (action, success, message, data = null) => {
@@ -359,7 +393,9 @@ const sendWeeklySummaryNotifications = async () => {
 const cleanupOldNotifications = async () => {
   loading.cleanupOldNotifications = true
   try {
-    const response = await adminService.cleanupOldNotifications()
+    const response = await adminService.cleanupOldNotifications(
+      cleanupDays.value,
+    )
     addResult('清理舊通知', true, '操作完成', response.data)
     toast.add({
       severity: 'success',
@@ -462,6 +498,322 @@ const getRecommendationSystemStatus = async () => {
     })
   } finally {
     loading.getRecommendationSystemStatus = false
+  }
+}
+
+// 新增功能
+const getMaintenanceStatus = async () => {
+  loading.getMaintenanceStatus = true
+  try {
+    const response = await adminService.getMaintenanceStatus()
+    addResult('獲取維護狀態', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '維護狀態已獲取',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '獲取維護狀態',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.getMaintenanceStatus = false
+  }
+}
+
+const createTestReports = async () => {
+  loading.createTestReports = true
+  try {
+    const response = await adminService.createTestReports()
+    addResult('創建測試報告', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '測試報告已創建',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '創建測試報告',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.createTestReports = false
+  }
+}
+
+const getContentBasedStatistics = async () => {
+  loading.getContentBasedStatistics = true
+  try {
+    const response = await adminService.getContentBasedStatistics()
+    addResult('獲取內容基礎統計', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '內容基礎統計已獲取',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '獲取內容基礎統計',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.getContentBasedStatistics = false
+  }
+}
+
+const getCollaborativeFilteringStatistics = async () => {
+  loading.getCollaborativeFilteringStatistics = true
+  try {
+    const response = await adminService.getCollaborativeFilteringStatistics()
+    addResult('獲取協同過濾統計', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '協同過濾統計已獲取',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '獲取協同過濾統計',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.getCollaborativeFilteringStatistics = false
+  }
+}
+
+const updateRecommendationConfig = async () => {
+  loading.updateRecommendationConfig = true
+  try {
+    const response = await adminService.updateRecommendationSystemConfig(
+      configData.recommendation,
+    )
+    addResult('更新推薦系統配置', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '推薦系統配置已更新',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '更新推薦系統配置',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.updateRecommendationConfig = false
+  }
+}
+
+const updateContentBasedConfig = async () => {
+  loading.updateContentBasedConfig = true
+  try {
+    const response = await adminService.updateContentBasedConfig(
+      configData.contentBased,
+    )
+    addResult('更新內容基礎配置', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '內容基礎配置已更新',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '更新內容基礎配置',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.updateContentBasedConfig = false
+  }
+}
+
+const updateCollaborativeFilteringConfig = async () => {
+  loading.updateCollaborativeFilteringConfig = true
+  try {
+    const response = await adminService.updateCollaborativeFilteringConfig(
+      configData.collaborativeFiltering,
+    )
+    addResult('更新協同過濾配置', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '協同過濾配置已更新',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '更新協同過濾配置',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.updateCollaborativeFilteringConfig = false
+  }
+}
+
+// 系統監控功能
+const getSystemPerformanceStats = async () => {
+  loading.getSystemPerformanceStats = true
+  try {
+    const response = await adminService.getSystemPerformanceStats()
+    addResult('獲取系統性能統計', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '系統性能統計已獲取',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '獲取系統性能統計',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.getSystemPerformanceStats = false
+  }
+}
+
+const getDatabaseStats = async () => {
+  loading.getDatabaseStats = true
+  try {
+    const response = await adminService.getDatabaseStats()
+    addResult('獲取資料庫統計', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '資料庫統計已獲取',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '獲取資料庫統計',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.getDatabaseStats = false
+  }
+}
+
+const cleanupExpiredCache = async () => {
+  loading.cleanupExpiredCache = true
+  try {
+    const response = await adminService.cleanupExpiredCache()
+    addResult('清理過期快取', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '過期快取已清理',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '清理過期快取',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.cleanupExpiredCache = false
+  }
+}
+
+const rebuildIndexes = async () => {
+  loading.rebuildIndexes = true
+  try {
+    const response = await adminService.rebuildIndexes()
+    addResult('重建資料庫索引', true, '操作完成', response.data)
+    toast.add({
+      severity: 'success',
+      summary: '操作成功',
+      detail: '資料庫索引已重建',
+      life: 3000,
+    })
+  } catch (error) {
+    addResult(
+      '重建資料庫索引',
+      false,
+      error?.response?.data?.message || '操作失敗',
+    )
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: error?.response?.data?.message || '請稍後再試',
+      life: 3000,
+    })
+  } finally {
+    loading.rebuildIndexes = false
   }
 }
 </script>
@@ -595,14 +947,165 @@ const getRecommendationSystemStatus = async () => {
           >
             發送週報摘要通知
           </Button>
-          <Button
-            @click="cleanupOldNotifications"
-            :loading="loading.cleanupOldNotifications"
-            severity="warning"
-            class="w-full"
-          >
-            清理舊通知
-          </Button>
+          <div class="flex gap-2">
+            <InputText
+              v-model="cleanupDays"
+              type="number"
+              placeholder="天數"
+              class="flex-1"
+            />
+            <Button
+              @click="cleanupOldNotifications"
+              :loading="loading.cleanupOldNotifications"
+              severity="warning"
+            >
+              清理舊通知
+            </Button>
+          </div>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 系統配置工具 -->
+    <Card class="mb-6">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          系統配置工具
+        </h3>
+      </template>
+      <template #content>
+        <div class="space-y-6">
+          <!-- 推薦系統配置 -->
+          <div class="border rounded-lg p-4">
+            <h4 class="font-medium mb-3">推薦系統配置</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >內容基礎權重</label
+                >
+                <InputText
+                  v-model="configData.recommendation.contentBasedWeight"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >協同過濾權重</label
+                >
+                <InputText
+                  v-model="configData.recommendation.collaborativeWeight"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >更新間隔(小時)</label
+                >
+                <InputText
+                  v-model="configData.recommendation.updateInterval"
+                  type="number"
+                  min="1"
+                />
+              </div>
+            </div>
+            <Button
+              @click="updateRecommendationConfig"
+              :loading="loading.updateRecommendationConfig"
+              severity="primary"
+            >
+              更新推薦系統配置
+            </Button>
+          </div>
+
+          <!-- 內容基礎配置 -->
+          <div class="border rounded-lg p-4">
+            <h4 class="font-medium mb-3">內容基礎推薦配置</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">相似度閾值</label>
+                <InputText
+                  v-model="configData.contentBased.similarityThreshold"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">最大推薦數</label>
+                <InputText
+                  v-model="configData.contentBased.maxRecommendations"
+                  type="number"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >更新間隔(小時)</label
+                >
+                <InputText
+                  v-model="configData.contentBased.updateInterval"
+                  type="number"
+                  min="1"
+                />
+              </div>
+            </div>
+            <Button
+              @click="updateContentBasedConfig"
+              :loading="loading.updateContentBasedConfig"
+              severity="primary"
+            >
+              更新內容基礎配置
+            </Button>
+          </div>
+
+          <!-- 協同過濾配置 -->
+          <div class="border rounded-lg p-4">
+            <h4 class="font-medium mb-3">協同過濾配置</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >最小共同項目</label
+                >
+                <InputText
+                  v-model="configData.collaborativeFiltering.minCommonItems"
+                  type="number"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">最大鄰居數</label>
+                <InputText
+                  v-model="configData.collaborativeFiltering.maxNeighbors"
+                  type="number"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >更新間隔(小時)</label
+                >
+                <InputText
+                  v-model="configData.collaborativeFiltering.updateInterval"
+                  type="number"
+                  min="1"
+                />
+              </div>
+            </div>
+            <Button
+              @click="updateCollaborativeFilteringConfig"
+              :loading="loading.updateCollaborativeFilteringConfig"
+              severity="primary"
+            >
+              更新協同過濾配置
+            </Button>
+          </div>
         </div>
       </template>
     </Card>
@@ -639,6 +1142,96 @@ const getRecommendationSystemStatus = async () => {
             class="w-full"
           >
             獲取推薦系統狀態
+          </Button>
+          <Button
+            @click="getMaintenanceStatus"
+            :loading="loading.getMaintenanceStatus"
+            severity="info"
+            class="w-full"
+          >
+            獲取維護狀態
+          </Button>
+          <Button
+            @click="getContentBasedStatistics"
+            :loading="loading.getContentBasedStatistics"
+            severity="info"
+            class="w-full"
+          >
+            獲取內容基礎統計
+          </Button>
+          <Button
+            @click="getCollaborativeFilteringStatistics"
+            :loading="loading.getCollaborativeFilteringStatistics"
+            severity="info"
+            class="w-full"
+          >
+            獲取協同過濾統計
+          </Button>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 系統監控 -->
+    <Card class="mb-6">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          系統監控
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            @click="getSystemPerformanceStats"
+            :loading="loading.getSystemPerformanceStats"
+            severity="info"
+            class="w-full"
+          >
+            獲取系統性能統計
+          </Button>
+          <Button
+            @click="getDatabaseStats"
+            :loading="loading.getDatabaseStats"
+            severity="info"
+            class="w-full"
+          >
+            獲取資料庫統計
+          </Button>
+          <Button
+            @click="cleanupExpiredCache"
+            :loading="loading.cleanupExpiredCache"
+            severity="warning"
+            class="w-full"
+          >
+            清理過期快取
+          </Button>
+          <Button
+            @click="rebuildIndexes"
+            :loading="loading.rebuildIndexes"
+            severity="danger"
+            class="w-full"
+          >
+            重建資料庫索引
+          </Button>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 測試工具 -->
+    <Card class="mb-6">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          測試工具
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            @click="createTestReports"
+            :loading="loading.createTestReports"
+            severity="help"
+            class="w-full"
+          >
+            創建測試報告
           </Button>
         </div>
       </template>

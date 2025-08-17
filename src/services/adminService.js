@@ -168,4 +168,92 @@ export default {
       `/api/admin/notifications/cleanup?days=${days}`,
     )
   },
+
+  // 測試工具
+  // 創建測試報告
+  createTestReports() {
+    return apiService.httpAuth.post('/api/admin/create-test-reports')
+  },
+
+  // 系統監控
+  // 獲取系統性能統計
+  getSystemPerformanceStats() {
+    return apiService.httpAuth.get('/api/admin/system-performance-stats')
+  },
+
+  // 獲取資料庫統計
+  getDatabaseStats() {
+    return apiService.httpAuth.get('/api/admin/database-stats')
+  },
+
+  // 獲取快取統計
+  getCacheStats() {
+    return apiService.httpAuth.get('/api/admin/cache-stats')
+  },
+
+  // 系統維護
+  // 清理過期快取
+  cleanupExpiredCache() {
+    return apiService.httpAuth.post('/api/admin/cleanup-expired-cache')
+  },
+
+  // 重建索引
+  rebuildIndexes() {
+    return apiService.httpAuth.post('/api/admin/rebuild-indexes')
+  },
+
+  // 備份資料庫
+  backupDatabase() {
+    return apiService.httpAuth.post('/api/admin/backup-database')
+  },
+
+  // 恢復資料庫
+  restoreDatabase(backupId) {
+    return apiService.httpAuth.post(`/api/admin/restore-database/${backupId}`)
+  },
+
+  // 獲取備份列表
+  getBackupList() {
+    return apiService.httpAuth.get('/api/admin/backup-list')
+  },
+
+  // 安全工具
+  // 掃描安全漏洞
+  scanSecurityVulnerabilities() {
+    return apiService.httpAuth.post('/api/admin/scan-security-vulnerabilities')
+  },
+
+  // 更新安全設定
+  updateSecuritySettings(settings) {
+    return apiService.httpAuth.put('/api/admin/security-settings', settings)
+  },
+
+  // 獲取安全日誌
+  getSecurityLogs(limit = 100) {
+    return apiService.httpAuth.get(`/api/admin/security-logs?limit=${limit}`)
+  },
+
+  // 內容管理
+  // 批量審核內容
+  batchModerateContent(contentIds, action) {
+    return apiService.httpAuth.post('/api/admin/batch-moderate-content', {
+      contentIds,
+      action,
+    })
+  },
+
+  // 獲取待審核內容統計
+  getPendingModerationStats() {
+    return apiService.httpAuth.get('/api/admin/pending-moderation-stats')
+  },
+
+  // 設置自動審核規則
+  setAutoModerationRules(rules) {
+    return apiService.httpAuth.put('/api/admin/auto-moderation-rules', rules)
+  },
+
+  // 獲取自動審核規則
+  getAutoModerationRules() {
+    return apiService.httpAuth.get('/api/admin/auto-moderation-rules')
+  },
 }
