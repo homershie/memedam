@@ -1,146 +1,265 @@
 <template>
-  <div class="admin-tools grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <!-- 數據維護工具 -->
-    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          數據維護工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="checkAllCounts"
-            :loading="loading.checkAllCounts"
-            severity="secondary"
-            class="w-full"
-          >
-            檢查並修正所有計數
-          </Button>
-          <Button
-            @click="checkAllUserCounts"
-            :loading="loading.checkAllUserCounts"
-            severity="secondary"
-            class="w-full"
-          >
-            檢查並修正用戶計數
-          </Button>
-          <Button
-            @click="runFullCheck"
-            :loading="loading.runFullCheck"
-            severity="secondary"
-            class="w-full"
-          >
-            執行完整數據檢查
-          </Button>
-          <Button
-            @click="batchUpdateHotScores"
-            :loading="loading.batchUpdateHotScores"
-            severity="secondary"
-            class="w-full"
-          >
-            批次更新熱門分數
-          </Button>
-          <Button
-            @click="updateAllRecommendationSystems"
-            :loading="loading.updateAllRecommendationSystems"
-            severity="secondary"
-            class="w-full"
-          >
-            更新所有推薦系統
-          </Button>
-          <Button
-            @click="batchUpdateUserPreferences"
-            :loading="loading.batchUpdateUserPreferences"
-            severity="secondary"
-            class="w-full"
-          >
-            批次更新用戶偏好
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 用戶管理工具 -->
-    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          用戶管理工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="sendDeletionReminders"
-            :loading="loading.sendDeletionReminders"
-            severity="warning"
-            class="w-full"
-          >
-            發送刪除提醒
-          </Button>
-          <Button
-            @click="deleteUnverifiedUsers"
-            :loading="loading.deleteUnverifiedUsers"
-            severity="danger"
-            class="w-full"
-          >
-            刪除未驗證用戶
-          </Button>
-          <Button
-            @click="getUnverifiedUsersStats"
-            :loading="loading.getUnverifiedUsersStats"
-            severity="info"
-            class="w-full"
-          >
-            獲取未驗證用戶統計
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 通知管理工具 -->
-    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          通知管理工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 gap-4">
-          <Button
-            @click="sendHotContentNotifications"
-            :loading="loading.sendHotContentNotifications"
-            severity="secondary"
-            class="w-full"
-          >
-            發送熱門內容通知
-          </Button>
-          <Button
-            @click="sendWeeklySummaryNotifications"
-            :loading="loading.sendWeeklySummaryNotifications"
-            severity="secondary"
-            class="w-full"
-          >
-            發送週報摘要通知
-          </Button>
-          <div class="flex gap-2">
-            <InputText
-              v-model="cleanupDays"
-              type="number"
-              placeholder="天數"
-              class="flex-1"
-            />
+  <div class="admin-tools">
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4"
+    >
+      <!-- 數據維護工具 -->
+      <Card
+        class="mb-6 border border-gray-200 shadow-none dark:border-gray-700"
+      >
+        <template #title>
+          <h3 class="text-center mb-4">數據維護工具</h3>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <Button
+              @click="checkAllCounts"
+              :loading="loading.checkAllCounts"
+              severity="secondary"
+              class="w-full"
+            >
+              檢查並修正所有計數
+            </Button>
+            <Button
+              @click="checkAllUserCounts"
+              :loading="loading.checkAllUserCounts"
+              severity="secondary"
+              class="w-full"
+            >
+              檢查並修正用戶計數
+            </Button>
+            <Button
+              @click="runFullCheck"
+              :loading="loading.runFullCheck"
+              severity="secondary"
+              class="w-full"
+            >
+              執行完整數據檢查
+            </Button>
+            <Button
+              @click="batchUpdateHotScores"
+              :loading="loading.batchUpdateHotScores"
+              severity="secondary"
+              class="w-full"
+            >
+              批次更新熱門分數
+            </Button>
+            <Button
+              @click="updateAllRecommendationSystems"
+              :loading="loading.updateAllRecommendationSystems"
+              severity="secondary"
+              class="w-full"
+            >
+              更新所有推薦系統
+            </Button>
+            <Button
+              @click="batchUpdateUserPreferences"
+              :loading="loading.batchUpdateUserPreferences"
+              severity="secondary"
+              class="w-full"
+            >
+              批次更新用戶偏好
+            </Button>
+          </div>
+        </template>
+      </Card>
+      <!-- 用戶管理工具 -->
+      <Card
+        class="mb-6 border border-gray-200 shadow-none dark:border-gray-700"
+      >
+        <template #title>
+          <h3 class="text-center mb-4">用戶管理工具</h3>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <Button
+              @click="sendDeletionReminders"
+              :loading="loading.sendDeletionReminders"
+              severity="secondary"
+              class="w-full"
+            >
+              發送刪除提醒
+            </Button>
+            <Button
+              @click="getUnverifiedUsersStats"
+              :loading="loading.getUnverifiedUsersStats"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取未驗證用戶統計
+            </Button>
+            <Button
+              @click="deleteUnverifiedUsers"
+              :loading="loading.deleteUnverifiedUsers"
+              severity="primary"
+              class="w-full"
+            >
+              刪除未驗證用戶
+            </Button>
+          </div>
+        </template>
+      </Card>
+      <!-- 通知管理工具 -->
+      <Card
+        class="mb-6 border border-gray-200 shadow-none dark:border-gray-700"
+      >
+        <template #title>
+          <h3 class="text-center mb-4">通知管理工具</h3>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <Button
+              @click="sendHotContentNotifications"
+              :loading="loading.sendHotContentNotifications"
+              severity="secondary"
+              class="w-full"
+            >
+              發送熱門內容通知
+            </Button>
+            <Button
+              @click="sendWeeklySummaryNotifications"
+              :loading="loading.sendWeeklySummaryNotifications"
+              severity="secondary"
+              class="w-full"
+            >
+              發送週報摘要通知
+            </Button>
+            <InputText v-model="cleanupDays" type="number" placeholder="天數" />
             <Button
               @click="cleanupOldNotifications"
               :loading="loading.cleanupOldNotifications"
-              severity="warning"
+              severity="primary"
             >
               清理舊通知
             </Button>
           </div>
-        </div>
-      </template>
-    </Card>
+        </template>
+      </Card>
+      <!-- 統計資訊 -->
+      <Card
+        class="mb-6 border border-gray-200 shadow-none dark:border-gray-700"
+      >
+        <template #title>
+          <h3 class="text-center mb-4">系統統計</h3>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <Button
+              @click="getCountStatistics"
+              :loading="loading.getCountStatistics"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取計數統計
+            </Button>
+            <Button
+              @click="getHotScoreStatistics"
+              :loading="loading.getHotScoreStatistics"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取熱門分數統計
+            </Button>
+            <Button
+              @click="getRecommendationSystemStatus"
+              :loading="loading.getRecommendationSystemStatus"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取推薦系統狀態
+            </Button>
+            <Button
+              @click="getMaintenanceStatus"
+              :loading="loading.getMaintenanceStatus"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取維護狀態
+            </Button>
+            <Button
+              @click="getContentBasedStatistics"
+              :loading="loading.getContentBasedStatistics"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取內容基礎統計
+            </Button>
+            <Button
+              @click="getCollaborativeFilteringStatistics"
+              :loading="loading.getCollaborativeFilteringStatistics"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取協同過濾統計
+            </Button>
+          </div>
+        </template>
+      </Card>
+      <!-- 系統監控 -->
+      <Card
+        class="mb-6 border border-gray-200 shadow-none dark:border-gray-700"
+      >
+        <template #title>
+          <h3 class="text-center mb-4">系統監控</h3>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <Button
+              @click="getSystemPerformanceStats"
+              :loading="loading.getSystemPerformanceStats"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取系統性能統計
+            </Button>
+            <Button
+              @click="getDatabaseStats"
+              :loading="loading.getDatabaseStats"
+              severity="secondary"
+              class="w-full"
+            >
+              獲取資料庫統計
+            </Button>
+            <Button
+              @click="cleanupExpiredCache"
+              :loading="loading.cleanupExpiredCache"
+              severity="warn"
+              class="w-full"
+            >
+              清理過期快取
+            </Button>
+            <Button
+              @click="rebuildIndexes"
+              :loading="loading.rebuildIndexes"
+              severity="primary"
+              class="w-full"
+            >
+              重建資料庫索引
+            </Button>
+          </div>
+        </template>
+      </Card>
+      <!-- 測試工具 -->
+      <Card
+        class="mb-6 border border-gray-200 shadow-none dark:border-gray-700"
+      >
+        <template #title>
+          <h3 class="text-center mb-4">測試工具</h3>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-4">
+            <Button
+              @click="createTestReports"
+              :loading="loading.createTestReports"
+              severity="primary"
+              class="w-full"
+            >
+              創建測試報告
+            </Button>
+          </div>
+        </template>
+      </Card>
+    </div>
 
     <!-- 系統配置工具 -->
     <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
@@ -152,7 +271,9 @@
       <template #content>
         <div class="space-y-6">
           <!-- 推薦系統配置 -->
-          <div class="border rounded-lg p-4">
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+          >
             <h4 class="font-medium mb-3">推薦系統配置</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
@@ -200,7 +321,9 @@
           </div>
 
           <!-- 內容基礎配置 -->
-          <div class="border rounded-lg p-4">
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+          >
             <h4 class="font-medium mb-3">內容基礎推薦配置</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
@@ -242,7 +365,9 @@
           </div>
 
           <!-- 協同過濾配置 -->
-          <div class="border rounded-lg p-4">
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+          >
             <h4 class="font-medium mb-3">協同過濾配置</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
@@ -282,133 +407,6 @@
               更新協同過濾配置
             </Button>
           </div>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 統計資訊 -->
-    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          系統統計
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="getCountStatistics"
-            :loading="loading.getCountStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取計數統計
-          </Button>
-          <Button
-            @click="getHotScoreStatistics"
-            :loading="loading.getHotScoreStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取熱門分數統計
-          </Button>
-          <Button
-            @click="getRecommendationSystemStatus"
-            :loading="loading.getRecommendationSystemStatus"
-            severity="info"
-            class="w-full"
-          >
-            獲取推薦系統狀態
-          </Button>
-          <Button
-            @click="getMaintenanceStatus"
-            :loading="loading.getMaintenanceStatus"
-            severity="info"
-            class="w-full"
-          >
-            獲取維護狀態
-          </Button>
-          <Button
-            @click="getContentBasedStatistics"
-            :loading="loading.getContentBasedStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取內容基礎統計
-          </Button>
-          <Button
-            @click="getCollaborativeFilteringStatistics"
-            :loading="loading.getCollaborativeFilteringStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取協同過濾統計
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 系統監控 -->
-    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          系統監控
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="getSystemPerformanceStats"
-            :loading="loading.getSystemPerformanceStats"
-            severity="info"
-            class="w-full"
-          >
-            獲取系統性能統計
-          </Button>
-          <Button
-            @click="getDatabaseStats"
-            :loading="loading.getDatabaseStats"
-            severity="info"
-            class="w-full"
-          >
-            獲取資料庫統計
-          </Button>
-          <Button
-            @click="cleanupExpiredCache"
-            :loading="loading.cleanupExpiredCache"
-            severity="warning"
-            class="w-full"
-          >
-            清理過期快取
-          </Button>
-          <Button
-            @click="rebuildIndexes"
-            :loading="loading.rebuildIndexes"
-            severity="danger"
-            class="w-full"
-          >
-            重建資料庫索引
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 測試工具 -->
-    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          測試工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="createTestReports"
-            :loading="loading.createTestReports"
-            severity="help"
-            class="w-full"
-          >
-            創建測試報告
-          </Button>
         </div>
       </template>
     </Card>

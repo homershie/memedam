@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useAdminStore } from '@/stores/adminStore'
 
 import AppMenuItem from './AppMenuItem.vue'
@@ -19,12 +19,6 @@ import {
 // 使用 admin store
 const adminStore = useAdminStore()
 let refreshInterval = null
-
-// 計算待處理檢舉的 badge
-const reportsBadge = computed(() => {
-  const count = adminStore.pendingReportsCount
-  return count > 0 ? { value: count, severity: 'danger' } : null
-})
 
 // 載入待處理檢舉數量
 const loadPendingCounts = async () => {
@@ -51,126 +45,130 @@ onUnmounted(() => {
   }
 })
 
-const model = ref([
-  {
-    label: '儀表板',
-    items: [
-      {
-        label: '總覽',
-        icon: 'pi pi-fw pi-home',
-        to: '/admin',
-        badge: null,
-      },
-    ],
-  },
-  {
-    label: '內容管理',
-    items: [
-      {
-        label: '迷因管理',
-        icon: 'pi pi-fw pi-image',
-        to: '/admin/memes',
-        badge: null,
-      },
-      {
-        label: '標籤管理',
-        icon: 'pi pi-fw pi-tags',
-        to: '/admin/tags',
-        badge: null,
-        customIcon: IconTags,
-      },
-      {
-        label: '評論管理',
-        icon: 'pi pi-fw pi-comments',
-        to: '/admin/comments',
-        badge: null,
-        customIcon: IconComments,
-      },
-      {
-        label: '公告管理',
-        icon: 'pi pi-fw pi-bullhorn',
-        to: '/admin/announcements',
-        badge: null,
-        customIcon: IconBullhorn,
-      },
-    ],
-  },
-  {
-    label: '用戶管理',
-    items: [
-      {
-        label: '用戶列表',
-        icon: 'pi pi-fw pi-users',
-        to: '/admin/users',
-        badge: null,
-      },
-    ],
-  },
-  {
-    label: '檢舉管理',
-    items: [
-      {
-        label: '檢舉處理',
-        icon: 'pi pi-fw pi-flag',
-        to: '/admin/reports',
-        badge: reportsBadge,
-        customIcon: IconFlag,
-      },
-      {
-        label: '檢舉統計',
-        icon: 'pi pi-fw pi-chart-bar',
-        to: '/admin/report-stats',
-        badge: null,
-        customIcon: IconChartBar,
-      },
-    ],
-  },
-  {
-    label: '數據分析',
-    items: [
-      {
-        label: '推薦分析',
-        icon: 'pi pi-fw pi-chart-line',
-        to: '/admin/analytics',
-        badge: null,
-        customIcon: IconChartLine,
-      },
-      {
-        label: 'A/B 測試',
-        icon: 'pi pi-fw pi-flask',
-        to: '/admin/ab-tests',
-        badge: null,
-        customIcon: IconFlask,
-      },
-      {
-        label: '用戶行為',
-        icon: 'pi pi-fw pi-user-edit',
-        to: '/admin/user-behavior',
-        badge: null,
-        customIcon: IconUserEdit,
-      },
-    ],
-  },
-  {
-    label: '系統管理',
-    items: [
-      {
-        label: '維護工具',
-        icon: 'pi pi-fw pi-wrench',
-        to: '/admin/tools',
-        badge: null,
-        customIcon: IconWrench,
-      },
-      {
-        label: '日誌查看',
-        icon: 'pi pi-fw pi-file-text',
-        to: '/admin/logs',
-        badge: null,
-        customIcon: IconFileText,
-      },
-    ],
-  },
-])
+// 響應式的 menu model
+const model = computed(() => {
+  const count = adminStore.pendingReportsCount
+  return [
+    {
+      label: '儀表板',
+      items: [
+        {
+          label: '總覽',
+          icon: 'pi pi-fw pi-home',
+          to: '/admin',
+          badge: null,
+        },
+      ],
+    },
+    {
+      label: '內容管理',
+      items: [
+        {
+          label: '迷因管理',
+          icon: 'pi pi-fw pi-image',
+          to: '/admin/memes',
+          badge: null,
+        },
+        {
+          label: '標籤管理',
+          icon: 'pi pi-fw pi-tags',
+          to: '/admin/tags',
+          badge: null,
+          customIcon: IconTags,
+        },
+        {
+          label: '評論管理',
+          icon: 'pi pi-fw pi-comments',
+          to: '/admin/comments',
+          badge: null,
+          customIcon: IconComments,
+        },
+        {
+          label: '公告管理',
+          icon: 'pi pi-fw pi-bullhorn',
+          to: '/admin/announcements',
+          badge: null,
+          customIcon: IconBullhorn,
+        },
+      ],
+    },
+    {
+      label: '用戶管理',
+      items: [
+        {
+          label: '用戶列表',
+          icon: 'pi pi-fw pi-users',
+          to: '/admin/users',
+          badge: null,
+        },
+      ],
+    },
+    {
+      label: '檢舉管理',
+      items: [
+        {
+          label: '檢舉處理',
+          icon: 'pi pi-fw pi-flag',
+          to: '/admin/reports',
+          badge: count > 0 ? { value: count, severity: 'danger' } : null,
+          customIcon: IconFlag,
+        },
+        {
+          label: '檢舉統計',
+          icon: 'pi pi-fw pi-chart-bar',
+          to: '/admin/report-stats',
+          badge: null,
+          customIcon: IconChartBar,
+        },
+      ],
+    },
+    {
+      label: '數據分析',
+      items: [
+        {
+          label: '推薦分析',
+          icon: 'pi pi-fw pi-chart-line',
+          to: '/admin/analytics',
+          badge: null,
+          customIcon: IconChartLine,
+        },
+        {
+          label: 'A/B 測試',
+          icon: 'pi pi-fw pi-flask',
+          to: '/admin/ab-tests',
+          badge: null,
+          customIcon: IconFlask,
+        },
+        {
+          label: '用戶行為',
+          icon: 'pi pi-fw pi-user-edit',
+          to: '/admin/user-behavior',
+          badge: null,
+          customIcon: IconUserEdit,
+        },
+      ],
+    },
+    {
+      label: '系統管理',
+      items: [
+        {
+          label: '維護工具',
+          icon: 'pi pi-fw pi-wrench',
+          to: '/admin/tools',
+          badge: null,
+          customIcon: IconWrench,
+        },
+        {
+          label: '日誌查看',
+          icon: 'pi pi-fw pi-file-text',
+          to: '/admin/logs',
+          badge: null,
+          customIcon: IconFileText,
+        },
+      ],
+    },
+  ]
+})
 </script>
 
 <template>

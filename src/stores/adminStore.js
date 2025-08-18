@@ -235,7 +235,10 @@ export const useAdminStore = defineStore('admin', () => {
     pendingReportsLoading.value = true
     try {
       const response = await reportService.getPendingCount()
-      const count = response.data?.count ?? response.data ?? 0
+
+      // 正確提取 count 值：response.data.data.count
+      const count = response.data?.data?.count ?? 0
+
       pendingReportsCount.value = count
       pendingReportsLastUpdated.value = Date.now()
       return count

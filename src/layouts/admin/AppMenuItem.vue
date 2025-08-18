@@ -1,6 +1,6 @@
 <script setup>
 import { useLayout } from '@/layouts/composables/layout'
-import { onBeforeMount, ref, watch } from 'vue'
+import { onBeforeMount, ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Badge from 'primevue/badge'
 
@@ -98,6 +98,23 @@ function getBadgeProps(badge) {
 
   return null
 }
+
+// 計算 badge 是否應該顯示
+const shouldShowBadge = computed(() => {
+  const badge = props.item.badge
+
+  if (!badge) return false
+
+  if (typeof badge === 'string') {
+    return badge.length > 0
+  }
+
+  if (typeof badge === 'object') {
+    return badge.value && badge.value > 0
+  }
+
+  return false
+})
 </script>
 
 <template>
@@ -127,7 +144,7 @@ function getBadgeProps(badge) {
       ></i>
       <span class="menu-text flex-1 text-base">{{ item.label }}</span>
       <Badge
-        v-if="item.badge"
+        v-if="shouldShowBadge"
         v-bind="getBadgeProps(item.badge)"
         class="menu-badge shrink-0"
       />

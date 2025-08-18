@@ -14,9 +14,9 @@ const loading = ref(false)
 const selectedLogs = ref([])
 
 const levels = [
-  { label: 'Info', value: 'info' },
-  { label: 'Warn', value: 'warn' },
-  { label: 'Error', value: 'error' },
+  { label: '資訊', value: 'info' },
+  { label: '警告', value: 'warn' },
+  { label: '錯誤', value: 'error' },
 ]
 
 const filters = ref({

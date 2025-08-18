@@ -84,6 +84,17 @@
   --p-button-primary-color: var(--p-surface-0);
   --p-button-text-secondary-color: var(--p-surface-800);
   --p-button-text-info-color: var(--p-secondary-600);
+  --p-button-warn-background: var(--p-warn-500);
+  --p-button-warn-hover-background: var(--p-warn-600);
+  --p-button-warn-active-background: var(--p-warn-700);
+  --p-button-warn-border-color: var(--p-warn-500);
+  --p-button-warn-hover-border-color: var(--p-warn-600);
+  --p-button-warn-active-border-color: var(--p-warn-700);
+  --p-button-warn-color: #000000;
+  --p-button-warn-hover-color: #000000;
+  --p-button-warn-active-color: #000000;
+  --p-button-warn-focus-ring-color: var(--p-warn-500);
+  --p-button-warn-focus-ring-shadow: none;
   --p-tag-primary-color: var(--p-primary-500);
   --p-tag-primary-background: var(--p-primary-100);
   --p-tag-info-color: var(--p-info-500);
