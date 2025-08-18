@@ -1,0 +1,33 @@
+User-agent: *
+Allow: /
+
+# 允許搜尋引擎抓取主要內容
+Allow: /memes/
+Allow: /users/
+Allow: /about
+Allow: /contact
+Allow: /donate
+Allow: /premium
+
+# 禁止搜尋引擎抓取私人和管理頁面
+Disallow: /admin/
+Disallow: /settings
+Disallow: /login
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /oauth-callback
+Disallow: /verify
+
+# 禁止抓取 API 端點
+Disallow: /api/
+
+# 禁止抓取重複的查詢參數頁面
+Disallow: /*?page=1$
+Disallow: /*?search=$
+Disallow: /*?tags=$
+
+# 站點地圖位置
+Sitemap: https://memedam.netlify.app/sitemap.xml
+
+# 抓取延遲（毫秒）
+Crawl-delay: 1

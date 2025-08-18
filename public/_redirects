@@ -1,1 +1,53 @@
+# 重新導向設定
+# 這個文件用於 Netlify 和其他支援 _redirects 的主機平台
+
+# 強制 HTTPS
+http://memedam.netlify.app/* https://memedam.netlify.app/:splat 301!
+http://www.memedam.netlify.app/* https://memedam.netlify.app/:splat 301!
+
+# 移除 www 前綴（如果適用）
+https://www.memedam.netlify.app/* https://memedam.netlify.app/:splat 301!
+
+# 舊的分頁 URL 重新導向到新格式
+/memes/all?page=1 /memes/all 301
+/memes/hot?page=1 /memes/hot 301
+/memes/new?page=1 /memes/new 301
+/memes/trending?page=1 /memes/trending 301
+
+# 移除重複的查詢參數
+/memes/all?search=&* /memes/all 301
+/memes/all?tags=&* /memes/all 301
+/memes/all?page=0* /memes/all 301
+
+# API 路由處理（如果後端在不同位置）
+/api/* https://your-backend-domain.com/api/:splat 200
+
+# 處理沒有副檔名的檔案（SPA 路由）
 /*    /index.html   200
+
+# 特定檔案的快取控制
+/assets/*  /assets/:splat  200
+  Cache-Control: public, max-age=31536000, immutable
+
+# 圖片檔案快取
+/*.png  /:splat.png  200
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpg  /:splat.jpg  200
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpeg /:splat.jpeg 200
+  Cache-Control: public, max-age=31536000, immutable
+/*.gif  /:splat.gif  200
+  Cache-Control: public, max-age=31536000, immutable
+/*.webp /:splat.webp 200
+  Cache-Control: public, max-age=31536000, immutable
+/*.svg  /:splat.svg  200
+  Cache-Control: public, max-age=31536000, immutable
+
+# 字型檔案快取
+/*.woff2 /:splat.woff2 200
+  Cache-Control: public, max-age=31536000, immutable
+/*.woff  /:splat.woff  200
+  Cache-Control: public, max-age=31536000, immutable
+
+# 404 錯誤頁面 - 必須在最後
+/* /404 404

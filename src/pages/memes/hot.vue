@@ -122,6 +122,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { setMemeListSEO } from '@/utils/seoUtils'
 import MemeCard from '@/components/MemeCard.vue'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -148,6 +149,8 @@ const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(10) // 從5改為10，加快載入速度
+const totalCount = ref(0)
+const totalPages = ref(1)
 
 // 篩選和排序
 const selectedTags = ref([])
@@ -324,6 +327,23 @@ const loadMemes = async (reset = true) => {
     )
 
     // 更新無限滾動狀態
+    // 更新總數和頁數資訊
+    if (response.data?.pagination) {
+      totalCount.value = response.data.pagination.total || 0
+      totalPages.value = response.data.pagination.totalPages || 1
+    } else if (response.data?.total) {
+      totalCount.value = response.data.total
+      totalPages.value = Math.ceil(totalCount.value / pageSize.value)
+    } else {
+      totalCount.value = memes.value.length
+      totalPages.value = hasMore.value
+        ? currentPage.value + 1
+        : currentPage.value
+    }
+
+    // 更新 SEO 設定
+    updateSEOSettings()
+
     console.log(
       'Hot page updateLoadingState: loading=false, hasMore=',
       hasMore.value,
@@ -438,6 +458,19 @@ const loadTagCategories = async () => {
       { _id: 'audio', name: '音訊', count: 0 },
     ]
   }
+}
+
+// 更新 SEO 設定
+const updateSEOSettings = () => {
+  setMemeListSEO({
+    title: '熱門迷因',
+    basePath: '/memes/hot',
+    searchQuery: '',
+    selectedTags: selectedTags.value,
+    currentPage: currentPage.value,
+    totalPages: totalPages.value,
+    totalCount: totalCount.value,
+  })
 }
 
 // 初始化

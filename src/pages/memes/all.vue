@@ -123,6 +123,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { setMemeListSEO, cleanUrlParams } from '@/utils/seoUtils'
 import MemeCard from '@/components/MemeCard.vue'
 import SearchBox from '@/components/SearchBox.vue'
 import Button from 'primevue/button'
@@ -153,6 +154,8 @@ const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(5)
+const totalCount = ref(0)
+const totalPages = ref(1)
 
 // 搜尋相關
 const searchQuery = ref('')
@@ -294,6 +297,23 @@ const loadMemes = async (reset = true) => {
     hasMore.value =
       newMemes.length > 0 &&
       (newMemes.length === pageSize.value || backendHasMore)
+
+    // 更新總數和頁數資訊
+    if (response.data?.pagination) {
+      totalCount.value = response.data.pagination.total || 0
+      totalPages.value = response.data.pagination.totalPages || 1
+    } else if (response.data?.total) {
+      totalCount.value = response.data.total
+      totalPages.value = Math.ceil(totalCount.value / pageSize.value)
+    } else {
+      totalCount.value = memes.value.length
+      totalPages.value = hasMore.value
+        ? currentPage.value + 1
+        : currentPage.value
+    }
+
+    // 更新 SEO 設定
+    updateSEOSettings()
 
     // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)
@@ -602,6 +622,56 @@ const loadTopTags = async () => {
   }
 }
 
+// 更新 SEO 設定
+const updateSEOSettings = () => {
+  // 準備 SEO 參數
+  const seoParams = {
+    title: '所有迷因',
+    basePath: '/memes/all',
+    searchQuery: searchQuery.value,
+    selectedTags: selectedTags.value,
+    currentPage: currentPage.value,
+    totalPages: totalPages.value,
+    totalCount: totalCount.value,
+  }
+
+  // 設定 SEO
+  setMemeListSEO(seoParams)
+
+  // 更新瀏覽器 URL（如果需要）
+  updateBrowserUrl()
+}
+
+// 更新瀏覽器 URL
+const updateBrowserUrl = () => {
+  const params = cleanUrlParams({
+    search: searchQuery.value,
+    tags:
+      selectedTags.value.length > 0
+        ? selectedTags.value.map((tag) => tag.name)
+        : null,
+    page: currentPage.value > 1 ? currentPage.value : null,
+  })
+
+  const newQuery = {}
+  Object.keys(params).forEach((key) => {
+    if (params[key]) {
+      newQuery[key] = params[key]
+    }
+  })
+
+  // 只在查詢參數真正改變時更新 URL
+  const currentQueryString = JSON.stringify(route.query)
+  const newQueryString = JSON.stringify(newQuery)
+
+  if (currentQueryString !== newQueryString) {
+    router.replace({
+      path: '/memes/all',
+      query: newQuery,
+    })
+  }
+}
+
 // 初始化
 onMounted(async () => {
   // 檢查路由查詢參數
@@ -610,6 +680,14 @@ onMounted(async () => {
     // 設定搜尋框的值
     if (searchBoxRef.value) {
       searchBoxRef.value.setQuery(route.query.search)
+    }
+  }
+
+  // 檢查頁面參數
+  if (route.query.page) {
+    const pageNum = parseInt(route.query.page)
+    if (!isNaN(pageNum) && pageNum > 0) {
+      currentPage.value = pageNum
     }
   }
 
