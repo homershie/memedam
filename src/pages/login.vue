@@ -361,13 +361,12 @@ const validateForm = () => {
     // 使用者名稱驗證
     if (!formData.username.trim()) {
       errors.username = '使用者名稱必填'
-    } else if (formData.username.length < 8) {
-      errors.username = '使用者名稱至少8個字元'
-    } else if (formData.username.length > 20) {
-      errors.username = '使用者名稱最多20個字元'
-    } else if (!/^[a-z0-9._-]+$/.test(formData.username)) {
-      errors.username =
-        '使用者名稱只能包含小寫英文字母、數字、點號(.)、底線(_)和連字號(-)'
+    } else if (formData.username.length < 5) {
+      errors.username = '使用者名稱至少5個字元'
+    } else if (formData.username.length > 30) {
+      errors.username = '使用者名稱最多30個字元'
+    } else if (!/^[a-z0-9._]+$/.test(formData.username)) {
+      errors.username = '使用者名稱只能包含小寫英文字母、數字、點號(.)和底線(_)'
     }
   }
 

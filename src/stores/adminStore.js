@@ -4,6 +4,7 @@ import memeService from '@/services/memeService'
 import userService from '@/services/userService'
 import tagService from '@/services/tagService'
 import analyticsService from '@/services/analyticsService'
+import reportService from '@/services/reportService'
 import { handleServiceError, processApiResponse } from '@/utils/adminUtils'
 
 export const useAdminStore = defineStore('admin', () => {
@@ -51,6 +52,9 @@ export const useAdminStore = defineStore('admin', () => {
     limit: 10,
     total: 0,
   })
+  const pendingReportsCount = ref(0)
+  const pendingReportsLoading = ref(false)
+  const pendingReportsLastUpdated = ref(null)
 
   // 公告管理
   const announcements = ref([])
@@ -81,27 +85,27 @@ export const useAdminStore = defineStore('admin', () => {
   }))
 
   const pendingMemes = computed(() =>
-    memes.value.filter((meme) => meme.status === 'pending')
+    memes.value.filter((meme) => meme.status === 'pending'),
   )
 
   const bannedUsers = computed(() =>
-    users.value.filter((user) => user.status === 'banned')
+    users.value.filter((user) => user.status === 'banned'),
   )
 
   const urgentReports = computed(() =>
-    reports.value.filter((report) => report.priority === 'high')
+    reports.value.filter((report) => report.priority === 'high'),
   )
 
   const publishedAnnouncements = computed(() =>
     announcements.value.filter(
-      (announcement) => announcement.status === 'published'
-    )
+      (announcement) => announcement.status === 'published',
+    ),
   )
 
   const pinnedAnnouncements = computed(() =>
     announcements.value.filter(
-      (announcement) => announcement.is_pinned === true
-    )
+      (announcement) => announcement.is_pinned === true,
+    ),
   )
 
   // 動作
@@ -133,14 +137,14 @@ export const useAdminStore = defineStore('admin', () => {
     try {
       const response = await memeService.getAll(params)
       const processed = processApiResponse(response, 'memes')
-      
+
       memes.value = processed.data
       memePagination.value = {
         page: params.page || 1,
         limit: params.limit || 10,
         total: processed.total,
       }
-      
+
       return processed
     } catch (error) {
       handleServiceError(error, '迷因管理')
@@ -155,14 +159,14 @@ export const useAdminStore = defineStore('admin', () => {
     try {
       const response = await userService.getAll(params)
       const processed = processApiResponse(response, 'users')
-      
+
       users.value = processed.data
       userPagination.value = {
         page: params.page || 1,
         limit: params.limit || 10,
         total: processed.total,
       }
-      
+
       return processed
     } catch (error) {
       handleServiceError(error, '用戶管理')
@@ -177,14 +181,14 @@ export const useAdminStore = defineStore('admin', () => {
     try {
       const response = await tagService.getAll(params)
       const processed = processApiResponse(response, 'tags')
-      
+
       tags.value = processed.data
       tagPagination.value = {
         page: params.page || 1,
         limit: params.limit || 10,
         total: processed.total,
       }
-      
+
       return processed
     } catch (error) {
       handleServiceError(error, '標籤管理')
@@ -197,23 +201,51 @@ export const useAdminStore = defineStore('admin', () => {
   const loadReports = async (params = {}) => {
     reportsLoading.value = true
     try {
-      // 假設有reportService
-      // const response = await reportService.getAll(params)
-      // const processed = processApiResponse(response, 'reports')
-      
-      // reports.value = processed.data
-      // reportPagination.value = {
-      //   page: params.page || 1,
-      //   limit: params.limit || 10,
-      //   total: processed.total,
-      // }
-      
-      // return processed
+      const response = await reportService.getAll(params)
+      const processed = processApiResponse(response, 'reports')
+
+      reports.value = processed.data
+      reportPagination.value = {
+        page: params.page || 1,
+        limit: params.limit || 10,
+        total: processed.total,
+      }
+
+      return processed
     } catch (error) {
       handleServiceError(error, '檢舉管理')
       throw error
     } finally {
       reportsLoading.value = false
+    }
+  }
+
+  // 載入待處理檢舉數量
+  const loadPendingReportsCount = async (forceRefresh = false) => {
+    // 檢查快取是否有效（2分鐘）
+    if (
+      !forceRefresh &&
+      pendingReportsCount.value !== null &&
+      pendingReportsLastUpdated.value &&
+      Date.now() - pendingReportsLastUpdated.value < 2 * 60 * 1000
+    ) {
+      return pendingReportsCount.value
+    }
+
+    pendingReportsLoading.value = true
+    try {
+      const response = await reportService.getPendingCount()
+      const count = response.data?.count ?? response.data ?? 0
+      pendingReportsCount.value = count
+      pendingReportsLastUpdated.value = Date.now()
+      return count
+    } catch (error) {
+      console.error('載入待處理檢舉數量失敗:', error)
+      // 靜默失敗，不顯示錯誤訊息給用戶
+      pendingReportsCount.value = 0
+      return 0
+    } finally {
+      pendingReportsLoading.value = false
     }
   }
 
@@ -223,14 +255,12 @@ export const useAdminStore = defineStore('admin', () => {
       // 假設有announcementService
       // const response = await announcementService.getAll(params)
       // const processed = processApiResponse(response, 'announcements')
-      
       // announcements.value = processed.data
       // announcementPagination.value = {
       //   page: params.page || 1,
       //   limit: params.limit || 10,
       //   total: processed.total,
       // }
-      
       // return processed
     } catch (error) {
       handleServiceError(error, '公告管理')
@@ -430,6 +460,8 @@ export const useAdminStore = defineStore('admin', () => {
     announcements.value = []
     analyticsData.value = null
     algorithmStats.value = []
+    pendingReportsCount.value = 0
+    pendingReportsLastUpdated.value = null
   }
 
   return {
@@ -453,6 +485,9 @@ export const useAdminStore = defineStore('admin', () => {
     reportStats,
     reportsLoading,
     reportPagination,
+    pendingReportsCount,
+    pendingReportsLoading,
+    pendingReportsLastUpdated,
     announcements,
     announcementStats,
     announcementsLoading,
@@ -477,6 +512,7 @@ export const useAdminStore = defineStore('admin', () => {
     loadUsers,
     loadTags,
     loadReports,
+    loadPendingReportsCount,
     loadAnnouncements,
     loadAnalyticsData,
     loadSystemHealth,

@@ -60,4 +60,17 @@ export default {
   remove(id) {
     return apiService.httpAuth.delete(`/api/reports/${id}`)
   },
+
+  // 匯出檢舉數據（CSV）
+  exportReports(params = {}) {
+    return apiService.httpAuth.get('/api/reports/export', {
+      params,
+      responseType: 'blob',
+    })
+  },
+
+  // 獲取待處理檢舉數量（用於 badge 顯示）
+  getPendingCount() {
+    return apiService.httpAuth.get('/api/reports/pending-count')
+  },
 }

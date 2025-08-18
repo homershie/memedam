@@ -1,3 +1,482 @@
+<template>
+  <div class="admin-tools grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- 數據維護工具 -->
+    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          數據維護工具
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            @click="checkAllCounts"
+            :loading="loading.checkAllCounts"
+            severity="secondary"
+            class="w-full"
+          >
+            檢查並修正所有計數
+          </Button>
+          <Button
+            @click="checkAllUserCounts"
+            :loading="loading.checkAllUserCounts"
+            severity="secondary"
+            class="w-full"
+          >
+            檢查並修正用戶計數
+          </Button>
+          <Button
+            @click="runFullCheck"
+            :loading="loading.runFullCheck"
+            severity="secondary"
+            class="w-full"
+          >
+            執行完整數據檢查
+          </Button>
+          <Button
+            @click="batchUpdateHotScores"
+            :loading="loading.batchUpdateHotScores"
+            severity="secondary"
+            class="w-full"
+          >
+            批次更新熱門分數
+          </Button>
+          <Button
+            @click="updateAllRecommendationSystems"
+            :loading="loading.updateAllRecommendationSystems"
+            severity="secondary"
+            class="w-full"
+          >
+            更新所有推薦系統
+          </Button>
+          <Button
+            @click="batchUpdateUserPreferences"
+            :loading="loading.batchUpdateUserPreferences"
+            severity="secondary"
+            class="w-full"
+          >
+            批次更新用戶偏好
+          </Button>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 用戶管理工具 -->
+    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          用戶管理工具
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            @click="sendDeletionReminders"
+            :loading="loading.sendDeletionReminders"
+            severity="warning"
+            class="w-full"
+          >
+            發送刪除提醒
+          </Button>
+          <Button
+            @click="deleteUnverifiedUsers"
+            :loading="loading.deleteUnverifiedUsers"
+            severity="danger"
+            class="w-full"
+          >
+            刪除未驗證用戶
+          </Button>
+          <Button
+            @click="getUnverifiedUsersStats"
+            :loading="loading.getUnverifiedUsersStats"
+            severity="info"
+            class="w-full"
+          >
+            獲取未驗證用戶統計
+          </Button>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 通知管理工具 -->
+    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          通知管理工具
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 gap-4">
+          <Button
+            @click="sendHotContentNotifications"
+            :loading="loading.sendHotContentNotifications"
+            severity="secondary"
+            class="w-full"
+          >
+            發送熱門內容通知
+          </Button>
+          <Button
+            @click="sendWeeklySummaryNotifications"
+            :loading="loading.sendWeeklySummaryNotifications"
+            severity="secondary"
+            class="w-full"
+          >
+            發送週報摘要通知
+          </Button>
+          <div class="flex gap-2">
+            <InputText
+              v-model="cleanupDays"
+              type="number"
+              placeholder="天數"
+              class="flex-1"
+            />
+            <Button
+              @click="cleanupOldNotifications"
+              :loading="loading.cleanupOldNotifications"
+              severity="warning"
+            >
+              清理舊通知
+            </Button>
+          </div>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 系統配置工具 -->
+    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          系統配置工具
+        </h3>
+      </template>
+      <template #content>
+        <div class="space-y-6">
+          <!-- 推薦系統配置 -->
+          <div class="border rounded-lg p-4">
+            <h4 class="font-medium mb-3">推薦系統配置</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >內容基礎權重</label
+                >
+                <InputText
+                  v-model="configData.recommendation.contentBasedWeight"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >協同過濾權重</label
+                >
+                <InputText
+                  v-model="configData.recommendation.collaborativeWeight"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >更新間隔(小時)</label
+                >
+                <InputText
+                  v-model="configData.recommendation.updateInterval"
+                  type="number"
+                  min="1"
+                />
+              </div>
+            </div>
+            <Button
+              @click="updateRecommendationConfig"
+              :loading="loading.updateRecommendationConfig"
+              severity="primary"
+            >
+              更新推薦系統配置
+            </Button>
+          </div>
+
+          <!-- 內容基礎配置 -->
+          <div class="border rounded-lg p-4">
+            <h4 class="font-medium mb-3">內容基礎推薦配置</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">相似度閾值</label>
+                <InputText
+                  v-model="configData.contentBased.similarityThreshold"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">最大推薦數</label>
+                <InputText
+                  v-model="configData.contentBased.maxRecommendations"
+                  type="number"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >更新間隔(小時)</label
+                >
+                <InputText
+                  v-model="configData.contentBased.updateInterval"
+                  type="number"
+                  min="1"
+                />
+              </div>
+            </div>
+            <Button
+              @click="updateContentBasedConfig"
+              :loading="loading.updateContentBasedConfig"
+              severity="primary"
+            >
+              更新內容基礎配置
+            </Button>
+          </div>
+
+          <!-- 協同過濾配置 -->
+          <div class="border rounded-lg p-4">
+            <h4 class="font-medium mb-3">協同過濾配置</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >最小共同項目</label
+                >
+                <InputText
+                  v-model="configData.collaborativeFiltering.minCommonItems"
+                  type="number"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">最大鄰居數</label>
+                <InputText
+                  v-model="configData.collaborativeFiltering.maxNeighbors"
+                  type="number"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >更新間隔(小時)</label
+                >
+                <InputText
+                  v-model="configData.collaborativeFiltering.updateInterval"
+                  type="number"
+                  min="1"
+                />
+              </div>
+            </div>
+            <Button
+              @click="updateCollaborativeFilteringConfig"
+              :loading="loading.updateCollaborativeFilteringConfig"
+              severity="primary"
+            >
+              更新協同過濾配置
+            </Button>
+          </div>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 統計資訊 -->
+    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          系統統計
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            @click="getCountStatistics"
+            :loading="loading.getCountStatistics"
+            severity="info"
+            class="w-full"
+          >
+            獲取計數統計
+          </Button>
+          <Button
+            @click="getHotScoreStatistics"
+            :loading="loading.getHotScoreStatistics"
+            severity="info"
+            class="w-full"
+          >
+            獲取熱門分數統計
+          </Button>
+          <Button
+            @click="getRecommendationSystemStatus"
+            :loading="loading.getRecommendationSystemStatus"
+            severity="info"
+            class="w-full"
+          >
+            獲取推薦系統狀態
+          </Button>
+          <Button
+            @click="getMaintenanceStatus"
+            :loading="loading.getMaintenanceStatus"
+            severity="info"
+            class="w-full"
+          >
+            獲取維護狀態
+          </Button>
+          <Button
+            @click="getContentBasedStatistics"
+            :loading="loading.getContentBasedStatistics"
+            severity="info"
+            class="w-full"
+          >
+            獲取內容基礎統計
+          </Button>
+          <Button
+            @click="getCollaborativeFilteringStatistics"
+            :loading="loading.getCollaborativeFilteringStatistics"
+            severity="info"
+            class="w-full"
+          >
+            獲取協同過濾統計
+          </Button>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 系統監控 -->
+    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          系統監控
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            @click="getSystemPerformanceStats"
+            :loading="loading.getSystemPerformanceStats"
+            severity="info"
+            class="w-full"
+          >
+            獲取系統性能統計
+          </Button>
+          <Button
+            @click="getDatabaseStats"
+            :loading="loading.getDatabaseStats"
+            severity="info"
+            class="w-full"
+          >
+            獲取資料庫統計
+          </Button>
+          <Button
+            @click="cleanupExpiredCache"
+            :loading="loading.cleanupExpiredCache"
+            severity="warning"
+            class="w-full"
+          >
+            清理過期快取
+          </Button>
+          <Button
+            @click="rebuildIndexes"
+            :loading="loading.rebuildIndexes"
+            severity="danger"
+            class="w-full"
+          >
+            重建資料庫索引
+          </Button>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 測試工具 -->
+    <Card class="mb-6 border border-gray-200 shadow-none dark:border-gray-700">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          測試工具
+        </h3>
+      </template>
+      <template #content>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            @click="createTestReports"
+            :loading="loading.createTestReports"
+            severity="help"
+            class="w-full"
+          >
+            創建測試報告
+          </Button>
+        </div>
+      </template>
+    </Card>
+
+    <!-- 結果顯示 -->
+    <Card v-if="results.length > 0">
+      <template #title>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          執行結果
+        </h3>
+      </template>
+      <template #content>
+        <div class="space-y-4">
+          <div
+            v-for="(result, index) in results"
+            :key="index"
+            class="p-4 border rounded-lg"
+            :class="{
+              'border-green-200 bg-green-50 dark:bg-green-900/20':
+                result.success,
+              'border-red-200 bg-red-50 dark:bg-red-900/20': !result.success,
+            }"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <h4
+                  class="font-medium"
+                  :class="{
+                    'text-green-800 dark:text-green-200': result.success,
+                    'text-red-800 dark:text-red-200': !result.success,
+                  }"
+                >
+                  {{ result.action }}
+                </h4>
+                <p
+                  class="text-sm mt-1"
+                  :class="{
+                    'text-green-700 dark:text-green-300': result.success,
+                    'text-red-700 dark:text-red-300': !result.success,
+                  }"
+                >
+                  {{ result.message }}
+                </p>
+              </div>
+              <div class="flex items-center">
+                <i
+                  v-if="result.success"
+                  class="pi pi-check-circle text-green-500 text-xl"
+                ></i>
+                <i
+                  v-else
+                  class="pi pi-exclamation-triangle text-red-500 text-xl"
+                ></i>
+              </div>
+            </div>
+            <div
+              v-if="result.data"
+              class="mt-2 text-xs text-gray-600 dark:text-gray-400"
+            >
+              <pre>{{ JSON.stringify(result.data, null, 2) }}</pre>
+            </div>
+          </div>
+        </div>
+      </template>
+    </Card>
+  </div>
+</template>
+
 <script setup>
 // Define component name to fix linter error
 defineOptions({
@@ -818,509 +1297,9 @@ const rebuildIndexes = async () => {
 }
 </script>
 
-<template>
-  <div class="admin-tools">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-      管理員工具
-    </h1>
-
-    <!-- 數據維護工具 -->
-    <Card class="mb-6">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          數據維護工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="checkAllCounts"
-            :loading="loading.checkAllCounts"
-            severity="secondary"
-            class="w-full"
-          >
-            檢查並修正所有計數
-          </Button>
-          <Button
-            @click="checkAllUserCounts"
-            :loading="loading.checkAllUserCounts"
-            severity="secondary"
-            class="w-full"
-          >
-            檢查並修正用戶計數
-          </Button>
-          <Button
-            @click="runFullCheck"
-            :loading="loading.runFullCheck"
-            severity="secondary"
-            class="w-full"
-          >
-            執行完整數據檢查
-          </Button>
-          <Button
-            @click="batchUpdateHotScores"
-            :loading="loading.batchUpdateHotScores"
-            severity="secondary"
-            class="w-full"
-          >
-            批次更新熱門分數
-          </Button>
-          <Button
-            @click="updateAllRecommendationSystems"
-            :loading="loading.updateAllRecommendationSystems"
-            severity="secondary"
-            class="w-full"
-          >
-            更新所有推薦系統
-          </Button>
-          <Button
-            @click="batchUpdateUserPreferences"
-            :loading="loading.batchUpdateUserPreferences"
-            severity="secondary"
-            class="w-full"
-          >
-            批次更新用戶偏好
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 用戶管理工具 -->
-    <Card class="mb-6">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          用戶管理工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="sendDeletionReminders"
-            :loading="loading.sendDeletionReminders"
-            severity="warning"
-            class="w-full"
-          >
-            發送刪除提醒
-          </Button>
-          <Button
-            @click="deleteUnverifiedUsers"
-            :loading="loading.deleteUnverifiedUsers"
-            severity="danger"
-            class="w-full"
-          >
-            刪除未驗證用戶
-          </Button>
-          <Button
-            @click="getUnverifiedUsersStats"
-            :loading="loading.getUnverifiedUsersStats"
-            severity="info"
-            class="w-full"
-          >
-            獲取未驗證用戶統計
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 通知管理工具 -->
-    <Card class="mb-6">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          通知管理工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="sendHotContentNotifications"
-            :loading="loading.sendHotContentNotifications"
-            severity="success"
-            class="w-full"
-          >
-            發送熱門內容通知
-          </Button>
-          <Button
-            @click="sendWeeklySummaryNotifications"
-            :loading="loading.sendWeeklySummaryNotifications"
-            severity="success"
-            class="w-full"
-          >
-            發送週報摘要通知
-          </Button>
-          <div class="flex gap-2">
-            <InputText
-              v-model="cleanupDays"
-              type="number"
-              placeholder="天數"
-              class="flex-1"
-            />
-            <Button
-              @click="cleanupOldNotifications"
-              :loading="loading.cleanupOldNotifications"
-              severity="warning"
-            >
-              清理舊通知
-            </Button>
-          </div>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 系統配置工具 -->
-    <Card class="mb-6">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          系統配置工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="space-y-6">
-          <!-- 推薦系統配置 -->
-          <div class="border rounded-lg p-4">
-            <h4 class="font-medium mb-3">推薦系統配置</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label class="block text-sm font-medium mb-1"
-                  >內容基礎權重</label
-                >
-                <InputText
-                  v-model="configData.recommendation.contentBasedWeight"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1"
-                  >協同過濾權重</label
-                >
-                <InputText
-                  v-model="configData.recommendation.collaborativeWeight"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1"
-                  >更新間隔(小時)</label
-                >
-                <InputText
-                  v-model="configData.recommendation.updateInterval"
-                  type="number"
-                  min="1"
-                />
-              </div>
-            </div>
-            <Button
-              @click="updateRecommendationConfig"
-              :loading="loading.updateRecommendationConfig"
-              severity="primary"
-            >
-              更新推薦系統配置
-            </Button>
-          </div>
-
-          <!-- 內容基礎配置 -->
-          <div class="border rounded-lg p-4">
-            <h4 class="font-medium mb-3">內容基礎推薦配置</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label class="block text-sm font-medium mb-1">相似度閾值</label>
-                <InputText
-                  v-model="configData.contentBased.similarityThreshold"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1">最大推薦數</label>
-                <InputText
-                  v-model="configData.contentBased.maxRecommendations"
-                  type="number"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1"
-                  >更新間隔(小時)</label
-                >
-                <InputText
-                  v-model="configData.contentBased.updateInterval"
-                  type="number"
-                  min="1"
-                />
-              </div>
-            </div>
-            <Button
-              @click="updateContentBasedConfig"
-              :loading="loading.updateContentBasedConfig"
-              severity="primary"
-            >
-              更新內容基礎配置
-            </Button>
-          </div>
-
-          <!-- 協同過濾配置 -->
-          <div class="border rounded-lg p-4">
-            <h4 class="font-medium mb-3">協同過濾配置</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label class="block text-sm font-medium mb-1"
-                  >最小共同項目</label
-                >
-                <InputText
-                  v-model="configData.collaborativeFiltering.minCommonItems"
-                  type="number"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1">最大鄰居數</label>
-                <InputText
-                  v-model="configData.collaborativeFiltering.maxNeighbors"
-                  type="number"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1"
-                  >更新間隔(小時)</label
-                >
-                <InputText
-                  v-model="configData.collaborativeFiltering.updateInterval"
-                  type="number"
-                  min="1"
-                />
-              </div>
-            </div>
-            <Button
-              @click="updateCollaborativeFilteringConfig"
-              :loading="loading.updateCollaborativeFilteringConfig"
-              severity="primary"
-            >
-              更新協同過濾配置
-            </Button>
-          </div>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 統計資訊 -->
-    <Card class="mb-6">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          系統統計
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="getCountStatistics"
-            :loading="loading.getCountStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取計數統計
-          </Button>
-          <Button
-            @click="getHotScoreStatistics"
-            :loading="loading.getHotScoreStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取熱門分數統計
-          </Button>
-          <Button
-            @click="getRecommendationSystemStatus"
-            :loading="loading.getRecommendationSystemStatus"
-            severity="info"
-            class="w-full"
-          >
-            獲取推薦系統狀態
-          </Button>
-          <Button
-            @click="getMaintenanceStatus"
-            :loading="loading.getMaintenanceStatus"
-            severity="info"
-            class="w-full"
-          >
-            獲取維護狀態
-          </Button>
-          <Button
-            @click="getContentBasedStatistics"
-            :loading="loading.getContentBasedStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取內容基礎統計
-          </Button>
-          <Button
-            @click="getCollaborativeFilteringStatistics"
-            :loading="loading.getCollaborativeFilteringStatistics"
-            severity="info"
-            class="w-full"
-          >
-            獲取協同過濾統計
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 系統監控 -->
-    <Card class="mb-6">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          系統監控
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="getSystemPerformanceStats"
-            :loading="loading.getSystemPerformanceStats"
-            severity="info"
-            class="w-full"
-          >
-            獲取系統性能統計
-          </Button>
-          <Button
-            @click="getDatabaseStats"
-            :loading="loading.getDatabaseStats"
-            severity="info"
-            class="w-full"
-          >
-            獲取資料庫統計
-          </Button>
-          <Button
-            @click="cleanupExpiredCache"
-            :loading="loading.cleanupExpiredCache"
-            severity="warning"
-            class="w-full"
-          >
-            清理過期快取
-          </Button>
-          <Button
-            @click="rebuildIndexes"
-            :loading="loading.rebuildIndexes"
-            severity="danger"
-            class="w-full"
-          >
-            重建資料庫索引
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 測試工具 -->
-    <Card class="mb-6">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          測試工具
-        </h3>
-      </template>
-      <template #content>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            @click="createTestReports"
-            :loading="loading.createTestReports"
-            severity="help"
-            class="w-full"
-          >
-            創建測試報告
-          </Button>
-        </div>
-      </template>
-    </Card>
-
-    <!-- 結果顯示 -->
-    <Card v-if="results.length > 0">
-      <template #title>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          執行結果
-        </h3>
-      </template>
-      <template #content>
-        <div class="space-y-4">
-          <div
-            v-for="(result, index) in results"
-            :key="index"
-            class="p-4 border rounded-lg"
-            :class="{
-              'border-green-200 bg-green-50 dark:bg-green-900/20':
-                result.success,
-              'border-red-200 bg-red-50 dark:bg-red-900/20': !result.success,
-            }"
-          >
-            <div class="flex items-center justify-between">
-              <div>
-                <h4
-                  class="font-medium"
-                  :class="{
-                    'text-green-800 dark:text-green-200': result.success,
-                    'text-red-800 dark:text-red-200': !result.success,
-                  }"
-                >
-                  {{ result.action }}
-                </h4>
-                <p
-                  class="text-sm mt-1"
-                  :class="{
-                    'text-green-700 dark:text-green-300': result.success,
-                    'text-red-700 dark:text-red-300': !result.success,
-                  }"
-                >
-                  {{ result.message }}
-                </p>
-              </div>
-              <div class="flex items-center">
-                <i
-                  v-if="result.success"
-                  class="pi pi-check-circle text-green-500 text-xl"
-                ></i>
-                <i
-                  v-else
-                  class="pi pi-exclamation-triangle text-red-500 text-xl"
-                ></i>
-              </div>
-            </div>
-            <div
-              v-if="result.data"
-              class="mt-2 text-xs text-gray-600 dark:text-gray-400"
-            >
-              <pre>{{ JSON.stringify(result.data, null, 2) }}</pre>
-            </div>
-          </div>
-        </div>
-      </template>
-    </Card>
-  </div>
-</template>
-
 <style scoped>
 .admin-tools {
   max-width: 100%;
-}
-
-/* 自定義 PrimeVue Card 樣式 */
-:deep(.p-card) {
-  box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.1),
-    0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  border: 1px solid #e5e7eb;
-}
-
-:deep(.p-card .p-card-title) {
-  color: #111827;
-  font-weight: 600;
-}
-
-:deep(.p-card .p-card-content) {
-  padding: 1.5rem;
 }
 </style>
 

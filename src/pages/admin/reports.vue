@@ -8,8 +8,10 @@ import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
 import reportService from '@/services/reportService'
+import { useAdminStore } from '@/stores/adminStore'
 
 const toast = useToast()
+const adminStore = useAdminStore()
 
 // 表格與狀態
 const dt = ref()
@@ -267,6 +269,9 @@ const loadData = async () => {
 
     // 清除選擇
     selectedReports.value = []
+
+    // 同時更新待處理檢舉數量
+    await adminStore.loadPendingReportsCount(true) // 強制刷新
   } catch (error) {
     console.error('載入檢舉數據失敗:', error)
     toast.add({
@@ -403,6 +408,7 @@ async function saveReport() {
     reportDialog.value = false
     report.value = {}
     await loadData() // 重新載入數據
+    // 更新badge數量會在 loadData() 中處理
   } catch (error) {
     console.error('儲存檢舉失敗:', error)
     toast.add({
@@ -465,6 +471,7 @@ async function deleteReport() {
       life: 3000,
     })
     await loadData() // 重新載入數據
+    // 更新badge數量會在 loadData() 中處理
   } catch (error) {
     console.error('刪除檢舉失敗:', error)
     toast.add({
@@ -494,6 +501,7 @@ async function deleteSelectedReports() {
       life: 3000,
     })
     await loadData() // 重新載入數據
+    // 更新badge數量會在 loadData() 中處理
   } catch (error) {
     console.error('批量刪除失敗:', error)
     toast.add({
@@ -553,6 +561,7 @@ async function confirmBatchProcess() {
 
     // 重新載入數據
     await loadData()
+    // 更新badge數量會在 loadData() 中處理
   } catch (error) {
     console.error('批量處理失敗:', error)
     toast.add({

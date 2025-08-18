@@ -1,21 +1,55 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAdminStore } from '@/stores/adminStore'
 
 import AppMenuItem from './AppMenuItem.vue'
 import {
   IconTags,
   IconComments,
   IconBullhorn,
-  IconShield,
   IconFlag,
   IconChartBar,
   IconChartLine,
   IconFlask,
   IconUserEdit,
-  IconCog,
   IconWrench,
   IconFileText,
 } from '@/components/icons'
+
+// 使用 admin store
+const adminStore = useAdminStore()
+let refreshInterval = null
+
+// 計算待處理檢舉的 badge
+const reportsBadge = computed(() => {
+  const count = adminStore.pendingReportsCount
+  return count > 0 ? { value: count, severity: 'danger' } : null
+})
+
+// 載入待處理檢舉數量
+const loadPendingCounts = async () => {
+  try {
+    await adminStore.loadPendingReportsCount()
+  } catch (error) {
+    console.warn('無法載入待處理檢舉數量:', error)
+  }
+}
+
+// 組件掛載時初始化並設置定期刷新
+onMounted(async () => {
+  await loadPendingCounts()
+
+  // 每5分鐘刷新一次
+  refreshInterval = setInterval(loadPendingCounts, 5 * 60 * 1000)
+})
+
+// 組件卸載時清除定時器
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    refreshInterval = null
+  }
+})
 
 const model = ref([
   {
@@ -49,7 +83,7 @@ const model = ref([
         label: '評論管理',
         icon: 'pi pi-fw pi-comments',
         to: '/admin/comments',
-        badge: { value: 5, severity: 'primary' },
+        badge: null,
         customIcon: IconComments,
       },
       {
@@ -79,7 +113,7 @@ const model = ref([
         label: '檢舉處理',
         icon: 'pi pi-fw pi-flag',
         to: '/admin/reports',
-        badge: { value: 12, severity: 'primary' },
+        badge: reportsBadge,
         customIcon: IconFlag,
       },
       {
@@ -105,7 +139,7 @@ const model = ref([
         label: 'A/B 測試',
         icon: 'pi pi-fw pi-flask',
         to: '/admin/ab-tests',
-        badge: { value: 3, severity: 'primary' },
+        badge: null,
         customIcon: IconFlask,
       },
       {
@@ -131,7 +165,7 @@ const model = ref([
         label: '日誌查看',
         icon: 'pi pi-fw pi-file-text',
         to: '/admin/logs',
-        badge: { value: 8, severity: 'primary' },
+        badge: null,
         customIcon: IconFileText,
       },
     ],

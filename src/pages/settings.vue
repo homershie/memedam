@@ -1264,8 +1264,8 @@
 
             <!-- 格式提示 -->
             <small class="text-gray-500 dark:text-gray-400">
-              使用者名稱長度需在 8-20
-              個字元之間，只能包含英文字母、數字、點號(.)、底線(_)和連字號(-)
+              使用者名稱長度需在 5-30
+              個字元之間，只能包含小寫英文字母、數字、點號(.)和底線(_)
             </small>
           </div>
 
@@ -2604,13 +2604,13 @@ const handleUsernameInput = () => {
   // 基本格式驗證
   if (usernameForm.newUsername) {
     if (
-      usernameForm.newUsername.length < 8 ||
-      usernameForm.newUsername.length > 20
+      usernameForm.newUsername.length < 5 ||
+      usernameForm.newUsername.length > 30
     ) {
-      usernameForm.errors.newUsername = '使用者名稱長度需在 8-20 個字元之間'
-    } else if (!/^[a-zA-Z0-9._-]+$/.test(usernameForm.newUsername)) {
+      usernameForm.errors.newUsername = '使用者名稱長度需在 5-30 個字元之間'
+    } else if (!/^[a-z0-9._]+$/.test(usernameForm.newUsername)) {
       usernameForm.errors.newUsername =
-        '使用者名稱只能包含英文字母、數字、點號(.)、底線(_)和連字號(-)'
+        '使用者名稱只能包含小寫英文字母、數字、點號(.)和底線(_)'
     } else if (usernameForm.newUsername === userProfile.username) {
       usernameForm.errors.newUsername = '新使用者名稱不能與目前使用者名稱相同'
     }
@@ -2626,17 +2626,17 @@ const checkUsernameAvailability = async () => {
 
   // 基本格式驗證
   if (
-    usernameForm.newUsername.length < 8 ||
-    usernameForm.newUsername.length > 20
+    usernameForm.newUsername.length < 5 ||
+    usernameForm.newUsername.length > 30
   ) {
-    usernameForm.errors.newUsername = '使用者名稱長度需在 8-20 個字元之間'
+    usernameForm.errors.newUsername = '使用者名稱長度需在 5-30 個字元之間'
     usernameForm.availability = null
     return
   }
 
-  if (!/^[a-zA-Z0-9._-]+$/.test(usernameForm.newUsername)) {
+  if (!/^[a-z0-9._]+$/.test(usernameForm.newUsername)) {
     usernameForm.errors.newUsername =
-      '使用者名稱只能包含英文字母、數字、點號(.)、底線(_)和連字號(-)'
+      '使用者名稱只能包含小寫英文字母、數字、點號(.)和底線(_)'
     usernameForm.availability = null
     return
   }
