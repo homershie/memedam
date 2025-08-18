@@ -252,7 +252,7 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  const loadAnnouncements = async (params = {}) => {
+  const loadAnnouncements = async () => {
     announcementsLoading.value = true
     try {
       // 假設有announcementService

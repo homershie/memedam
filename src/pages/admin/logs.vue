@@ -1,3 +1,76 @@
+<template>
+  <div>
+    <div class="card">
+      <Toolbar class="mb-6">
+        <template #start>
+          <Button
+            label="匯出"
+            icon="pi pi-upload"
+            severity="secondary"
+            @click="exportCSV"
+          />
+        </template>
+        <template #end>
+          <IconField>
+            <InputIcon>
+              <i class="pi pi-search" />
+            </InputIcon>
+            <InputText
+              v-model="filters['global'].value"
+              placeholder="搜尋日誌..."
+            />
+          </IconField>
+        </template>
+      </Toolbar>
+
+      <DataTable
+        ref="dt"
+        :value="logs"
+        v-model:selection="selectedLogs"
+        dataKey="id"
+        :loading="loading"
+        paginator
+        :rows="10"
+        :filters="filters"
+      >
+        <template #header>
+          <div class="flex items-center justify-between gap-4">
+            <h4 class="m-0">系統日誌</h4>
+            <Dropdown
+              v-model="filters.level.value"
+              :options="levels"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="依等級篩選"
+            />
+          </div>
+        </template>
+        <Column
+          selectionMode="multiple"
+          style="width: 3rem"
+          :exportable="false"
+        />
+        <Column field="id" header="ID" sortable style="min-width: 8rem" />
+        <Column field="level" header="等級" sortable>
+          <template #body="{ data }">
+            <Tag
+              :value="getLevelLabel(data.level)"
+              :severity="levelSeverity(data.level)"
+            />
+          </template>
+        </Column>
+        <Column field="message" header="訊息" style="min-width: 20rem" />
+        <Column field="context" header="來源" style="min-width: 12rem" />
+        <Column field="createdAt" header="時間" sortable>
+          <template #body="{ data }">{{
+            new Date(data.createdAt).toLocaleString('zh-TW')
+          }}</template>
+        </Column>
+      </DataTable>
+    </div>
+  </div>
+</template>
+
 <script setup>
 defineOptions({
   name: 'AdminLogs',
@@ -81,77 +154,20 @@ const levelSeverity = (level) => {
       return 'secondary'
   }
 }
+
+const getLevelLabel = (level) => {
+  switch (level) {
+    case 'info':
+      return '資訊'
+    case 'warn':
+      return '警告'
+    case 'error':
+      return '錯誤'
+    default:
+      return level
+  }
+}
 </script>
-
-<template>
-  <div>
-    <div class="card">
-      <Toolbar class="mb-6">
-        <template #start>
-          <Button
-            label="匯出"
-            icon="pi pi-upload"
-            severity="secondary"
-            @click="exportCSV"
-          />
-        </template>
-        <template #end>
-          <IconField>
-            <InputIcon>
-              <i class="pi pi-search" />
-            </InputIcon>
-            <InputText
-              v-model="filters['global'].value"
-              placeholder="搜尋日誌..."
-            />
-          </IconField>
-        </template>
-      </Toolbar>
-
-      <DataTable
-        ref="dt"
-        :value="logs"
-        v-model:selection="selectedLogs"
-        dataKey="id"
-        :loading="loading"
-        paginator
-        :rows="10"
-        :filters="filters"
-      >
-        <template #header>
-          <div class="flex items-center justify-between gap-4">
-            <h4 class="m-0">系統日誌</h4>
-            <Dropdown
-              v-model="filters.level.value"
-              :options="levels"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="依等級篩選"
-            />
-          </div>
-        </template>
-        <Column
-          selectionMode="multiple"
-          style="width: 3rem"
-          :exportable="false"
-        />
-        <Column field="id" header="ID" sortable style="min-width: 8rem" />
-        <Column field="level" header="等級" sortable>
-          <template #body="{ data }">
-            <Tag :value="data.level" :severity="levelSeverity(data.level)" />
-          </template>
-        </Column>
-        <Column field="message" header="訊息" style="min-width: 20rem" />
-        <Column field="context" header="來源" style="min-width: 12rem" />
-        <Column field="createdAt" header="時間" sortable>
-          <template #body="{ data }">{{
-            new Date(data.createdAt).toLocaleString('zh-TW')
-          }}</template>
-        </Column>
-      </DataTable>
-    </div>
-  </div>
-</template>
 
 <route lang="yaml">
 meta:
