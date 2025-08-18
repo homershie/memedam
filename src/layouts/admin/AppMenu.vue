@@ -9,9 +9,9 @@ import {
   IconBullhorn,
   IconFlag,
   IconChartBar,
-  IconChartLine,
-  IconFlask,
-  IconUserEdit,
+  // IconChartLine,
+  // IconFlask,
+  // IconUserEdit,
   IconWrench,
   IconFileText,
 } from '@/components/icons'
@@ -122,32 +122,33 @@ const model = computed(() => {
         },
       ],
     },
-    {
-      label: '數據分析',
-      items: [
-        {
-          label: '推薦分析',
-          icon: 'pi pi-fw pi-chart-line',
-          to: '/admin/analytics',
-          badge: null,
-          customIcon: IconChartLine,
-        },
-        {
-          label: 'A/B 測試',
-          icon: 'pi pi-fw pi-flask',
-          to: '/admin/ab-tests',
-          badge: null,
-          customIcon: IconFlask,
-        },
-        {
-          label: '用戶行為',
-          icon: 'pi pi-fw pi-user-edit',
-          to: '/admin/user-behavior',
-          badge: null,
-          customIcon: IconUserEdit,
-        },
-      ],
-    },
+    // MVP階段不會實作，先註解掉
+    // {
+    //   label: '數據分析',
+    //   items: [
+    //     {
+    //       label: '推薦分析',
+    //       icon: 'pi pi-fw pi-chart-line',
+    //       to: '/admin/analytics',
+    //       badge: null,
+    //       customIcon: IconChartLine,
+    //     },
+    //     {
+    //       label: 'A/B 測試',
+    //       icon: 'pi pi-fw pi-flask',
+    //       to: '/admin/ab-tests',
+    //       badge: null,
+    //       customIcon: IconFlask,
+    //     },
+    //     {
+    //       label: '用戶行為',
+    //       icon: 'pi pi-fw pi-user-edit',
+    //       to: '/admin/user-behavior',
+    //       badge: null,
+    //       customIcon: IconUserEdit,
+    //     },
+    //   ],
+    // },
     {
       label: '系統管理',
       items: [
