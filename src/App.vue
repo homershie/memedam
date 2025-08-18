@@ -1,4 +1,5 @@
 <template>
+  <Toast position="bottom-right" />
   <RouterView />
   <ConfirmDialog />
 </template>
