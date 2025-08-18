@@ -3,16 +3,18 @@
     <!-- 統計卡片 -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <div class="card">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-center gap-4">
           <div>
-            <div class="text-2xl font-bold">{{ statistics.total || 0 }}</div>
+            <div class="text-2xl font-bold text-blue-500">
+              {{ statistics.total || 0 }}
+            </div>
             <div class="text-surface-500">總日誌數</div>
           </div>
           <i class="pi pi-file text-3xl text-blue-500"></i>
         </div>
       </div>
       <div class="card">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-center gap-4">
           <div>
             <div class="text-2xl font-bold text-red-500">
               {{ statistics.levels?.error || 0 }}
@@ -23,18 +25,18 @@
         </div>
       </div>
       <div class="card">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-center gap-4">
           <div>
-            <div class="text-2xl font-bold text-orange-500">
+            <div class="text-2xl font-bold text-warn-500">
               {{ statistics.levels?.warn || 0 }}
             </div>
             <div class="text-surface-500">警告</div>
           </div>
-          <i class="pi pi-exclamation-triangle text-3xl text-orange-500"></i>
+          <i class="pi pi-exclamation-triangle text-3xl text-warn-500"></i>
         </div>
       </div>
       <div class="card">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-center gap-4">
           <div>
             <div class="text-2xl font-bold text-green-500">
               {{ statistics.levels?.info || 0 }}
@@ -60,14 +62,15 @@
             <Button
               label="清理舊日誌"
               icon="pi pi-trash"
-              severity="danger"
+              severity="primary"
               @click="showCleanupDialog = true"
             />
             <Button
               :label="realTimeEnabled ? '停止即時' : '開始即時'"
               :icon="realTimeEnabled ? 'pi pi-pause' : 'pi pi-play'"
-              :severity="realTimeEnabled ? 'warning' : 'success'"
+              :severity="realTimeEnabled ? 'primary' : 'success'"
               @click="toggleRealTime"
+              :loading="realTimeEnabled && !eventSource"
             />
           </div>
         </template>
@@ -209,61 +212,8 @@
             {{ formatDateTime(data.createdAt) }}
           </template>
         </Column>
-        <Column header="操作" style="min-width: 8rem">
-          <template #body="{ data }">
-            <Button
-              icon="pi pi-eye"
-              size="small"
-              severity="secondary"
-              @click="showLogDetail(data)"
-              v-tooltip="'查看詳情'"
-            />
-          </template>
-        </Column>
       </DataTable>
     </div>
-
-    <!-- 日誌詳情對話框 -->
-    <Dialog
-      v-model:visible="showDetailDialog"
-      :header="`日誌詳情 - ${selectedLog?.id}`"
-      :style="{ width: '50vw' }"
-      modal
-    >
-      <div v-if="selectedLog" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="font-semibold">ID:</label>
-            <div>{{ selectedLog.id }}</div>
-          </div>
-          <div>
-            <label class="font-semibold">等級:</label>
-            <div>
-              <Tag
-                :value="getLevelLabel(selectedLog.level)"
-                :severity="levelSeverity(selectedLog.level)"
-              />
-            </div>
-          </div>
-          <div>
-            <label class="font-semibold">來源:</label>
-            <div>
-              <Tag :value="selectedLog.context" severity="secondary" />
-            </div>
-          </div>
-          <div>
-            <label class="font-semibold">時間:</label>
-            <div>{{ formatDateTime(selectedLog.createdAt) }}</div>
-          </div>
-        </div>
-        <div>
-          <label class="font-semibold">訊息:</label>
-          <div class="mt-2 p-3 bg-surface-50 rounded border">
-            <pre class="whitespace-pre-wrap">{{ selectedLog.message }}</pre>
-          </div>
-        </div>
-      </div>
-    </Dialog>
 
     <!-- 清理日誌對話框 -->
     <Dialog
@@ -343,9 +293,7 @@ const realTimeEnabled = ref(false)
 const eventSource = ref(null)
 
 // 對話框狀態
-const showDetailDialog = ref(false)
 const showCleanupDialog = ref(false)
-const selectedLog = ref(null)
 const daysToKeep = ref(7)
 
 // 選項資料
@@ -411,9 +359,10 @@ const loadStatistics = async () => {
 const loadContexts = async () => {
   try {
     const contextList = await logsService.getContexts()
-    contexts.value = contextList
+    contexts.value = contextList || []
   } catch (error) {
     console.error('載入來源失敗:', error)
+    contexts.value = []
   }
 }
 
@@ -476,20 +425,20 @@ const exportCSV = async () => {
 }
 
 // 切換即時更新
-const toggleRealTime = () => {
+const toggleRealTime = async () => {
   if (realTimeEnabled.value) {
     stopRealTime()
   } else {
-    startRealTime()
+    await startRealTime()
   }
 }
 
 // 開始即時更新
-const startRealTime = () => {
+const startRealTime = async () => {
   if (eventSource.value) return
 
   try {
-    eventSource.value = logsService.createLogStream({
+    eventSource.value = await logsService.createLogStream({
       level: selectedLevel.value,
       onMessage: (logData) => {
         // 將新日誌插入到列表頂部
@@ -540,12 +489,6 @@ const stopRealTime = () => {
     eventSource.value = null
   }
   realTimeEnabled.value = false
-}
-
-// 顯示日誌詳情
-const showLogDetail = (log) => {
-  selectedLog.value = log
-  showDetailDialog.value = true
 }
 
 // 確認清理

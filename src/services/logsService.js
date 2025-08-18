@@ -19,7 +19,7 @@ class LogsService {
    */
   async getLogs(params = {}) {
     try {
-      const response = await apiService.get(this.baseURL, { params })
+      const response = await apiService.httpAuth.get(this.baseURL, { params })
       return response.data
     } catch (error) {
       console.error('獲取日誌失敗:', error)
@@ -33,7 +33,9 @@ class LogsService {
    */
   async getStatistics() {
     try {
-      const response = await apiService.get(`${this.baseURL}/statistics`)
+      const response = await apiService.httpAuth.get(
+        `${this.baseURL}/statistics`,
+      )
       return response.data
     } catch (error) {
       console.error('獲取日誌統計失敗:', error)
@@ -48,7 +50,7 @@ class LogsService {
    */
   async exportLogs(params = {}) {
     try {
-      const response = await apiService.get(`${this.baseURL}/export`, {
+      const response = await apiService.httpAuth.get(`${this.baseURL}/export`, {
         params,
         responseType: 'blob',
       })
@@ -65,7 +67,7 @@ class LogsService {
    */
   async getContexts() {
     try {
-      const response = await apiService.get(`${this.baseURL}/contexts`)
+      const response = await apiService.httpAuth.get(`${this.baseURL}/contexts`)
       return response.data.data
     } catch (error) {
       console.error('獲取日誌來源失敗:', error)
@@ -80,9 +82,12 @@ class LogsService {
    */
   async cleanupLogs(daysToKeep = 7) {
     try {
-      const response = await apiService.post(`${this.baseURL}/cleanup`, {
-        daysToKeep,
-      })
+      const response = await apiService.httpAuth.post(
+        `${this.baseURL}/cleanup`,
+        {
+          daysToKeep,
+        },
+      )
       return response.data
     } catch (error) {
       console.error('清理日誌失敗:', error)
@@ -96,9 +101,9 @@ class LogsService {
    * @param {string} options.level - 篩選等級
    * @param {Function} options.onMessage - 訊息回調
    * @param {Function} options.onError - 錯誤回調
-   * @returns {EventSource} EventSource 實例
+   * @returns {Promise<EventSource>} EventSource 實例
    */
-  createLogStream(options = {}) {
+  async createLogStream(options = {}) {
     const { level, onMessage, onError } = options
 
     // 構建 URL
@@ -107,6 +112,21 @@ class LogsService {
 
     if (level) {
       params.append('level', level)
+    }
+
+    // 添加認證 token
+    try {
+      const userStore = await import('@/stores/userStore').then((m) =>
+        m.useUserStore(),
+      )
+      if (userStore.token) {
+        params.append('token', userStore.token)
+        console.log('已添加 token 到串流 URL')
+      } else {
+        console.warn('用戶 token 不存在')
+      }
+    } catch (error) {
+      console.warn('無法獲取用戶 token:', error)
     }
 
     if (params.toString()) {
@@ -118,20 +138,52 @@ class LogsService {
       withCredentials: true,
     })
 
+    // 添加連線狀態監聽
+    eventSource.onopen = () => {
+      console.log('日誌串流連線已建立:', streamURL)
+    }
+
+    eventSource.onclose = () => {
+      console.log('日誌串流連線已關閉')
+    }
+
     // 設置事件監聽器
     eventSource.onmessage = (event) => {
       try {
+        console.log('收到日誌串流資料:', event.data)
         const logData = JSON.parse(event.data)
+
+        // 檢查是否是連接成功訊息
+        if (logData.type === 'connection') {
+          console.log('串流連接成功:', logData.message)
+          return
+        }
+
+        // 檢查是否是心跳訊息
+        if (logData.type === 'heartbeat') {
+          console.log('收到心跳訊息:', logData.timestamp)
+          return
+        }
+
         if (onMessage) {
           onMessage(logData)
         }
       } catch (error) {
         console.error('解析日誌串流資料失敗:', error)
+        console.error('原始資料:', event.data)
       }
     }
 
     eventSource.onerror = (error) => {
       console.error('日誌串流錯誤:', error)
+      console.error('串流 URL:', streamURL)
+      console.error('EventSource readyState:', eventSource.readyState)
+
+      // 檢查是否是 403 錯誤
+      if (eventSource.readyState === EventSource.CLOSED) {
+        console.error('EventSource 已關閉')
+      }
+
       if (onError) {
         onError(error)
       }
@@ -145,19 +197,15 @@ class LogsService {
    * @returns {string} 基礎 URL
    */
   getStreamBaseURL() {
-    // 開發環境
-    if (import.meta.env.DEV) {
-      return 'http://localhost:4000'
+    // 使用與 apiService 相同的環境變數
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+
+    // 如果是相對路徑，轉換為絕對路徑
+    if (apiUrl.startsWith('/')) {
+      return window.location.origin + apiUrl
     }
 
-    // 生產環境 - 根據當前域名決定
-    const currentHost = window.location.hostname
-    if (currentHost === 'memedam.com' || currentHost === 'www.memedam.com') {
-      return 'https://api.memedam.com'
-    }
-
-    // 預設使用相對路徑
-    return window.location.origin
+    return apiUrl
   }
 
   /**
