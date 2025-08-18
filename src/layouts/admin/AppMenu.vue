@@ -14,6 +14,7 @@ import {
   // IconUserEdit,
   IconWrench,
   IconFileText,
+  IconSupport,
 } from '@/components/icons'
 
 // 使用 admin store
@@ -119,6 +120,13 @@ const model = computed(() => {
           to: '/admin/report-stats',
           badge: null,
           customIcon: IconChartBar,
+        },
+        {
+          label: '意見管理',
+          icon: 'pi pi-fw pi-comments',
+          to: '/admin/feedbacks',
+          badge: null,
+          customIcon: IconSupport,
         },
       ],
     },

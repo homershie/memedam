@@ -14,10 +14,10 @@
             <ProgressSpinner size="small" />
           </div>
           <div v-else>
-            <div class="text-2xl font-bold text-blue-600">
+            <div class="text-2xl font-bold text-blue-500">
               {{ stats.total }}
             </div>
-            <div class="text-sm text-gray-600">總檢舉數</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">總檢舉數</div>
           </div>
         </template>
       </Card>
@@ -27,10 +27,10 @@
             <ProgressSpinner size="small" />
           </div>
           <div v-else>
-            <div class="text-2xl font-bold text-orange-600">
+            <div class="text-2xl font-bold text-primary-600">
               {{ stats.pending }}
             </div>
-            <div class="text-sm text-gray-600">待處理</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">待處理</div>
           </div>
         </template>
       </Card>
@@ -40,10 +40,10 @@
             <ProgressSpinner size="small" />
           </div>
           <div v-else>
-            <div class="text-2xl font-bold text-green-600">
+            <div class="text-2xl font-bold text-green-500">
               {{ stats.processed }}
             </div>
-            <div class="text-sm text-gray-600">已處理</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">已處理</div>
           </div>
         </template>
       </Card>
@@ -113,7 +113,7 @@
                   :severity="getStatusSeverity(report.status)"
                 />
               </div>
-              <span class="text-sm text-gray-500">
+              <span class="text-sm text-gray-500 dark:text-gray-400">
                 {{ formatDate(report.createdAt) }}
               </span>
             </div>
