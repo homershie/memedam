@@ -1,9 +1,7 @@
 <template>
-  <div
-    class="min-h-screen px-4 pt-6 flex justify-center min-w-full md:min-w-5xl md:px-0"
-  >
+  <div class="px-4 pt-6 flex justify-center w-full h-fit scroll-auto">
     <!-- 主要內容區域 -->
-    <div class="w-full max-w-md">
+    <div class="flex flex-col w-full max-w-md">
       <!-- 導航標籤 -->
       <div class="flex justify-center mb-8 gap-8">
         <button
@@ -36,13 +34,6 @@
         </button>
       </div>
 
-      <!-- 標題 -->
-      <h1
-        class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-4"
-      >
-        {{ activeTab === 'register' ? '註冊' : '登入' }}
-      </h1>
-
       <!-- 條款說明 -->
       <p
         class="text-sm text-gray-600 dark:text-gray-400 mb-8 text-center leading-relaxed"
@@ -69,7 +60,7 @@
       <!-- 表單 -->
       <form
         @submit.prevent="onSubmit"
-        class="space-y-6 mb-8"
+        class="space-y-6"
         :data-form-type="activeTab"
         data-testid="login-form"
         autocomplete="on"
@@ -308,13 +299,11 @@
           </small>
         </div>
       </div>
-    </div>
 
-    <!-- 版權聲明 -->
-    <div
-      class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-500 dark:text-gray-400"
-    >
-      © 2025 迷因典 MemeDam
+      <!-- 版權聲明 -->
+      <div class="mt-4 text-sm text-center text-gray-500 dark:text-gray-400">
+        © 2025 迷因典 MemeDam
+      </div>
     </div>
   </div>
 </template>

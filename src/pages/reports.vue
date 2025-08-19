@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-4 space-y-6">
+  <div class="w-5xl p-8 mx-auto space-y-6">
     <!-- 頁面標題 -->
     <div class="mb-6">
       <h1 class="text-3xl font-bold mb-2">檢舉紀錄</h1>

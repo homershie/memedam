@@ -1,5 +1,5 @@
 <template>
-  <div class="container min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6">
+  <div class="w-5xl min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6">
     <!-- 使用 PrimeVue Tabs 的設定區塊 -->
     <div class="rounded-lg">
       <Tabs v-model:value="activeTabIndex" class="w-full">

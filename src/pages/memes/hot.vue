@@ -5,6 +5,7 @@
     <!-- 頁面標題 -->
     <div class="mb-6 text-start">
       <h1 class="text-3xl font-bold text-gray-800">熱門迷因</h1>
+      <p class="text-gray-600 mt-2">基於熱門排序的推薦</p>
     </div>
 
     <div class="flex justify-between flex-wrap">

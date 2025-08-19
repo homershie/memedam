@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-4 space-y-12">
+  <div class="w-5xl p-8 mx-auto space-y-6">
     <div class="mb-4">
       <h1>提供意見</h1>
       <p class="mt-2">您的意見對我們很重要，請告訴我們您的想法</p>
