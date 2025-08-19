@@ -4,9 +4,25 @@ class FeedbackService {
   // 提交意見
   async submitFeedback(feedbackData) {
     try {
-      const response = await apiService.post('/feedback/submit', feedbackData)
+      console.log('📤 feedbackService: 開始發送請求到後端...')
+      console.log('📦 feedbackService: 請求數據:', feedbackData)
+      console.log('🌐 feedbackService: 請求 URL:', 'api/feedback/submit')
+
+      const response = await apiService.httpAuth.post(
+        'api/feedback/submit',
+        feedbackData,
+      )
+
+      console.log('✅ feedbackService: 後端回應成功:', response.data)
       return response.data
     } catch (error) {
+      console.error('❌ feedbackService: 請求失敗:', error)
+      console.error('❌ feedbackService: 錯誤詳情:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+      })
       throw this.handleError(error)
     }
   }
@@ -14,7 +30,9 @@ class FeedbackService {
   // 取得意見列表 (管理員用)
   async getFeedbacks(params = {}) {
     try {
-      const response = await apiService.get('/feedback/admin', { params })
+      const response = await apiService.httpAuth.get('api/feedback/admin', {
+        params,
+      })
       return response.data
     } catch (error) {
       throw this.handleError(error)
@@ -24,36 +42,67 @@ class FeedbackService {
   // 更新意見狀態 (管理員用)
   async updateFeedbackStatus(id, statusData) {
     try {
-      const response = await apiService.put(`/feedback/admin/${id}`, statusData)
+      const response = await apiService.httpAuth.put(
+        `api/feedback/admin/${id}`,
+        statusData,
+      )
       return response.data
     } catch (error) {
       throw this.handleError(error)
     }
   }
 
+  // 檢查 reCAPTCHA 設定
+  checkRecaptchaConfig() {
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+    console.log('🔍 環境檢查:', {
+      siteKey: siteKey || '未設定',
+      DEV: import.meta.env.DEV,
+      MODE: import.meta.env.MODE,
+      NODE_ENV: import.meta.env.NODE_ENV,
+    })
+
+    if (
+      !siteKey ||
+      siteKey === 'your_site_key_here' ||
+      siteKey === 'undefined'
+    ) {
+      throw new Error('reCAPTCHA 設定未完成，請聯絡管理員')
+    }
+    return siteKey
+  }
+
   // 載入 reCAPTCHA 腳本
   loadRecaptchaScript() {
     return new Promise((resolve, reject) => {
+      // 檢查是否已經載入
       if (window.grecaptcha) {
         resolve(window.grecaptcha)
         return
       }
 
+      // 檢查環境變數
+      const siteKey = this.checkRecaptchaConfig()
+
       const script = document.createElement('script')
-      script.src = `https://www.google.com/recaptcha/api.js?render=${import.meta.env.VITE_RECAPTCHA_SITE_KEY}`
+      script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`
       script.async = true
       script.defer = true
-      
+
       script.onload = () => {
-        if (window.grecaptcha) {
-          resolve(window.grecaptcha)
-        } else {
-          reject(new Error('reCAPTCHA 載入失敗'))
+        // 等待 grecaptcha 初始化
+        const checkGrecaptcha = () => {
+          if (window.grecaptcha && window.grecaptcha.ready) {
+            resolve(window.grecaptcha)
+          } else {
+            setTimeout(checkGrecaptcha, 100)
+          }
         }
+        checkGrecaptcha()
       }
-      
+
       script.onerror = () => {
-        reject(new Error('reCAPTCHA 腳本載入失敗'))
+        reject(new Error('reCAPTCHA 腳本載入失敗，請檢查網路連線'))
       }
 
       document.head.appendChild(script)
@@ -63,12 +112,29 @@ class FeedbackService {
   // 執行 reCAPTCHA 驗證
   async executeRecaptcha(action = 'submit_feedback') {
     try {
+      console.log('🔄 開始執行 reCAPTCHA 驗證...')
       const grecaptcha = await this.loadRecaptchaScript()
-      const token = await grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY, { action })
-      return token
+
+      return new Promise((resolve, reject) => {
+        grecaptcha.ready(() => {
+          grecaptcha
+            .execute(this.checkRecaptchaConfig(), { action })
+            .then((token) => {
+              if (token) {
+                resolve(token)
+              } else {
+                reject(new Error('reCAPTCHA 驗證失敗'))
+              }
+            })
+            .catch((error) => {
+              console.error('reCAPTCHA 執行錯誤:', error)
+              reject(new Error('驗證失敗，請重新嘗試'))
+            })
+        })
+      })
     } catch (error) {
       console.error('reCAPTCHA 執行失敗:', error)
-      throw new Error('驗證失敗，請重新嘗試')
+      throw error
     }
   }
 

@@ -13,6 +13,7 @@ export const useUserStore = defineStore(
 
     const isLoggedIn = computed(() => token.value.length > 0)
     const isAdmin = computed(() => role.value === 'admin')
+    const isManager = computed(() => ['manager', 'admin'].includes(role.value))
 
     const login = (data) => {
       console.log('用戶登入，接收資料:', {
@@ -66,6 +67,7 @@ export const useUserStore = defineStore(
       userId,
       isLoggedIn,
       isAdmin,
+      isManager,
       login,
       logout,
     }

@@ -125,6 +125,10 @@
             <div class="ml-3 text-sm text-primary-500! dark:text-primary-200!">
               為了防止垃圾訊息，我們使用 Google reCAPTCHA
               進行驗證。提交表單時會自動執行驗證。
+              <br />
+              <span class="text-xs text-primary-400! dark:text-primary-300!">
+                如果遇到驗證問題，請檢查網路連線或聯絡管理員。
+              </span>
             </div>
           </div>
         </div>
@@ -187,40 +191,12 @@
         </div>
       </form>
     </div>
-
-    <!-- 成功訊息 -->
-    <div v-if="showSuccess" class="max-w-2xl mx-auto">
-      <div
-        class="bg-primary-50 border border-primary-200 text-primary-500! dark:bg-primary-900 dark:border-primary-800 dark:text-primary-200! rounded-md p-4"
-      >
-        <div class="flex items-start">
-          <div class="flex-shrink-0">
-            <svg
-              class="h-5 w-5 text-green-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <h3 class="text-success-800!">提交成功！</h3>
-            <div class="text-sm text-success-700! mt-1">
-              感謝您的意見回饋，我們會認真考慮您的建議。
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import feedbackService from '../services/feedbackService.js'
 
 // 定義元件名稱
@@ -248,7 +224,7 @@ const categoryOptions = [
 // 響應式狀態
 const errors = reactive({})
 const isSubmitting = ref(false)
-const showSuccess = ref(false)
+const toast = useToast()
 
 // 表單驗證
 const validateForm = () => {
@@ -281,39 +257,71 @@ const validateForm = () => {
 
 // 提交表單
 const submitFeedback = async () => {
+  console.log('🚀 開始提交 feedback 表單...')
+  console.log('📝 表單數據:', form)
+
   if (!validateForm()) {
+    console.log('❌ 表單驗證失敗')
     return
   }
 
+  console.log('✅ 表單驗證通過')
   isSubmitting.value = true
   errors.general = ''
 
   try {
     // 執行 reCAPTCHA 驗證
-    const recaptchaToken = await feedbackService.executeRecaptcha()
+    let recaptchaToken
+    try {
+      console.log('🔄 開始 reCAPTCHA 驗證...')
+      recaptchaToken = await feedbackService.executeRecaptcha()
+      console.log(
+        '✅ reCAPTCHA 驗證完成，token:',
+        recaptchaToken ? '已取得' : '無',
+      )
+    } catch (recaptchaError) {
+      console.error('❌ reCAPTCHA 錯誤:', recaptchaError)
+
+      // 根據錯誤類型提供不同的錯誤訊息
+      if (recaptchaError.message.includes('設定未完成')) {
+        errors.general = '系統設定問題，請聯絡管理員'
+      } else if (recaptchaError.message.includes('網路連線')) {
+        errors.general = '網路連線問題，請檢查網路後重新嘗試'
+      } else {
+        errors.general = '驗證失敗，請重新嘗試。如果問題持續，請聯絡管理員。'
+      }
+      return
+    }
 
     // 提交表單
-    const _response = await feedbackService.submitFeedback({
+    console.log('📤 開始提交到後端...')
+    const requestData = {
       ...form,
       recaptchaToken,
-    })
+    }
+    console.log('📦 請求數據:', requestData)
 
-    // 顯示成功訊息
-    showSuccess.value = true
+    const _response = await feedbackService.submitFeedback(requestData)
+    console.log('✅ 後端回應:', _response)
+
+    // 顯示成功 toast
+    toast.add({
+      severity: 'success',
+      summary: '提交成功',
+      detail: '感謝您的意見回饋，我們會認真考慮您的建議。',
+      life: 5000,
+    })
 
     // 重置表單
     Object.keys(form).forEach((key) => {
       form[key] = ''
     })
-
-    // 3秒後隱藏成功訊息
-    setTimeout(() => {
-      showSuccess.value = false
-    }, 3000)
   } catch (error) {
-    console.error('提交意見失敗:', error)
+    console.error('❌ 提交意見失敗:', error)
     if (error.message.includes('請先登入')) {
       errors.general = '請先登入才能提交意見'
+    } else if (error.message.includes('reCAPTCHA 驗證失敗')) {
+      errors.general = '驗證失敗，請重新嘗試'
     } else {
       errors.general =
         error.message || '提交失敗，請稍後再試。如有問題請聯絡客服。'

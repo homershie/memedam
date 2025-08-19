@@ -120,7 +120,7 @@
           <Button
             @click="enterSearchMode"
             severity="contrast"
-            class="p-button-text rounded-full w-10 h-10"
+            class="p-button-text rounded-full w-10 h-10 md:hidden"
             title="搜尋"
           >
             <i class="pi pi-search"></i>
@@ -530,9 +530,8 @@ const handleMenuClick = () => {
   }
 }
 
-const handleSearch = (searchTerm) => {
+const handleSearch = () => {
   // SearchBox 元件會處理頁面跳轉，這裡可以加入額外的搜尋邏輯
-  console.log('從 default.vue 搜尋:', searchTerm)
   if (isSearchMode.value) {
     exitSearchMode()
   }

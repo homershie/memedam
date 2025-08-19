@@ -313,6 +313,7 @@ const completeSocialRegistration = async (username) => {
       ...data.user,
       token: data.token,
       userId: data.userId || data.user?._id,
+      role: data.role, // 確保 role 資訊正確傳遞
     })
 
     needsUsernameSelection.value = false
@@ -412,6 +413,7 @@ const processOAuthCallback = async () => {
         ...userData,
         token: token,
         userId: userData?.id || userData?._id,
+        role: userData?.role, // 確保 role 資訊正確傳遞
       })
 
       isSuccess.value = true

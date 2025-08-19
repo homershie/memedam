@@ -3,7 +3,7 @@
     class="min-h-screen px-4 pt-6 flex justify-center min-w-full md:min-w-5xl md:px-0"
   >
     <!-- 主要內容區域 -->
-    <div class="w-full max-w-md h-fit">
+    <div class="w-full max-w-md">
       <!-- 導航標籤 -->
       <div class="flex justify-center mb-8 gap-8">
         <button
@@ -461,6 +461,7 @@ const onSubmit = async () => {
         ...data.user,
         token: data.token,
         userId: data.userId || data.user?._id, // 兩種都支援
+        role: data.role, // 確保 role 資訊正確傳遞
       })
 
       toast.add({
