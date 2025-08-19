@@ -1,13 +1,15 @@
 <template>
   <div class="container mx-auto p-4 space-y-12">
     <div class="mb-4">
-      <h1 class="text-3xl font-bold">提供意見</h1>
-      <p class="text-gray-600 mt-2">您的意見對我們很重要，請告訴我們您的想法</p>
-      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
-        <p class="text-sm text-blue-700">
+      <h1>提供意見</h1>
+      <p class="mt-2">您的意見對我們很重要，請告訴我們您的想法</p>
+      <div
+        class="bg-primary-50 border border-primary-200 text-primary-500! dark:bg-primary-900 dark:border-primary-800 dark:text-primary-200! rounded-md p-3 mt-4"
+      >
+        <div class="text-sm">
           <strong>隱私聲明：</strong
           >您提供的意見僅用於改善服務，不會對外公開。我們重視您的隱私權。
-        </p>
+        </div>
       </div>
     </div>
 
@@ -18,52 +20,55 @@
         <div>
           <label
             for="category"
-            class="block text-sm font-medium text-gray-700 mb-2"
+            class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400"
           >
-            意見分類 <span class="text-red-500">*</span>
+            意見分類 <span class="text-primary-500">*</span>
           </label>
-          <select
-            id="category"
+          <Select
             v-model="form.category"
-            required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="{ 'border-red-500': errors.category }"
+            :options="categoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="請選擇分類"
+            :invalid="!!errors.category"
+            class="w-full"
+          />
+          <Message
+            v-if="errors.category"
+            severity="error"
+            size="small"
+            variant="simple"
           >
-            <option value="">請選擇分類</option>
-            <option value="suggestion">建議</option>
-            <option value="bug">錯誤回報</option>
-            <option value="content">內容問題</option>
-            <option value="feature">功能請求</option>
-            <option value="other">其他</option>
-          </select>
-          <p v-if="errors.category" class="text-red-500 text-sm mt-1">
             {{ errors.category }}
-          </p>
+          </Message>
         </div>
 
         <!-- 標題 -->
         <div>
           <label
             for="title"
-            class="block text-sm font-medium text-gray-700 mb-2"
+            class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400"
           >
-            意見標題 <span class="text-red-500">*</span>
+            意見標題 <span class="text-primary-500">*</span>
           </label>
-          <input
-            id="title"
+          <InputText
             v-model="form.title"
             type="text"
-            required
-            minlength="5"
-            maxlength="200"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="{ 'border-red-500': errors.title }"
+            :minlength="5"
+            :maxlength="200"
+            :invalid="!!errors.title"
             placeholder="請簡述您的意見標題 (5-200字)"
+            class="w-full"
           />
           <div class="flex justify-between items-center mt-1">
-            <p v-if="errors.title" class="text-red-500 text-sm">
+            <Message
+              v-if="errors.title"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
               {{ errors.title }}
-            </p>
+            </Message>
             <p class="text-gray-500 text-sm">{{ form.title.length }}/200</p>
           </div>
         </div>
@@ -72,35 +77,41 @@
         <div>
           <label
             for="message"
-            class="block text-sm font-medium text-gray-700 mb-2"
+            class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400"
           >
-            訊息內容 <span class="text-red-500">*</span>
+            訊息內容 <span class="text-primary-500">*</span>
           </label>
-          <textarea
-            id="message"
+          <Textarea
             v-model="form.message"
-            required
-            minlength="10"
-            maxlength="2000"
-            rows="6"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            :class="{ 'border-red-500': errors.message }"
+            :minlength="10"
+            :maxlength="2000"
+            :rows="6"
+            :invalid="!!errors.message"
             placeholder="請詳細描述您的意見或建議... (至少10字)"
-          ></textarea>
+            class="w-full"
+            autoResize
+          />
           <div class="flex justify-between items-center mt-1">
-            <p v-if="errors.message" class="text-red-500 text-sm">
+            <Message
+              v-if="errors.message"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
               {{ errors.message }}
-            </p>
+            </Message>
             <p class="text-gray-500 text-sm">{{ form.message.length }}/2000</p>
           </div>
         </div>
 
         <!-- reCAPTCHA 提示 -->
-        <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div
+          class="bg-primary-50 border border-primary-200 text-primary-500! dark:bg-primary-900 dark:border-primary-800 dark:text-primary-300! rounded-md p-4"
+        >
           <div class="flex items-start">
             <div class="flex-shrink-0">
               <svg
-                class="h-5 w-5 text-blue-400"
+                class="h-5 w-5 text-primary-400"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -111,11 +122,9 @@
                 />
               </svg>
             </div>
-            <div class="ml-3">
-              <p class="text-sm text-blue-700">
-                為了防止垃圾訊息，我們使用 Google reCAPTCHA
-                進行驗證。提交表單時會自動執行驗證。
-              </p>
+            <div class="ml-3 text-sm text-primary-500! dark:text-primary-200!">
+              為了防止垃圾訊息，我們使用 Google reCAPTCHA
+              進行驗證。提交表單時會自動執行驗證。
             </div>
           </div>
         </div>
@@ -123,12 +132,12 @@
         <!-- 錯誤訊息 -->
         <div
           v-if="errors.general"
-          class="bg-red-50 border border-red-200 rounded-md p-4"
+          class="bg-primary-50 border border-primary-200 text-primary-500! dark:bg-primary-900 dark:border-primary-800 dark:text-primary-200! rounded-md p-4"
         >
           <div class="flex items-start">
             <div class="flex-shrink-0">
               <svg
-                class="h-5 w-5 text-red-400"
+                class="h-5 w-5 text-primary-400"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -140,18 +149,16 @@
               </svg>
             </div>
             <div class="ml-3">
-              <p class="text-sm text-red-700">{{ errors.general }}</p>
+              <p class="text-sm text-primary-500! dark:text-primary-200!">
+                {{ errors.general }}
+              </p>
             </div>
           </div>
         </div>
 
         <!-- 提交按鈕 -->
         <div class="flex justify-end">
-          <button
-            type="submit"
-            :disabled="isSubmitting"
-            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button type="submit" :disabled="isSubmitting">
             <span v-if="isSubmitting" class="flex items-center">
               <svg
                 class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
@@ -176,14 +183,16 @@
               提交中...
             </span>
             <span v-else>提交意見</span>
-          </button>
+          </Button>
         </div>
       </form>
     </div>
 
     <!-- 成功訊息 -->
     <div v-if="showSuccess" class="max-w-2xl mx-auto">
-      <div class="bg-green-50 border border-green-200 rounded-md p-4">
+      <div
+        class="bg-primary-50 border border-primary-200 text-primary-500! dark:bg-primary-900 dark:border-primary-800 dark:text-primary-200! rounded-md p-4"
+      >
         <div class="flex items-start">
           <div class="flex-shrink-0">
             <svg
@@ -199,10 +208,10 @@
             </svg>
           </div>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-green-800">提交成功！</h3>
-            <p class="text-sm text-green-700 mt-1">
+            <h3 class="text-success-800!">提交成功！</h3>
+            <div class="text-sm text-success-700! mt-1">
               感謝您的意見回饋，我們會認真考慮您的建議。
-            </p>
+            </div>
           </div>
         </div>
       </div>
@@ -210,102 +219,108 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive } from 'vue'
 import feedbackService from '../services/feedbackService.js'
 
-export default {
+// 定義元件名稱
+defineOptions({
   name: 'FeedbackPage',
-  setup() {
-    const form = reactive({
-      title: '',
-      message: '',
-      category: '',
+})
+
+// 表單數據
+const form = reactive({
+  title: '',
+  message: '',
+  category: '',
+})
+
+// 分類選項
+const categoryOptions = [
+  { label: '請選擇分類', value: '' },
+  { label: '建議', value: 'suggestion' },
+  { label: '錯誤回報', value: 'bug' },
+  { label: '內容問題', value: 'content' },
+  { label: '功能請求', value: 'feature' },
+  { label: '其他', value: 'other' },
+]
+
+// 響應式狀態
+const errors = reactive({})
+const isSubmitting = ref(false)
+const showSuccess = ref(false)
+
+// 表單驗證
+const validateForm = () => {
+  errors.category = ''
+  errors.title = ''
+  errors.message = ''
+
+  if (!form.category) {
+    errors.category = '請選擇分類'
+  }
+
+  if (!form.title.trim()) {
+    errors.title = '請輸入標題'
+  } else if (form.title.length < 5) {
+    errors.title = '標題至少需要 5 個字元'
+  } else if (form.title.length > 200) {
+    errors.title = '標題不能超過 200 個字元'
+  }
+
+  if (!form.message.trim()) {
+    errors.message = '請輸入訊息內容'
+  } else if (form.message.length < 10) {
+    errors.message = '訊息內容至少需要 10 個字元'
+  } else if (form.message.length > 2000) {
+    errors.message = '訊息內容不能超過 2000 個字元'
+  }
+
+  return !Object.values(errors).some((error) => error)
+}
+
+// 提交表單
+const submitFeedback = async () => {
+  if (!validateForm()) {
+    return
+  }
+
+  isSubmitting.value = true
+  errors.general = ''
+
+  try {
+    // 執行 reCAPTCHA 驗證
+    const recaptchaToken = await feedbackService.executeRecaptcha()
+
+    // 提交表單
+    const _response = await feedbackService.submitFeedback({
+      ...form,
+      recaptchaToken,
     })
 
-    const errors = reactive({})
-    const isSubmitting = ref(false)
-    const showSuccess = ref(false)
+    // 顯示成功訊息
+    showSuccess.value = true
 
-    const validateForm = () => {
-      errors.category = ''
-      errors.title = ''
-      errors.message = ''
+    // 重置表單
+    Object.keys(form).forEach((key) => {
+      form[key] = ''
+    })
 
-      if (!form.category) {
-        errors.category = '請選擇分類'
-      }
-
-      if (!form.title.trim()) {
-        errors.title = '請輸入標題'
-      } else if (form.title.length < 5) {
-        errors.title = '標題至少需要 5 個字元'
-      } else if (form.title.length > 200) {
-        errors.title = '標題不能超過 200 個字元'
-      }
-
-      if (!form.message.trim()) {
-        errors.message = '請輸入訊息內容'
-      } else if (form.message.length < 10) {
-        errors.message = '訊息內容至少需要 10 個字元'
-      } else if (form.message.length > 2000) {
-        errors.message = '訊息內容不能超過 2000 個字元'
-      }
-
-      return !Object.values(errors).some((error) => error)
+    // 3秒後隱藏成功訊息
+    setTimeout(() => {
+      showSuccess.value = false
+    }, 3000)
+  } catch (error) {
+    console.error('提交意見失敗:', error)
+    if (error.message.includes('請先登入')) {
+      errors.general = '請先登入才能提交意見'
+    } else {
+      errors.general =
+        error.message || '提交失敗，請稍後再試。如有問題請聯絡客服。'
     }
-
-    const submitFeedback = async () => {
-      if (!validateForm()) {
-        return
-      }
-
-      isSubmitting.value = true
-      errors.general = ''
-
-      try {
-        // 執行 reCAPTCHA 驗證
-        const recaptchaToken = await feedbackService.executeRecaptcha()
-
-        // 提交表單
-        const response = await feedbackService.submitFeedback({
-          ...form,
-          recaptchaToken,
-        })
-
-        // 顯示成功訊息
-        showSuccess.value = true
-
-        // 重置表單
-        Object.keys(form).forEach((key) => {
-          form[key] = ''
-        })
-
-        // 3秒後隱藏成功訊息
-        setTimeout(() => {
-          showSuccess.value = false
-        }, 3000)
-      } catch (error) {
-        console.error('提交意見失敗:', error)
-        if (error.message.includes('請先登入')) {
-          errors.general = '請先登入才能提交意見'
-        } else {
-          errors.general =
-            error.message || '提交失敗，請稍後再試。如有問題請聯絡客服。'
-        }
-      } finally {
-        isSubmitting.value = false
-      }
-    }
-
-    return {
-      form,
-      errors,
-      isSubmitting,
-      showSuccess,
-      submitFeedback,
-    }
-  },
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 

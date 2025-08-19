@@ -155,6 +155,19 @@ updatePreset({
   },
   primitive: {
     // 次要色 Secondary (#A259F7)
+    red: {
+      50: '#FFF5FC',
+      100: '#FFEBF9',
+      200: '#FFCCEF',
+      300: '#FFADE2',
+      400: '#FF70C1',
+      500: '#ff3399',
+      600: '#E62984',
+      700: '#BF1D63',
+      800: '#991248',
+      900: '#730A31',
+      950: '#4A041A',
+    },
     purple: {
       50: '#FDF7FF',
       100: '#FAF0FF',

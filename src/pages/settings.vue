@@ -95,6 +95,7 @@
                       class="space-y-4"
                       data-testid="set-password-form"
                       autocomplete="on"
+                      novalidate
                     >
                       <div
                         class="flex items-center gap-4 flex-wrap md:flex-nowrap"
@@ -116,21 +117,19 @@
                             toggleMask
                             fluid
                             placeholder="輸入新密碼"
-                            :class="{
-                              'p-invalid': passwordForm.errors.newPassword,
-                            }"
-                            required
+                            :invalid="!!passwordForm.errors.newPassword"
                             aria-describedby="new-password-set-error"
                             :aria-invalid="!!passwordForm.errors.newPassword"
                           />
-                          <small
-                            id="new-password-set-error"
+                          <Message
                             v-if="passwordForm.errors.newPassword"
-                            class="p-error"
-                            role="alert"
+                            severity="error"
+                            size="small"
+                            variant="simple"
+                            id="new-password-set-error"
                           >
                             {{ passwordForm.errors.newPassword }}
-                          </small>
+                          </Message>
                         </div>
                         <div class="w-full md:w-1/2">
                           <label
@@ -149,23 +148,21 @@
                             toggleMask
                             fluid
                             placeholder="再次輸入新密碼"
-                            :class="{
-                              'p-invalid': passwordForm.errors.confirmPassword,
-                            }"
-                            required
+                            :invalid="!!passwordForm.errors.confirmPassword"
                             aria-describedby="confirm-password-set-error"
                             :aria-invalid="
                               !!passwordForm.errors.confirmPassword
                             "
                           />
-                          <small
-                            id="confirm-password-set-error"
+                          <Message
                             v-if="passwordForm.errors.confirmPassword"
-                            class="p-error"
-                            role="alert"
+                            severity="error"
+                            size="small"
+                            variant="simple"
+                            id="confirm-password-set-error"
                           >
                             {{ passwordForm.errors.confirmPassword }}
-                          </small>
+                          </Message>
                         </div>
                       </div>
                       <div class="flex justify-end">
@@ -190,6 +187,7 @@
                   class="space-y-4"
                   data-testid="change-password-form"
                   autocomplete="on"
+                  novalidate
                 >
                   <div class="flex items-center gap-4 flex-wrap md:flex-nowrap">
                     <div class="w-full md:w-1/3">
@@ -209,21 +207,19 @@
                         toggleMask
                         placeholder="輸入目前密碼"
                         fluid
-                        :class="{
-                          'p-invalid': passwordForm.errors.currentPassword,
-                        }"
-                        required
+                        :invalid="!!passwordForm.errors.currentPassword"
                         aria-describedby="current-password-error"
                         :aria-invalid="!!passwordForm.errors.currentPassword"
                       />
-                      <small
-                        id="current-password-error"
+                      <Message
                         v-if="passwordForm.errors.currentPassword"
-                        class="p-error"
-                        role="alert"
+                        severity="error"
+                        size="small"
+                        variant="simple"
+                        id="current-password-error"
                       >
                         {{ passwordForm.errors.currentPassword }}
-                      </small>
+                      </Message>
                     </div>
                     <div class="w-full md:w-1/3">
                       <label
@@ -242,21 +238,19 @@
                         toggleMask
                         fluid
                         placeholder="輸入新密碼"
-                        :class="{
-                          'p-invalid': passwordForm.errors.newPassword,
-                        }"
-                        required
+                        :invalid="!!passwordForm.errors.newPassword"
                         aria-describedby="new-password-change-error"
                         :aria-invalid="!!passwordForm.errors.newPassword"
                       />
-                      <small
-                        id="new-password-change-error"
+                      <Message
                         v-if="passwordForm.errors.newPassword"
-                        class="p-error"
-                        role="alert"
+                        severity="error"
+                        size="small"
+                        variant="simple"
+                        id="new-password-change-error"
                       >
                         {{ passwordForm.errors.newPassword }}
-                      </small>
+                      </Message>
                     </div>
                     <div class="w-full md:w-1/3">
                       <label
@@ -275,21 +269,19 @@
                         toggleMask
                         placeholder="再次輸入新密碼"
                         fluid
-                        :class="{
-                          'p-invalid': passwordForm.errors.confirmPassword,
-                        }"
-                        required
+                        :invalid="!!passwordForm.errors.confirmPassword"
                         aria-describedby="confirm-password-change-error"
                         :aria-invalid="!!passwordForm.errors.confirmPassword"
                       />
-                      <small
-                        id="confirm-password-change-error"
+                      <Message
                         v-if="passwordForm.errors.confirmPassword"
-                        class="p-error"
-                        role="alert"
+                        severity="error"
+                        size="small"
+                        variant="simple"
+                        id="confirm-password-change-error"
                       >
                         {{ passwordForm.errors.confirmPassword }}
-                      </small>
+                      </Message>
                     </div>
                   </div>
 
@@ -525,6 +517,7 @@
                 class="space-y-6"
                 data-testid="profile-form"
                 autocomplete="on"
+                novalidate
               >
                 <!-- 頭像 -->
                 <div class="space-y-4 mt-4">
@@ -610,19 +603,19 @@
                       data-testid="display-name-input"
                       placeholder="輸入顯示名稱"
                       class="w-full"
-                      :class="{ 'p-invalid': profileForm.errors.displayName }"
-                      required
+                      :invalid="!!profileForm.errors.displayName"
                       aria-describedby="display-name-error"
                       :aria-invalid="!!profileForm.errors.displayName"
                     />
-                    <small
-                      id="display-name-error"
+                    <Message
                       v-if="profileForm.errors.displayName"
-                      class="p-error"
-                      role="alert"
+                      severity="error"
+                      size="small"
+                      variant="simple"
+                      id="display-name-error"
                     >
                       {{ profileForm.errors.displayName }}
-                    </small>
+                    </Message>
                   </div>
 
                   <div>
@@ -645,14 +638,15 @@
                       aria-describedby="gender-error"
                       :aria-invalid="!!profileForm.errors.gender"
                     />
-                    <small
-                      id="gender-error"
+                    <Message
                       v-if="profileForm.errors.gender"
-                      class="p-error"
-                      role="alert"
+                      severity="error"
+                      size="small"
+                      variant="simple"
+                      id="gender-error"
                     >
                       {{ profileForm.errors.gender }}
-                    </small>
+                    </Message>
                   </div>
 
                   <div>
@@ -673,14 +667,15 @@
                       aria-describedby="birthday-error"
                       :aria-invalid="!!profileForm.errors.birthday"
                     />
-                    <small
-                      id="birthday-error"
+                    <Message
                       v-if="profileForm.errors.birthday"
-                      class="p-error"
-                      role="alert"
+                      severity="error"
+                      size="small"
+                      variant="simple"
+                      id="birthday-error"
                     >
                       {{ profileForm.errors.birthday }}
-                    </small>
+                    </Message>
                   </div>
                 </div>
 
@@ -700,19 +695,20 @@
                     placeholder="寫下您的自我介紹..."
                     rows="4"
                     class="w-full"
-                    :class="{ 'p-invalid': profileForm.errors.bio }"
+                    :invalid="!!profileForm.errors.bio"
                     aria-describedby="bio-error"
                     :aria-invalid="!!profileForm.errors.bio"
                   />
                   <div class="flex justify-between items-center mt-2">
-                    <small
-                      id="bio-error"
+                    <Message
                       v-if="profileForm.errors.bio"
-                      class="p-error"
-                      role="alert"
+                      severity="error"
+                      size="small"
+                      variant="simple"
+                      id="bio-error"
                     >
                       {{ profileForm.errors.bio }}
-                    </small>
+                    </Message>
                     <small class="text-gray-500">
                       {{ userProfile.bio?.length || 0 }}/500
                     </small>
@@ -922,6 +918,7 @@
         class="space-y-4"
         data-testid="change-email-form"
         autocomplete="on"
+        novalidate
       >
         <div>
           <label
@@ -939,19 +936,19 @@
             data-testid="new-email-input"
             placeholder="輸入新電子信箱"
             fluid
-            :class="{ 'p-invalid': emailForm.errors.newEmail }"
-            required
+            :invalid="!!emailForm.errors.newEmail"
             aria-describedby="new-email-error"
             :aria-invalid="!!emailForm.errors.newEmail"
           />
-          <small
-            id="new-email-error"
+          <Message
             v-if="emailForm.errors.newEmail"
-            class="p-error"
-            role="alert"
+            severity="error"
+            size="small"
+            variant="simple"
+            id="new-email-error"
           >
             {{ emailForm.errors.newEmail }}
-          </small>
+          </Message>
         </div>
         <div v-if="userProfile.hasPassword">
           <label
@@ -970,19 +967,19 @@
             toggleMask
             fluid
             placeholder="輸入目前密碼"
-            :class="{ 'p-invalid': emailForm.errors.currentPassword }"
-            required
+            :invalid="!!emailForm.errors.currentPassword"
             aria-describedby="current-password-email-error"
             :aria-invalid="!!emailForm.errors.currentPassword"
           />
-          <small
-            id="current-password-email-error"
+          <Message
             v-if="emailForm.errors.currentPassword"
-            class="p-error"
-            role="alert"
+            severity="error"
+            size="small"
+            variant="simple"
+            id="current-password-email-error"
           >
             {{ emailForm.errors.currentPassword }}
-          </small>
+          </Message>
         </div>
         <!-- 如果沒有密碼，顯示提示 -->
         <div
@@ -1062,19 +1059,19 @@
             data-testid="delete-confirmation-input"
             placeholder="輸入您的使用者名稱"
             class="w-full"
-            :class="{ 'p-invalid': deleteForm.errors.confirmation }"
-            required
+            :invalid="!!deleteForm.errors.confirmation"
             aria-describedby="delete-confirmation-error"
             :aria-invalid="!!deleteForm.errors.confirmation"
           />
-          <small
-            id="delete-confirmation-error"
+          <Message
             v-if="deleteForm.errors.confirmation"
-            class="p-error"
-            role="alert"
+            severity="error"
+            size="small"
+            variant="simple"
+            id="delete-confirmation-error"
           >
             {{ deleteForm.errors.confirmation }}
-          </small>
+          </Message>
         </div>
       </div>
       <template #footer>
@@ -1188,7 +1185,7 @@
           </div>
         </div>
 
-        <form @submit.prevent="changeUsername" class="space-y-4">
+        <form @submit.prevent="changeUsername" class="space-y-4" novalidate>
           <!-- 新使用者名稱輸入 -->
           <div>
             <label
@@ -1208,13 +1205,12 @@
                 placeholder="輸入新使用者名稱"
                 class="flex-1"
                 :class="{
-                  'p-invalid': usernameForm.errors.newUsername,
                   'p-success': usernameForm.availability === true,
                   'p-error': usernameForm.availability === false,
                 }"
+                :invalid="!!usernameForm.errors.newUsername"
                 @input="handleUsernameInput"
                 @blur="checkUsernameAvailability"
-                required
                 aria-describedby="new-username-error"
                 :aria-invalid="!!usernameForm.errors.newUsername"
               />
@@ -1235,14 +1231,15 @@
             </div>
 
             <!-- 錯誤訊息 -->
-            <small
-              id="new-username-error"
+            <Message
               v-if="usernameForm.errors.newUsername"
-              class="p-error"
-              role="alert"
+              severity="error"
+              size="small"
+              variant="simple"
+              id="new-username-error"
             >
               {{ usernameForm.errors.newUsername }}
-            </small>
+            </Message>
 
             <!-- 可用性狀態 -->
             <div v-if="usernameForm.availability !== null" class="mt-2">
@@ -1287,19 +1284,19 @@
               toggleMask
               fluid
               placeholder="輸入目前密碼"
-              :class="{ 'p-invalid': usernameForm.errors.currentPassword }"
-              required
+              :invalid="!!usernameForm.errors.currentPassword"
               aria-describedby="current-password-username-error"
               :aria-invalid="!!usernameForm.errors.currentPassword"
             />
-            <small
-              id="current-password-username-error"
+            <Message
               v-if="usernameForm.errors.currentPassword"
-              class="p-error"
-              role="alert"
+              severity="error"
+              size="small"
+              variant="simple"
+              id="current-password-username-error"
             >
               {{ usernameForm.errors.currentPassword }}
-            </small>
+            </Message>
           </div>
           <!-- 如果沒有密碼，顯示提示 -->
           <div

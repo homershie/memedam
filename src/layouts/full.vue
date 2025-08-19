@@ -77,10 +77,6 @@
   </div>
 </template>
 
-<script setup>
-import Toast from 'primevue/toast'
-</script>
-
 <style scoped lang="scss">
 .full-layout {
   min-height: 100vh;

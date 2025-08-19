@@ -3,7 +3,7 @@
     class="min-h-screen px-4 pt-6 flex justify-center min-w-full md:min-w-5xl md:px-0"
   >
     <!-- 主要內容區域 -->
-    <div class="w-full max-w-md">
+    <div class="w-full max-w-md h-fit">
       <!-- 導航標籤 -->
       <div class="flex justify-center mb-8 gap-8">
         <button
@@ -73,6 +73,7 @@
         :data-form-type="activeTab"
         data-testid="login-form"
         autocomplete="on"
+        novalidate
       >
         <!-- 註冊時的使用者名稱欄位 -->
         <div v-if="activeTab === 'register'" class="space-y-2">
@@ -90,22 +91,20 @@
             autocomplete="username"
             data-testid="username-input"
             fluid
-            :class="{
-              'border-primary-500 focus:ring-primary-500': errors.username,
-            }"
+            :invalid="!!errors.username"
             placeholder="請輸入使用者名稱"
-            required
             aria-describedby="username-error"
-            aria-invalid="false"
+            :aria-invalid="!!errors.username"
           />
-          <small
-            id="username-error"
-            class="text-primary-500 text-xs"
+          <Message
             v-if="errors.username"
-            role="alert"
+            severity="error"
+            size="small"
+            variant="simple"
+            :id="'username-error'"
           >
             {{ errors.username }}
-          </small>
+          </Message>
         </div>
 
         <!-- 電子信箱/帳號欄位 -->
@@ -128,28 +127,26 @@
               activeTab === 'register' ? 'email-input' : 'login-input'
             "
             fluid
-            :class="{
-              'border-primary-500 focus:ring-primary-500': errors.email,
-            }"
+            :invalid="!!errors.email"
             :placeholder="
               activeTab === 'register'
                 ? '請輸入電子信箱'
                 : '請輸入使用者名稱或電子信箱'
             "
-            required
             :aria-describedby="
               activeTab === 'register' ? 'email-error' : 'login-error'
             "
             :aria-invalid="!!errors.email"
           />
-          <small
-            :id="activeTab === 'register' ? 'email-error' : 'login-error'"
-            class="text-primary-500 text-xs"
+          <Message
             v-if="errors.email"
-            role="alert"
+            severity="error"
+            size="small"
+            variant="simple"
+            :id="activeTab === 'register' ? 'email-error' : 'login-error'"
           >
             {{ errors.email }}
-          </small>
+          </Message>
         </div>
 
         <!-- 密碼欄位 -->
@@ -169,23 +166,23 @@
             "
             data-testid="password-input"
             class="w-full"
-            :class="{ 'p-invalid': errors.password }"
+            :invalid="!!errors.password"
             placeholder="請輸入密碼"
             :feedback="false"
             toggleMask
             fluid
-            required
             aria-describedby="password-error"
             :aria-invalid="!!errors.password"
           />
-          <small
-            id="password-error"
-            class="text-primary-500 text-xs"
+          <Message
             v-if="errors.password"
-            role="alert"
+            severity="error"
+            size="small"
+            variant="simple"
+            id="password-error"
           >
             {{ errors.password }}
-          </small>
+          </Message>
         </div>
 
         <!-- 確認密碼欄位（僅註冊時顯示） -->
@@ -203,24 +200,34 @@
             autocomplete="new-password"
             data-testid="confirm-password-input"
             class="w-full"
-            :class="{ 'p-invalid': errors.confirmPassword }"
+            :invalid="!!errors.confirmPassword"
             placeholder="請再次輸入密碼"
             :feedback="false"
             toggleMask
             fluid
-            required
             aria-describedby="confirm-password-error"
             :aria-invalid="!!errors.confirmPassword"
           />
-          <small
-            id="confirm-password-error"
-            class="text-primary-500 text-xs"
+          <Message
             v-if="errors.confirmPassword"
-            role="alert"
+            severity="error"
+            size="small"
+            variant="simple"
+            id="confirm-password-error"
           >
             {{ errors.confirmPassword }}
-          </small>
+          </Message>
         </div>
+
+        <!-- 一般錯誤訊息 -->
+        <Message
+          v-if="errors.general"
+          severity="error"
+          size="small"
+          variant="simple"
+        >
+          {{ errors.general }}
+        </Message>
 
         <Button
           type="submit"
@@ -348,6 +355,7 @@ const errors = reactive({
   email: '',
   password: '',
   confirmPassword: '',
+  general: '',
 })
 
 // 驗證函數
@@ -418,6 +426,7 @@ const onSubmit = async () => {
   }
 
   isSubmitting.value = true
+  errors.general = ''
 
   try {
     if (activeTab.value === 'register') {
