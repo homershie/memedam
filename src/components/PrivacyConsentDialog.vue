@@ -148,6 +148,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import privacyConsentService from '@/services/privacyConsentService'
 
 // 定義組件名稱
 defineOptions({
@@ -162,37 +163,89 @@ const cookiePreferences = ref({
   analytics: true,
 })
 
-// 檢查是否已經同意過
-const hasConsented = () => {
-  return localStorage.getItem('privacy-consent') !== null
+// 檢查是否已經同意過（考慮後端資料）
+const hasConsented = async () => {
+  try {
+    // 先檢查本地資料
+    const localConsent = localStorage.getItem('privacy-consent')
+    if (localConsent) {
+      return true
+    }
+
+    // 如果本地沒有，檢查後端資料
+    const response = await privacyConsentService.getCurrentConsent()
+    const backendConsent = response.data?.consent
+
+    if (backendConsent) {
+      // 後端有資料但本地沒有，同步到本地
+      localStorage.setItem('privacy-consent', JSON.stringify(backendConsent))
+      return true
+    }
+
+    return false
+  } catch (error) {
+    console.log('檢查同意狀態失敗，使用本地資料:', error.message)
+    // 檢查失敗時，使用本地資料
+    return localStorage.getItem('privacy-consent') !== null
+  }
 }
 
 // 檢查是否需要顯示（首次訪問或未同意）
-const shouldShow = () => {
-  return !hasConsented()
+const shouldShow = async () => {
+  return !(await hasConsented())
 }
 
 // 接受全部 Cookie
-const acceptAll = () => {
+const acceptAll = async () => {
   const consent = {
     necessary: true,
     functional: true,
     analytics: true,
     timestamp: new Date().toISOString(),
   }
+
+  try {
+    // 同步到後端
+    await privacyConsentService.createConsent({
+      necessary: consent.necessary,
+      functional: consent.functional,
+      analytics: consent.analytics,
+      consentVersion: '1.0',
+      consentSource: 'initial',
+    })
+  } catch (error) {
+    console.error('隱私設定同步失敗:', error)
+    // 即使後端同步失敗，也要儲存到本地
+  }
+
   localStorage.setItem('privacy-consent', JSON.stringify(consent))
   visible.value = false
   emit('consent-given', consent)
 }
 
 // 僅接受必要 Cookie
-const acceptNecessary = () => {
+const acceptNecessary = async () => {
   const consent = {
     necessary: true,
     functional: false,
     analytics: false,
     timestamp: new Date().toISOString(),
   }
+
+  try {
+    // 同步到後端
+    await privacyConsentService.createConsent({
+      necessary: consent.necessary,
+      functional: consent.functional,
+      analytics: consent.analytics,
+      consentVersion: '1.0',
+      consentSource: 'initial',
+    })
+  } catch (error) {
+    console.error('隱私設定同步失敗:', error)
+    // 即使後端同步失敗，也要儲存到本地
+  }
+
   localStorage.setItem('privacy-consent', JSON.stringify(consent))
   visible.value = false
   emit('consent-given', consent)
@@ -204,13 +257,28 @@ const showCustomSettings = () => {
 }
 
 // 儲存自訂設定
-const saveCustomSettings = () => {
+const saveCustomSettings = async () => {
   const consent = {
     necessary: true,
     functional: cookiePreferences.value.functional,
     analytics: cookiePreferences.value.analytics,
     timestamp: new Date().toISOString(),
   }
+
+  try {
+    // 同步到後端
+    await privacyConsentService.createConsent({
+      necessary: consent.necessary,
+      functional: consent.functional,
+      analytics: consent.analytics,
+      consentVersion: '1.0',
+      consentSource: 'initial',
+    })
+  } catch (error) {
+    console.error('隱私設定同步失敗:', error)
+    // 即使後端同步失敗，也要儲存到本地
+  }
+
   localStorage.setItem('privacy-consent', JSON.stringify(consent))
   customSettingsVisible.value = false
   visible.value = false
@@ -261,8 +329,8 @@ defineExpose({
 })
 
 // 組件掛載時檢查是否需要顯示
-onMounted(() => {
-  if (shouldShow()) {
+onMounted(async () => {
+  if (await shouldShow()) {
     // 延遲顯示，確保頁面已完全載入
     setTimeout(() => {
       visible.value = true

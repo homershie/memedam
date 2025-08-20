@@ -901,6 +901,119 @@
               </div>
             </div>
           </TabPanel>
+
+          <!-- 隱私設定 TabPanel -->
+          <TabPanel value="4">
+            <div class="space-y-6">
+              <!-- 說明 -->
+              <div class="space-y-4 mb-8">
+                <h3
+                  class="text-lg font-semibold text-gray-800 dark:text-gray-200"
+                >
+                  關於 Cookie
+                </h3>
+
+                <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                  <p>
+                    Cookie
+                    是小型文字檔案，儲存在您的裝置上，幫助我們提供更好的服務體驗，除了剛開始進入網站的時候可以設定，您也可以隨時在此頁面調整設定，或透過瀏覽器設定管理
+                    Cookie。 請查看我們的
+                    <router-link
+                      to="/privacy"
+                      class="text-primary-600 hover:text-primary-700 underline"
+                      target="_blank"
+                      >隱私政策</router-link
+                    >了解更多詳情。
+                  </p>
+                </div>
+              </div>
+              <!-- Cookie 設定 -->
+              <div class="space-y-4">
+                <h3 class="mb-4">Cookie 與隱私設定</h3>
+                <!-- 必要 Cookie -->
+                <div
+                  class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+                >
+                  <div class="flex items-center justify-start mb-2 gap-6">
+                    <div>
+                      <h5>必要 Cookie</h5>
+                      <small class="text-sm text-gray-600 dark:text-gray-400">
+                        維持網站基本功能
+                      </small>
+                    </div>
+                    <div class="flex items-center">
+                      <i class="pi pi-lock text-gray-400 mr-2"></i>
+                      <span class="text-sm text-gray-500">始終啟用</span>
+                    </div>
+                  </div>
+                  <p class="text-xs text-gray-500">
+                    這些 Cookie 對於網站正常運作是必要的，無法停用。
+                  </p>
+                </div>
+
+                <!-- 功能 Cookie -->
+                <div
+                  class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+                >
+                  <div class="flex items-center justify-start mb-2 gap-6">
+                    <div>
+                      <h5>功能 Cookie</h5>
+                      <small class="text-sm text-gray-600 dark:text-gray-400">
+                        記住您的偏好設定
+                      </small>
+                    </div>
+                    <InputSwitch
+                      v-model="cookiePreferences.functional"
+                      :disabled="!currentConsent"
+                    />
+                  </div>
+                  <p class="text-xs text-gray-500">
+                    這些 Cookie
+                    記住您的語言偏好、主題設定等，提供更好的使用體驗。
+                  </p>
+                </div>
+
+                <!-- 分析 Cookie -->
+                <div
+                  class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+                >
+                  <div class="flex items-center justify-start mb-2 gap-6">
+                    <div>
+                      <h5>分析 Cookie</h5>
+                      <small class="text-sm text-gray-600 dark:text-gray-400">
+                        匿名統計，改善服務
+                      </small>
+                    </div>
+                    <InputSwitch
+                      v-model="cookiePreferences.analytics"
+                      :disabled="!currentConsent"
+                    />
+                  </div>
+                  <p class="text-xs text-gray-500">
+                    這些 Cookie
+                    幫助我們了解網站使用情況，改善服務品質。所有數據都是匿名的。
+                  </p>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="flex justify-end pt-4">
+                  <Button
+                    label="儲存設定"
+                    icon="pi pi-save"
+                    :disabled="!currentConsent || !hasChanges"
+                    @click="saveSettings"
+                  />
+                </div>
+
+                <!-- 最後更新時間 -->
+                <div
+                  class="text-xs text-right text-gray-500 dark:text-gray-400 mt-4"
+                >
+                  <p>最後更新：{{ formatDate(currentConsent?.timestamp) }}</p>
+                </div>
+              </div>
+            </div>
+          </TabPanel>
         </TabPanels>
       </Tabs>
     </div>
@@ -1351,6 +1464,7 @@ import { useThemeStore } from '@/stores/themeStore'
 import userService from '@/services/userService'
 import uploadService from '@/services/uploadService'
 import verificationService from '@/services/verificationService'
+import privacyConsentService from '@/services/privacyConsentService'
 import { optimizeOAuthResourceLoading } from '@/utils/oauthUtils'
 import OAuthBindingDialog from '@/components/OAuthBindingDialog.vue'
 
@@ -1388,6 +1502,7 @@ const sections = ref([
   { id: 'profile', title: '個人資訊', icon: 'pi pi-id-card' },
   { id: 'notifications', title: '通知偏好', icon: 'pi pi-bell' },
   { id: 'preferences', title: '內容偏好', icon: 'pi pi-cog' },
+  { id: 'privacy', title: '隱私設定', icon: 'pi pi-shield' },
 ])
 
 // 使用者資料
@@ -1491,6 +1606,9 @@ onMounted(async () => {
 
   // 載入使用者資料
   await loadUserProfile()
+
+  // 載入隱私設定（使用雙向同步）
+  await loadCurrentConsent()
 
   // 檢查 URL 中是否有驗證 token，如果有則重定向到驗證頁面
   const urlParams = new URLSearchParams(window.location.search)
@@ -2776,6 +2894,103 @@ const canSubmitUsernameChange = computed(() => {
     !usernameForm.errors.currentPassword
   )
 })
+
+// 隱私設定相關數據
+const currentConsent = ref(null)
+const cookiePreferences = ref({
+  functional: true,
+  analytics: true,
+})
+
+// 檢查是否有變更
+const hasChanges = computed(() => {
+  if (!currentConsent.value) return false
+  return (
+    cookiePreferences.value.functional !== currentConsent.value.functional ||
+    cookiePreferences.value.analytics !== currentConsent.value.analytics
+  )
+})
+
+// 載入當前設定（使用雙向同步）
+const loadCurrentConsent = async () => {
+  try {
+    // 使用雙向同步獲取最新的同意資料
+    const syncedConsent = await privacyConsentService.syncConsentData()
+
+    if (syncedConsent) {
+      currentConsent.value = syncedConsent
+      cookiePreferences.value = {
+        functional: syncedConsent.functional,
+        analytics: syncedConsent.analytics,
+      }
+
+      console.log('已載入同步後的同意設定:', syncedConsent)
+    } else {
+      console.log('沒有找到同意設定')
+      currentConsent.value = null
+      cookiePreferences.value = {
+        functional: true,
+        analytics: true,
+      }
+    }
+  } catch (error) {
+    console.error('載入同意設定失敗:', error)
+    // 同步失敗時，使用本地資料作為備用
+    const consent = localStorage.getItem('privacy-consent')
+    if (consent) {
+      currentConsent.value = JSON.parse(consent)
+      cookiePreferences.value = {
+        functional: currentConsent.value.functional,
+        analytics: currentConsent.value.analytics,
+      }
+    }
+  }
+}
+
+// 儲存設定
+const saveSettings = async () => {
+  const consent = {
+    necessary: true,
+    functional: cookiePreferences.value.functional,
+    analytics: cookiePreferences.value.analytics,
+    timestamp: new Date().toISOString(),
+  }
+
+  try {
+    // 同步到後端
+    await privacyConsentService.createConsent({
+      necessary: consent.necessary,
+      functional: consent.functional,
+      analytics: consent.analytics,
+      consentVersion: '1.0',
+      consentSource: 'settings',
+    })
+
+    toast.add({
+      severity: 'success',
+      summary: '設定已同步',
+      detail: '隱私設定已成功同步到伺服器',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('隱私設定同步失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '同步失敗',
+      detail: '隱私設定同步失敗，但已儲存在本地',
+      life: 3000,
+    })
+  }
+
+  localStorage.setItem('privacy-consent', JSON.stringify(consent))
+  currentConsent.value = consent
+}
+
+// 格式化日期
+const formatDate = (timestamp) => {
+  if (!timestamp) return '未設定'
+  return new Date(timestamp).toLocaleString('zh-TW')
+}
 </script>
 
 <style scoped lang="scss">

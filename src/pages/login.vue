@@ -341,6 +341,7 @@ import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
 import { onMounted } from 'vue'
 import emailService from '@/services/emailService'
+import privacyConsentService from '@/services/privacyConsentService'
 
 const router = useRouter()
 const user = useUserStore()
@@ -446,6 +447,16 @@ const onSubmit = async () => {
         password: formData.password,
       })
 
+      // 註冊成功後同步隱私權同意設定
+      try {
+        console.log('註冊成功，開始同步隱私權同意設定...')
+        await privacyConsentService.syncConsentData()
+        console.log('隱私權同意設定同步完成')
+      } catch (error) {
+        console.warn('隱私權同意設定同步失敗，但不影響註冊流程:', error)
+        // 同步失敗不影響註冊流程，只記錄警告
+      }
+
       // 註冊成功後轉到註冊完成頁面
       const userData = {
         username: formData.username,
@@ -486,6 +497,16 @@ const onSubmit = async () => {
         userId: data.userId || data.user?._id, // 兩種都支援
         role: data.role, // 確保 role 資訊正確傳遞
       })
+
+      // 登入成功後同步隱私權同意設定
+      try {
+        console.log('開始同步隱私權同意設定...')
+        await privacyConsentService.syncConsentData()
+        console.log('隱私權同意設定同步完成')
+      } catch (error) {
+        console.warn('隱私權同意設定同步失敗，但不影響登入流程:', error)
+        // 同步失敗不影響登入流程，只記錄警告
+      }
 
       toast.add({
         severity: 'success',
