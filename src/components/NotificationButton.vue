@@ -77,55 +77,85 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-sm">新追蹤者通知</span>
-              <InputSwitch
+              <ToggleSwitch
                 v-model="notificationSettings.newFollower"
-                @change="updateNotificationSetting('newFollower', $event)"
+                @change="
+                  updateNotificationSetting(
+                    'newFollower',
+                    notificationSettings.newFollower,
+                  )
+                "
                 :disabled="updatingSettings"
               />
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm">新留言通知</span>
-              <InputSwitch
+              <ToggleSwitch
                 v-model="notificationSettings.newComment"
-                @change="updateNotificationSetting('newComment', $event)"
+                @change="
+                  updateNotificationSetting(
+                    'newComment',
+                    notificationSettings.newComment,
+                  )
+                "
                 :disabled="updatingSettings"
               />
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm">新按讚通知</span>
-              <InputSwitch
+              <ToggleSwitch
                 v-model="notificationSettings.newLike"
-                @change="updateNotificationSetting('newLike', $event)"
+                @change="
+                  updateNotificationSetting(
+                    'newLike',
+                    notificationSettings.newLike,
+                  )
+                "
                 :disabled="updatingSettings"
               />
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm">提及通知</span>
-              <InputSwitch
+              <ToggleSwitch
                 v-model="notificationSettings.newMention"
-                @change="updateNotificationSetting('newMention', $event)"
+                @change="
+                  updateNotificationSetting(
+                    'newMention',
+                    notificationSettings.newMention,
+                  )
+                "
                 :disabled="updatingSettings"
               />
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm">熱門內容通知</span>
-              <InputSwitch
+              <ToggleSwitch
                 v-model="notificationSettings.trendingContent"
-                @change="updateNotificationSetting('trendingContent', $event)"
+                @change="
+                  updateNotificationSetting(
+                    'trendingContent',
+                    notificationSettings.trendingContent,
+                  )
+                "
                 :disabled="updatingSettings"
               />
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm">週報摘要通知</span>
-              <InputSwitch
+              <ToggleSwitch
                 v-model="notificationSettings.weeklyDigest"
-                @change="updateNotificationSetting('weeklyDigest', $event)"
+                @change="
+                  updateNotificationSetting(
+                    'weeklyDigest',
+                    notificationSettings.weeklyDigest,
+                  )
+                "
                 :disabled="updatingSettings"
               />
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm">瀏覽器推送通知</span>
-              <InputSwitch
+              <ToggleSwitch
                 v-model="notificationSettings.browser"
                 @change="updateBrowserNotificationSetting"
                 :disabled="updatingSettings"
@@ -239,7 +269,7 @@ import Popover from 'primevue/popover'
 import OverlayBadge from 'primevue/overlaybadge'
 import ProgressSpinner from 'primevue/progressspinner'
 import notificationService from '@/services/notificationService'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 
 const router = useRouter()
 const toast = useToast()
@@ -769,9 +799,13 @@ const updateNotificationSetting = async (key, value) => {
 
   updatingSettings.value = true
   try {
-    const response = await notificationService.updateNotificationSettings({
-      [key]: value,
-    })
+    // 使用專門的通知設定 API 端點
+    // 準備完整的通知設定物件，確保所有設定都被包含
+    const requestData = { ...notificationSettings.value, [key]: value }
+
+    const response =
+      await notificationService.updateNotificationSettings(requestData)
+
     if (response.data.success) {
       notificationSettings.value[key] = value
 
@@ -790,10 +824,18 @@ const updateNotificationSetting = async (key, value) => {
     }
   } catch (error) {
     console.error('更新通知設置失敗:', error)
+    // 恢復原始值
+    notificationSettings.value[key] = !value
+
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '無法更新通知設置'
+
     toast.add({
       severity: 'error',
       summary: '操作失敗',
-      detail: '無法更新通知設置',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -846,10 +888,11 @@ const updateBrowserNotificationSetting = async () => {
       }
     }
 
-    // 更新設置
-    const response = await notificationService.updateNotificationSettings({
-      browser: notificationSettings.value.browser,
-    })
+    // 更新設置 - 使用專門的通知設定 API 端點
+    // 準備完整的通知設定物件，確保所有設定都被包含
+    const requestData = { ...notificationSettings.value }
+    const response =
+      await notificationService.updateNotificationSettings(requestData)
 
     if (response.data.success) {
       localStorage.setItem(
@@ -865,10 +908,18 @@ const updateBrowserNotificationSetting = async () => {
     }
   } catch (error) {
     console.error('更新瀏覽器推送通知設置失敗:', error)
+    // 恢復原始值
+    notificationSettings.value.browser = !notificationSettings.value.browser
+
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      '無法更新瀏覽器推送通知設置'
+
     toast.add({
       severity: 'error',
       summary: '操作失敗',
-      detail: '無法更新瀏覽器推送通知設置',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
