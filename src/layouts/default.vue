@@ -2,6 +2,12 @@
   <div class="min-h-screen flex flex-col w-full relative">
     <DynamicDialog />
 
+    <!-- 隱私同意對話框 -->
+    <PrivacyConsentDialog
+      ref="privacyConsentRef"
+      @consent-given="handleConsentGiven"
+    />
+
     <!-- 搜尋模式下的自定義佈局 -->
     <div
       v-if="isSearchMode"
@@ -284,15 +290,18 @@
               <div class="text-s mb-10">
                 <div class="mb-2">© 2025 迷因典 MemeDam ®</div>
                 <div>
-                  <a href="#" class="hover:underline">privacy</a> |
-                  <a href="#" class="hover:underline">terms of service</a> |
-                  <a href="#" class="hover:underline">dmca</a> |
-                  <a href="#" class="hover:underline">statement</a> |
-                  <a href="#" class="hover:underline"
-                    >information collection notice</a
+                  <router-link to="/privacy" class="text-sm hover:underline"
+                    >隱私政策</router-link
                   >
-                  <a href="#" class="hover:underline"
-                    >data subject access request</a
+                  |
+                  <router-link to="/terms" class="text-sm hover:underline"
+                    >服務條款</router-link
+                  >
+                  | <a href="#" class="text-sm hover:underline">DMCA</a> |
+                  <a href="#" class="text-sm hover:underline">聲明</a> |
+                  <a href="#" class="text-sm hover:underline">資料收集通知</a>
+                  <a href="#" class="text-sm hover:underline"
+                    >資料主體存取請求</a
                   >
                 </div>
               </div>
@@ -502,6 +511,7 @@ import SearchBox from '@/components/SearchBox.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import NotificationButton from '@/components/NotificationButton.vue'
 import AdSidebar from '@/components/AdSidebar.vue'
+import PrivacyConsentDialog from '@/components/PrivacyConsentDialog.vue'
 
 const user = useUserStore()
 const router = useRouter()
@@ -509,6 +519,7 @@ const toast = useToast()
 const sidebarVisible = ref(true)
 const mobileSidebarVisible = ref(false)
 const userProfile = ref(null)
+const privacyConsentRef = ref(null)
 
 // 響應式數據
 const isSearchMode = ref(false)
@@ -659,6 +670,24 @@ const handleImageError = (event) => {
   console.error('頭像圖片載入失敗:', event.target.src)
   // 可以設定一個預設圖片或隱藏圖片元素
   event.target.style.display = 'none'
+}
+
+// 處理隱私同意事件
+const handleConsentGiven = (consent) => {
+  console.log('用戶同意隱私政策:', consent)
+
+  // 根據同意設定調整網站行為
+  if (consent.analytics) {
+    // 啟用分析追蹤
+    console.log('啟用分析追蹤')
+  }
+
+  if (consent.functional) {
+    // 啟用功能 Cookie
+    console.log('啟用功能 Cookie')
+  }
+
+  // 可以根據需要添加更多邏輯
 }
 </script>
 

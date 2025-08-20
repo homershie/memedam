@@ -41,20 +41,23 @@
         v-if="activeTab === 'register'"
       >
         如果註冊，即表示你同意
-        <a
-          href="#"
+        <router-link
+          to="/terms"
           class="text-surface-900 dark:text-white underline hover:text-surface-700 dark:hover:text-surface-300 transition-colors"
-          >服務條款</a
+          target="_blank"
+          >服務條款</router-link
         >和
-        <a
-          href="#"
+        <router-link
+          to="/privacy"
           class="text-surface-900 dark:text-white underline hover:text-surface-700 dark:hover:text-surface-300 transition-colors"
-          >隱私政策</a
+          target="_blank"
+          >隱私政策</router-link
         >，包括
-        <a
-          href="#"
+        <router-link
+          to="/privacy"
           class="text-surface-900 dark:text-white underline hover:text-surface-700 dark:hover:text-surface-300 transition-colors"
-          >Cookie 使用政策</a
+          target="_blank"
+          >Cookie 使用政策</router-link
         >。
       </p>
 
