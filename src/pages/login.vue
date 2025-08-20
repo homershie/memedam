@@ -1,58 +1,59 @@
 <template>
-  <div class="px-4 pt-6 flex justify-center w-full h-fit scroll-auto">
+  <div class="px-4 pt-6 flex justify-center w-full h-fit scroll-">
     <!-- 主要內容區域 -->
     <div class="flex flex-col w-full max-w-md">
       <!-- 導航標籤 -->
       <div class="flex justify-center mb-8 gap-8">
         <button
-          class="relative px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors duration-300 hover:text-gray-900 dark:hover:text-white"
+          class="relative px-4 py-2 text-surface-600 dark:text-surface-400 transition-colors duration-300 hover:text-surface-900 dark:hover:text-white"
           :class="{
-            'text-gray-900 dark:text-white font-bold': activeTab === 'register',
-            'text-gray-600 dark:text-gray-400': activeTab !== 'register',
+            'text-surface-900 dark:text-white font-bold':
+              activeTab === 'register',
+            'text-surface-600 dark:text-surface-400': activeTab !== 'register',
           }"
           @click="handleTabChange('register')"
         >
           註冊
           <div
             v-if="activeTab === 'register'"
-            class="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-surface-900 dark:bg-white"
           ></div>
         </button>
         <button
-          class="relative px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors duration-300 hover:text-gray-900 dark:hover:text-white"
+          class="relative px-4 py-2 text-surface-600 dark:text-surface-400 transition-colors duration-300 hover:text-surface-900 dark:hover:text-white"
           :class="{
-            'text-gray-900 dark:text-white font-bold': activeTab === 'login',
-            'text-gray-600 dark:text-gray-400': activeTab !== 'login',
+            'text-surface-900 dark:text-white font-bold': activeTab === 'login',
+            'text-surface-600 dark:text-surface-400': activeTab !== 'login',
           }"
           @click="handleTabChange('login')"
         >
           登入
           <div
             v-if="activeTab === 'login'"
-            class="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-surface-900 dark:bg-white"
           ></div>
         </button>
       </div>
 
       <!-- 條款說明 -->
       <p
-        class="text-sm text-gray-600 dark:text-gray-400 mb-8 text-center leading-relaxed"
+        class="text-sm text-surface-600 dark:text-surface-400 mb-8 text-center leading-relaxed"
         v-if="activeTab === 'register'"
       >
         如果註冊，即表示你同意
         <a
           href="#"
-          class="text-gray-900 dark:text-white underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          class="text-surface-900 dark:text-white underline hover:text-surface-700 dark:hover:text-surface-300 transition-colors"
           >服務條款</a
         >和
         <a
           href="#"
-          class="text-gray-900 dark:text-white underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          class="text-surface-900 dark:text-white underline hover:text-surface-700 dark:hover:text-surface-300 transition-colors"
           >隱私政策</a
         >，包括
         <a
           href="#"
-          class="text-gray-900 dark:text-white underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          class="text-surface-900 dark:text-white underline hover:text-surface-700 dark:hover:text-surface-300 transition-colors"
           >Cookie 使用政策</a
         >。
       </p>
@@ -70,7 +71,7 @@
         <div v-if="activeTab === 'register'" class="space-y-2">
           <label
             for="username"
-            class="block text-sm font-medium text-gray-900 dark:text-white"
+            class="block text-sm font-medium text-surface-900 dark:text-white"
           >
             使用者名稱*
           </label>
@@ -102,7 +103,7 @@
         <div class="space-y-2">
           <label
             :for="activeTab === 'register' ? 'email' : 'login'"
-            class="block text-sm font-medium text-gray-900 dark:text-white"
+            class="block text-sm font-medium text-surface-900 dark:text-white"
           >
             {{
               activeTab === 'register' ? '電子信箱*' : '使用者名稱或電子信箱*'
@@ -144,7 +145,7 @@
         <div class="space-y-2">
           <label
             for="password"
-            class="block text-sm font-medium text-gray-900 dark:text-white"
+            class="block text-sm font-medium text-surface-900 dark:text-white"
           >
             密碼*
           </label>
@@ -180,7 +181,7 @@
         <div class="space-y-2" v-if="activeTab === 'register'">
           <label
             for="confirmPassword"
-            class="block text-sm font-medium text-gray-900 dark:text-white"
+            class="block text-sm font-medium text-surface-900 dark:text-white"
           >
             確認密碼*
           </label>
@@ -225,7 +226,9 @@
           class="w-full h-12 text-base font-medium"
           severity="primary"
           :loading="isSubmitting"
-          :disabled="isSubmitting"
+          :disabled="
+            isSubmitting || (activeTab === 'login' && recaptchaLoading)
+          "
           data-testid="submit-button"
           :aria-label="activeTab === 'register' ? '註冊帳號' : '登入帳號'"
         >
@@ -243,65 +246,77 @@
         </router-link>
       </div>
 
+      <!-- reCAPTCHA 載入狀態（僅在登入時顯示） -->
+      <div
+        v-if="activeTab === 'login' && recaptchaLoading"
+        class="text-center py-2"
+      >
+        <small class="text-surface-600 dark:text-surface-400">
+          正在載入安全驗證...
+        </small>
+      </div>
+
       <!-- 社交媒體登入 -->
       <div class="mt-8">
         <div class="flex justify-center gap-4">
           <button
             @click="handleSocialLogin('google')"
             :disabled="socialLoginLoading"
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-12 h-12 border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-surface-400 dark:hover:border-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
             aria-label="使用 Google 登入"
           >
             <i
-              class="pi pi-google text-xl text-gray-700 dark:text-gray-300"
+              class="pi pi-google text-xl text-surface-700 dark:text-surface-300"
             ></i>
           </button>
           <button
             @click="handleSocialLogin('facebook')"
             :disabled="socialLoginLoading"
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-12 h-12 border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-surface-400 dark:hover:border-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
             aria-label="使用 Facebook 登入"
           >
             <i
-              class="pi pi-facebook text-xl text-gray-700 dark:text-gray-300"
+              class="pi pi-facebook text-xl text-surface-700 dark:text-surface-300"
             ></i>
           </button>
           <button
             @click="handleSocialLogin('twitter')"
             :disabled="socialLoginLoading"
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-12 h-12 border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-surface-400 dark:hover:border-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
             aria-label="使用 Twitter 登入"
           >
             <i
-              class="pi pi-twitter text-xl text-gray-700 dark:text-gray-300"
+              class="pi pi-twitter text-xl text-surface-700 dark:text-surface-300"
             ></i>
           </button>
           <button
             @click="handleSocialLogin('discord')"
             :disabled="socialLoginLoading"
-            class="w-12 h-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-12 h-12 border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-surface-400 dark:hover:border-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
             aria-label="使用 Discord 登入"
           >
             <i
-              class="pi pi-discord text-xl text-gray-700 dark:text-gray-300"
+              class="pi pi-discord text-xl text-surface-700 dark:text-surface-300"
             ></i>
           </button>
         </div>
 
         <!-- 社群登入載入提示 -->
         <div v-if="socialLoginLoading" class="text-center mt-4">
-          <small class="text-gray-600 dark:text-gray-400">
+          <small class="text-surface-600 dark:text-surface-400">
             正在開啟授權視窗，請稍候...
           </small>
         </div>
       </div>
 
       <!-- 版權聲明 -->
-      <div class="mt-4 text-sm text-center text-gray-500 dark:text-gray-400">
+      <div
+        class="mt-4 text-sm text-center text-surface-500 dark:text-surface-400"
+      >
         © 2025 迷因典 MemeDam
       </div>
     </div>
@@ -322,6 +337,7 @@ import userService from '@/services/userService'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
 import { onMounted } from 'vue'
+import emailService from '@/services/emailService'
 
 const router = useRouter()
 const user = useUserStore()
@@ -331,6 +347,7 @@ const toast = useToast()
 const activeTab = ref('login')
 const isSubmitting = ref(false)
 const socialLoginLoading = ref(false)
+const recaptchaLoading = ref(false)
 
 const formData = reactive({
   username: '',
@@ -440,10 +457,24 @@ const onSubmit = async () => {
       })
     } else {
       // 登入邏輯
-      const { data } = await userService.login({
+      let loginData = {
         login: formData.email, // 支援帳號或信箱
         password: formData.password,
-      })
+      }
+
+      // 如果設定了 reCAPTCHA，加入驗證
+      try {
+        recaptchaLoading.value = true
+        const recaptchaToken = await emailService.executeRecaptcha('login')
+        loginData.recaptchaToken = recaptchaToken
+      } catch (error) {
+        console.warn('reCAPTCHA 載入失敗，繼續登入流程:', error)
+        // 如果 reCAPTCHA 載入失敗，繼續登入流程（後端會處理）
+      } finally {
+        recaptchaLoading.value = false
+      }
+
+      const { data } = await userService.login(loginData)
 
       console.log('登入API回傳:', data)
       user.login({
