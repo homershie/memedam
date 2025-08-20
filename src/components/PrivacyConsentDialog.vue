@@ -2,8 +2,7 @@
   <Drawer
     v-model:visible="visible"
     position="bottom"
-    :closable="false"
-    :dismissableMask="false"
+    :dismissable="false"
     class="privacy-consent-drawer"
     :style="{ height: 'auto', maxHeight: '80vh' }"
   >
@@ -52,7 +51,7 @@
           @click="acceptAll"
         />
         <Button
-          label="僅限必要 Cookie"
+          label="僅限必要"
           icon="pi pi-cog"
           severity="secondary"
           class="flex-1"
@@ -340,17 +339,36 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.privacy-consent-drawer :deep(.p-drawer-header) {
-  border-bottom: 1px solid var(--surface-border);
-  padding-bottom: 1rem;
+/* 強力移除遮罩背景 - 使用多種方法確保覆蓋 */
+.privacy-consent-drawer :deep(.p-drawer-mask) {
+  background-color: transparent !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
 }
 
-.privacy-consent-drawer :deep(.p-drawer-content) {
-  padding-top: 1rem;
+/* 如果上面的方法不行，嘗試更強力的覆蓋 */
+.privacy-consent-drawer :deep(.p-drawer-mask[style*='background']) {
+  background-color: transparent !important;
+  background: transparent !important;
+  pointer-events: none !important;
 }
 
-.privacy-consent-drawer :deep(.p-drawer-footer) {
-  border-top: 1px solid var(--surface-border);
-  padding-top: 1rem;
+/* 使用全域樣式作為備用方案 */
+</style>
+
+<style>
+/* 全域樣式確保覆蓋 */
+.privacy-consent-drawer .p-drawer-mask {
+  background-color: transparent !important;
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+/* 更強力的全域覆蓋 */
+.p-drawer-mask {
+  background-color: transparent !important;
+  background: transparent !important;
+  pointer-events: none !important;
 }
 </style>
