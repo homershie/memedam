@@ -37,6 +37,15 @@
           <h5 class="text-lg font-semibold">通知</h5>
           <div class="flex gap-2">
             <Button
+              @click="showSettings = !showSettings"
+              size="small"
+              severity="secondary"
+              class="text-xs"
+            >
+              <i class="pi pi-cog mr-1"></i>
+              設置
+            </Button>
+            <Button
               v-if="unreadCount > 0"
               @click="markAllAsRead"
               size="small"
@@ -56,6 +65,72 @@
               <i class="pi pi-trash mr-1"></i>
               全部移除
             </Button>
+          </div>
+        </div>
+
+        <!-- 通知設置區域 -->
+        <div
+          v-if="showSettings"
+          class="p-4 border-b border-gray-200 dark:border-gray-700"
+        >
+          <h6 class="text-sm font-medium mb-3">通知設置</h6>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm">新追蹤者通知</span>
+              <InputSwitch
+                v-model="notificationSettings.newFollower"
+                @change="updateNotificationSetting('newFollower', $event)"
+                :disabled="updatingSettings"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">新留言通知</span>
+              <InputSwitch
+                v-model="notificationSettings.newComment"
+                @change="updateNotificationSetting('newComment', $event)"
+                :disabled="updatingSettings"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">新按讚通知</span>
+              <InputSwitch
+                v-model="notificationSettings.newLike"
+                @change="updateNotificationSetting('newLike', $event)"
+                :disabled="updatingSettings"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">提及通知</span>
+              <InputSwitch
+                v-model="notificationSettings.newMention"
+                @change="updateNotificationSetting('newMention', $event)"
+                :disabled="updatingSettings"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">熱門內容通知</span>
+              <InputSwitch
+                v-model="notificationSettings.trendingContent"
+                @change="updateNotificationSetting('trendingContent', $event)"
+                :disabled="updatingSettings"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">週報摘要通知</span>
+              <InputSwitch
+                v-model="notificationSettings.weeklyDigest"
+                @change="updateNotificationSetting('weeklyDigest', $event)"
+                :disabled="updatingSettings"
+              />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">瀏覽器推送通知</span>
+              <InputSwitch
+                v-model="notificationSettings.browser"
+                @change="updateBrowserNotificationSetting"
+                :disabled="updatingSettings"
+              />
+            </div>
           </div>
         </div>
 
@@ -83,7 +158,7 @@
               :key="notification._id"
               class="p-3 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors cursor-pointer"
               :class="{
-                'bg-primary-50 dark:bg-primary-900/20': !notification.read,
+                'bg-primary-50 dark:bg-primary-900/20': !notification.isRead,
               }"
               @mouseenter="handleHoverMarkRead(notification)"
               @click="handleNotificationClick(notification)"
@@ -92,7 +167,7 @@
                 <!-- 通知圖標 -->
                 <div class="flex-shrink-0">
                   <i
-                    :class="getNotificationIcon(notification.type)"
+                    :class="getNotificationIcon(notification.verb)"
                     class="text-lg text-primary-500"
                   ></i>
                 </div>
@@ -100,12 +175,16 @@
                 <!-- 通知內容 -->
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-gray-900 line-clamp-2">
-                    {{ notification.content }}
+                    {{ getNotificationText(notification) }}
                   </p>
 
                   <div class="flex items-center justify-between mt-1">
                     <p class="text-xs text-gray-500">
-                      {{ formatTime(notification.createdAt) }}
+                      {{
+                        formatTime(
+                          notification.createdAt || notification.eventCreatedAt,
+                        )
+                      }}
                     </p>
 
                     <!-- 操作按鈕 -->
@@ -124,7 +203,7 @@
                 </div>
 
                 <!-- 未讀指示點 -->
-                <div v-if="!notification.read" class="flex-shrink-0">
+                <div v-if="!notification.isRead" class="flex-shrink-0">
                   <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
                 </div>
               </div>
@@ -151,7 +230,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
@@ -160,6 +239,7 @@ import Popover from 'primevue/popover'
 import OverlayBadge from 'primevue/overlaybadge'
 import ProgressSpinner from 'primevue/progressspinner'
 import notificationService from '@/services/notificationService'
+import InputSwitch from 'primevue/inputswitch'
 
 const router = useRouter()
 const toast = useToast()
@@ -175,6 +255,17 @@ const deletingAll = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const unreadCount = ref(0)
+const showSettings = ref(false)
+const notificationSettings = ref({
+  newFollower: true,
+  newComment: true,
+  newLike: true,
+  newMention: true,
+  trendingContent: false,
+  weeklyDigest: true,
+  browser: false,
+})
+const updatingSettings = ref(false)
 
 // Popover 和按鈕引用
 const notificationPopover = ref(null)
@@ -182,6 +273,42 @@ const notificationBtn = ref(null)
 
 // 計算屬性
 const hasMore = computed(() => currentPage.value < totalPages.value)
+
+// 監聽用戶登入狀態變化
+watch(
+  () => user.isLoggedIn,
+  (newValue) => {
+    if (newValue) {
+      // 用戶登入時重新載入數據
+      initUnreadCount()
+      fetchNotifications()
+      getNotificationSettings()
+
+      // 檢查瀏覽器通知權限
+      if ('Notification' in window) {
+        if (Notification.permission === 'denied') {
+          notificationSettings.value.browser = false
+          localStorage.setItem(
+            'notificationSettings',
+            JSON.stringify(notificationSettings.value),
+          )
+        }
+      } else {
+        notificationSettings.value.browser = false
+        localStorage.setItem(
+          'notificationSettings',
+          JSON.stringify(notificationSettings.value),
+        )
+      }
+    } else {
+      // 用戶登出時清空數據
+      notifications.value = []
+      unreadCount.value = 0
+      currentPage.value = 1
+      totalPages.value = 1
+    }
+  },
+)
 
 // 方法
 const toggleNotifications = (event) => {
@@ -203,6 +330,8 @@ const fetchNotifications = async (append = false) => {
     const params = {
       page: append ? currentPage.value + 1 : 1,
       limit: 10,
+      // 只獲取未刪除的通知
+      deleted: false,
     }
 
     const response = await notificationService.getAll(params)
@@ -223,8 +352,12 @@ const fetchNotifications = async (append = false) => {
         totalPages.value = response.data.pagination.pages
       }
 
-      // 計算未讀數量
-      updateUnreadCount()
+      // 更新未讀數量（從 API 響應中獲取）
+      if (response.data.unreadCount !== undefined) {
+        unreadCount.value = response.data.unreadCount
+      } else {
+        updateUnreadCount()
+      }
     }
   } catch (error) {
     console.error('獲取通知失敗:', error)
@@ -240,7 +373,7 @@ const fetchNotifications = async (append = false) => {
 }
 
 const updateUnreadCount = () => {
-  unreadCount.value = notifications.value.filter((n) => !n.read).length
+  unreadCount.value = notifications.value.filter((n) => !n.isRead).length
 }
 
 const markAsRead = async (notificationId, options = {}) => {
@@ -253,23 +386,26 @@ const markAsRead = async (notificationId, options = {}) => {
 
   markingRead.value.push(notificationId)
   try {
-    await notificationService.markRead(notificationId)
+    const response = await notificationService.markRead(notificationId)
 
-    // 更新本地狀態
-    const notification = notifications.value.find(
-      (n) => n._id === notificationId,
-    )
-    if (notification) {
-      notification.read = true
-      updateUnreadCount()
-    }
+    if (response.data.success) {
+      // 更新本地狀態
+      const notification = notifications.value.find(
+        (n) => n._id === notificationId,
+      )
+      if (notification) {
+        notification.isRead = true
+        notification.read_at = new Date().toISOString()
+        updateUnreadCount()
+      }
 
-    if (!options.silent) {
-      toast.add({
-        severity: 'success',
-        summary: '已標記為已讀',
-        life: 2000,
-      })
+      if (!options.silent) {
+        toast.add({
+          severity: 'success',
+          summary: '已標記為已讀',
+          life: 2000,
+        })
+      }
     }
   } catch (error) {
     console.error('標記已讀失敗:', error)
@@ -286,7 +422,7 @@ const markAsRead = async (notificationId, options = {}) => {
 
 // 滑鼠移入即標記為已讀（靜默）
 const handleHoverMarkRead = (notification) => {
-  if (!notification || notification.read) return
+  if (!notification || notification.isRead) return
   if (markingRead.value.includes(notification._id)) return
   markAsRead(notification._id, { silent: true })
 }
@@ -301,19 +437,22 @@ const markAllAsRead = async () => {
 
   markingAllRead.value = true
   try {
-    await notificationService.markAllRead()
+    const response = await notificationService.markAllRead()
 
-    // 更新本地狀態
-    notifications.value.forEach((notification) => {
-      notification.read = true
-    })
-    updateUnreadCount()
+    if (response.data.success) {
+      // 更新本地狀態
+      notifications.value.forEach((notification) => {
+        notification.isRead = true
+        notification.read_at = new Date().toISOString()
+      })
+      unreadCount.value = 0
 
-    toast.add({
-      severity: 'success',
-      summary: '已全部標記為已讀',
-      life: 2000,
-    })
+      toast.add({
+        severity: 'success',
+        summary: '已全部標記為已讀',
+        life: 2000,
+      })
+    }
   } catch (error) {
     console.error('全部標記已讀失敗:', error)
     toast.add({
@@ -376,18 +515,21 @@ const removeAllNotifications = async () => {
 
   deletingAll.value = true
   try {
-    await notificationService.removeBatch()
-    // 清空列表與狀態
-    notifications.value = []
-    currentPage.value = 1
-    totalPages.value = 1
-    updateUnreadCount()
+    const response = await notificationService.removeBatch()
 
-    toast.add({
-      severity: 'success',
-      summary: '已全部移除',
-      life: 2000,
-    })
+    if (response.data.success) {
+      // 清空列表與狀態
+      notifications.value = []
+      currentPage.value = 1
+      totalPages.value = 1
+      unreadCount.value = 0
+
+      toast.add({
+        severity: 'success',
+        summary: '已全部移除',
+        life: 2000,
+      })
+    }
   } catch (error) {
     console.error('全部移除通知失敗:', error)
     toast.add({
@@ -403,24 +545,62 @@ const removeAllNotifications = async () => {
 
 const handleNotificationClick = (notification) => {
   // 如果通知未讀，先標記為已讀
-  if (!notification.read) {
+  if (!notification.isRead) {
     markAsRead(notification._id)
   }
 
   // 如果有 URL，則跳轉
   if (notification.url) {
-    // 檢查是否為外部連結
-    if (notification.url.startsWith('http')) {
-      window.open(notification.url, '_blank')
-    } else {
-      // 內部路由
-      router.push(notification.url)
-      notificationPopover.value.hide()
+    try {
+      // 檢查是否為外部連結
+      if (notification.url.startsWith('http')) {
+        window.open(notification.url, '_blank')
+      } else {
+        // 內部路由
+        router.push(notification.url)
+        notificationPopover.value.hide()
+      }
+    } catch (error) {
+      console.error('跳轉失敗:', error)
+      toast.add({
+        severity: 'error',
+        summary: '跳轉失敗',
+        detail: '無法打開通知連結',
+        life: 3000,
+      })
+    }
+  } else if (notification.object_type && notification.object_id) {
+    // 根據物件類型生成默認跳轉 URL
+    try {
+      let url = ''
+      switch (notification.object_type) {
+        case 'meme':
+          url = `/memes/detail/${notification.object_id}`
+          break
+        case 'comment':
+          url = `/memes/detail/${notification.object_id}`
+          break
+        case 'user':
+          url = `/users/${notification.object_id}`
+          break
+        case 'collection':
+          url = `/collections/${notification.object_id}`
+          break
+        default:
+          return
+      }
+
+      if (url) {
+        router.push(url)
+        notificationPopover.value.hide()
+      }
+    } catch (error) {
+      console.error('生成跳轉 URL 失敗:', error)
     }
   }
 }
 
-const getNotificationIcon = (type) => {
+const getNotificationIcon = (verb) => {
   const iconMap = {
     like: 'pi pi-heart',
     comment: 'pi pi-comment',
@@ -428,12 +608,42 @@ const getNotificationIcon = (type) => {
     mention: 'pi pi-at',
     system: 'pi pi-cog',
     announcement: 'pi pi-megaphone',
+    share: 'pi pi-share-alt',
+    report: 'pi pi-flag',
     default: 'pi pi-bell',
   }
-  return iconMap[type] || iconMap.default
+  return iconMap[verb] || iconMap.default
+}
+
+const getNotificationText = (notification) => {
+  // 優先使用 title 字段
+  if (notification.title) {
+    return notification.title
+  }
+
+  // 其次使用 content 字段
+  if (notification.content) {
+    return notification.content
+  }
+
+  // 根據 verb 生成默認文本
+  const verbTextMap = {
+    like: '有人對您的內容按讚',
+    comment: '有人評論了您的內容',
+    follow: '有人開始關注您',
+    mention: '有人在內容中提到了您',
+    system: '系統通知',
+    announcement: '公告',
+    share: '有人分享了您的內容',
+    report: '舉報通知',
+  }
+
+  return verbTextMap[notification.verb] || '新通知'
 }
 
 const formatTime = (timestamp) => {
+  if (!timestamp) return '剛剛'
+
   const now = new Date()
   const time = new Date(timestamp)
   const diff = now - time
@@ -463,23 +673,260 @@ const checkForNewNotifications = () => {
   }
 }
 
+// 初始化未讀通知數量
+const initUnreadCount = async () => {
+  if (!user.isLoggedIn) return
+
+  try {
+    const response = await notificationService.getUnreadCount()
+    if (response.data.success) {
+      unreadCount.value = response.data.data.unreadCount
+    }
+  } catch (error) {
+    console.error('獲取未讀通知數量失敗:', error)
+  }
+}
+
+// 獲取通知設置
+const getNotificationSettings = async () => {
+  if (!user.isLoggedIn) return
+
+  try {
+    const response = await notificationService.getNotificationSettings()
+    if (response.data.success) {
+      // 合併默認設置和用戶設置
+      const userSettings = response.data.data || {}
+      const settings = {
+        newFollower:
+          userSettings.newFollower !== undefined
+            ? userSettings.newFollower
+            : true,
+        newComment:
+          userSettings.newComment !== undefined
+            ? userSettings.newComment
+            : true,
+        newLike:
+          userSettings.newLike !== undefined ? userSettings.newLike : true,
+        newMention:
+          userSettings.newMention !== undefined
+            ? userSettings.newMention
+            : true,
+        trendingContent:
+          userSettings.trendingContent !== undefined
+            ? userSettings.trendingContent
+            : false,
+        weeklyDigest:
+          userSettings.weeklyDigest !== undefined
+            ? userSettings.weeklyDigest
+            : true,
+        browser:
+          userSettings.browser !== undefined ? userSettings.browser : false,
+      }
+      notificationSettings.value = settings
+
+      // 保存到本地存儲
+      localStorage.setItem('notificationSettings', JSON.stringify(settings))
+    }
+  } catch (error) {
+    console.error('獲取通知設置失敗:', error)
+    // 嘗試從本地存儲恢復設置
+    const savedSettings = localStorage.getItem('notificationSettings')
+    if (savedSettings) {
+      try {
+        notificationSettings.value = JSON.parse(savedSettings)
+      } catch {
+        // 使用默認設置
+        notificationSettings.value = {
+          newFollower: true,
+          newComment: true,
+          newLike: true,
+          newMention: true,
+          trendingContent: false,
+          weeklyDigest: true,
+          browser: false,
+        }
+      }
+    } else {
+      // 使用默認設置
+      notificationSettings.value = {
+        newFollower: true,
+        newComment: true,
+        newLike: true,
+        newMention: true,
+        trendingContent: false,
+        weeklyDigest: true,
+        browser: false,
+      }
+    }
+  }
+}
+
+// 更新通知設置
+const updateNotificationSetting = async (key, value) => {
+  if (!user.isLoggedIn) return
+
+  if (updatingSettings.value) return
+
+  updatingSettings.value = true
+  try {
+    const response = await notificationService.updateNotificationSettings({
+      [key]: value,
+    })
+    if (response.data.success) {
+      notificationSettings.value[key] = value
+
+      // 更新本地存儲
+      localStorage.setItem(
+        'notificationSettings',
+        JSON.stringify(notificationSettings.value),
+      )
+
+      toast.add({
+        severity: 'success',
+        summary: '設置已更新',
+        detail: `通知設置已更新`,
+        life: 2000,
+      })
+    }
+  } catch (error) {
+    console.error('更新通知設置失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: '無法更新通知設置',
+      life: 3000,
+    })
+  } finally {
+    updatingSettings.value = false
+  }
+}
+
+// 更新瀏覽器推送通知設置
+const updateBrowserNotificationSetting = async () => {
+  if (!user.isLoggedIn) return
+
+  if (updatingSettings.value) return
+
+  updatingSettings.value = true
+  try {
+    // 檢查瀏覽器通知權限
+    if (notificationSettings.value.browser) {
+      if (!('Notification' in window)) {
+        toast.add({
+          severity: 'warn',
+          summary: '不支援',
+          detail: '您的瀏覽器不支援推送通知',
+          life: 3000,
+        })
+        notificationSettings.value.browser = false
+        return
+      }
+
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission()
+        if (permission !== 'granted') {
+          notificationSettings.value.browser = false
+          toast.add({
+            severity: 'warn',
+            summary: '權限被拒絕',
+            detail: '需要通知權限才能啟用瀏覽器推送通知',
+            life: 3000,
+          })
+          return
+        }
+      } else if (Notification.permission === 'denied') {
+        notificationSettings.value.browser = false
+        toast.add({
+          severity: 'warn',
+          summary: '權限被拒絕',
+          detail: '請在瀏覽器設置中允許通知權限',
+          life: 3000,
+        })
+        return
+      }
+    }
+
+    // 更新設置
+    const response = await notificationService.updateNotificationSettings({
+      browser: notificationSettings.value.browser,
+    })
+
+    if (response.data.success) {
+      localStorage.setItem(
+        'notificationSettings',
+        JSON.stringify(notificationSettings.value),
+      )
+      toast.add({
+        severity: 'success',
+        summary: '設置已更新',
+        detail: '瀏覽器推送通知設置已更新',
+        life: 2000,
+      })
+    }
+  } catch (error) {
+    console.error('更新瀏覽器推送通知設置失敗:', error)
+    toast.add({
+      severity: 'error',
+      summary: '操作失敗',
+      detail: '無法更新瀏覽器推送通知設置',
+      life: 3000,
+    })
+  } finally {
+    updatingSettings.value = false
+  }
+}
+
 // 組件掛載時獲取通知
 onMounted(() => {
   // 檢查用戶是否已登入
   if (user.isLoggedIn) {
+    // 先初始化未讀數量
+    initUnreadCount()
+    // 然後獲取通知列表
     fetchNotifications()
-
-    // 設定定期檢查（每5分鐘）
-    const interval = setInterval(checkForNewNotifications, 5 * 60 * 1000)
-
-    // 監聽頁面可見性變化
-    document.addEventListener('visibilitychange', checkForNewNotifications)
-
-    // 清理
-    return () => {
-      clearInterval(interval)
-      document.removeEventListener('visibilitychange', checkForNewNotifications)
+    // 獲取通知設置
+    getNotificationSettings()
+  } else {
+    // 用戶未登入時，嘗試從本地存儲載入設置
+    const savedSettings = localStorage.getItem('notificationSettings')
+    if (savedSettings) {
+      try {
+        notificationSettings.value = JSON.parse(savedSettings)
+      } catch {
+        // 使用默認設置
+      }
     }
+  }
+
+  // 檢查瀏覽器通知權限
+  if ('Notification' in window) {
+    if (Notification.permission === 'denied') {
+      // 如果權限被拒絕，禁用瀏覽器通知設置
+      notificationSettings.value.browser = false
+      localStorage.setItem(
+        'notificationSettings',
+        JSON.stringify(notificationSettings.value),
+      )
+    }
+  } else {
+    // 瀏覽器不支援通知，禁用設置
+    notificationSettings.value.browser = false
+    localStorage.setItem(
+      'notificationSettings',
+      JSON.stringify(notificationSettings.value),
+    )
+  }
+
+  // 設定定期檢查（每5分鐘）
+  const interval = setInterval(checkForNewNotifications, 5 * 60 * 1000)
+
+  // 監聽頁面可見性變化
+  document.addEventListener('visibilitychange', checkForNewNotifications)
+
+  // 清理
+  return () => {
+    clearInterval(interval)
+    document.removeEventListener('visibilitychange', checkForNewNotifications)
   }
 })
 </script>
