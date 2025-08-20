@@ -1,11 +1,11 @@
 <template>
-  <div class="container mx-auto p-4 space-y-12">
-    <!-- 聯絡站長標題與說明 -->
+  <div class="w-5xl min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6">
+    <!-- 聯絡迷因長標題與說明 -->
     <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h1 class="text-5xl font-bold text-center">聯絡站長</h1>
+      <h1 class="text-5xl font-bold text-center">聯絡迷因長</h1>
       <div class="text-center text-gray-600 max-w-2xl">
         <p class="text-base mb-2">
-          如果有什麼建議或問題，歡迎填寫表單跟本站站長聯繫
+          如果有什麼建議或問題，歡迎填寫表單跟本站迷因長聯繫
         </p>
         <p class="text-base">如果有圖片侵犯到你的權利，也歡迎使用檢舉功能。</p>
       </div>
@@ -16,49 +16,32 @@
       <div class="w-full max-w-2xl">
         <form @submit.prevent="submitForm" class="space-y-6">
           <!-- 姓名欄位 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label
-                for="firstName"
-                class="block text-sm font-medium text-gray-700"
-              >
-                First name
-              </label>
-              <InputText
-                id="firstName"
-                v-model="form.firstName"
-                class="w-full"
-                :class="{ 'p-invalid': errors.firstName }"
-                placeholder="請輸入名字"
-              />
-              <small v-if="errors.firstName" class="p-error">{{
-                errors.firstName
-              }}</small>
-            </div>
-            <div class="space-y-2">
-              <label
-                for="lastName"
-                class="block text-sm font-medium text-gray-700"
-              >
-                Last name
-              </label>
-              <InputText
-                id="lastName"
-                v-model="form.lastName"
-                class="w-full"
-                :class="{ 'p-invalid': errors.lastName }"
-                placeholder="請輸入姓氏"
-              />
-              <small v-if="errors.lastName" class="p-error">{{
-                errors.lastName
-              }}</small>
-            </div>
+          <div class="space-y-2">
+            <label
+              for="fullName"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              姓名
+            </label>
+            <InputText
+              id="fullName"
+              v-model="form.fullName"
+              class="w-full"
+              :class="{ 'p-invalid': errors.fullName }"
+              placeholder="請輸入您的姓名"
+            />
+            <small v-if="errors.fullName" class="p-error">{{
+              errors.fullName
+            }}</small>
           </div>
 
           <!-- 電子郵件欄位 -->
           <div class="space-y-2">
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              Email
+            <label
+              for="email"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              電子信箱
             </label>
             <InputText
               id="email"
@@ -66,34 +49,20 @@
               type="email"
               class="w-full"
               :class="{ 'p-invalid': errors.email }"
-              placeholder="請輸入電子郵件"
+              placeholder="請輸入電子信箱"
             />
             <small v-if="errors.email" class="p-error">{{
               errors.email
             }}</small>
           </div>
 
-          <!-- 電話號碼欄位 -->
-          <div class="space-y-2">
-            <label for="phone" class="block text-sm font-medium text-gray-700">
-              Phone number
-            </label>
-            <InputText
-              id="phone"
-              v-model="form.phone"
-              class="w-full"
-              :class="{ 'p-invalid': errors.phone }"
-              placeholder="請輸入電話號碼"
-            />
-            <small v-if="errors.phone" class="p-error">{{
-              errors.phone
-            }}</small>
-          </div>
-
           <!-- 主題選擇 -->
           <div class="space-y-2">
-            <label for="topic" class="block text-sm font-medium text-gray-700">
-              Choose a topic
+            <label
+              for="topic"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              選擇主題
             </label>
             <Dropdown
               id="topic"
@@ -101,7 +70,7 @@
               :options="topicOptions"
               option-label="label"
               option-value="value"
-              placeholder="Select one..."
+              placeholder="請選擇一個主題..."
               class="w-full"
               :class="{ 'p-invalid': errors.topic }"
             />
@@ -112,8 +81,10 @@
 
           <!-- 單選按鈕組 -->
           <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700 mb-3">
-              Which best describes you?
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
+            >
+              您屬於哪一類型？
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-3">
@@ -130,7 +101,7 @@
                   />
                   <label
                     :for="`option-${index}`"
-                    class="ml-2 text-sm text-gray-700"
+                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
                   >
                     {{ option.label }}
                   </label>
@@ -150,7 +121,7 @@
                   />
                   <label
                     :for="`option-${index + 3}`"
-                    class="ml-2 text-sm text-gray-700"
+                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
                   >
                     {{ option.label }}
                   </label>
@@ -166,9 +137,9 @@
           <div class="space-y-2">
             <label
               for="message"
-              class="block text-sm font-medium text-gray-700"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Message
+              訊息內容
             </label>
             <Textarea
               id="message"
@@ -176,11 +147,42 @@
               rows="6"
               class="w-full"
               :class="{ 'p-invalid': errors.message }"
-              placeholder="Type your message..."
+              placeholder="請輸入您的訊息內容..."
             />
             <small v-if="errors.message" class="p-error">{{
               errors.message
             }}</small>
+          </div>
+
+          <!-- reCAPTCHA 提示 -->
+          <div
+            class="bg-primary-50 border border-primary-200 text-primary-500! dark:bg-primary-900 dark:border-primary-800 dark:text-primary-300! rounded-md p-4"
+          >
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg
+                  class="h-5 w-5 text-primary-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div
+                class="ml-3 text-sm text-primary-500! dark:text-primary-200!"
+              >
+                為了防止垃圾訊息，我們使用 Google reCAPTCHA
+                進行驗證。提交表單時會自動執行驗證。
+                <br />
+                <span class="text-xs text-primary-400! dark:text-primary-300!">
+                  如果遇到驗證問題，請檢查網路連線或聯絡管理員。
+                </span>
+              </div>
+            </div>
           </div>
 
           <!-- 條款同意 -->
@@ -191,8 +193,8 @@
               :binary="true"
               :class="{ 'p-invalid': errors.acceptTerms }"
             />
-            <label for="terms" class="text-sm text-gray-700">
-              I accept the Terms
+            <label for="terms" class="text-sm text-gray-700 dark:text-gray-300">
+              我同意條款
             </label>
           </div>
           <small v-if="errors.acceptTerms" class="p-error">{{
@@ -203,7 +205,7 @@
           <div class="flex justify-center">
             <Button
               type="submit"
-              label="Submit"
+              label="提交"
               class="w-48 h-12"
               :loading="submitting"
               :disabled="submitting"
@@ -224,15 +226,14 @@ import RadioButton from 'primevue/radiobutton'
 import Textarea from 'primevue/textarea'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
+import emailService from '@/services/emailService'
 
 const toast = useToast()
 
 // 表單資料
 const form = reactive({
-  firstName: '',
-  lastName: '',
+  fullName: '',
   email: '',
-  phone: '',
   topic: null,
   userType: '',
   message: '',
@@ -241,10 +242,8 @@ const form = reactive({
 
 // 錯誤訊息
 const errors = reactive({
-  firstName: '',
-  lastName: '',
+  fullName: '',
   email: '',
-  phone: '',
   topic: '',
   userType: '',
   message: '',
@@ -256,25 +255,29 @@ const submitting = ref(false)
 
 // 主題選項
 const topicOptions = ref([
-  { label: '一般問題', value: 'general' },
-  { label: '技術支援', value: 'technical' },
-  { label: '內容檢舉', value: 'report' },
-  { label: '合作提案', value: 'partnership' },
-  { label: '其他', value: 'other' },
+  { label: '一般問題', value: '一般問題' },
+  { label: '帳戶相關', value: '帳戶相關' },
+  { label: '付款與訂閱', value: '付款與訂閱' },
+  { label: '內容授權', value: '內容授權' },
+  { label: '廣告合作', value: '廣告合作' },
+  { label: '媒體採訪', value: '媒體採訪' },
+  { label: '活動合作', value: '活動合作' },
+  { label: '投訴申訴', value: '投訴申訴' },
+  { label: '其他', value: '其他' },
 ])
 
 // 第一欄選項
 const firstColumnOptions = ref([
-  { label: 'First choice', value: 'first' },
-  { label: 'Third choice', value: 'third' },
-  { label: 'Fifth choice', value: 'fifth' },
+  { label: '一般用戶', value: '一般用戶' },
+  { label: '內容創作者', value: '內容創作者' },
+  { label: '企業用戶', value: '企業用戶' },
 ])
 
 // 第二欄選項
 const secondColumnOptions = ref([
-  { label: 'Second choice', value: 'second' },
-  { label: 'Fourth choice', value: 'fourth' },
-  { label: 'Other', value: 'other' },
+  { label: '學生', value: '學生' },
+  { label: '媒體工作者', value: '媒體工作者' },
+  { label: '其他', value: '其他' },
 ])
 
 // 驗證表單
@@ -286,15 +289,9 @@ const validateForm = () => {
     errors[key] = ''
   })
 
-  // 驗證名字
-  if (!form.firstName.trim()) {
-    errors.firstName = '請輸入名字'
-    isValid = false
-  }
-
-  // 驗證姓氏
-  if (!form.lastName.trim()) {
-    errors.lastName = '請輸入姓氏'
+  // 驗證姓名
+  if (!form.fullName.trim()) {
+    errors.fullName = '請輸入姓名'
     isValid = false
   }
 
@@ -304,12 +301,6 @@ const validateForm = () => {
     isValid = false
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
     errors.email = '請輸入有效的電子郵件格式'
-    isValid = false
-  }
-
-  // 驗證電話號碼
-  if (!form.phone.trim()) {
-    errors.phone = '請輸入電話號碼'
     isValid = false
   }
 
@@ -345,7 +336,11 @@ const validateForm = () => {
 
 // 提交表單
 const submitForm = async () => {
+  console.log('🚀 開始提交聯絡表單...')
+  console.log('📝 表單數據:', form)
+
   if (!validateForm()) {
+    console.log('❌ 表單驗證失敗')
     toast.add({
       severity: 'error',
       summary: '表單驗證失敗',
@@ -355,36 +350,62 @@ const submitForm = async () => {
     return
   }
 
+  console.log('✅ 表單驗證通過')
   submitting.value = true
 
   try {
-    // 這裡可以調用 API 來提交表單資料
-    // const response = await contactService.submit(form)
-
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    toast.add({
-      severity: 'success',
-      summary: '提交成功',
-      detail: '您的訊息已成功送出，我們會盡快回覆您',
-      life: 5000,
+    // 調用 API 來提交表單資料
+    const response = await emailService.sendContactForm({
+      fullName: form.fullName.trim(),
+      email: form.email.trim(),
+      topic: form.topic,
+      userType: form.userType,
+      message: form.message.trim(),
     })
 
-    // 重置表單
-    Object.keys(form).forEach((key) => {
-      if (key === 'acceptTerms') {
-        form[key] = false
-      } else {
-        form[key] = ''
-      }
-    })
+    console.log('✅ 後端回應:', response)
+
+    if (response.data.success) {
+      toast.add({
+        severity: 'success',
+        summary: '提交成功',
+        detail: response.data.message || '您的訊息已成功送出，我們會盡快回覆您',
+        life: 5000,
+      })
+
+      // 重置表單
+      Object.keys(form).forEach((key) => {
+        if (key === 'acceptTerms') {
+          form[key] = false
+        } else {
+          form[key] = ''
+        }
+      })
+    } else {
+      throw new Error(response.data.message || '提交失敗')
+    }
   } catch (error) {
-    console.error('提交表單失敗:', error)
+    console.error('❌ 提交表單失敗:', error)
+
+    let errorMessage = '無法提交表單，請稍後再試'
+
+    // 根據錯誤類型提供不同的錯誤訊息
+    if (error.message.includes('設定未完成')) {
+      errorMessage = '系統設定問題，請聯絡管理員'
+    } else if (error.message.includes('網路連線')) {
+      errorMessage = '網路連線問題，請檢查網路後重新嘗試'
+    } else if (error.message.includes('reCAPTCHA 驗證失敗')) {
+      errorMessage = '驗證失敗，請重新嘗試'
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+
     toast.add({
       severity: 'error',
       summary: '提交失敗',
-      detail: '無法提交表單，請稍後再試',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -401,7 +422,7 @@ export default {
 
 <route lang="yaml">
 meta:
-  title: '聯絡站長'
+  title: '聯絡迷因長'
   login: ''
   admin: false
 </route>
