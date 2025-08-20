@@ -195,6 +195,7 @@ import userService from '@/services/userService'
 import memeService from '@/services/memeService'
 import collectionService from '@/services/collectionService'
 import likeService from '@/services/likeService'
+import followService from '@/services/followService'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 
 // 組件名稱 (修復linter錯誤)
@@ -312,9 +313,19 @@ const loadUserProfile = async () => {
 // 載入用戶統計資料
 const loadUserStats = async () => {
   try {
-    const response = await userService.getStats(userId.value)
-    if (response.data && response.data.success) {
-      userStats.value = response.data.data
+    // 獲取追隨相關統計資訊
+    const followStatsResponse = await followService.getStats(userId.value)
+    const followStats = followStatsResponse.data?.data || {}
+
+    // 獲取用戶相關統計資訊
+    const userStatsResponse = await userService.getStats(userId.value)
+    const userStatsData = userStatsResponse.data?.data || {}
+
+    // 合併統計資訊
+    userStats.value = {
+      ...userStatsData,
+      follower_count: followStats.follower_count || 0,
+      following_count: followStats.following_count || 0,
     }
   } catch (error) {
     console.error('載入用戶統計失敗:', error)

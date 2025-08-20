@@ -100,10 +100,7 @@ export default {
   initBindAuth(provider) {
     return apiService.httpAuth.get(`/api/users/bind-auth/${provider}`)
   },
-  // 用戶統計相關
-  getStats(userId) {
-    return apiService.http.get(`/api/follows/stats/${userId}`)
-  },
+
   // 搜索用戶（用於@提及功能）
   searchUsers(params = {}) {
     const queryString = new URLSearchParams(params).toString()
@@ -117,6 +114,14 @@ export default {
       provider,
       profile,
     })
+  },
+
+  // 獲取 username 建議（用於 OAuth 註冊）
+  getOAuthUsernameSuggestions(provider, profile) {
+    const encodedProfile = encodeURIComponent(JSON.stringify(profile))
+    return apiService.http.get(
+      `/api/users/username-suggestions/${provider}?profile=${encodedProfile}`,
+    )
   },
 
   // 檢查 username 可用性
@@ -145,7 +150,7 @@ export default {
 
   // 完成社群註冊
   completeSocialRegistration(data) {
-    return apiService.http.post('/api/auth/social/complete', data)
+    return apiService.http.post('/api/users/complete-social-registration', data)
   },
 
   getActiveUsers,
