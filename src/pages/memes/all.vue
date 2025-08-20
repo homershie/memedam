@@ -312,8 +312,10 @@ const loadMemes = async (reset = true) => {
         : currentPage.value
     }
 
-    // 更新 SEO 設定
-    updateSEOSettings()
+    // 只在初始載入時更新 SEO 設定，避免在無限滾動時更新 URL
+    if (reset) {
+      updateSEOSettings()
+    }
 
     // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)
@@ -638,19 +640,38 @@ const updateSEOSettings = () => {
   // 設定 SEO
   setMemeListSEO(seoParams)
 
-  // 更新瀏覽器 URL（如果需要）
-  updateBrowserUrl()
+  // 更新瀏覽器 URL（只在初始載入或搜尋/篩選變化時）
+  updateBrowserUrl(true)
 }
 
 // 更新瀏覽器 URL
-const updateBrowserUrl = () => {
+const updateBrowserUrl = (shouldUpdate = false) => {
+  // 如果不是明確要求更新，則跳過
+  if (!shouldUpdate) {
+    return
+  }
+
+  // 在無限滾動載入時不更新 URL，避免循環觸發
+  if (
+    currentPage.value > 1 &&
+    !searchQuery.value.trim() &&
+    selectedTags.value.length === 0
+  ) {
+    return
+  }
+
   const params = cleanUrlParams({
     search: searchQuery.value,
     tags:
       selectedTags.value.length > 0
         ? selectedTags.value.map((tag) => tag.name)
         : null,
-    page: currentPage.value > 1 ? currentPage.value : null,
+    // 只在第一頁或搜尋/篩選時才在 URL 中顯示頁面參數
+    page:
+      currentPage.value > 1 &&
+      (searchQuery.value.trim() || selectedTags.value.length > 0)
+        ? currentPage.value
+        : null,
   })
 
   const newQuery = {}
