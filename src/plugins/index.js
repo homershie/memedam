@@ -40,6 +40,7 @@ import Divider from 'primevue/divider'
 import Avatar from 'primevue/avatar'
 import Image from 'primevue/image'
 import ConfirmDialog from 'primevue/confirmdialog'
+import Skeleton from 'primevue/skeleton'
 
 export function registerPlugins(app) {
   app
@@ -72,6 +73,7 @@ export function registerPlugins(app) {
     .component('Avatar', Avatar)
     .component('Image', Image)
     .component('ConfirmDialog', ConfirmDialog)
+    .component('Skeleton', Skeleton)
 
   // 全域提供 composables
   app.provide('useConfirm', useConfirm)

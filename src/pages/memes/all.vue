@@ -49,8 +49,8 @@
     </div>
 
     <!-- 載入中狀態 -->
-    <div v-if="loading" class="flex justify-center py-8">
-      <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
+    <div v-if="loading" class="space-y-6 pb-10">
+      <MemeCardSkeleton v-for="n in 3" :key="n" />
     </div>
 
     <!-- 迷因列表 -->
@@ -94,11 +94,8 @@
       ref="triggerRef"
       class="h-4 w-full"
     >
-      <div v-if="infiniteLoading" class="flex justify-center py-6">
-        <div class="flex items-center text-gray-500">
-          <ProgressSpinner style="width: 20px; height: 20px" />
-          <span class="ml-2">載入更多內容...</span>
-        </div>
+      <div v-if="infiniteLoading" class="space-y-6 pb-10">
+        <MemeCardSkeleton v-for="n in 2" :key="`infinite-${n}`" />
       </div>
     </div>
 
@@ -125,9 +122,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { setMemeListSEO, cleanUrlParams } from '@/utils/seoUtils'
 import MemeCard from '@/components/MemeCard.vue'
+import MemeCardSkeleton from '@/components/MemeCardSkeleton.vue'
 import SearchBox from '@/components/SearchBox.vue'
 import Button from 'primevue/button'
-import ProgressSpinner from 'primevue/progressspinner'
 import Dialog from 'primevue/dialog'
 import memeService from '@/services/memeService'
 import userService from '@/services/userService'

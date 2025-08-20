@@ -131,8 +131,8 @@
       </div>
 
       <!-- 載入中狀態 -->
-      <div v-if="loading" class="flex justify-center items-center py-20">
-        <ProgressSpinner />
+      <div v-if="loading" class="space-y-4">
+        <MemeCardSlimSkeleton v-for="n in 5" :key="n" />
       </div>
 
       <!-- 迷因列表 -->
@@ -146,11 +146,8 @@
 
         <!-- 無限滾動觸發元素 -->
         <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
-          <div v-if="infiniteLoading" class="flex justify-center mt-8">
-            <div class="flex items-center text-gray-500">
-              <ProgressSpinner style="width: 20px; height: 20px" />
-              <span class="ml-2">載入更多內容...</span>
-            </div>
+          <div v-if="infiniteLoading" class="space-y-4 mt-8">
+            <MemeCardSlimSkeleton v-for="n in 3" :key="`infinite-${n}`" />
           </div>
         </div>
 
@@ -189,11 +186,11 @@ import { useToast } from 'primevue/usetoast'
 import Avatar from 'primevue/avatar'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
-import ProgressSpinner from 'primevue/progressspinner'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import MemeCardSlim from '@/components/MemeCardSlim.vue'
+import MemeCardSlimSkeleton from '@/components/MemeCardSlimSkeleton.vue'
 import userService from '@/services/userService'
 import memeService from '@/services/memeService'
 import collectionService from '@/services/collectionService'
