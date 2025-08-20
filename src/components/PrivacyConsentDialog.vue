@@ -1,112 +1,74 @@
 <template>
-  <Dialog
+  <Drawer
     v-model:visible="visible"
-    modal
+    position="bottom"
     :closable="false"
     :dismissableMask="false"
-    class="privacy-consent-dialog"
-    :style="{ width: '90vw', maxWidth: '600px' }"
+    class="privacy-consent-drawer"
+    :style="{ height: 'auto', maxHeight: '80vh' }"
   >
     <template #header>
       <div class="flex items-center gap-3">
         <i class="pi pi-shield text-2xl text-primary-600"></i>
-        <h2 class="text-xl font-bold">隱私權與 Cookie 政策</h2>
+        <h6>隱私權與 Cookie 政策</h6>
       </div>
     </template>
 
-    <div class="space-y-4">
+    <div class="flex flex-col lg:flex-row justify-between gap-8 lg:gap-0">
       <!-- 主要說明 -->
-      <div class="text-gray-700 dark:text-gray-300">
-        <p class="mb-3">
+      <div class="text-gray-700 dark:text-gray-300 flex-1 lg:flex-6/12">
+        <small>
           歡迎來到迷因典 MemeDam！我們重視您的隱私權，並致力於保護您的個人資料。
-        </p>
-        <p class="mb-3">
           我們使用 Cookie
-          和類似技術來改善您的使用體驗、提供個人化內容，以及分析網站流量。
-        </p>
-        <p>
-          註冊即表示您同意我們的
+          和類似技術來改善您的使用體驗、提供個人化內容，以及分析網站流量。使用本網站即表示您同意我們的
           <router-link
             to="/terms"
             class="text-primary-600 hover:text-primary-700 underline font-medium"
             @click="handleLinkClick"
+            >服務條款</router-link
           >
-            服務條款
-          </router-link>
           和
           <router-link
             to="/privacy"
             class="text-primary-600 hover:text-primary-700 underline font-medium"
             @click="handleLinkClick"
-          >
-            隱私政策 </router-link
-          >， 並同意我們依政策收集與使用資料。
-        </p>
+            >隱私政策</router-link
+          >，並允許使用 Cookie 以提升體驗、分析流量及個人化內容。
+        </small>
       </div>
 
-      <!-- Cookie 類型說明 -->
-      <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-        <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">
-          我們使用的 Cookie 類型：
-        </h3>
-        <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-          <div class="flex items-start gap-2">
-            <i class="pi pi-check-circle text-green-500 mt-0.5"></i>
-            <span
-              ><strong>必要 Cookie：</strong>維持網站基本功能，如登入狀態</span
-            >
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="pi pi-check-circle text-green-500 mt-0.5"></i>
-            <span><strong>功能 Cookie：</strong>記住您的偏好設定</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="pi pi-check-circle text-green-500 mt-0.5"></i>
-            <span><strong>分析 Cookie：</strong>匿名統計，幫助改善服務</span>
-          </div>
-        </div>
-      </div>
+      <!-- 空白區域 -->
+      <div class="flex-1/12 xl:flex-2/12 2xl:flex-3/12 hidden lg:block"></div>
 
       <!-- 選擇按鈕 -->
-      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+      <div
+        class="flex flex-1 flex-col md:flex-row lg:flex-5/12 xl:flex-4/12 2xl:flex-3/12 gap-3"
+      >
         <Button
           label="接受全部"
           icon="pi pi-check"
           class="flex-1"
+          severity="contrast"
           @click="acceptAll"
         />
         <Button
-          label="僅接受必要 Cookie"
+          label="僅限必要 Cookie"
           icon="pi pi-cog"
           severity="secondary"
           class="flex-1"
           @click="acceptNecessary"
         />
-        <Button
-          label="自訂設定"
-          icon="pi pi-sliders-h"
-          severity="outline"
-          class="flex-1"
-          @click="showCustomSettings"
-        />
-      </div>
-
-      <!-- 額外說明 -->
-      <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
-        <p>
-          您可以隨時在
-          <router-link
-            to="/privacy"
-            class="underline hover:text-gray-700 dark:hover:text-gray-300"
-            @click="handleLinkClick"
-          >
-            隱私政策
-          </router-link>
-          中了解更多詳情，或在瀏覽器設定中管理 Cookie。
-        </p>
+        <a
+          href="#"
+          class="flex justify-center items-center gap-2 text-surface-600 dark:text-surface-300 hover:text-surface-900! dark:hover:text-surface-100!"
+          @click.prevent="showCustomSettings"
+        >
+          <i class="pi pi-sliders-h"></i>
+          <span>自訂設定</span>
+        </a>
       </div>
     </div>
-  </Dialog>
+  </Drawer>
 
   <!-- 自訂設定對話框 -->
   <Dialog
@@ -117,15 +79,13 @@
   >
     <div class="space-y-4">
       <!-- 必要 Cookie -->
-      <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-2">
+      <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div class="flex items-center justify-start mb-2 gap-6">
           <div>
-            <h4 class="font-semibold text-gray-800 dark:text-gray-200">
-              必要 Cookie
-            </h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <h5>必要 Cookie</h5>
+            <small class="text-sm text-gray-600 dark:text-gray-400">
               維持網站基本功能
-            </p>
+            </small>
           </div>
           <div class="flex items-center">
             <i class="pi pi-lock text-gray-400 mr-2"></i>
@@ -138,15 +98,13 @@
       </div>
 
       <!-- 功能 Cookie -->
-      <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-2">
+      <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div class="flex items-center justify-start mb-2 gap-6">
           <div>
-            <h4 class="font-semibold text-gray-800 dark:text-gray-200">
-              功能 Cookie
-            </h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <h5>功能 Cookie</h5>
+            <small class="text-sm text-gray-600 dark:text-gray-400">
               記住您的偏好設定
-            </p>
+            </small>
           </div>
           <InputSwitch v-model="cookiePreferences.functional" />
         </div>
@@ -156,15 +114,13 @@
       </div>
 
       <!-- 分析 Cookie -->
-      <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-2">
+      <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div class="flex items-center justify-start mb-2 gap-6">
           <div>
-            <h4 class="font-semibold text-gray-800 dark:text-gray-200">
-              分析 Cookie
-            </h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <h5>分析 Cookie</h5>
+            <small class="text-sm text-gray-600 dark:text-gray-400">
               匿名統計，改善服務
-            </p>
+            </small>
           </div>
           <InputSwitch v-model="cookiePreferences.analytics" />
         </div>
@@ -182,8 +138,9 @@
           severity="secondary"
           text
           @click="customSettingsVisible = false"
+          class="w-24"
         />
-        <Button label="儲存設定" @click="saveCustomSettings" />
+        <Button label="儲存設定" @click="saveCustomSettings" class="w-24" />
       </div>
     </template>
   </Dialog>
@@ -191,14 +148,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 
 // 定義組件名稱
 defineOptions({
   name: 'PrivacyConsentDialog',
 })
-
-const router = useRouter()
 
 // 響應式數據
 const visible = ref(false)
@@ -318,16 +272,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.privacy-consent-dialog :deep(.p-dialog-header) {
+.privacy-consent-drawer :deep(.p-drawer-header) {
   border-bottom: 1px solid var(--surface-border);
   padding-bottom: 1rem;
 }
 
-.privacy-consent-dialog :deep(.p-dialog-content) {
+.privacy-consent-drawer :deep(.p-drawer-content) {
   padding-top: 1rem;
 }
 
-.privacy-consent-dialog :deep(.p-dialog-footer) {
+.privacy-consent-drawer :deep(.p-drawer-footer) {
   border-top: 1px solid var(--surface-border);
   padding-top: 1rem;
 }
