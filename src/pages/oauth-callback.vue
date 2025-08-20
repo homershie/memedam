@@ -1,29 +1,29 @@
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"
-  >
-    <div class="text-center max-w-md mx-auto px-4">
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="text-center max-w-md mx-auto px-4 pb-40">
       <div v-if="isProcessing" class="space-y-4">
         <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"
         ></div>
-        <p class="text-gray-600 dark:text-gray-400">{{ processingMessage }}</p>
+        <p class="text-surface-600 dark:text-surface-400">
+          {{ processingMessage }}
+        </p>
       </div>
 
       <div v-else-if="needsUsernameSelection" class="space-y-6">
-        <div class="text-blue-500 text-6xl mb-4">
+        <div class="text-primary-500 text-6xl mb-4">
           <i class="pi pi-user-plus"></i>
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-xl font-semibold text-surface-900 dark:text-white">
           選擇您的使用者名稱
         </h2>
-        <p class="text-gray-600 dark:text-gray-400">
+        <p class="text-surface-600 dark:text-surface-400">
           為了完成註冊，請選擇一個使用者名稱
         </p>
 
         <!-- 建議的 username 列表 -->
         <div v-if="usernameSuggestions.length > 0" class="space-y-3">
-          <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+          <h4 class="text-sm font-medium text-surface-900 dark:text-white">
             建議的使用者名稱：
           </h4>
           <div class="space-y-2">
@@ -31,9 +31,9 @@
               v-for="suggestion in usernameSuggestions"
               :key="suggestion"
               @click="selectSuggestedUsername(suggestion)"
-              class="w-full px-3 py-2 text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+              class="w-full px-3 py-2 text-left border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-800 text-surface-900 dark:text-white hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
               :class="{
-                'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20':
+                'border-primary-500 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/20':
                   selectedUsername === suggestion,
               }"
             >
@@ -45,7 +45,7 @@
         <!-- 自定義 username 輸入 -->
         <div class="space-y-2">
           <label
-            class="block text-sm font-medium text-gray-900 dark:text-white"
+            class="block text-sm font-medium text-surface-900 dark:text-white"
           >
             或自定義使用者名稱：
           </label>
@@ -55,9 +55,9 @@
               @input="debouncedCheckUsername"
               type="text"
               placeholder="輸入您想要的使用者名稱"
-              class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              class="w-full px-3 py-3 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-800 text-surface-900 dark:text-white placeholder-surface-500 dark:placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               :class="{
-                'border-red-500 focus:ring-red-500': usernameError,
+                'border-primary-500 focus:ring-primary-500': usernameError,
                 'border-green-500 focus:ring-green-500':
                   customUsername && !usernameError && !usernameChecking,
                 'pr-10': usernameChecking,
@@ -69,7 +69,7 @@
               v-if="usernameChecking"
               class="absolute right-3 top-1/2 transform -translate-y-1/2"
             >
-              <i class="pi pi-spin pi-spinner text-gray-400"></i>
+              <i class="pi pi-spin pi-spinner text-surface-400"></i>
             </div>
             <div
               v-else-if="customUsername && !usernameError"
@@ -81,18 +81,18 @@
               v-else-if="usernameError"
               class="absolute right-3 top-1/2 transform -translate-y-1/2"
             >
-              <i class="pi pi-times text-red-500"></i>
+              <i class="pi pi-times text-primary-500"></i>
             </div>
           </div>
 
           <!-- 錯誤訊息 -->
-          <small v-if="usernameError" class="text-red-500 text-xs">
+          <small v-if="usernameError" class="text-primary-500 text-xs">
             {{ usernameError }}
           </small>
 
           <!-- 使用者名稱規則提示 -->
-          <small class="text-gray-500 dark:text-gray-400 text-xs">
-            8-20個字元，只能包含英文字母和數字
+          <small class="text-surface-500 dark:text-surface-400 text-xs">
+            5-30個字元，只能包含小寫英文字母、數字、點號(.)和底線(_)
           </small>
         </div>
 
@@ -100,14 +100,14 @@
         <div class="flex gap-3 pt-4">
           <button
             @click="cancelUsernameSelection"
-            class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            class="flex-1 px-4 py-2 border border-surface-300 dark:border-surface-600 text-surface-700 dark:text-surface-300 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
             :disabled="isConfirmingUsername"
           >
             取消
           </button>
           <button
             @click="confirmUsernameSelection"
-            class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="!isUsernameValid || isConfirmingUsername"
           >
             <i
@@ -123,23 +123,25 @@
         <div class="text-green-500 text-6xl mb-4">
           <i class="pi pi-check-circle"></i>
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-xl font-semibold text-surface-900 dark:text-white">
           {{ successMessage }}
         </h2>
-        <p class="text-gray-600 dark:text-gray-400">{{ successDetail }}</p>
+        <p class="text-surface-600 dark:text-surface-400">
+          {{ successDetail }}
+        </p>
       </div>
 
       <div v-else class="space-y-4">
-        <div class="text-red-500 text-6xl mb-4">
+        <div class="text-primary-500 text-6xl mb-4">
           <i class="pi pi-times-circle"></i>
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-xl font-semibold text-surface-900 dark:text-white">
           授權失敗
         </h2>
-        <p class="text-gray-600 dark:text-gray-400">{{ errorMessage }}</p>
+        <p class="text-surface-600 dark:text-surface-400">{{ errorMessage }}</p>
         <button
           @click="backToLogin"
-          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+          class="px-4 py-2 bg-surface-500 text-white rounded hover:bg-surface-600 transition-colors"
         >
           返回登入頁面
         </button>
@@ -149,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { debounce } from 'lodash'
 import userService from '@/services/userService'
@@ -185,14 +187,14 @@ const validateUsername = (username) => {
   if (!username || username.trim() === '') {
     return '使用者名稱不能為空'
   }
-  if (username.length < 8) {
-    return '使用者名稱至少8個字元'
+  if (username.length < 5) {
+    return '使用者名稱至少5個字元'
   }
-  if (username.length > 20) {
-    return '使用者名稱最多20個字元'
+  if (username.length > 30) {
+    return '使用者名稱最多30個字元'
   }
-  if (!/^[A-Za-z0-9]+$/.test(username)) {
-    return '使用者名稱只能包含英文字母和數字'
+  if (!/^[a-z0-9._]+$/.test(username)) {
+    return '使用者名稱只能包含小寫英文字母、數字、點號(.)和底線(_)'
   }
   return ''
 }
@@ -304,8 +306,10 @@ const completeSocialRegistration = async (username) => {
 
     // 調用後端API完成註冊
     const { data } = await userService.completeSocialRegistration({
-      ...oauthData.value,
+      token: oauthData.value.token,
       username,
+      provider: oauthData.value.provider,
+      profile: oauthData.value.profile,
     })
 
     // 登入用戶
@@ -349,8 +353,6 @@ const backToLogin = () => {
 
 // 處理OAuth回調數據
 const processOAuthCallback = async () => {
-  console.log('OAuth 回調頁面載入，查詢參數:', route.query)
-
   const token = route.query.token
   const error = route.query.error
   const userData = route.query.user
@@ -363,19 +365,14 @@ const processOAuthCallback = async () => {
     : null
 
   if (error) {
-    console.log('檢測到授權錯誤:', error)
     handleError(error)
     return
   }
 
   if (!token) {
-    console.log('未檢測到 token')
     handleError('未收到有效的授權資訊')
     return
   }
-
-  console.log('檢測到授權成功，token:', token.substring(0, 20) + '...')
-  console.log('需要選擇username:', needsUsername)
 
   isProcessing.value = false
 
@@ -394,11 +391,18 @@ const processOAuthCallback = async () => {
 
     try {
       // 獲取username建議
-      const { data } = await userService.previewUsernameSuggestions(
+      const response = await userService.getOAuthUsernameSuggestions(
         provider,
         profile,
       )
-      usernameSuggestions.value = data.suggestions || []
+
+      // 處理響應結構：response.data.data.suggestions
+      const suggestions =
+        response.data?.data?.suggestions || response.data?.suggestions || []
+      usernameSuggestions.value = suggestions
+
+      // 確保 DOM 更新
+      await nextTick()
     } catch (error) {
       console.error('獲取username建議失敗:', error)
       usernameSuggestions.value = []
