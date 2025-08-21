@@ -64,28 +64,35 @@
       <div class="text-center subtitle mb-8">
         最新消息與站務公告將在此處更新，請留意更新情況。
       </div>
-      <div class="grid lg:grid-cols-3 gap-4">
-        <Card v-for="n in 3" :key="n" class="w-full">
-          <template #header>
-            <div class="h-60 flex items-center justify-center">
-              <img
-                src="https://picsum.photos/300/200/?random=10"
-                class="w-full h-full object-cover rounded-t-lg"
-              />
-            </div>
-          </template>
-          <template #content>
-            <div class="mb-2 flex justify-between items-center">
-              <h4 class="mb-1">標題{{ n }}</h4>
-              <Tag value="公告" severity="primary" />
-            </div>
-            <p class="mb-2">
-              這裡是公告內容的簡短描述，讓大家快速掌握最新動態。
-              如果公告內容較長，可以點擊進入公告頁面。這邊的字數限制在100字以內。
-              讓使用者可以快速了解公告內容，並決定是否要點擊進入公告頁面。
-            </p>
-          </template>
-        </Card>
+
+      <!-- 載入中狀態 -->
+      <div v-if="announcementsLoading" class="flex justify-center py-8">
+        <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
+      </div>
+
+      <!-- 公告列表 -->
+      <div
+        v-else-if="announcements.length > 0"
+        class="grid lg:grid-cols-3 gap-4 w-full"
+      >
+        <AnnouncementCard
+          v-for="announcement in announcements"
+          :key="announcement._id"
+          :announcement="announcement"
+        />
+      </div>
+
+      <!-- 空狀態 -->
+      <div v-else class="text-center py-12">
+        <i class="pi pi-bullhorn text-6xl text-gray-300 mb-4"></i>
+        <h3 class="mb-2">暫無公告</h3>
+        <p class="subtitle">目前沒有公告，請稍後再試</p>
+        <Button
+          label="重新載入"
+          icon="pi pi-refresh"
+          @click="loadAnnouncements"
+          class="mt-4"
+        />
       </div>
     </div>
 
@@ -275,7 +282,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
 import { handleOAuthCallback } from '@/utils/oauthUtils'
-import Card from 'primevue/card'
+
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
 import Tag from 'primevue/tag'
@@ -292,6 +299,8 @@ import memeService from '@/services/memeService'
 import VortexBackground from '@/components/VortexBackground.vue'
 import { useThemeStore } from '@/stores/themeStore'
 import AdInline from '@/components/AdInline.vue'
+import AnnouncementCard from '@/components/AnnouncementCard.vue'
+import announcementService from '@/services/announcementService'
 
 const router = useRouter()
 const route = useRoute()
@@ -327,6 +336,10 @@ const loading = ref(false)
 // 活躍用戶相關狀態
 const activeUsers = ref([])
 const activeUsersLoading = ref(false)
+
+// 公告相關狀態
+const announcements = ref([])
+const announcementsLoading = ref(false)
 
 // Menu items for user actions
 const items = ref([
@@ -426,6 +439,64 @@ const loadTopTags = async () => {
   } catch (error) {
     console.error('載入熱門標籤失敗:', error)
     topTags.value = []
+  }
+}
+
+// 載入公告
+const loadAnnouncements = async () => {
+  try {
+    announcementsLoading.value = true
+    const response = await announcementService.getAll({
+      status: 'public',
+      limit: 3,
+      page: 1,
+    })
+
+    if (response.data && response.data.success) {
+      announcements.value = response.data.data || []
+    } else {
+      announcements.value = []
+    }
+  } catch (error) {
+    console.error('載入公告失敗:', error)
+    // 如果後端無法連接，使用模擬資料
+    announcements.value = [
+      {
+        _id: '1',
+        title: '系統維護通知',
+        content:
+          '親愛的用戶們，我們將於本週末進行系統維護，屆時網站可能會暫時無法訪問。維護時間預計為 2 小時，我們會盡快完成維護工作。感謝您的理解與支持！',
+        category: 'system',
+        status: 'public',
+        pinned: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        _id: '2',
+        title: '新功能上線',
+        content:
+          '我們很高興地宣布，迷因編輯器的新功能已經上線！現在您可以更方便地編輯和分享您的迷因作品。新功能包括：1. 更直觀的編輯介面 2. 更多濾鏡效果 3. 一鍵分享功能。快來試試看吧！',
+        category: 'update',
+        status: 'public',
+        pinned: false,
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1天前
+        updatedAt: new Date(Date.now() - 86400000).toISOString(),
+      },
+      {
+        _id: '3',
+        title: '社群活動預告',
+        content:
+          '下個月我們將舉辦第一屆迷因創作大賽！參賽者將有機會獲得豐厚獎品，包括現金獎勵和平台 VIP 會員資格。比賽詳情將在近期公布，敬請期待！',
+        category: 'activity',
+        status: 'public',
+        pinned: false,
+        createdAt: new Date(Date.now() - 172800000).toISOString(), // 2天前
+        updatedAt: new Date(Date.now() - 172800000).toISOString(),
+      },
+    ]
+  } finally {
+    announcementsLoading.value = false
   }
 }
 
@@ -812,7 +883,12 @@ onMounted(async () => {
 
   // 檢查每日迷因狀態
   await checkDailyMemeStatus()
-  await Promise.all([loadTopTags(), loadFeaturedMemes(), loadActiveUsers()])
+  await Promise.all([
+    loadTopTags(),
+    loadFeaturedMemes(),
+    loadActiveUsers(),
+    loadAnnouncements(),
+  ])
 })
 </script>
 

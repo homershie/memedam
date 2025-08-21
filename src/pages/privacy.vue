@@ -2,7 +2,7 @@
   <div class="container h-fit mx-auto p-8 mb-20 space-y-8">
     <!-- 頁面標題 -->
     <div class="mb-8 max-w-4xl mx-auto">
-      <h1 class="text-4xl font-bold mb-4">隱私政策</h1>
+      <h2 class="text-4xl font-bold mb-4">隱私政策</h2>
       <p class="text-surface-600 dark:text-surface-400">
         最後更新：{{ lastUpdated }}
       </p>
