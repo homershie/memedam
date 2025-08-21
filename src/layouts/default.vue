@@ -231,7 +231,7 @@
         :class="[
           'bg-surface-0 dark:bg-surface-900 h-[calc(100vh-80px)] flex-col group transition-discrete duration-300 ease-in-out relative hidden lg:flex',
           sidebarVisible
-            ? 'w-1/6 max-w-[280px] opacity-100 min-w-60'
+            ? 'w-1/6 max-w-[280px] opacity-100 min-w-64'
             : 'w-0 opacity-0 overflow-hidden',
         ]"
         :style="{
@@ -287,22 +287,26 @@
                 <AdSidebar />
               </div>
               <Divider />
-              <div class="text-s mb-10">
-                <div class="mb-2">© 2025 迷因典 MemeDam ®</div>
-                <div>
-                  <router-link to="/privacy" class="text-sm hover:underline"
-                    >隱私政策</router-link
+              <div class="mb-10">
+                <div class="mb-2">© 2025 迷因典 MemeDam</div>
+
+                <div class="text-xs">
+                  <router-link
+                    to="/terms"
+                    class="text-sm hover:underline p-0! mr-2"
+                    >條款</router-link
+                  ><router-link
+                    to="/privacy"
+                    class="text-sm hover:underline p-0! mr-2"
+                    >隱私權</router-link
+                  ><a href="/dmca" class="text-sm hover:underline p-0! mr-2"
+                    >DMCA</a
+                  ><a href="/dsar" class="text-sm hover:underline p-0! mr-2"
+                    >資料請求</a
                   >
-                  |
-                  <router-link to="/terms" class="text-sm hover:underline"
-                    >服務條款</router-link
-                  >
-                  | <a href="#" class="text-sm hover:underline">DMCA</a> |
-                  <a href="#" class="text-sm hover:underline">聲明</a> |
-                  <a href="#" class="text-sm hover:underline">資料收集通知</a>
-                  <a href="#" class="text-sm hover:underline"
-                    >資料主體存取請求</a
-                  >
+                </div>
+                <div class="text-sm dark:text-surface-300">
+                  內容僅供娛樂，勿作真實資訊。
                 </div>
               </div>
             </template>
@@ -467,26 +471,37 @@
                 </template>
                 <template #end
                   ><!-- Google Adsense 佔位符 -->
-                  <div class="flex justify-center items-center my-2">
-                    <div
-                      style="
-                        width: 150px;
-                        height: 600px;
-                        background: #e5e7eb;
-                        border-radius: 8px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: #888;
-                        font-size: 14px;
-                        border: 1px dashed #bbb;
-                        margin: 10px;
-                      "
-                    >
-                      150x600<br />Google Ad
+                  <!-- Google Adsense 廣告 - VIP 用戶不顯示 -->
+                  <div
+                    v-if="!isVipUser"
+                    class="flex justify-center items-center my-2"
+                  >
+                    <AdSidebar />
+                  </div>
+                  <Divider />
+                  <div class="mb-10">
+                    <div class="mb-2">© 2025 迷因典 MemeDam</div>
+
+                    <div class="text-xs">
+                      <router-link
+                        to="/terms"
+                        class="text-sm hover:underline p-0! mr-2"
+                        >條款</router-link
+                      ><router-link
+                        to="/privacy"
+                        class="text-sm hover:underline p-0! mr-2"
+                        >隱私權</router-link
+                      ><a href="/dmca" class="text-sm hover:underline p-0! mr-2"
+                        >DMCA</a
+                      ><a href="/dsar" class="text-sm hover:underline p-0! mr-2"
+                        >資料請求</a
+                      >
                     </div>
-                  </div></template
-                >
+                    <div class="text-sm dark:text-surface-300">
+                      內容僅供娛樂，勿作真實資訊。
+                    </div>
+                  </div>
+                </template>
               </Menu>
             </div>
           </div>
