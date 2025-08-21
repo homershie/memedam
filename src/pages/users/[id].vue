@@ -159,17 +159,6 @@
             <MemeCardSlimSkeleton v-for="n in 6" :key="`infinite-${n}`" />
           </div>
         </div>
-
-        <!-- 沒有更多內容提示 -->
-        <div
-          v-if="!hasMore && memes.length > 0"
-          class="flex justify-center mt-8"
-        >
-          <div class="text-gray-500 text-center">
-            <i class="pi pi-check-circle text-green-500 mr-2"></i>
-            已載入全部內容
-          </div>
-        </div>
       </div>
 
       <!-- 空狀態 -->

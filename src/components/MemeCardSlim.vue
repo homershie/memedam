@@ -141,48 +141,58 @@
     </template>
 
     <template #content>
-      <!-- 標籤 -->
-      <div class="flex flex-wrap gap-2 mb-4" v-if="tags.length > 0">
-        <Tag
-          v-for="tag in tags.slice(0, 3)"
-          :key="tag._id"
-          :value="`#${tag.name}`"
-          severity="primary"
-          class="cursor-pointer"
-          @click.stop="onTagClick(tag)"
-        />
-      </div>
+      <div class="flex flex-col h-60 min-h-48">
+        <!-- 內容區域 -->
+        <div class="flex-1 overflow-hidden flex flex-col">
+          <!-- 標籤 -->
+          <div class="flex flex-wrap gap-2 mb-4" v-if="tags.length > 0">
+            <Tag
+              v-for="tag in tags.slice(0, 3)"
+              :key="tag._id"
+              :value="`#${tag.name}`"
+              severity="primary"
+              class="cursor-pointer"
+              @click.stop="onTagClick(tag)"
+            />
+          </div>
 
-      <p class="mb-4 multi-line-clamp-5" v-if="meme.content">
-        {{ meme.content }}
-      </p>
+          <p class="mb-4 line-clamp-5" v-if="meme.content">
+            {{ meme.content }}
+          </p>
+        </div>
 
-      <Divider class="my-2" />
-      <div class="flex justify-around text-gray-500 text-lg">
-        <Button
-          class="w-1/3"
-          :icon="isLiked ? 'pi pi-thumbs-up-fill' : 'pi pi-thumbs-up'"
-          :severity="isLiked ? 'primary' : 'secondary'"
-          text
-          :label="likesCount.toString()"
-          @click.stop="toggleLike"
-        />
-        <Button
-          class="w-1/3"
-          :icon="isDisliked ? 'pi pi-thumbs-down-fill' : 'pi pi-thumbs-down'"
-          :severity="isDisliked ? 'success' : 'secondary'"
-          text
-          :label="dislikesCount.toString()"
-          @click.stop="toggleDislike"
-        />
-        <Button
-          class="w-1/3"
-          icon="pi pi-comment"
-          severity="secondary"
-          text
-          :label="commentsCount.toString()"
-          @click.stop="showComments"
-        />
+        <!-- 互動按鈕區域 -->
+        <div class="flex-shrink-0 mt-auto">
+          <Divider class="my-2" />
+          <div class="flex justify-around text-gray-500 text-lg">
+            <Button
+              class="w-1/3"
+              :icon="isLiked ? 'pi pi-thumbs-up-fill' : 'pi pi-thumbs-up'"
+              :severity="isLiked ? 'primary' : 'secondary'"
+              text
+              :label="likesCount.toString()"
+              @click.stop="toggleLike"
+            />
+            <Button
+              class="w-1/3"
+              :icon="
+                isDisliked ? 'pi pi-thumbs-down-fill' : 'pi pi-thumbs-down'
+              "
+              :severity="isDisliked ? 'success' : 'secondary'"
+              text
+              :label="dislikesCount.toString()"
+              @click.stop="toggleDislike"
+            />
+            <Button
+              class="w-1/3"
+              icon="pi pi-comment"
+              severity="secondary"
+              text
+              :label="commentsCount.toString()"
+              @click.stop="showComments"
+            />
+          </div>
+        </div>
       </div>
     </template>
   </Card>
@@ -195,7 +205,7 @@
     :target-info="{
       type: 'meme',
       title: meme.title,
-      author: meme.author?.display_name || meme.author?.username
+      author: meme.author?.display_name || meme.author?.username,
     }"
     @submitted="handleReportSubmitted"
   />
@@ -222,7 +232,6 @@ import likeService from '@/services/likeService'
 import dislikeService from '@/services/dislikeService'
 import memeTagService from '@/services/memeTagService'
 import memeService from '@/services/memeService'
-import reportService from '@/services/reportService'
 
 // 工具函數
 import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
@@ -614,7 +623,7 @@ const handleReportSubmitted = (reportData) => {
 }
 
 /* 多行截斷：限制 5 行，超出以省略號顯示 */
-.multi-line-clamp-5 {
+.line-clamp-5 {
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
