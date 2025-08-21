@@ -157,7 +157,7 @@ export default {
 
   // 新增：取得用戶統計
   getStats(userId) {
-    return apiService.httpAuth.get(`/api/users/${userId}/stats`)
+    return apiService.http.get(`/api/users/${userId}/stats`)
   },
 
   // 新增：取得所有用戶統計

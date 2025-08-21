@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen">
     <!-- 用戶資訊頁首 -->
-    <div class="bg-white shadow-sm border-b">
+    <div class="border-b border-surface-200 dark:border-surface-800">
       <div class="max-w-6xl mx-auto px-4 py-8">
         <div
           class="flex flex-col md:flex-row items-center md:items-start gap-6"
@@ -131,12 +131,18 @@
       </div>
 
       <!-- 載入中狀態 -->
-      <div v-if="loading" class="space-y-4">
-        <MemeCardSlimSkeleton v-for="n in 5" :key="n" />
+      <div
+        v-if="loading"
+        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+      >
+        <MemeCardSlimSkeleton v-for="n in 6" :key="n" />
       </div>
 
       <!-- 迷因列表 -->
-      <div v-else-if="filteredMemes.length > 0" class="space-y-4">
+      <div
+        v-else-if="filteredMemes.length > 0"
+        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+      >
         <MemeCardSlim
           v-for="meme in filteredMemes"
           :key="meme.id || meme._id"
@@ -146,8 +152,11 @@
 
         <!-- 無限滾動觸發元素 -->
         <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
-          <div v-if="infiniteLoading" class="space-y-4 mt-8">
-            <MemeCardSlimSkeleton v-for="n in 3" :key="`infinite-${n}`" />
+          <div
+            v-if="infiniteLoading"
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8"
+          >
+            <MemeCardSlimSkeleton v-for="n in 6" :key="`infinite-${n}`" />
           </div>
         </div>
 
@@ -217,6 +226,50 @@ const currentPage = ref(1)
 const searchQuery = ref('')
 const sortOrder = ref('newest')
 const activeTab = ref('posts')
+
+// 用戶資訊快取，避免重複載入相同用戶的資訊
+const userCache = ref(new Map())
+
+// 智能載入用戶資訊的輔助函數
+const loadUserInfo = async (authorId) => {
+  // 如果快取中已有該用戶資訊，直接返回
+  if (userCache.value.has(authorId)) {
+    return userCache.value.get(authorId)
+  }
+
+  // 如果是當前頁面的用戶，使用已載入的資訊
+  if (authorId === userId.value && userProfile.value) {
+    const userInfo = {
+      _id: userProfile.value._id || userId.value,
+      username: userProfile.value.username || 'unknown',
+      display_name: userProfile.value.display_name || '未知用戶',
+      avatar: userProfile.value.avatar || null,
+    }
+    userCache.value.set(authorId, userInfo)
+    return userInfo
+  }
+
+  try {
+    // 載入用戶資訊
+    const authorResponse = await userService.get(authorId)
+    const userInfo = authorResponse.data.user || authorResponse.data
+
+    // 快取用戶資訊
+    userCache.value.set(authorId, userInfo)
+    return userInfo
+  } catch (error) {
+    console.warn(`載入作者 ${authorId} 失敗:`, error.message)
+    // 設定預設值
+    const defaultUserInfo = {
+      _id: authorId,
+      display_name: '未知用戶',
+      username: 'unknown',
+      avatar: null,
+    }
+    userCache.value.set(authorId, defaultUserInfo)
+    return defaultUserInfo
+  }
+}
 
 // 標籤配置
 const tabs = ref([
@@ -353,7 +406,8 @@ const loadUserMemes = async (reset = false) => {
 
     const params = {
       page: currentPage.value,
-      limit: 10,
+      limit: 20, // 增加每次載入的數量，提高效率
+      author: userId.value, // 直接按作者篩選，避免前端篩選
     }
 
     const response = await memeService.getAll(params)
@@ -363,51 +417,20 @@ const loadUserMemes = async (reset = false) => {
         ? response.data
         : response.data.memes || response.data.data || []
 
-      // 為每個迷因載入作者資訊，參考 all.vue 的做法
-      const memesWithAuthors = await Promise.all(
-        allMemes.map(async (meme) => {
-          try {
-            if (meme.author_id) {
-              // 修正：支援 { $oid: ... } 格式
-              const authorId =
-                typeof meme.author_id === 'object' && meme.author_id.$oid
-                  ? meme.author_id.$oid
-                  : meme.author_id
-              const authorResponse = await userService.get(authorId)
-              meme.author = authorResponse.data.user || authorResponse.data
-            } else {
-              // 沒有作者 ID，設定預設值
-              meme.author = {
-                display_name: '匿名用戶',
-                username: 'anonymous',
-                avatar: null,
-              }
-            }
-            return meme
-          } catch (error) {
-            console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
-            // 如果載入作者失敗，設定預設值
-            meme.author = {
-              display_name: '未知用戶',
-              username: 'unknown',
-              avatar: null,
-            }
-            return meme
-          }
-        }),
-      )
-
-      // 篩選出屬於當前用戶的迷因
-      const userMemes = memesWithAuthors.filter((meme) => {
-        const authorId = meme.author?._id || meme.author?.id
-        const currentUserId = userId.value
-
-        // 處理不同的ID格式
-        if (typeof authorId === 'object' && authorId.$oid) {
-          return authorId.$oid === currentUserId
+      // 在用戶頁面中，所有迷因都屬於同一個用戶，直接使用當前用戶資訊
+      const memesWithAuthors = allMemes.map((meme) => {
+        // 使用當前頁面的用戶資訊作為作者資訊
+        meme.author = {
+          _id: userProfile.value?._id || userId.value,
+          username: userProfile.value?.username || 'unknown',
+          display_name: userProfile.value?.display_name || '未知用戶',
+          avatar: userProfile.value?.avatar || null,
         }
-        return authorId === currentUserId
+        return meme
       })
+
+      // 由於已經在後端按作者篩選，這裡不需要再次篩選
+      const userMemes = memesWithAuthors
 
       if (reset) {
         memes.value = userMemes
@@ -420,8 +443,14 @@ const loadUserMemes = async (reset = false) => {
         memes.value.push(...newMemes)
       }
 
-      // 判斷是否還有更多數據（基於API返回的數據量）
-      hasMore.value = allMemes.length === params.limit
+      // 修正：使用API返回的分頁資訊來判斷是否還有更多數據
+      const pagination = response.data.pagination
+      if (pagination) {
+        hasMore.value = pagination.hasNext || false
+      } else {
+        // 如果沒有分頁資訊，則基於返回的數據量判斷
+        hasMore.value = allMemes.length >= params.limit
+      }
 
       if (hasMore.value) {
         currentPage.value++
@@ -514,7 +543,7 @@ const loadUserCollections = async (reset = false) => {
     )
 
     // 分頁處理收藏記錄
-    const pageSize = 10
+    const pageSize = 6
     const startIndex = (currentPage.value - 1) * pageSize
     const endIndex = startIndex + pageSize
     const pagedCollections = userCollections.slice(startIndex, endIndex)
@@ -526,14 +555,13 @@ const loadUserCollections = async (reset = false) => {
             const memeResponse = await memeService.get(collection.meme_id)
             const meme = memeResponse.data
 
-            // 載入作者資訊
+            // 載入作者資訊（使用快取機制）
             if (meme.author_id) {
               const authorId =
                 typeof meme.author_id === 'object' && meme.author_id.$oid
                   ? meme.author_id.$oid
                   : meme.author_id
-              const authorResponse = await userService.get(authorId)
-              meme.author = authorResponse.data.user || authorResponse.data
+              meme.author = await loadUserInfo(authorId)
             } else {
               meme.author = {
                 display_name: '匿名用戶',
@@ -603,7 +631,7 @@ const loadUserLikedMemes = async (reset = false) => {
     )
 
     // 分頁處理按讚記錄
-    const pageSize = 10
+    const pageSize = 6
     const startIndex = (currentPage.value - 1) * pageSize
     const endIndex = startIndex + pageSize
     const pagedLikes = userLikes.slice(startIndex, endIndex)
@@ -615,14 +643,13 @@ const loadUserLikedMemes = async (reset = false) => {
             const memeResponse = await memeService.get(like.meme_id)
             const meme = memeResponse.data
 
-            // 載入作者資訊
+            // 載入作者資訊（使用快取機制）
             if (meme.author_id) {
               const authorId =
                 typeof meme.author_id === 'object' && meme.author_id.$oid
                   ? meme.author_id.$oid
                   : meme.author_id
-              const authorResponse = await userService.get(authorId)
-              meme.author = authorResponse.data.user || authorResponse.data
+              meme.author = await loadUserInfo(authorId)
             } else {
               meme.author = {
                 display_name: '匿名用戶',
