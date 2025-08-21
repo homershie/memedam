@@ -469,6 +469,8 @@ const loadAnnouncements = async () => {
         category: 'system',
         status: 'public',
         pinned: true,
+        image:
+          'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -480,6 +482,8 @@ const loadAnnouncements = async () => {
         category: 'update',
         status: 'public',
         pinned: false,
+        image:
+          'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=600&fit=crop',
         createdAt: new Date(Date.now() - 86400000).toISOString(), // 1天前
         updatedAt: new Date(Date.now() - 86400000).toISOString(),
       },
@@ -491,6 +495,8 @@ const loadAnnouncements = async () => {
         category: 'activity',
         status: 'public',
         pinned: false,
+        image:
+          'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
         createdAt: new Date(Date.now() - 172800000).toISOString(), // 2天前
         updatedAt: new Date(Date.now() - 172800000).toISOString(),
       },

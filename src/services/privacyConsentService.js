@@ -117,6 +117,7 @@ class PrivacyConsentService {
       } else if (localData && !backendData) {
         // 只有本地資料，同步到後端
         console.log('只有本地資料，同步到後端')
+        console.log('本地資料詳情:', localData)
         await this.createConsent({
           necessary: localData.necessary,
           functional: localData.functional,
