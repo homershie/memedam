@@ -153,13 +153,17 @@
                 class="w-full rounded-lg"
               />
             </div>
-            <div v-else-if="meme.type === 'text'" class="relative">
+            <div
+              v-else-if="meme.type === 'text'"
+              class="relative aspect-square"
+            >
               <!-- 裝飾性標題 -->
               <TextMemeCard
                 :title="meme.title"
                 variant="random"
                 size="medium"
                 :hover-effect="true"
+                :auto-resize="true"
               />
             </div>
           </div>
@@ -263,7 +267,7 @@
     :target-info="{
       type: 'meme',
       title: meme.title,
-      author: meme.author?.display_name || meme.author?.username
+      author: meme.author?.display_name || meme.author?.username,
     }"
     @submitted="handleReportSubmitted"
   />

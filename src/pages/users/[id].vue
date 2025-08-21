@@ -1,177 +1,173 @@
 <template>
-  <div class="min-h-screen">
-    <!-- 用戶資訊頁首 -->
-    <div class="border-b border-surface-200 dark:border-surface-800">
-      <div class="max-w-6xl mx-auto px-4 py-8">
-        <div
-          class="flex flex-col md:flex-row items-center md:items-start gap-6"
-        >
+  <div class="relative">
+    <!-- 背景圖片 -->
+    <div class="w-full z-0 relative top-0 left-0 h-60">
+      <img
+        src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1755748262/announcements/ftwo79lbkiwcp0m2ov3n.jpg"
+        alt="banner"
+        class="w-full h-full object-cover rounded-b-2xl"
+      />
+    </div>
+
+    <!-- 內容區域 -->
+    <div class="min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6 relative -top-36">
+      <!-- 用戶資訊頁首 -->
+      <div class="mx-auto px-4 py-8">
+        <div class="flex flex-col items-center gap-8">
           <!-- 用戶頭像 -->
-          <div class="flex-shrink-0">
+          <div>
             <Avatar
               :image="userProfile?.avatar"
               shape="circle"
               size="xlarge"
-              class="border-4 border-gray-200 w-32 h-32"
+              class="border-3 border-surface-200 w-28 h-28"
             />
           </div>
 
           <!-- 用戶資訊 -->
-          <div class="flex-1 text-center md:text-left">
-            <div class="mb-4">
-              <h1 class="text-3xl font-bold text-gray-800 mb-2">
+          <div class="text-center md:text-left">
+            <div class="text-center">
+              <h2 class="text-3xl">
                 {{
                   userProfile?.display_name || userProfile?.username || '用戶'
                 }}
-              </h1>
-              <p class="text-gray-600 text-lg">
-                @{{ userProfile?.username || 'username' }}
-              </p>
-            </div>
-
-            <!-- 用戶描述 -->
-            <div v-if="userProfile?.bio" class="mb-6">
-              <p class="text-gray-700 max-w-2xl">
-                {{ userProfile.bio }}
-              </p>
-            </div>
-
-            <!-- 統計數據 -->
-            <div
-              class="bg-black text-white rounded-full px-8 py-4 inline-block"
-            >
-              <div class="flex items-center gap-8 text-center">
-                <div class="flex flex-col">
-                  <span class="text-sm text-gray-300">關注數</span>
-                  <span class="text-xl font-bold">{{
-                    userStats.following_count || 0
-                  }}</span>
-                </div>
-                <div class="flex flex-col">
-                  <span class="text-sm text-gray-300">粉絲數</span>
-                  <span class="text-xl font-bold">{{
-                    userStats.follower_count || 0
-                  }}</span>
-                </div>
-                <div class="flex flex-col items-center">
-                  <span class="text-sm text-gray-300">使用者自訂名稱</span>
-                  <div class="flex items-center gap-1">
-                    <span class="text-lg">👑</span>
-                    <span class="text-lg">💋</span>
-                  </div>
-                </div>
-                <div class="flex flex-col">
-                  <span class="text-sm text-gray-300">貼文數</span>
-                  <span class="text-xl font-bold">{{
-                    userStats.meme_count || memes.length
-                  }}</span>
-                </div>
-                <div class="flex flex-col">
-                  <span class="text-sm text-gray-300">收藏數</span>
-                  <span class="text-xl font-bold">{{
-                    userStats.collection_count || 0
-                  }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 用戶簡介文字 -->
-            <div class="mt-6 max-w-4xl">
-              <p class="text-gray-600 leading-relaxed">
-                這是一個關於幽默和社交文化的迷因，捕捉了現代生活中的有趣時刻。作為一種年輕人喜歡的內容，迷因不僅能帶來歡樂，還能反映當實生活中的各種問題和感悟。無論是通過圖像、影片或文字，迷因都是一種富有創意和感染力的表達方式。
-              </p>
+              </h2>
+              <p>@{{ userProfile?.username || 'username' }}</p>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 內容區域 -->
-    <div class="max-w-6xl mx-auto px-4 py-8">
-      <!-- 標籤導航 -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between border-b border-gray-200">
-          <!-- 使用 PrimeVue Tabs 作為導航選單 -->
-          <Tabs :value="activeTab" @update:value="activeTab = $event">
-            <TabList class="border-b-0">
-              <Tab
-                v-for="tab in tabs"
-                :key="tab.key"
-                :value="tab.key"
-                class="py-4 px-2 font-medium text-sm transition-colors"
+          <!-- 統計數據 -->
+          <div class="w-full flex flex-row justify-center gap-20">
+            <div class="flex flex-col items-center justify-center rounded-xl">
+              <span class="text-sm text-surface-500 dark:text-surface-400"
+                >關注數</span
               >
-                <i v-if="tab.icon" :class="[tab.icon, 'mr-2']"></i>
-                {{ tab.label }}
-              </Tab>
-            </TabList>
-          </Tabs>
-
-          <!-- 搜索和排序 -->
-          <div class="flex items-center gap-4">
-            <div class="relative">
-              <InputText
-                v-model="searchQuery"
-                placeholder="搜尋"
-                class="pl-10 pr-4 py-2 w-64"
-              />
-              <i
-                class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              ></i>
+              <span class="text-2xl font-bold">{{
+                userStats.following_count || 0
+              }}</span>
             </div>
-            <Dropdown
-              v-model="sortOrder"
-              :options="sortOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="排序"
-              class="w-32"
-            />
+            <div class="flex flex-col items-center justify-center rounded-xl">
+              <span class="text-sm text-surface-500 dark:text-surface-400"
+                >粉絲數</span
+              >
+              <span class="text-2xl font-bold">{{
+                userStats.follower_count || 0
+              }}</span>
+            </div>
+            <div class="flex flex-col items-center justify-center rounded-xl">
+              <span class="text-sm text-surface-500 dark:text-surface-400"
+                >貼文數</span
+              >
+              <span class="text-2xl font-bold">{{
+                userStats.meme_count || memes.length
+              }}</span>
+            </div>
+            <div class="flex flex-col items-center justify-center rounded-xl">
+              <span class="text-sm text-surface-500 dark:text-surface-400"
+                >收藏數</span
+              >
+              <span class="text-2xl font-bold">{{
+                userStats.collection_count || 0
+              }}</span>
+            </div>
+          </div>
+
+          <!-- 用戶描述 -->
+          <div v-if="userProfile?.bio">
+            <p class="text-surface-700 max-w-2xl">
+              {{ userProfile.bio }}
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- 載入中狀態 -->
-      <div
-        v-if="loading"
-        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
-      >
-        <MemeCardSlimSkeleton v-for="n in 6" :key="n" />
-      </div>
+      <!-- 內容區域 -->
+      <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- 標籤導航 -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between">
+            <!-- 使用 PrimeVue Tabs 作為導航選單 -->
+            <Tabs :value="activeTab" @update:value="activeTab = $event">
+              <TabList class="border-b-0">
+                <Tab
+                  v-for="tab in tabs"
+                  :key="tab.key"
+                  :value="tab.key"
+                  class="py-4 px-2 font-medium text-sm transition-colors"
+                >
+                  <i v-if="tab.icon" :class="[tab.icon, 'mr-2']"></i>
+                  {{ tab.label }}
+                </Tab>
+              </TabList>
+            </Tabs>
 
-      <!-- 迷因列表 -->
-      <div
-        v-else-if="filteredMemes.length > 0"
-        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
-      >
-        <MemeCardSlim
-          v-for="meme in filteredMemes"
-          :key="meme.id || meme._id"
-          :meme="meme"
-          @tag-click="handleTagClick"
-        />
-
-        <!-- 無限滾動觸發元素 -->
-        <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
-          <div
-            v-if="infiniteLoading"
-            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8"
-          >
-            <MemeCardSlimSkeleton v-for="n in 6" :key="`infinite-${n}`" />
+            <!-- 搜索和排序 -->
+            <div class="flex items-center gap-4">
+              <div class="relative">
+                <InputText
+                  v-model="searchQuery"
+                  placeholder="搜尋"
+                  class="pl-10 pr-4 py-2 w-64"
+                />
+                <i
+                  class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400"
+                ></i>
+              </div>
+              <Dropdown
+                v-model="sortOrder"
+                :options="sortOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="排序"
+                class="w-32"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- 空狀態 -->
-      <div v-else class="text-center py-20">
-        <div class="mb-4">
-          <i class="pi pi-inbox text-6xl text-gray-300"></i>
+        <!-- 載入中狀態 -->
+        <div
+          v-if="loading"
+          class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+        >
+          <MemeCardSlimSkeleton v-for="n in 6" :key="n" />
         </div>
-        <h3 class="text-xl font-semibold text-gray-600 mb-2">
-          {{ getEmptyStateMessage() }}
-        </h3>
-        <p class="text-gray-500">
-          {{ getEmptyStateDescription() }}
-        </p>
+
+        <!-- 迷因列表 -->
+        <div
+          v-else-if="filteredMemes.length > 0"
+          class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+        >
+          <MemeCardSlim
+            v-for="meme in filteredMemes"
+            :key="meme.id || meme._id"
+            :meme="meme"
+            @tag-click="handleTagClick"
+          />
+
+          <!-- 無限滾動觸發元素 -->
+          <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
+            <div
+              v-if="infiniteLoading"
+              class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8"
+            >
+              <MemeCardSlimSkeleton v-for="n in 6" :key="`infinite-${n}`" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 空狀態 -->
+        <div v-else class="text-center py-20">
+          <div class="mb-4">
+            <i class="pi pi-inbox text-6xl text-surface-300"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-surface-600 mb-2">
+            {{ getEmptyStateMessage() }}
+          </h3>
+          <p class="text-surface-500">
+            {{ getEmptyStateDescription() }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -181,6 +177,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { debounce } from 'lodash'
 import Avatar from 'primevue/avatar'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
@@ -213,7 +210,7 @@ const loading = ref(true)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const searchQuery = ref('')
-const sortOrder = ref('newest')
+const sortOrder = ref('comprehensive')
 const activeTab = ref('posts')
 
 // 用戶資訊快取，避免重複載入相同用戶的資訊
@@ -269,60 +266,31 @@ const tabs = ref([
 ])
 
 // 排序選項
-const sortOptions = ref([
-  { label: '排序', value: 'newest' },
-  { label: '最新', value: 'newest' },
-  { label: '最舊', value: 'oldest' },
-  { label: '最熱門', value: 'popular' },
-  { label: '最多讚', value: 'most_liked' },
-])
+const sortOptions = computed(() => {
+  const baseOptions = [
+    { label: '綜合排序', value: 'comprehensive' },
+    { label: '最新', value: 'createdAt' },
+    { label: '最舊', value: 'createdAt_asc' },
+    { label: '最熱門', value: 'popularity' },
+    { label: '最少人看', value: 'popularity_asc' },
+    { label: '互動數', value: 'quality' },
+    { label: '最少互動', value: 'quality_asc' },
+  ]
+
+  // 只有在搜尋時才顯示相關性選項
+  if (searchQuery.value.trim()) {
+    baseOptions.push({ label: '相關性', value: 'relevance' })
+  }
+
+  return baseOptions
+})
 
 // 計算屬性
 const userId = computed(() => route.params.id)
 
 const filteredMemes = computed(() => {
-  let filtered = [...memes.value]
-
-  // 搜索過濾
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(
-      (meme) =>
-        meme.title?.toLowerCase().includes(query) ||
-        meme.content?.toLowerCase().includes(query),
-    )
-  }
-
-  // 排序
-  switch (sortOrder.value) {
-    case 'oldest':
-      filtered.sort(
-        (a, b) =>
-          new Date(a.createdAt || a.created_at) -
-          new Date(b.createdAt || b.created_at),
-      )
-      break
-    case 'popular':
-      filtered.sort((a, b) => (b.views_count || 0) - (a.views_count || 0))
-      break
-    case 'most_liked':
-      filtered.sort(
-        (a, b) =>
-          (b.likes_count || b.like_count || 0) -
-          (a.likes_count || a.like_count || 0),
-      )
-      break
-    case 'newest':
-    default:
-      filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt || b.created_at) -
-          new Date(a.createdAt || a.created_at),
-      )
-      break
-  }
-
-  return filtered
+  // 直接返回 memes，因為搜尋和排序現在由後端處理
+  return memes.value
 })
 
 // 載入用戶資料
@@ -399,7 +367,26 @@ const loadUserMemes = async (reset = false) => {
       author: userId.value, // 直接按作者篩選，避免前端篩選
     }
 
-    const response = await memeService.getAll(params)
+    let response
+
+    // 如果有搜尋關鍵字
+    if (searchQuery.value.trim()) {
+      // 使用搜尋 API（後端支援 author 與排序，前端不再手動過濾）
+      const searchParams = {
+        ...params,
+        useAdvancedSearch: 'true',
+        sort: sortOrder.value,
+      }
+      response = await memeService.search(searchQuery.value, searchParams)
+    } else {
+      // 使用一般 API，添加排序參數
+      const getAllParams = {
+        ...params,
+        sort: sortOrder.value, // 添加排序參數
+        useAdvancedSearch: 'true', // 強制使用進階搜尋以確保排序正確
+      }
+      response = await memeService.getAll(getAllParams)
+    }
 
     if (response.data) {
       const allMemes = Array.isArray(response.data)
@@ -739,6 +726,31 @@ watch(activeTab, (newTab) => {
     loadUserLikedMemes(true)
   }
   // 其他標籤的邏輯可以在這裡添加
+})
+
+// 防抖搜尋函數
+const debouncedSearch = debounce(() => {
+  if (activeTab.value === 'posts') {
+    // 重置分頁並重新載入
+    currentPage.value = 1
+    hasMore.value = true
+    resetState()
+    loadUserMemes(true)
+  }
+}, 300)
+
+// 監聽搜尋查詢變化
+watch(searchQuery, debouncedSearch)
+
+// 監聽排序變化
+watch(sortOrder, () => {
+  if (activeTab.value === 'posts') {
+    // 重置分頁並重新載入
+    currentPage.value = 1
+    hasMore.value = true
+    resetState()
+    loadUserMemes(true)
+  }
 })
 
 // 監聽用戶ID變化

@@ -215,6 +215,7 @@
                   variant="random"
                   size="large"
                   :hover-effect="false"
+                  :auto-resize="true"
                 />
               </div>
             </div>

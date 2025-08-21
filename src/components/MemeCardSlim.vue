@@ -93,6 +93,7 @@
             variant="random"
             size="small"
             :hover-effect="false"
+            :auto-resize="true"
           />
         </div>
         <div
