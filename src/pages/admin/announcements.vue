@@ -6,8 +6,9 @@ defineOptions({
 
 import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import announcementService from '@/services/announcementService'
+import FileUpload from 'primevue/fileupload'
 
 const toast = useToast()
 
@@ -28,6 +29,7 @@ const deleteAnnouncementsDialog = ref(false)
 // 表單資料
 const announcement = ref({})
 const submitted = ref(false)
+const selectedImage = ref(null)
 
 // 篩選器
 const filters = ref({
@@ -93,7 +95,7 @@ const loadData = async () => {
       params.q = filters.value.global.value.trim()
     }
 
-    const response = await announcementService.getAll(params)
+    const response = await announcementService.getAllAdmin(params)
 
     // 處理後端API響應格式
     if (
@@ -177,6 +179,30 @@ const loadFallbackData = () => {
       createdAt: '2024-01-10T09:15:00Z',
       updatedAt: '2024-01-10T09:15:00Z',
     },
+    {
+      _id: 5,
+      id: 5,
+      title: '測試草稿公告',
+      content: '這是一個測試用的草稿公告，只有管理員可以看到。',
+      category: 'system',
+      status: 'draft',
+      pinned: false,
+      author_id: 'admin',
+      createdAt: '2024-01-12T08:30:00Z',
+      updatedAt: '2024-01-12T08:30:00Z',
+    },
+    {
+      _id: 6,
+      id: 6,
+      title: '已隱藏的公告',
+      content: '這個公告已經被隱藏，一般用戶無法看到。',
+      category: 'other',
+      status: 'hidden',
+      pinned: false,
+      author_id: 'admin',
+      createdAt: '2024-01-11T14:20:00Z',
+      updatedAt: '2024-01-11T14:20:00Z',
+    },
   ]
   totalRecords.value = announcements.value.length
   selectedAnnouncements.value = []
@@ -186,12 +212,24 @@ onMounted(async () => {
   await loadData()
 })
 
+// 組件卸載時清理 URL 物件
+onUnmounted(() => {
+  if (selectedImage.value && selectedImage.value._previewUrl) {
+    URL.revokeObjectURL(selectedImage.value._previewUrl)
+  }
+})
+
 function openNew() {
   announcement.value = {
     status: 'draft',
     category: 'system',
     pinned: false,
   }
+  // 清理之前的圖片預覽 URL
+  if (selectedImage.value && selectedImage.value._previewUrl) {
+    URL.revokeObjectURL(selectedImage.value._previewUrl)
+  }
+  selectedImage.value = null
   submitted.value = false
   announcementDialog.value = true
 }
@@ -199,15 +237,25 @@ function openNew() {
 function hideDialog() {
   announcementDialog.value = false
   submitted.value = false
+  // 清理圖片預覽 URL
+  if (selectedImage.value && selectedImage.value._previewUrl) {
+    URL.revokeObjectURL(selectedImage.value._previewUrl)
+  }
+  selectedImage.value = null
 }
 
 async function saveAnnouncement() {
   submitted.value = true
-  const current = announcement.value
+  const current = { ...announcement.value }
 
   if (!current?.title?.trim() || !current?.content?.trim()) return
 
   try {
+    // 如果有選擇圖片，加入圖片資料
+    if (selectedImage.value) {
+      current.image = selectedImage.value
+    }
+
     if (current._id) {
       // 更新現有公告
       await announcementService.update(current._id, current)
@@ -231,6 +279,11 @@ async function saveAnnouncement() {
 
     announcementDialog.value = false
     announcement.value = {}
+    // 清理圖片預覽 URL
+    if (selectedImage.value && selectedImage.value._previewUrl) {
+      URL.revokeObjectURL(selectedImage.value._previewUrl)
+    }
+    selectedImage.value = null
     await loadData() // 重新載入數據
   } catch (error) {
     console.error('儲存公告失敗:', error)
@@ -245,6 +298,11 @@ async function saveAnnouncement() {
 
 function editAnnouncement(row) {
   announcement.value = { ...row }
+  // 清理之前的圖片預覽 URL
+  if (selectedImage.value && selectedImage.value._previewUrl) {
+    URL.revokeObjectURL(selectedImage.value._previewUrl)
+  }
+  selectedImage.value = null
   announcementDialog.value = true
 }
 
@@ -465,6 +523,39 @@ function onPageChange(event) {
 function onFilterChange() {
   currentPage.value = 1
   loadData()
+}
+
+// 圖片選擇處理
+function onImageSelect(event) {
+  if (event.files && event.files.length > 0) {
+    // 清理之前的 URL 物件
+    if (selectedImage.value && selectedImage.value._previewUrl) {
+      URL.revokeObjectURL(selectedImage.value._previewUrl)
+    }
+
+    const file = event.files[0]
+    // 為檔案添加預覽 URL
+    if (typeof window !== 'undefined') {
+      file._previewUrl = URL.createObjectURL(file)
+    }
+    selectedImage.value = file
+  }
+}
+
+// 移除圖片
+function removeImage() {
+  if (selectedImage.value && selectedImage.value._previewUrl) {
+    URL.revokeObjectURL(selectedImage.value._previewUrl)
+  }
+  selectedImage.value = null
+}
+
+// 取得圖片預覽 URL（安全處理 SSR）
+function getImagePreviewUrl(file) {
+  if (file && file._previewUrl) {
+    return file._previewUrl
+  }
+  return ''
 }
 </script>
 
@@ -740,6 +831,63 @@ function onFilterChange() {
         <div class="flex items-center gap-2">
           <InputSwitch v-model="announcement.pinned" />
           <label class="text-sm">置頂公告</label>
+        </div>
+
+        <!-- 圖片上傳 -->
+        <div>
+          <label class="block font-bold mb-3">公告圖片</label>
+          <div class="flex flex-col gap-4">
+            <!-- 當前圖片預覽 -->
+            <div v-if="announcement.image && !selectedImage" class="relative">
+              <img
+                :src="announcement.image"
+                :alt="announcement.title"
+                class="w-full max-w-xs h-48 object-cover rounded-lg border"
+              />
+              <Button
+                icon="pi pi-times"
+                severity="danger"
+                size="small"
+                class="absolute top-2 right-2"
+                @click="announcement.image = null"
+                text
+                rounded
+              />
+            </div>
+
+            <!-- 新選擇的圖片預覽 -->
+            <div v-if="selectedImage" class="relative">
+              <img
+                :src="getImagePreviewUrl(selectedImage)"
+                :alt="selectedImage.name"
+                class="w-full max-w-xs h-48 object-cover rounded-lg border"
+              />
+              <Button
+                icon="pi pi-times"
+                severity="danger"
+                size="small"
+                class="absolute top-2 right-2"
+                @click="removeImage"
+                text
+                rounded
+              />
+            </div>
+
+            <!-- 圖片上傳元件 -->
+            <FileUpload
+              mode="basic"
+              name="image"
+              accept="image/*"
+              :maxFileSize="5000000"
+              @select="onImageSelect"
+              chooseLabel="選擇圖片"
+              :auto="false"
+              class="w-full"
+            />
+            <small class="text-gray-500"
+              >支援 JPG、PNG、GIF、WebP 格式，最大 5MB</small
+            >
+          </div>
         </div>
       </div>
 

@@ -2,9 +2,20 @@
   <Card class="w-full announcement-card" @click="toggleExpanded">
     <template #header>
       <div
-        class="h-60 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 cursor-pointer"
+        class="h-60 flex items-center justify-center cursor-pointer overflow-hidden"
+        :class="
+          announcement.image
+            ? 'bg-gray-100'
+            : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+        "
       >
-        <div class="text-center">
+        <img
+          v-if="announcement.image"
+          :src="announcement.image"
+          :alt="announcement.title"
+          class="w-full h-full object-cover"
+        />
+        <div v-else class="text-center">
           <i class="pi pi-bullhorn text-4xl text-indigo-500 mb-2"></i>
           <p class="text-gray-600 text-sm">公告</p>
         </div>
