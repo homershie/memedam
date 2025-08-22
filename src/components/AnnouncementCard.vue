@@ -2,7 +2,7 @@
   <Card class="w-full announcement-card" @click="toggleExpanded">
     <template #header>
       <div
-        class="h-60 flex items-center justify-center cursor-pointer overflow-hidden"
+        class="h-60 flex items-center justify-center cursor-pointer overflow-hidden rounded-t-lg"
         :class="
           announcement.image
             ? 'bg-gray-100'

@@ -188,7 +188,7 @@
               :key="notification._id"
               class="p-3 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors cursor-pointer"
               :class="{
-                'bg-primary-50 dark:bg-primary-900/20': !notification.isRead,
+                'bg-primary-50 dark:bg-primary-900/20': !notification.is_read,
               }"
               @mouseenter="handleHoverMarkRead(notification)"
               @click="handleNotificationClick(notification)"
@@ -233,7 +233,7 @@
                 </div>
 
                 <!-- 未讀指示點 -->
-                <div v-if="!notification.isRead" class="flex-shrink-0">
+                <div v-if="!notification.is_read" class="flex-shrink-0">
                   <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
                 </div>
               </div>
@@ -403,7 +403,7 @@ const fetchNotifications = async (append = false) => {
 }
 
 const updateUnreadCount = () => {
-  unreadCount.value = notifications.value.filter((n) => !n.isRead).length
+  unreadCount.value = notifications.value.filter((n) => !n.is_read).length
 }
 
 const markAsRead = async (notificationId, options = {}) => {
@@ -424,8 +424,8 @@ const markAsRead = async (notificationId, options = {}) => {
         (n) => n._id === notificationId,
       )
       if (notification) {
-        notification.isRead = true
-        notification.read_at = new Date().toISOString()
+        notification.is_read = true
+        notification.readAt = new Date().toISOString()
         updateUnreadCount()
       }
 
@@ -452,7 +452,7 @@ const markAsRead = async (notificationId, options = {}) => {
 
 // 滑鼠移入即標記為已讀（靜默）
 const handleHoverMarkRead = (notification) => {
-  if (!notification || notification.isRead) return
+  if (!notification || notification.is_read) return
   if (markingRead.value.includes(notification._id)) return
   markAsRead(notification._id, { silent: true })
 }
@@ -472,8 +472,8 @@ const markAllAsRead = async () => {
     if (response.data.success) {
       // 更新本地狀態
       notifications.value.forEach((notification) => {
-        notification.isRead = true
-        notification.read_at = new Date().toISOString()
+        notification.is_read = true
+        notification.readAt = new Date().toISOString()
       })
       unreadCount.value = 0
 
@@ -575,7 +575,7 @@ const removeAllNotifications = async () => {
 
 const handleNotificationClick = (notification) => {
   // 如果通知未讀，先標記為已讀
-  if (!notification.isRead) {
+  if (!notification.is_read) {
     markAsRead(notification._id)
   }
 
@@ -599,22 +599,22 @@ const handleNotificationClick = (notification) => {
         life: 3000,
       })
     }
-  } else if (notification.object_type && notification.object_id) {
+  } else if (notification.objectType && notification.objectId) {
     // 根據物件類型生成默認跳轉 URL
     try {
       let url = ''
-      switch (notification.object_type) {
+      switch (notification.objectType) {
         case 'meme':
-          url = `/memes/detail/${notification.object_id}`
+          url = `/memes/detail/${notification.objectId}`
           break
         case 'comment':
-          url = `/memes/detail/${notification.object_id}`
+          url = `/memes/detail/${notification.objectId}`
           break
         case 'user':
-          url = `/users/${notification.object_id}`
+          url = `/users/${notification.objectId}`
           break
         case 'collection':
-          url = `/collections/${notification.object_id}`
+          url = `/collections/${notification.objectId}`
           break
         default:
           return

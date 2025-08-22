@@ -17,12 +17,12 @@
         <!-- 根據類型顯示不同內容 -->
         <div
           v-if="meme.type === 'image' && meme.image_url"
-          class="w-full h-full"
+          class="w-full h-full overflow-hidden rounded-t-lg"
         >
           <Image
             :src="meme.image_url"
             :alt="meme.title"
-            class="w-full h-full object-cover rounded-t-lg"
+            class="w-full h-full object-cover"
           />
         </div>
         <div
@@ -33,7 +33,7 @@
           <div v-if="isExternalVideoUrl(meme.video_url)" class="w-full h-full">
             <iframe
               :src="getEmbedUrl(meme.video_url)"
-              class="w-full h-full rounded-t-lg"
+              class="w-full h-full"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
@@ -43,7 +43,7 @@
           <video
             v-else
             controls
-            class="w-full h-full object-cover rounded-t-lg"
+            class="w-full h-full object-cover"
             :poster="meme.image_url"
           >
             <source :src="meme.video_url" type="video/mp4" />
@@ -52,7 +52,7 @@
         </div>
         <div
           v-else-if="meme.type === 'audio' && meme.audio_url"
-          class="w-full h-full"
+          class="w-full h-full overflow-hidden rounded-t-lg"
         >
           <!-- 外部音訊平台 -->
           <div v-if="isExternalAudioUrl(meme.audio_url)" class="w-full h-full">
@@ -78,15 +78,18 @@
         </div>
         <div
           v-else-if="meme.type === 'gif' && meme.image_url"
-          class="w-full h-full"
+          class="w-full h-full overflow-hidden rounded-t-lg"
         >
           <img
             :src="meme.image_url"
             :alt="meme.title"
-            class="w-full h-full object-cover rounded-t-lg"
+            class="w-full h-full object-cover"
           />
         </div>
-        <div v-else-if="meme.type === 'text'" class="w-full h-full">
+        <div
+          v-else-if="meme.type === 'text'"
+          class="w-full h-full overflow-hidden rounded-t-lg"
+        >
           <!-- 裝飾性標題 -->
           <TextMemeCard
             :title="meme.title"

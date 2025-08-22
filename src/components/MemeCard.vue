@@ -296,7 +296,6 @@ import collectionService from '@/services/collectionService'
 import shareService from '@/services/shareService'
 import memeTagService from '@/services/memeTagService'
 import memeService from '@/services/memeService'
-import reportService from '@/services/reportService'
 
 // 工具函數
 import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
