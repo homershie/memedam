@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="w-full relative">
     <!-- 背景圖片 -->
     <div class="w-full z-0 relative top-0 left-0 h-60">
       <img
@@ -10,9 +10,9 @@
     </div>
 
     <!-- 內容區域 -->
-    <div class="min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6 relative -top-36">
+    <div class="min-h-fit mb-30 mx-auto space-y-30 relative -top-20">
       <!-- 用戶資訊頁首 -->
-      <div class="mx-auto px-4 py-8">
+      <div class="mx-auto">
         <div class="flex flex-col items-center gap-8">
           <!-- 用戶頭像 -->
           <div>
@@ -32,13 +32,17 @@
                   userProfile?.display_name || userProfile?.username || '用戶'
                 }}
               </h2>
-              <p>@{{ userProfile?.username || 'username' }}</p>
+              <p class="max-w-xl block">
+                @{{ userProfile?.username || 'username' }}
+              </p>
             </div>
           </div>
 
           <!-- 統計數據 -->
-          <div class="w-full flex flex-row justify-center gap-20">
-            <div class="flex flex-col items-center justify-center rounded-xl">
+          <div
+            class="w-full flex flex-row flex-wrap justify-center gap-8 md:gap-20"
+          >
+            <div class="flex flex-col items-center justify-center">
               <span class="text-sm text-surface-500 dark:text-surface-400"
                 >關注數</span
               >
@@ -46,7 +50,7 @@
                 userStats.following_count || 0
               }}</span>
             </div>
-            <div class="flex flex-col items-center justify-center rounded-xl">
+            <div class="flex flex-col items-center justify-center">
               <span class="text-sm text-surface-500 dark:text-surface-400"
                 >粉絲數</span
               >
@@ -54,7 +58,7 @@
                 userStats.follower_count || 0
               }}</span>
             </div>
-            <div class="flex flex-col items-center justify-center rounded-xl">
+            <div class="flex flex-col items-center justify-center">
               <span class="text-sm text-surface-500 dark:text-surface-400"
                 >貼文數</span
               >
@@ -62,7 +66,7 @@
                 userStats.meme_count || memes.length
               }}</span>
             </div>
-            <div class="flex flex-col items-center justify-center rounded-xl">
+            <div class="flex flex-col items-center justify-center">
               <span class="text-sm text-surface-500 dark:text-surface-400"
                 >收藏數</span
               >
@@ -82,18 +86,24 @@
       </div>
 
       <!-- 內容區域 -->
-      <div class="max-w-6xl mx-auto px-4 py-8">
+      <div class="max-w-5xl mx-auto px-4 pb-20 2xl:px-0">
         <!-- 標籤導航 -->
         <div class="mb-8">
-          <div class="flex items-center justify-between">
+          <div
+            class="flex items-center flex-wrap flex-col justify-between gap-8 xl:flex-row"
+          >
             <!-- 使用 PrimeVue Tabs 作為導航選單 -->
-            <Tabs :value="activeTab" @update:value="activeTab = $event">
+            <Tabs
+              :value="activeTab"
+              @update:value="activeTab = $event"
+              class="order-2 xl:order-1"
+            >
               <TabList class="border-b-0">
                 <Tab
                   v-for="tab in tabs"
                   :key="tab.key"
                   :value="tab.key"
-                  class="py-4 px-2 font-medium text-sm transition-colors"
+                  class="p-4 transition-colors"
                 >
                   <i v-if="tab.icon" :class="[tab.icon, 'mr-2']"></i>
                   {{ tab.label }}
@@ -102,71 +112,254 @@
             </Tabs>
 
             <!-- 搜索和排序 -->
-            <div class="flex items-center gap-4">
-              <div class="relative">
-                <InputText
-                  v-model="searchQuery"
-                  placeholder="搜尋"
-                  class="pl-10 pr-4 py-2 w-64"
-                />
-                <i
-                  class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400"
-                ></i>
-              </div>
+            <div
+              v-if="activeTab !== 'about'"
+              class="flex items-center gap-4 order-1 xl:order-2"
+            >
+              <FloatLabel variant="on">
+                <IconField>
+                  <InputIcon class="pi pi-search" />
+                  <InputText
+                    id="on_label"
+                    v-model="searchQuery"
+                    class="pl-10 pr-4 py-2 w-64"
+                  />
+                  <InputIcon
+                    v-if="searchQuery"
+                    class="pi pi-times cursor-pointer transition-colors duration-300 hover:text-surface-900 dark:hover:text-white!"
+                    @click="searchQuery = ''"
+                  />
+                </IconField>
+                <label for="on_label">搜尋</label>
+              </FloatLabel>
               <Dropdown
                 v-model="sortOrder"
                 :options="sortOptions"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="排序"
-                class="w-32"
+                class="w-36"
               />
             </div>
           </div>
         </div>
 
-        <!-- 載入中狀態 -->
-        <div
-          v-if="loading"
-          class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
-        >
-          <MemeCardSlimSkeleton v-for="n in 6" :key="n" />
-        </div>
+        <!-- 關於標籤頁內容 -->
+        <div v-if="activeTab === 'about'" class="max-w-5xl mx-auto">
+          <!-- 載入中狀態 -->
+          <div v-if="loading" class="space-y-6">
+            <div class="animate-pulse">
+              <div class="h-4 bg-surface-200 rounded w-1/4 mb-4"></div>
+              <div class="h-6 bg-surface-200 rounded w-3/4 mb-2"></div>
+              <div class="h-4 bg-surface-200 rounded w-1/2"></div>
+            </div>
+            <div class="animate-pulse">
+              <div class="h-4 bg-surface-200 rounded w-1/4 mb-4"></div>
+              <div class="h-6 bg-surface-200 rounded w-3/4 mb-2"></div>
+              <div class="h-4 bg-surface-200 rounded w-1/2"></div>
+            </div>
+          </div>
 
-        <!-- 迷因列表 -->
-        <div
-          v-else-if="filteredMemes.length > 0"
-          class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
-        >
-          <MemeCardSlim
-            v-for="meme in filteredMemes"
-            :key="meme.id || meme._id"
-            :meme="meme"
-            @tag-click="handleTagClick"
-          />
-
-          <!-- 無限滾動觸發元素 -->
-          <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
+          <!-- 關於內容 -->
+          <div v-else class="space-y-8">
+            <!-- 基本資料卡片 -->
             <div
-              v-if="infiniteLoading"
-              class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8"
+              class="bg-white dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 p-6"
             >
-              <MemeCardSlimSkeleton v-for="n in 6" :key="`infinite-${n}`" />
+              <h3
+                class="text-xl font-semibold text-surface-900 dark:text-white mb-6 flex items-center"
+              >
+                <i class="pi pi-user mr-2 text-primary"></i>
+                基本資料
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 使用者名稱 -->
+                <div class="space-y-2">
+                  <label
+                    class="text-sm font-medium text-surface-600 dark:text-surface-400"
+                    >使用者名稱</label
+                  >
+                  <p class="text-surface-900 dark:text-white font-medium">
+                    {{ userProfile?.username || '未設定' }}
+                  </p>
+                </div>
+
+                <!-- 顯示名稱 -->
+                <div class="space-y-2">
+                  <label
+                    class="text-sm font-medium text-surface-600 dark:text-surface-400"
+                    >顯示名稱</label
+                  >
+                  <p class="text-surface-900 dark:text-white font-medium">
+                    {{ userProfile?.display_name || '未設定' }}
+                  </p>
+                </div>
+
+                <!-- 性別 -->
+                <div class="space-y-2">
+                  <label
+                    class="text-sm font-medium text-surface-600 dark:text-surface-400"
+                    >性別</label
+                  >
+                  <p class="text-surface-900 dark:text-white font-medium">
+                    {{ getGenderText(userProfile?.gender) }}
+                  </p>
+                </div>
+
+                <!-- 生日 -->
+                <div class="space-y-2">
+                  <label
+                    class="text-sm font-medium text-surface-600 dark:text-surface-400"
+                    >生日</label
+                  >
+                  <p class="text-surface-900 dark:text-white font-medium">
+                    {{ formatBirthday(userProfile?.birthday) }}
+                  </p>
+                </div>
+
+                <!-- 註冊時間 -->
+                <div class="space-y-2">
+                  <label
+                    class="text-sm font-medium text-surface-600 dark:text-surface-400"
+                    >註冊時間</label
+                  >
+                  <p class="text-surface-900 dark:text-white font-medium">
+                    {{ formatDateOnly(userProfile?.createdAt) }}
+                  </p>
+                </div>
+
+                <!-- 最後登入 -->
+                <div class="space-y-2">
+                  <label
+                    class="text-sm font-medium text-surface-600 dark:text-surface-400"
+                    >最後登入</label
+                  >
+                  <p class="text-surface-900 dark:text-white font-medium">
+                    {{ formatDateOnly(userProfile?.last_login_at) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 自我介紹卡片 -->
+            <div
+              class="bg-white dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 p-6"
+            >
+              <h3
+                class="text-xl font-semibold text-surface-900 dark:text-white mb-6 flex items-center"
+              >
+                <i class="pi pi-comment mr-2 text-primary"></i>
+                自我介紹
+              </h3>
+
+              <div class="space-y-2">
+                <p
+                  v-if="userProfile?.bio"
+                  class="text-surface-700 dark:text-surface-300 leading-relaxed"
+                >
+                  {{ userProfile.bio }}
+                </p>
+                <p v-else class="text-surface-500 dark:text-surface-400 italic">
+                  此用戶尚未填寫自我介紹
+                </p>
+              </div>
+            </div>
+
+            <!-- 統計資料卡片 -->
+            <div
+              class="bg-white dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 p-6"
+            >
+              <h3
+                class="text-xl font-semibold text-surface-900 dark:text-white mb-6 flex items-center"
+              >
+                <i class="pi pi-chart-bar mr-2 text-primary"></i>
+                統計資料
+              </h3>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-primary mb-1">
+                    {{ userStats.follower_count || 0 }}
+                  </div>
+                  <div class="text-sm text-surface-600 dark:text-surface-400">
+                    粉絲數
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-primary mb-1">
+                    {{ userStats.following_count || 0 }}
+                  </div>
+                  <div class="text-sm text-surface-600 dark:text-surface-400">
+                    關注數
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-primary mb-1">
+                    {{ userStats.meme_count || 0 }}
+                  </div>
+                  <div class="text-sm text-surface-600 dark:text-surface-400">
+                    貼文數
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-primary mb-1">
+                    {{ userStats.collection_count || 0 }}
+                  </div>
+                  <div class="text-sm text-surface-600 dark:text-surface-400">
+                    收藏數
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 空狀態 -->
-        <div v-else class="text-center py-20">
-          <div class="mb-4">
-            <i class="pi pi-inbox text-6xl text-surface-300"></i>
+        <!-- 其他標籤頁內容 -->
+        <div v-else>
+          <!-- 載入中狀態 -->
+          <div
+            v-if="loading"
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+          >
+            <MemeCardSlimSkeleton v-for="n in 6" :key="n" />
           </div>
-          <h3 class="text-xl font-semibold text-surface-600 mb-2">
-            {{ getEmptyStateMessage() }}
-          </h3>
-          <p class="text-surface-500">
-            {{ getEmptyStateDescription() }}
-          </p>
+
+          <!-- 迷因列表 -->
+          <div
+            v-else-if="filteredMemes.length > 0"
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+          >
+            <MemeCardSlim
+              v-for="meme in filteredMemes"
+              :key="meme.id || meme._id"
+              :meme="meme"
+              @tag-click="handleTagClick"
+            />
+
+            <!-- 無限滾動觸發元素 -->
+            <div v-if="infiniteHasMore" ref="triggerRef" class="h-4 w-full">
+              <div
+                v-if="infiniteLoading"
+                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8"
+              >
+                <MemeCardSlimSkeleton v-for="n in 6" :key="`infinite-${n}`" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 空狀態 -->
+          <div v-else class="text-center py-20">
+            <div class="mb-4">
+              <i class="pi pi-inbox text-5xl text-surface-300"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-surface-600 mb-2">
+              {{ getEmptyStateMessage() }}
+            </h3>
+            <p class="text-surface-500">
+              {{ getEmptyStateDescription() }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -192,6 +385,21 @@ import collectionService from '@/services/collectionService'
 import likeService from '@/services/likeService'
 import followService from '@/services/followService'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
+
+/*
+ * feat: implement comprehensive "About" tab for user profile page
+ * - Add dedicated "About" tab content displaying user basic information instead of memes
+ * - Implement three information cards: basic profile data, self-introduction, and statistics
+ * - Add helper functions for data formatting (gender, birthday, date-only display)
+ * - Improve responsive design with better breakpoint handling (xl instead of lg)
+ * - Enhance tab switching logic to load appropriate data for each tab
+ * - Add conditional search/sort display (hidden on "About" tab)
+ * - Fix field name from lastLoginAt to last_login_at for last login time
+ * - Optimize loading states with skeleton screens for better UX
+ *
+ * The "About" tab now provides a comprehensive view of user information in a clean,
+ * card-based layout with proper dark mode support and responsive design.
+ */
 
 // 組件名稱 (修復linter錯誤)
 defineOptions({
@@ -272,9 +480,9 @@ const sortOptions = computed(() => {
     { label: '最新', value: 'createdAt' },
     { label: '最舊', value: 'createdAt_asc' },
     { label: '最熱門', value: 'popularity' },
-    { label: '最少人看', value: 'popularity_asc' },
-    { label: '互動數', value: 'quality' },
-    { label: '最少互動', value: 'quality_asc' },
+    { label: '最冷門', value: 'popularity_asc' },
+    { label: '最高互動', value: 'quality' },
+    { label: '最低互動', value: 'quality_asc' },
   ]
 
   // 只有在搜尋時才顯示相關性選項
@@ -724,8 +932,15 @@ watch(activeTab, (newTab) => {
     loadUserCollections(true)
   } else if (newTab === 'collected') {
     loadUserLikedMemes(true)
+  } else if (newTab === 'about') {
+    // 關於標籤不需要載入迷因資料，只需要確保用戶資料已載入
+    if (!userProfile.value) {
+      loadUserProfile()
+    }
+    if (!userStats.value || Object.keys(userStats.value).length === 0) {
+      loadUserStats()
+    }
   }
-  // 其他標籤的邏輯可以在這裡添加
 })
 
 // 防抖搜尋函數
@@ -753,6 +968,56 @@ watch(sortOrder, () => {
   }
 })
 
+// 輔助函數：格式化性別顯示
+const getGenderText = (gender) => {
+  if (!gender) return '未設定'
+  switch (gender.toLowerCase()) {
+    case 'male':
+    case 'm':
+      return '男性'
+    case 'female':
+    case 'f':
+      return '女性'
+    case 'other':
+    case 'o':
+      return '其他'
+    default:
+      return '未設定'
+  }
+}
+
+// 輔助函數：格式化生日
+const formatBirthday = (birthday) => {
+  if (!birthday) return '未設定'
+  try {
+    const date = new Date(birthday)
+    if (isNaN(date.getTime())) return '未設定'
+    return date.toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  } catch {
+    return '未設定'
+  }
+}
+
+// 輔助函數：格式化日期（只顯示日期）
+const formatDateOnly = (date) => {
+  if (!date) return '未設定'
+  try {
+    const dateObj = new Date(date)
+    if (isNaN(dateObj.getTime())) return '未設定'
+    return dateObj.toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  } catch {
+    return '未設定'
+  }
+}
+
 // 監聽用戶ID變化
 watch(
   userId,
@@ -775,5 +1040,9 @@ watch(
   width: 8rem !important;
   height: 8rem !important;
   font-size: 3rem !important;
+}
+:deep(.p-tablist-tab-list),
+:deep(.p-tab) {
+  border-color: transparent !important;
 }
 </style>
