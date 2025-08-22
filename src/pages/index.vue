@@ -15,7 +15,7 @@
     >
       <div :class="heroStyles.containerClass">
         <h1 :class="heroStyles.titleClass">讓最新的迷因為生活增添風味</h1>
-        <p :class="heroStyles.subtitleClass">
+        <p :class="heroStyles.Class">
           探索網友們精心整理的迷因，用互動的方式參與迷因的定義，讓自己成為最新穎最顛覆的迷因。
         </p>
         <div class="flex flex-wrap justify-center gap-2 mt-4 mb-8">
@@ -47,7 +47,7 @@
           <Avatar icon="pi pi-user" shape="circle" class="mb-1" size="large" />
           <div class="text-xs">
             <h6>使用者名稱</h6>
-            <p class="subtitle">注入了100點快樂</p>
+            <p class="">注入了100點快樂</p>
           </div>
         </div>
       </div>
@@ -59,12 +59,14 @@
     </div>
 
     <!-- 公告欄 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
-      <h2 class="text-center">公告欄</h2>
-      <div class="text-center subtitle mb-8">
-        最新消息與站務公告將在此處更新，請留意更新情況。
+    <div
+      class="mb-4 px-4 py-16 flex flex-col items-center gap-4 md:px-32 lg:px-16 xl:px-32"
+    >
+      <div class="text-center mb-8">
+        <p class="text-sm text-gray-500 mb-2">Announcements</p>
+        <h2 class="text-3xl font-bold">迷因典的重要公告</h2>
+        <p class="mt-2">最新消息與站務公告將在此處更新，請留意更新情況。</p>
       </div>
-
       <!-- 載入中狀態 -->
       <div v-if="announcementsLoading" class="flex justify-center py-8">
         <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
@@ -86,7 +88,7 @@
       <div v-else class="text-center py-12">
         <i class="pi pi-bullhorn text-6xl text-gray-300 mb-4"></i>
         <h3 class="mb-2">暫無公告</h3>
-        <p class="subtitle">目前沒有公告，請稍後再試</p>
+        <p class="">目前沒有公告，請稍後再試</p>
         <Button
           label="重新載入"
           icon="pi pi-refresh"
@@ -97,10 +99,15 @@
     </div>
 
     <!-- 近期精選迷因 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
-      <h2 class="text-center">近期精選迷因</h2>
-      <div class="text-center subtitle mb-8">
-        精選迷因將在此處更新，請留意更新情況。
+    <div
+      class="mb-4 px-4 py-16 flex flex-col items-center gap-4 md:px-32 lg:px-16 xl:px-32"
+    >
+      <div class="text-center mb-8">
+        <p class="text-sm text-gray-500 mb-2">Featured</p>
+        <h2 class="text-3xl font-bold">近期精選迷因</h2>
+        <p class="mt-2">
+          迷因長特別精選的迷因將在此處更新，看看最近迷因長喜歡什麼吧！
+        </p>
       </div>
 
       <!-- 載入中狀態 -->
@@ -127,7 +134,7 @@
       <div v-else class="text-center py-12">
         <i class="pi pi-image text-6xl text-gray-300 mb-4"></i>
         <h3 class="mb-2">暫無精選迷因</h3>
-        <p class="subtitle">目前沒有精選迷因，請稍後再試</p>
+        <p class="">目前沒有精選迷因，請稍後再試</p>
         <Button
           label="重新載入"
           icon="pi pi-refresh"
@@ -138,10 +145,13 @@
     </div>
 
     <!-- 每日迷因 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
-      <h2 class="text-center">每日迷因</h2>
-      <div class="text-center subtitle mb-4">
-        點擊按鈕隨機抽一個屬於你今天的迷因吧！
+    <div
+      class="mb-4 px-4 py-16 flex flex-col items-center gap-4 md:px-32 lg:px-16 xl:px-32"
+    >
+      <div class="text-center mb-8">
+        <p class="text-sm text-gray-500 mb-2">Lotttery</p>
+        <h2 class="text-3xl font-bold">每日迷因</h2>
+        <p class="mt-2">點擊按鈕隨機抽一個屬於你今天的迷因吧！</p>
       </div>
       <div class="flex justify-center mb-4">
         <Button
@@ -171,20 +181,23 @@
     </div>
 
     <!-- 本月活躍作者 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-32">
+    <div
+      class="mb-4 px-4 py-16 flex flex-col items-center gap-4 md:px-32 lg:px-16 xl:px-32"
+    >
       <div class="flex flex-col lg:flex-row gap-20">
-        <div class="flex-1 lg:flex-1">
-          <h2 class="mb-4">本月活躍作者</h2>
-          <div class="mb-4 subtitle">
+        <div class="flex-1 space-y-6 text-left">
+          <p class="text-sm text-gray-500 mb-2">Active Users</p>
+          <h2 class="text-3xl font-bold mb-2">本月活躍作者</h2>
+          <p class="text-base text-gray-600">
             這些是本月最活躍的迷因創作者，他們為平台帶來了豐富多彩的內容。透過他們的創意和分享，讓我們的迷因社群更加精彩。
-          </div>
+          </p>
           <Button
             class="w-32 h-16"
             label="建立迷因"
             @click="$router.push('/memes/post')"
           />
         </div>
-        <div class="flex-1 lg:flex-1 flex flex-wrap space-y-2">
+        <div class="flex-1 space-y-2">
           <!-- 載入中狀態 -->
           <div
             v-if="activeUsersLoading"
@@ -203,10 +216,9 @@
             v-for="(user, index) in activeUsers"
             :key="user._id"
             toggleable
-            collapsed
           >
             <template #header>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 py-2">
                 <Avatar
                   :image="user.avatar"
                   shape="circle"
@@ -277,7 +289,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
@@ -321,9 +333,9 @@ const heroStyles = computed(() => ({
   titleClass: themeStore.isDark
     ? 'text-4xl lg:text-6xl font-bold mb-6 text-white drop-shadow-2xl'
     : 'text-4xl lg:text-6xl font-bold mb-6 text-gray-800 drop-shadow-2xl',
-  subtitleClass: themeStore.isDark
-    ? 'subtitle mt-1 text-lg lg:text-xl text-gray-100 mb-8 max-w-3xl mx-auto drop-shadow-lg'
-    : 'subtitle mt-1 text-lg lg:text-xl text-gray-600 mb-8 max-w-3xl mx-auto drop-shadow-lg',
+  Class: themeStore.isDark
+    ? ' mt-1 text-lg lg:text-xl text-gray-100 mb-8 max-w-3xl mx-auto drop-shadow-lg'
+    : ' mt-1 text-lg lg:text-xl text-gray-600 mb-8 max-w-3xl mx-auto drop-shadow-lg',
   keywordClass: themeStore.isDark
     ? 'text-gray-200 font-medium'
     : 'text-gray-600 font-medium',
@@ -517,8 +529,11 @@ const loadActiveUsers = async () => {
 
       // 初始化每個用戶的追蹤狀態
       activeUsers.value.forEach((user, index) => {
-        activeUsers.value[index].isFollowing = false
         activeUsers.value[index].followLoading = false
+        // 只有在用戶未登入時才將 isFollowing 設為 false
+        if (!userStore.isLoggedIn) {
+          activeUsers.value[index].isFollowing = false
+        }
       })
 
       // 如果用戶已登入，檢查每個用戶的追蹤狀態
@@ -537,11 +552,17 @@ const loadActiveUsers = async () => {
               )
               if (followResponse.data && followResponse.data.success) {
                 activeUsers.value[index].isFollowing =
-                  followResponse.data.isFollowing || false
+                  followResponse.data.data?.is_following || false
+              } else {
+                // API 調用成功但回應格式不正確，保持原有狀態
+                console.warn(
+                  `檢查用戶 ${user._id} 追蹤狀態回應格式錯誤:`,
+                  followResponse,
+                )
               }
             } catch (error) {
               console.warn(`檢查用戶 ${user._id} 追蹤狀態失敗:`, error)
-              activeUsers.value[index].isFollowing = false
+              // 錯誤時不改變 isFollowing 狀態，保持原有狀態
             }
           }),
         )
@@ -881,6 +902,18 @@ const handleOAuthCallbackOnMount = async () => {
     await handleOAuthCallback(route, router, userStore, toast)
   }
 }
+
+// 監聽登入狀態變化，重新載入追蹤狀態
+watch(
+  () => userStore.isLoggedIn,
+  async (newIsLoggedIn, oldIsLoggedIn) => {
+    // 當用戶從未登入變為已登入時，重新載入活躍用戶的追蹤狀態
+    if (newIsLoggedIn && !oldIsLoggedIn && activeUsers.value.length > 0) {
+      console.log('用戶登入狀態改變，重新載入追蹤狀態')
+      await loadActiveUsers()
+    }
+  },
+)
 
 // 初始化
 onMounted(async () => {

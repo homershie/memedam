@@ -15,6 +15,7 @@ export default {
 <route lang="yaml">
 meta:
   title: '成為付費會員'
+  layout: 'full'
   login: ''
   admin: false
 </route>

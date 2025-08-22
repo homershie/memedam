@@ -1,18 +1,34 @@
 <template>
   <div class="w-5xl min-h-fit px-8 pt-8 mb-20 mx-auto space-y-6">
     <!-- 聯絡迷因長標題與說明 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h1 class="text-5xl font-bold text-center">聯絡迷因長</h1>
-      <div class="text-center text-gray-600 max-w-2xl">
-        <p class="text-base mb-2">
-          如果有什麼建議或問題，歡迎填寫表單跟本站迷因長聯繫
+    <div
+      class="mb-4 px-4 py-70 flex flex-col items-center gap-4 lg:px-16 xl:px-32"
+    >
+      <h1 class="mb-4 text-center">聯絡迷因長</h1>
+      <div class="text-center text-surface-600 max-w-4xl">
+        <p class="text-lg">
+          如果有什麼建議或問題，歡迎填寫表單跟本站迷因長聯繫。<br />
+          如果有圖片侵犯到你的權利，也歡迎使用檢舉功能。
         </p>
-        <p class="text-base">如果有圖片侵犯到你的權利，也歡迎使用檢舉功能。</p>
       </div>
+      <Button
+        label="立即填寫"
+        icon="pi pi-arrow-down"
+        size="large"
+        severity="primary"
+        rounded
+        variant="outlined"
+        @click="scrollToSection('contact')"
+        class="mb-4"
+      >
+      </Button>
     </div>
 
     <!-- 聯絡表單 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
+    <div
+      class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32"
+      id="contact"
+    >
       <div class="w-full max-w-2xl">
         <form @submit.prevent="submitForm" class="space-y-6">
           <!-- 姓名欄位 -->
@@ -194,7 +210,11 @@
               :class="{ 'p-invalid': errors.acceptTerms }"
             />
             <label for="terms" class="text-sm text-gray-700 dark:text-gray-300">
-              我同意條款
+              我同意<a
+                href="/privacy"
+                class="text-primary-500! dark:text-primary-400! underline"
+                >隱私權政策</a
+              >
             </label>
           </div>
           <small v-if="errors.acceptTerms" class="p-error">{{
@@ -410,6 +430,13 @@ const submitForm = async () => {
     })
   } finally {
     submitting.value = false
+  }
+}
+
+const scrollToSection = (sectionId) => {
+  const section = document.getElementById(sectionId)
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth' })
   }
 }
 </script>

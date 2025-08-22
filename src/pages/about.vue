@@ -4,7 +4,7 @@
     <div
       class="mb-4 px-4 py-16 flex flex-col lg:flex-row items-center gap-8 lg:px-32"
     >
-      <div class="flex-1 space-y-6">
+      <div class="py-40 flex-1 space-y-6">
         <p class="text-sm text-gray-500 mb-2">About</p>
         <h1 class="text-5xl font-bold">關於迷因典</h1>
         <div class="space-y-4 text-base text-gray-600">
@@ -29,7 +29,7 @@
     </div>
 
     <!-- 迷因典重視的價值區塊 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
+    <div class="mb-4 px-4 py-28 flex flex-col items-center gap-8 lg:px-32">
       <div class="text-center mb-8">
         <p class="text-sm text-gray-500 mb-2">Values</p>
         <h2 class="text-3xl font-bold">迷因典重視的價值</h2>
@@ -47,6 +47,7 @@
             <img
               src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1755655918/641yf1drx6f91_rp6mum.jpg"
               alt="rickroll"
+              title="rickroll"
               class="w-full h-full object-cover"
             />
           </div>
@@ -64,6 +65,7 @@
             <img
               src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1755656344/640_yguja2.png"
               alt="Ikari Shinji"
+              title="Ikari Shinji"
               class="w-full h-full object-cover"
             />
           </div>
@@ -81,6 +83,7 @@
             <img
               src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1755656425/EyHnASXU8AMaOcc_wccdfv.jpg"
               alt="Eren Yeager"
+              title="Eren Yeager"
               class="w-full h-full object-cover"
             />
           </div>
@@ -93,7 +96,7 @@
     </div>
 
     <!-- 網站故事區塊 -->
-    <div class="mb-4 px-4 py-16 flex flex-col xl:flex-row gap-8 xl:px-32">
+    <div class="mb-4 px-4 py-40 flex flex-col xl:flex-row gap-8 xl:px-32">
       <div class="flex-1 space-y-6 text-center xl:text-left">
         <p class="text-sm text-gray-500 mb-2">Timeline</p>
         <h2 class="text-3xl font-bold mb-2">迷因典的誕生</h2>
