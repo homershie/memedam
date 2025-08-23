@@ -9,6 +9,7 @@ import { useToast } from 'primevue/usetoast'
 import { onMounted, onUnmounted, ref } from 'vue'
 import announcementService from '@/services/announcementService'
 import FileUpload from 'primevue/fileupload'
+import RadioButton from 'primevue/radiobutton'
 
 const toast = useToast()
 
@@ -30,6 +31,8 @@ const deleteAnnouncementsDialog = ref(false)
 const announcement = ref({})
 const submitted = ref(false)
 const selectedImage = ref(null)
+const imageUrl = ref('')
+const imageType = ref('upload') // 'upload' 或 'url'
 
 // 篩選器
 const filters = ref({
@@ -230,6 +233,8 @@ function openNew() {
     URL.revokeObjectURL(selectedImage.value._previewUrl)
   }
   selectedImage.value = null
+  imageUrl.value = ''
+  imageType.value = 'upload'
   submitted.value = false
   announcementDialog.value = true
 }
@@ -242,6 +247,8 @@ function hideDialog() {
     URL.revokeObjectURL(selectedImage.value._previewUrl)
   }
   selectedImage.value = null
+  imageUrl.value = ''
+  imageType.value = 'upload'
 }
 
 async function saveAnnouncement() {
@@ -251,9 +258,14 @@ async function saveAnnouncement() {
   if (!current?.title?.trim() || !current?.content?.trim()) return
 
   try {
-    // 如果有選擇圖片，加入圖片資料
-    if (selectedImage.value) {
+    // 處理圖片資料
+    if (imageType.value === 'upload' && selectedImage.value) {
       current.image = selectedImage.value
+    } else if (imageType.value === 'url' && imageUrl.value.trim()) {
+      current.image = imageUrl.value.trim()
+    } else {
+      // 如果沒有圖片，清除圖片欄位
+      current.image = null
     }
 
     if (current._id) {
@@ -284,6 +296,8 @@ async function saveAnnouncement() {
       URL.revokeObjectURL(selectedImage.value._previewUrl)
     }
     selectedImage.value = null
+    imageUrl.value = ''
+    imageType.value = 'upload'
     await loadData() // 重新載入數據
   } catch (error) {
     console.error('儲存公告失敗:', error)
@@ -303,6 +317,22 @@ function editAnnouncement(row) {
     URL.revokeObjectURL(selectedImage.value._previewUrl)
   }
   selectedImage.value = null
+
+  // 設定圖片類型
+  if (row.image) {
+    // 判斷是否為 Cloudinary URL
+    if (row.image.includes('cloudinary.com')) {
+      imageType.value = 'upload'
+      imageUrl.value = ''
+    } else {
+      imageType.value = 'url'
+      imageUrl.value = row.image
+    }
+  } else {
+    imageType.value = 'upload'
+    imageUrl.value = ''
+  }
+
   announcementDialog.value = true
 }
 
@@ -556,6 +586,27 @@ function getImagePreviewUrl(file) {
     return file._previewUrl
   }
   return ''
+}
+
+// 切換圖片類型
+function switchImageType(type) {
+  imageType.value = type
+  if (type === 'upload') {
+    imageUrl.value = ''
+  } else {
+    // 清理之前的圖片預覽 URL
+    if (selectedImage.value && selectedImage.value._previewUrl) {
+      URL.revokeObjectURL(selectedImage.value._previewUrl)
+    }
+    selectedImage.value = null
+  }
+}
+
+// 驗證圖片 URL
+function validateImageUrl(url) {
+  if (!url) return true
+  const imageUrlPattern = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i
+  return imageUrlPattern.test(url)
 }
 </script>
 
@@ -836,9 +887,134 @@ function getImagePreviewUrl(file) {
         <!-- 圖片上傳 -->
         <div>
           <label class="block font-bold mb-3">公告圖片</label>
+
+          <!-- 圖片類型選擇 -->
+          <div class="flex gap-4 mb-4">
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="imageType"
+                value="upload"
+                :inputId="'upload'"
+                @change="switchImageType('upload')"
+              />
+              <label :for="'upload'" class="text-sm">上傳圖片</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="imageType"
+                value="url"
+                :inputId="'url'"
+                @change="switchImageType('url')"
+              />
+              <label :for="'url'" class="text-sm">使用連結</label>
+            </div>
+          </div>
+
           <div class="flex flex-col gap-4">
-            <!-- 當前圖片預覽 -->
-            <div v-if="announcement.image && !selectedImage" class="relative">
+            <!-- 上傳圖片模式 -->
+            <div v-if="imageType === 'upload'">
+              <!-- 當前圖片預覽 -->
+              <div
+                v-if="
+                  announcement.image &&
+                  !selectedImage &&
+                  announcement.image.includes('cloudinary.com')
+                "
+                class="relative"
+              >
+                <img
+                  :src="announcement.image"
+                  :alt="announcement.title"
+                  class="w-full max-w-xs h-48 object-cover rounded-lg border"
+                />
+                <Button
+                  icon="pi pi-times"
+                  severity="danger"
+                  size="small"
+                  class="absolute top-2 right-2"
+                  @click="announcement.image = null"
+                  text
+                  rounded
+                />
+              </div>
+
+              <!-- 新選擇的圖片預覽 -->
+              <div v-if="selectedImage" class="relative">
+                <img
+                  :src="getImagePreviewUrl(selectedImage)"
+                  :alt="selectedImage.name"
+                  class="w-full max-w-xs h-48 object-cover rounded-lg border"
+                />
+                <Button
+                  icon="pi pi-times"
+                  severity="danger"
+                  size="small"
+                  class="absolute top-2 right-2"
+                  @click="removeImage"
+                  text
+                  rounded
+                />
+              </div>
+
+              <!-- 圖片上傳元件 -->
+              <FileUpload
+                mode="basic"
+                name="image"
+                accept="image/*"
+                :maxFileSize="5000000"
+                @select="onImageSelect"
+                chooseLabel="選擇圖片"
+                :auto="false"
+                class="w-full"
+              />
+              <small class="text-gray-500"
+                >支援 JPG、PNG、GIF、WebP 格式，最大 5MB</small
+              >
+            </div>
+
+            <!-- 圖片連結模式 -->
+            <div v-if="imageType === 'url'">
+              <InputText
+                v-model="imageUrl"
+                placeholder="請輸入圖片連結 (https://...)"
+                class="w-full"
+                :class="{
+                  'p-invalid':
+                    submitted && imageUrl && !validateImageUrl(imageUrl),
+                }"
+              />
+              <small
+                v-if="submitted && imageUrl && !validateImageUrl(imageUrl)"
+                class="text-red-500"
+                >請輸入有效的圖片連結</small
+              >
+              <small class="text-gray-500"
+                >支援 JPG、PNG、GIF、WebP、SVG 格式的圖片連結</small
+              >
+
+              <!-- 圖片連結預覽 -->
+              <div
+                v-if="imageUrl && validateImageUrl(imageUrl)"
+                class="relative"
+              >
+                <img
+                  :src="imageUrl"
+                  :alt="announcement.title || '預覽圖片'"
+                  class="w-full max-w-xs h-48 object-cover rounded-lg border"
+                  @error="$event.target.style.display = 'none'"
+                />
+              </div>
+            </div>
+
+            <!-- 當前外部圖片預覽 -->
+            <div
+              v-if="
+                announcement.image &&
+                !announcement.image.includes('cloudinary.com') &&
+                imageType === 'url'
+              "
+              class="relative"
+            >
               <img
                 :src="announcement.image"
                 :alt="announcement.title"
@@ -849,44 +1025,14 @@ function getImagePreviewUrl(file) {
                 severity="danger"
                 size="small"
                 class="absolute top-2 right-2"
-                @click="announcement.image = null"
+                @click="
+                  announcement.image = null
+                  imageUrl = ''
+                "
                 text
                 rounded
               />
             </div>
-
-            <!-- 新選擇的圖片預覽 -->
-            <div v-if="selectedImage" class="relative">
-              <img
-                :src="getImagePreviewUrl(selectedImage)"
-                :alt="selectedImage.name"
-                class="w-full max-w-xs h-48 object-cover rounded-lg border"
-              />
-              <Button
-                icon="pi pi-times"
-                severity="danger"
-                size="small"
-                class="absolute top-2 right-2"
-                @click="removeImage"
-                text
-                rounded
-              />
-            </div>
-
-            <!-- 圖片上傳元件 -->
-            <FileUpload
-              mode="basic"
-              name="image"
-              accept="image/*"
-              :maxFileSize="5000000"
-              @select="onImageSelect"
-              chooseLabel="選擇圖片"
-              :auto="false"
-              class="w-full"
-            />
-            <small class="text-gray-500"
-              >支援 JPG、PNG、GIF、WebP 格式，最大 5MB</small
-            >
           </div>
         </div>
       </div>
