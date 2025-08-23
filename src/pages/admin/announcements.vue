@@ -1026,8 +1026,10 @@ function validateImageUrl(url) {
                 size="small"
                 class="absolute top-2 right-2"
                 @click="
-                  announcement.image = null
-                  imageUrl = ''
+                  () => {
+                    announcement.image = null
+                    imageUrl = ''
+                  }
                 "
                 text
                 rounded
