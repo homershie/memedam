@@ -21,7 +21,7 @@
       </div>
       <div class="flex-1 flex justify-center">
         <img
-          src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1755652908/ceee229b5e3cf1287c7c3b36fb6d1c5e_ppq9e9.png"
+          src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756045758/memedam-c-1024t_tnwl5r.png"
           alt="logo"
           class="w-100 h-100 drop-shadow-lg transform transition-transform duration-200 hover:scale-[1.02]"
         />
