@@ -273,15 +273,31 @@
 </template>
 
 <script>
+import { onMounted } from 'vue'
+import { useSEO } from '@/composables/useSEO'
+
 export default {
   name: 'PremiumPage',
-  data() {
-    return {
-      // 可以在這裡添加響應式數據
-    }
-  },
-  methods: {
-    // 可以在這裡添加方法
+  setup() {
+    const { updateSEO } = useSEO()
+
+    onMounted(() => {
+      updateSEO({
+        title: '成為付費會員',
+        description:
+          '支持迷因典 MemeDam，成為頂級會員，享有 VIP 徽章、功能搶先體驗與更多小確幸。',
+        canonical: `https://www.memedam.com/premium`,
+        openGraph: {
+          title: '成為付費會員 - 迷因典 MemeDam',
+          description:
+            '支持迷因典 MemeDam，成為頂級會員，享有 VIP 徽章、功能搶先體驗與更多小確幸。',
+          url: `https://www.memedam.com/premium`,
+          image: `${window.location.origin}/favicon/apple-touch-icon.png`,
+        },
+      })
+    })
+
+    return {}
   },
 }
 </script>

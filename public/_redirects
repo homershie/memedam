@@ -1,12 +1,14 @@
 # 重新導向設定
 # 這個文件用於 Netlify 和其他支援 _redirects 的主機平台
 
-# 強制 HTTPS
-http://memedam.netlify.app/* https://memedam.netlify.app/:splat 301!
-http://www.memedam.netlify.app/* https://memedam.netlify.app/:splat 301!
-
-# 移除 www 前綴（如果適用）
-https://www.memedam.netlify.app/* https://memedam.netlify.app/:splat 301!
+# 強制 HTTPS 與統一網域到 www（www.memedam.com）
+http://memedam.netlify.app/* https://www.memedam.com/:splat 301!
+http://www.memedam.netlify.app/* https://www.memedam.com/:splat 301!
+https://memedam.netlify.app/* https://www.memedam.com/:splat 301!
+https://www.memedam.netlify.app/* https://www.memedam.com/:splat 301!
+http://memedam.com/* https://www.memedam.com/:splat 301!
+http://www.memedam.com/* https://www.memedam.com/:splat 301!
+https://memedam.com/* https://www.memedam.com/:splat 301!
 
 # 舊的分頁 URL 重新導向到新格式
 /memes/all?page=1 /memes/all 301
@@ -49,5 +51,6 @@ https://www.memedam.netlify.app/* https://memedam.netlify.app/:splat 301!
 /*.woff  /:splat.woff  200
   Cache-Control: public, max-age=31536000, immutable
 
-# 404 錯誤頁面 - 必須在最後
-/* /404 404
+# 404 錯誤頁面
+# 將未知路由交給 SPA（/index.html）以避免 404 被誤判為導向錯誤
+/*    /index.html   200

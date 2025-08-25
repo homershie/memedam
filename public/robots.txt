@@ -27,7 +27,7 @@ Disallow: /*?search=$
 Disallow: /*?tags=$
 
 # 站點地圖位置
-Sitemap: https://memedam.netlify.app/sitemap.xml
+Sitemap: https://www.memedam.com/sitemap.xml
 
 # 抓取延遲（毫秒）
 Crawl-delay: 1
