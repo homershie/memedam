@@ -4,6 +4,11 @@ import AppMenu from './AppMenu.vue'
 import NotificationButton from '@/components/NotificationButton.vue'
 import { useUserStore } from '@/stores/userStore'
 import userService from '@/services/userService'
+import Avatar from 'primevue/avatar'
+import Button from 'primevue/button'
+import InputGroup from 'primevue/inputgroup'
+import InputText from 'primevue/inputtext'
+import InputGroupAddon from 'primevue/inputgroupaddon'
 
 const isDesktop = ref(true)
 const isDark = ref(document.documentElement.classList.contains('dark'))
@@ -70,31 +75,19 @@ onUnmounted(() => {
     <!-- 頂部區域：LOGO -->
     <div class="layout-sidebar-header p-4 flex-shrink-0">
       <div class="flex justify-center items-center">
-        <router-link to="/">
+        <router-link to="/" class="logo-link">
           <img
+            src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756045061/memedam-f-bw-light_ne9fhd.png"
+            alt="MemeDam"
+            class="h-12 w-auto"
             v-if="isDark"
-            src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1754649809/memedam-w-60_1_svvhiq.png"
-            alt="logo-white"
           />
           <img
+            src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756045061/memedam-f-bw-dark_saeqez.png"
+            alt="MemeDam"
+            class="h-12 w-auto"
             v-else
-            src="https://res.cloudinary.com/dkhexh4fp/image/upload/e_negate/v1754649809/memedam-w-60_1_svvhiq.png"
-            alt="logo-black"
           />
-        </router-link>
-        <router-link to="/">
-          <div class="flex flex-col justify-center">
-            <div
-              class="font-bold text-3xl mb-0 leading-none mt-1 dark:text-white!"
-            >
-              迷因典
-            </div>
-            <div
-              class="text-sm mb-0 text-gray-500 leading-none dark:text-gray-400"
-            >
-              MemeDam
-            </div>
-          </div>
         </router-link>
       </div>
     </div>
@@ -133,7 +126,7 @@ onUnmounted(() => {
       <InputGroup>
         <InputText placeholder="搜尋功能" />
         <InputGroupAddon>
-          <Button icon="pi pi-search" variant="text" @click="toggle" />
+          <Button icon="pi pi-search" variant="text" />
         </InputGroupAddon>
       </InputGroup>
     </div>
@@ -143,7 +136,7 @@ onUnmounted(() => {
       class="pb-10 flex-1 overflow-y-hidden group-hover:overflow-y-auto"
       style="scrollbar-gutter: stable; scrollbar-width: thin"
     >
-      <app-menu></app-menu>
+      <app-menu />
     </div>
   </div>
 </template>

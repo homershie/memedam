@@ -191,7 +191,7 @@ const model = computed(() => {
           v-if="!subItem.separator"
           :item="subItem"
           :index="`${i}-${j}`"
-        ></app-menu-item>
+        />
         <li v-if="subItem.separator" class="menu-separator"></li>
       </template>
     </template>

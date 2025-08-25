@@ -263,7 +263,6 @@ const loadReports = async () => {
 
   loading.value = true
   try {
-    console.log('開始載入檢舉數據...')
     const params = {
       page: pagination.value.page,
       limit: pagination.value.limit,
@@ -275,14 +274,9 @@ const loadReports = async () => {
       params.status = filters.value.status
     }
 
-    console.log('檢舉查詢參數:', params)
     const response = await reportService.getMyReports(params)
-    console.log('檢舉數據 API 回應:', response)
 
     if (response.data?.data) {
-      console.log('檢舉列表:', response.data.data.reports)
-      console.log('分頁資訊:', response.data.data.pagination)
-
       reports.value = response.data.data.reports || []
       pagination.value = {
         page: response.data.data.pagination?.page || 1,
@@ -294,15 +288,10 @@ const loadReports = async () => {
           (response.data.data.pagination?.limit || 10),
       }
 
-      console.log('更新後的檢舉列表:', reports.value)
-      console.log('更新後的分頁資訊:', pagination.value)
-
       // 載入統計數據
       await loadStats()
     }
   } catch (error) {
-    console.error('載入檢舉數據失敗:', error)
-
     // 檢查是否是認證錯誤
     if (error.response?.status === 401) {
       toast.add({
@@ -329,11 +318,7 @@ const loadReports = async () => {
 // 載入統計數據
 const loadStats = async () => {
   try {
-    console.log('開始載入統計數據...')
     const response = await reportService.getUserStats()
-    console.log('統計數據 API 回應:', response)
-    console.log('response.data:', response.data)
-    console.log('response.data.data:', response.data?.data)
 
     if (response.data?.data) {
       const newStats = {
@@ -341,13 +326,9 @@ const loadStats = async () => {
         pending: response.data.data.pending || 0,
         processed: response.data.data.processed || 0,
       }
-      console.log('更新統計數據:', newStats)
       stats.value = newStats
-    } else {
-      console.log('API 回應結構不符合預期:', response.data)
     }
   } catch (error) {
-    console.error('載入統計數據失敗:', error)
     // 如果統計 API 失敗，使用當前頁面資料計算
     calculateStatsFromCurrentPage()
   }

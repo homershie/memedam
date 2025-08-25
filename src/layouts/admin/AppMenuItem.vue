@@ -14,7 +14,7 @@ const props = defineProps({
     default: () => ({}),
   },
   index: {
-    type: Number,
+    type: [Number, String],
     default: 0,
   },
   root: {
@@ -71,7 +71,7 @@ function itemClick(event, item) {
   const foundItemKey = item.items
     ? isActiveMenu.value
       ? props.parentItemKey
-      : itemKey
+      : itemKey.value
     : itemKey.value
 
   setActiveMenuItem(foundItemKey)
@@ -121,7 +121,7 @@ const shouldShowBadge = computed(() => {
   <li class="menu-item">
     <router-link
       v-if="item.to && !item.items && item.visible !== false"
-      @click="itemClick($event, item, index)"
+      @click="itemClick($event, item)"
       :class="[
         'flex items-center gap-3 px-4! py-3! no-underline rounded-md mx-2 transition-all duration-200 relative hover:font-bold hover:bg-surface-200 dark:hover:bg-surface-700',
         checkActiveRoute(item) || item.active

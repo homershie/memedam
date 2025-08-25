@@ -6,7 +6,7 @@
 
       <!-- 信箱驗證提示 -->
       <div
-        v-if="!userStore.user?.email_verified"
+        v-if="!emailVerified"
         class="bg-yellow-50 border border-yellow-200 text-yellow-700! dark:bg-yellow-900 dark:border-yellow-800 dark:text-yellow-200! rounded-md p-3 mt-4"
       >
         <div class="flex items-start">
@@ -231,10 +231,11 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '../stores/userStore.js'
 import feedbackService from '../services/feedbackService.js'
+import userService from '../services/userService.js'
 
 // 定義元件名稱
 defineOptions({
@@ -263,6 +264,7 @@ const errors = reactive({})
 const isSubmitting = ref(false)
 const toast = useToast()
 const userStore = useUserStore()
+const emailVerified = ref(false)
 
 // 表單驗證
 const validateForm = () => {
@@ -292,6 +294,29 @@ const validateForm = () => {
 
   return !Object.values(errors).some((error) => error)
 }
+
+// 載入使用者信箱驗證狀態
+const loadUserEmailStatus = async () => {
+  try {
+    if (!userStore.isLoggedIn) {
+      emailVerified.value = false
+      return
+    }
+
+    const response = await userService.getMe()
+    const userData = response.data.user || response.data
+    emailVerified.value =
+      userData.email_verified || userData.emailVerified || false
+  } catch (error) {
+    console.error('載入使用者信箱狀態失敗:', error)
+    emailVerified.value = false
+  }
+}
+
+// 組件掛載時載入使用者資料
+onMounted(() => {
+  loadUserEmailStatus()
+})
 
 // 提交表單
 const submitFeedback = async () => {

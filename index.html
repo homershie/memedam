@@ -54,6 +54,27 @@
       }
     </script>
 
+    <!-- 預載入 Logo 圖片 - 僅預載入當前主題的圖片 -->
+    <script>
+      // 根據當前主題預載入對應的 Logo
+      ;(function () {
+        const isDark =
+          document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches
+
+        const logoUrl = isDark
+          ? 'https://res.cloudinary.com/dkhexh4fp/image/upload/v1756045061/memedam-f-bw-light_ne9fhd.png'
+          : 'https://res.cloudinary.com/dkhexh4fp/image/upload/v1756045061/memedam-f-bw-dark_saeqez.png'
+
+        const link = document.createElement('link')
+        link.rel = 'preload'
+        link.as = 'image'
+        link.href = logoUrl
+        link.type = 'image/png'
+        document.head.appendChild(link)
+      })()
+    </script>
+
     <!-- Google AdSense -->
     <script
       async
