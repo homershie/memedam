@@ -323,6 +323,7 @@ export default {
 <route lang="yaml">
 meta:
   title: '抖內贊助'
+  description: '支持迷因典的持續運作與功能開發，成為平台的乾爹乾媽，讓迷因更有趣！'
   login: ''
   admin: false
 </route>

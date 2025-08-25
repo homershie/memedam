@@ -180,6 +180,7 @@ const onSubmit = async () => {
 <route lang="yaml">
 meta:
   title: '忘記密碼'
+  description: '輸入電子信箱以接收密碼重設連結，協助您快速找回帳號。'
   admin: false
   layout: 'full'
 </route>

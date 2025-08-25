@@ -940,6 +940,7 @@ export default {
 <route lang="yaml">
 meta:
   title: '首頁'
+  description: '迷因典 MemeDam：探索最新熱門迷因、精選內容、每日抽迷因與活躍創作者，立即加入分享與互動！'
   login: ''
   admin: false
 </route>

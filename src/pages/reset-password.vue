@@ -228,6 +228,7 @@ const onSubmit = async () => {
 <route lang="yaml">
 meta:
   title: '重設密碼'
+  description: '設定新密碼以完成重設流程，請妥善保存您的帳號資訊。'
   admin: false
   layout: 'full'
 </route>

@@ -1682,6 +1682,7 @@ export default {
 <route lang="yaml">
 meta:
   title: '迷因詳情'
+  description: '閱讀迷因的標題、內容、標籤與互動統計，查看相關迷因並參與討論。'
   login: ''
   admin: false
 </route>

@@ -513,6 +513,7 @@ onMounted(async () => {
 <route lang="yaml">
 meta:
   title: '最新迷因'
+  description: '依時間排序的最新迷因清單，隨時掌握最新上架與即時推薦內容。'
   login: ''
   admin: false
 </route>

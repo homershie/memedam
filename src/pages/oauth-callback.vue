@@ -462,6 +462,7 @@ onMounted(() => {
 <route lang="yaml">
 meta:
   title: 'OAuth 授權處理'
+  description: '處理第三方登入授權的回呼流程，請稍候自動跳轉。'
   admin: false
   layout: 'full'
 </route>

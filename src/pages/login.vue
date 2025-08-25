@@ -660,6 +660,7 @@ const handleTabChange = (newTab) => {
 <route lang="yaml">
 meta:
   title: '登入'
+  description: '登入或註冊迷因典帳號，享受上傳迷因、按讚留言與個人化推薦等完整功能。'
   admin: false
   layout: 'full'
 </route>

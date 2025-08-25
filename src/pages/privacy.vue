@@ -228,6 +228,7 @@ const lastUpdated = ref('2025年9月')
 <route lang="yaml">
 meta:
   title: '隱私政策 - 迷因典'
+  description: '了解迷因典如何收集、使用與保護您的個人資料，以及您的隱私權利與選項。'
   login: false
   admin: false
 </route>

@@ -210,6 +210,7 @@ const lastUpdated = ref('2025年9月')
 <route lang="yaml">
 meta:
   title: '資料主體存取請求 - 迷因典'
+  description: '依 GDPR 等隱私法提交資料存取、下載、刪除或更正請求的流程與說明。'
   login: false
   admin: false
 </route>
