@@ -366,3 +366,10 @@ const getPrioritySeverity = (priority) => {
   color: #d1d5db;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  title: '公告詳情'
+  login: ''
+  admin: false
+</route>

@@ -24,7 +24,7 @@ https://memedam.com/* https://www.memedam.com/:splat 301!
 # API 路由處理（如果後端在不同位置）
 /api/* https://your-backend-domain.com/api/:splat 200
 
-# 處理沒有副檔名的檔案（SPA 路由）
+# SPA 路由處理（單一規則即可）
 /*    /index.html   200
 
 # 特定檔案的快取控制
@@ -51,6 +51,4 @@ https://memedam.com/* https://www.memedam.com/:splat 301!
 /*.woff  /:splat.woff  200
   Cache-Control: public, max-age=31536000, immutable
 
-# 404 錯誤頁面
-# 將未知路由交給 SPA（/index.html）以避免 404 被誤判為導向錯誤
-/*    /index.html   200
+# 404 交由 SPA，避免重複規則

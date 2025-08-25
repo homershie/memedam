@@ -136,6 +136,7 @@ const setup404SEO = () => {
     title: '404 - 頁面不存在',
     description: '抱歉，您訪問的頁面不存在。返回首頁或瀏覽其他內容。',
     canonical: `${window.location.origin}/404`,
+    robots: 'noindex, nofollow',
     openGraph: {
       title: '404 - 頁面不存在 | 迷因典 MemeDam',
       description: '抱歉，您訪問的頁面不存在。返回首頁或瀏覽其他內容。',

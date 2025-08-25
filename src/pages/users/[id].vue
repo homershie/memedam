@@ -1031,3 +1031,10 @@ watch(
   border-color: transparent !important;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  title: '用戶檔案'
+  login: ''
+  admin: false
+</route>

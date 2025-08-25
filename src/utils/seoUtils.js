@@ -13,7 +13,7 @@ import { ref, nextTick } from 'vue'
  * @param {string} meta.canonical - 標準網址
  * @param {Object} meta.openGraph - Open Graph 資訊
  */
-export function setPageMeta({ title, description, canonical, openGraph = {} }) {
+export function setPageMeta({ title, description, canonical, openGraph = {}, robots }) {
   // 設定頁面標題
   if (title) {
     document.title = `${title} | 迷因典 MemeDam`
@@ -25,6 +25,11 @@ export function setPageMeta({ title, description, canonical, openGraph = {} }) {
   // 設定基本 meta 標籤
   if (description) {
     addMetaTag('name', 'description', description)
+  }
+
+  // 設定 robots（可選）
+  if (robots) {
+    addMetaTag('name', 'robots', robots)
   }
 
   // 設定 canonical 標籤
