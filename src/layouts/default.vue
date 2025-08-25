@@ -534,7 +534,7 @@ const menuList = [
   { label: '首頁', icon: 'pi pi-home', route: '/' },
   { label: '關於迷因典', icon: 'pi pi-info-circle', route: '/about' },
   { label: '聯絡迷因長', icon: 'pi pi-envelope', route: '/contact' },
-  { label: '贊助飲料', icon: 'pi pi-gift', route: '/donate' },
+  { label: '抖內贊助', icon: 'pi pi-gift', route: '/donate' },
   { separator: true },
   { label: '探索' },
   { label: '所有迷因', icon: 'pi pi-list', route: '/memes/all' },

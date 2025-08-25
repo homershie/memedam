@@ -322,7 +322,7 @@ export default {
 
 <route lang="yaml">
 meta:
-  title: '請站長喝飲料'
+  title: '抖內贊助'
   login: ''
   admin: false
 </route>
