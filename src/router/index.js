@@ -76,11 +76,11 @@ router.afterEach((to) => {
 
     setPageMeta({
       title: to.meta?.title || baseTitle,
-      description: undefined,
+      description: to.meta?.description,
       canonical,
       openGraph: {
         title: pageTitle,
-        description: undefined,
+        description: to.meta?.description,
         url: canonical,
         image: `${window.location.origin}/favicon/apple-touch-icon.png`,
       },

@@ -514,6 +514,7 @@ onMounted(async () => {
 <route lang="yaml">
 meta:
   title: '近期話題'
+  description: '結合熱門趨勢與社交信號的話題迷因，一次看懂近期流行梗。'
   login: ''
   admin: false
 </route>

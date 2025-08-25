@@ -282,6 +282,7 @@ const lastUpdated = ref('2025年9月')
 <route lang="yaml">
 meta:
   title: '服務條款 - 迷因典'
+  description: '閱讀迷因典的使用規範、內容授權、帳號安全與權利義務，保障雙方權益。'
   login: false
   admin: false
 </route>

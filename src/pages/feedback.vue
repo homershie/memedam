@@ -403,6 +403,7 @@ const submitFeedback = async () => {
 <route lang="yaml">
 meta:
   title: '提供意見'
+  description: '提交建議、錯誤回報或功能需求，您的回饋能幫助迷因典持續變好。'
   login: true
   admin: false
 </route>

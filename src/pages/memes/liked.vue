@@ -506,6 +506,7 @@ onMounted(async () => {
 <route lang="yaml">
 meta:
   title: '大家都在看'
+  description: '基於熱門趨勢與個人化信號的推薦迷因，發現全站都在看的內容。'
   login: ''
   admin: false
 </route>

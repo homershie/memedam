@@ -202,6 +202,7 @@ const lastUpdated = ref('2025年9月')
 <route lang="yaml">
 meta:
   title: 'DMCA 下架程序 - 迷因典'
+  description: '瞭解如何提交 DMCA 侵權通知與反通知，以及平台處理流程與聯絡方式。'
   login: false
   admin: false
 </route>

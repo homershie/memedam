@@ -247,6 +247,7 @@ export default {
 <route lang="yaml">
 meta:
   title: '關於迷因典'
+  description: '認識迷因典的理念、價值與故事：以幽默、開放與自由打造中文迷因的理想鄉。'
   login: ''
   admin: false
 </route>

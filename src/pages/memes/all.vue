@@ -718,6 +718,7 @@ onMounted(async () => {
 <route lang="yaml">
 meta:
   title: '所有迷因'
+  description: '瀏覽所有迷因內容與熱門標籤，支援搜尋與標籤篩選，發現你喜歡的梗。'
   login: ''
   admin: false
 </route>

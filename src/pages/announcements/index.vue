@@ -73,6 +73,7 @@ const getTypeSeverity = (type) => ({ general: 'info', maintenance: 'warning', up
 <route lang="yaml">
 meta:
   title: '公告列表'
+  description: '瀏覽迷因典的重要公告、系統維護與功能更新，一次掌握最新動態。'
   login: ''
   admin: false
 </route>

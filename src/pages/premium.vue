@@ -404,6 +404,7 @@ onMounted(() => {
 meta:
   title: '成為付費會員'
   layout: 'full'
+  description: '加入迷因典頂級會員，每月 NT$100，獲得 VIP 徽章、功能搶先體驗與限定活動。'
   login: ''
   admin: false
 </route>

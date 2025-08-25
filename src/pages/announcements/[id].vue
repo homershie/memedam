@@ -370,6 +370,7 @@ const getPrioritySeverity = (priority) => {
 <route lang="yaml">
 meta:
   title: '公告詳情'
+  description: '查看公告詳細內容、發布時間與相關公告，掌握平台最新訊息。'
   login: ''
   admin: false
 </route>

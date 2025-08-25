@@ -856,6 +856,7 @@ const handleSubmit = async () => {
 <route lang="yaml">
 meta:
   title: '投稿迷因'
+  description: '上傳圖片、影片或純文字迷因，搭配標籤與介紹，分享你的創意。'
   login: required
   admin: false
 </route>

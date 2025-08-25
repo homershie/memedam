@@ -481,6 +481,7 @@ onMounted(async () => {
 <route lang="yaml">
 meta:
   title: '熱門迷因'
+  description: '以社群熱度與互動信號排序的熱門迷因，快速掌握現在最夯的梗。'
   login: ''
   admin: false
 </route>

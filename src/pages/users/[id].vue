@@ -1035,6 +1035,7 @@ watch(
 <route lang="yaml">
 meta:
   title: '用戶檔案'
+  description: '查看用戶的頭像、簡介、貼文、收藏與互動資訊，探索創作者的迷因作品。'
   login: ''
   admin: false
 </route>
