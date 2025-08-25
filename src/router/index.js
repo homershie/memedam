@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import routes from 'virtual:generated-pages'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { useUserStore } from '@/stores/userStore'
+import { setPageMeta, cleanUrlParams } from '@/utils/seoUtils'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,10 +43,50 @@ router.beforeEach((to, from, next) => {
 })
 
 router.afterEach((to) => {
-  if (to.meta && to.meta.title) {
-    document.title = to.meta.title + ' | 迷因典 MemeDam'
-  } else {
-    document.title = '迷因典 MemeDam'
+  const baseTitle = '迷因典 MemeDam'
+  const pageTitle = to.meta && to.meta.title ? `${to.meta.title} | ${baseTitle}` : baseTitle
+  document.title = pageTitle
+
+  // 根據當前路由自動設定 canonical 與基本 Open Graph
+  try {
+    const rawQuery = to.query || {}
+    const cleaned = cleanUrlParams(rawQuery)
+
+    const url = new URL(window.location.origin + to.path)
+    const searchParams = new URLSearchParams()
+    Object.keys(cleaned).forEach((key) => {
+      const value = cleaned[key]
+      if (
+        value !== null &&
+        value !== undefined &&
+        value !== '' &&
+        !(Array.isArray(value) && value.length === 0)
+      ) {
+        if (Array.isArray(value)) {
+          value.forEach((v) => searchParams.append(key, v))
+        } else {
+          searchParams.set(key, value)
+        }
+      }
+    })
+
+    const canonical = searchParams.toString()
+      ? `${url.origin}${url.pathname}?${searchParams.toString()}`
+      : `${url.origin}${url.pathname}`
+
+    setPageMeta({
+      title: to.meta?.title || baseTitle,
+      description: undefined,
+      canonical,
+      openGraph: {
+        title: pageTitle,
+        description: undefined,
+        url: canonical,
+        image: `${window.location.origin}/favicon/apple-touch-icon.png`,
+      },
+    })
+  } catch (e) {
+    // 靜默處理 SEO 設定錯誤，避免影響導航
   }
 })
 

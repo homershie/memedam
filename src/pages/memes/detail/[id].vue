@@ -1679,6 +1679,13 @@ export default {
 }
 </script>
 
+<route lang="yaml">
+meta:
+  title: '迷因詳情'
+  login: ''
+  admin: false
+</route>
+
 <style scoped>
 .prose {
   max-width: none;
