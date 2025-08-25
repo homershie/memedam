@@ -164,7 +164,8 @@
 
           <!-- 成為付費會員按鈕 -->
           <Button
-            label="成為付費會員"
+            v-if="!isVipUser"
+            label="成為頂級會員"
             class="text-white rounded-lg hidden lg:inline-flex"
             @click="$router.push('/premium')"
           />
