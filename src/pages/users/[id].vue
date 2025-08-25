@@ -386,21 +386,6 @@ import likeService from '@/services/likeService'
 import followService from '@/services/followService'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 
-/*
- * feat: implement comprehensive "About" tab for user profile page
- * - Add dedicated "About" tab content displaying user basic information instead of memes
- * - Implement three information cards: basic profile data, self-introduction, and statistics
- * - Add helper functions for data formatting (gender, birthday, date-only display)
- * - Improve responsive design with better breakpoint handling (xl instead of lg)
- * - Enhance tab switching logic to load appropriate data for each tab
- * - Add conditional search/sort display (hidden on "About" tab)
- * - Fix field name from lastLoginAt to last_login_at for last login time
- * - Optimize loading states with skeleton screens for better UX
- *
- * The "About" tab now provides a comprehensive view of user information in a clean,
- * card-based layout with proper dark mode support and responsive design.
- */
-
 // 組件名稱 (修復linter錯誤)
 defineOptions({
   name: 'UserProfile',

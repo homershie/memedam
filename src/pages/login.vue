@@ -1,7 +1,7 @@
 <template>
-  <div class="px-4 pt-6 flex justify-center w-full h-fit scroll-">
+  <div class="px-4 pt-6 flex justify-center">
     <!-- 主要內容區域 -->
-    <div class="flex flex-col w-full max-w-md">
+    <div class="flex flex-col w-full max-w-md mb-10">
       <!-- 導航標籤 -->
       <div class="flex justify-center mb-8 gap-8">
         <button

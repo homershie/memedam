@@ -1,11 +1,11 @@
 <!-- content -->
 <template>
-  <div class="full-layout">
+  <div class="relative top-0 left-0 min-h-screen h-auto w-full">
     <!-- Logo 區域 -->
     <div
-      class="m-0 py-3 logo-section w-full h-auto absolute top-0 left-0 flex items-center justify-center lg:justify-start lg:ms-20"
+      class="m-0 py-3 w-full h-20 fixed top-0 left-0 flex z-50 bg-surface-0 dark:bg-surface-900 box-border border-b border-surface-200 dark:border-surface-700 items-center justify-center lg:justify-start"
     >
-      <router-link to="/" class="logo-link">
+      <router-link to="/" class="logo-link ms-3 lg:ms-20">
         <img
           src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756045061/memedam-f-bw-light_ne9fhd.png"
           alt="MemeDam"
@@ -21,22 +21,13 @@
       </router-link>
     </div>
     <!-- slot for page content -->
-    <router-view />
+    <router-view
+      class="relative w-full h-[calc(100vh-80px)] top-20 left-0 overflow-y-auto"
+    />
   </div>
 </template>
 
 <style scoped lang="scss">
-.full-layout {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
-  position: relative;
-  padding-top: 60px;
-}
-
 /* Logo 在深色模式下的顏色轉換 */
 .logo-link svg {
   transition: filter 0.3s ease;

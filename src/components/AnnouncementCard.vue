@@ -1,5 +1,9 @@
 <template>
-  <Card class="w-full announcement-card" @click="toggleExpanded">
+  <Card
+    v-if="announcement && announcement.title"
+    class="w-full announcement-card"
+    @click="toggleExpanded"
+  >
     <template #header>
       <div
         class="h-60 flex items-center justify-center cursor-pointer overflow-hidden rounded-t-lg"
@@ -12,8 +16,9 @@
         <img
           v-if="announcement.image"
           :src="announcement.image"
-          :alt="announcement.title"
+          :alt="announcement.title || '公告圖片'"
           class="w-full h-full object-cover"
+          @error="handleImageError"
         />
         <div v-else class="text-center">
           <i class="pi pi-bullhorn text-4xl text-indigo-500 mb-2"></i>
@@ -24,7 +29,7 @@
     <template #content>
       <div class="mb-2 flex justify-between items-start">
         <h4 class="mb-1 text-lg font-semibold text-gray-800 line-clamp-2">
-          {{ announcement.title }}
+          {{ announcement.title || '無標題公告' }}
         </h4>
         <Tag
           :value="getCategoryLabel(announcement.category)"
@@ -35,7 +40,7 @@
       <p class="mb-3 text-gray-600" :class="expanded ? '' : 'line-clamp-3'">
         {{
           expanded
-            ? announcement.content
+            ? announcement.content || '無內容'
             : getContentPreview(announcement.content)
         }}
       </p>
@@ -70,10 +75,12 @@ import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 
-const props = defineProps({
+// 定義 props
+defineProps({
   announcement: {
     type: Object,
     required: true,
+    default: () => ({}),
   },
 })
 
@@ -81,6 +88,12 @@ const expanded = ref(false)
 
 const toggleExpanded = () => {
   expanded.value = !expanded.value
+}
+
+// 處理圖片載入錯誤
+const handleImageError = (event) => {
+  event.target.style.display = 'none'
+  event.target.nextElementSibling.style.display = 'block'
 }
 
 // 取得分類標籤文字
@@ -107,7 +120,7 @@ const getCategorySeverity = (category) => {
 
 // 取得內容預覽（限制字數）
 const getContentPreview = (content) => {
-  if (!content) return ''
+  if (!content) return '無內容'
   // 移除HTML標籤
   const plainText = content.replace(/<[^>]*>/g, '')
   // 限制在100字以內
@@ -118,20 +131,27 @@ const getContentPreview = (content) => {
 
 // 格式化日期
 const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffTime = Math.abs(now - date)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  if (!dateString) return '未知時間'
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return '未知時間'
 
-  if (diffDays === 1) {
-    return '今天'
-  } else if (diffDays === 2) {
-    return '昨天'
-  } else if (diffDays <= 7) {
-    return `${diffDays - 1}天前`
-  } else {
-    return date.toLocaleDateString('zh-TW')
+    const now = new Date()
+    const diffTime = Math.abs(now - date)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 1) {
+      return '今天'
+    } else if (diffDays === 2) {
+      return '昨天'
+    } else if (diffDays <= 7) {
+      return `${diffDays - 1}天前`
+    } else {
+      return date.toLocaleDateString('zh-TW')
+    }
+  } catch (error) {
+    console.error('日期格式化錯誤:', error)
+    return '未知時間'
   }
 }
 </script>
