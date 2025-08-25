@@ -3,7 +3,7 @@
   <div class="relative top-0 left-0 min-h-screen h-auto w-full">
     <!-- Logo 區域 -->
     <div
-      class="m-0 py-3 w-full h-20 fixed top-0 left-0 flex z-50 bg-surface-0 dark:bg-surface-900 box-border border-b border-surface-200 dark:border-surface-700 items-center justify-center lg:justify-start"
+      class="m-0 py-3 w-full h-20 absolute top-0 left-0 flex bg-surface-0 dark:bg-[oklch(0.145_0_0)] z-50 items-center justify-center lg:justify-start"
     >
       <router-link to="/" class="logo-link ms-3 lg:ms-20">
         <img
