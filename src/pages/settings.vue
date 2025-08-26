@@ -583,6 +583,69 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- 封面圖片 -->
+                <div class="space-y-4 mt-10">
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                    封面圖片
+                  </h3>
+                  <div class="space-y-4">
+                    <!-- 封面圖片預覽 -->
+                    <div class="relative group">
+                      <div
+                        class="w-full h-48 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden"
+                      >
+                        <img
+                          :src="
+                            userProfile.cover_image ||
+                            'https://res.cloudinary.com/dkhexh4fp/image/upload/v1755748262/announcements/ftwo79lbkiwcp0m2ov3n.jpg'
+                          "
+                          alt="封面圖片"
+                          class="w-full h-full object-cover"
+                        />
+                      </div>
+                      <!-- Hover 覆蓋層 - 編輯按鈕 -->
+                      <div
+                        class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      >
+                        <Button
+                          icon="pi pi-camera"
+                          severity="secondary"
+                          size="small"
+                          class="w-10 h-10 rounded-full shadow-lg"
+                          @click="$refs.coverImageInput.click()"
+                          aria-label="上傳封面圖片"
+                        />
+                      </div>
+                      <!-- Hover 覆蓋層 - 移除按鈕 -->
+                      <div
+                        v-if="userProfile.cover_image"
+                        class="absolute top-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      >
+                        <Button
+                          icon="pi pi-trash"
+                          severity="danger"
+                          size="small"
+                          class="w-10 h-10 rounded-full shadow-lg"
+                          @click="removeCoverImage"
+                          aria-label="移除封面圖片"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">
+                        支援 JPG、PNG 格式，最大 5MB，建議尺寸 1920x242 像素
+                      </p>
+                      <input
+                        ref="coverImageInput"
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="handleCoverImageChange"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <h3 class="mt-10">個人資料</h3>
 
                 <!-- 基本資訊 -->
@@ -1599,6 +1662,10 @@ const isResendingVerification = ref(false)
 // 暫存的頭像檔案
 const tempAvatarFile = ref(null)
 
+// 封面圖片相關
+const coverImageInput = ref(null)
+const isUploadingCoverImage = ref(false)
+
 // 密碼表單
 const passwordForm = reactive({
   currentPassword: '',
@@ -1848,6 +1915,8 @@ const loadUserProfile = async () => {
       displayName: userData.display_name || userData.displayName || '',
       // 使用自定義頭像
       avatar: userData.avatar || userData.avatarUrl || null,
+      // 封面圖片
+      cover_image: userData.cover_image || null,
       gender: userData.gender || '',
       birthday: userData.birthday ? new Date(userData.birthday) : null,
       bio: userData.bio || '',
@@ -2530,6 +2599,11 @@ const updateProfile = async () => {
       tempAvatarFile.value = null
     }
 
+    // 如果有封面圖片變更，加入更新資料
+    if (userProfile.cover_image !== undefined) {
+      updateData.cover_image = userProfile.cover_image
+    }
+
     // 呼叫 API 更新個人資料
     const response = await userService.updateMe(updateData)
 
@@ -3003,6 +3077,95 @@ const handleAvatarChange = async (event) => {
         life: 3000,
       })
     }
+  }
+}
+
+// 處理封面圖片變更
+const handleCoverImageChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    // 檢查檔案大小 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '封面圖片大小不能超過 5MB',
+        life: 3000,
+      })
+      return
+    }
+
+    // 檢查檔案類型
+    if (!file.type.startsWith('image/')) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '只能上傳圖片檔案',
+        life: 3000,
+      })
+      return
+    }
+
+    isUploadingCoverImage.value = true
+
+    // 上傳封面圖片
+    const response = await userService.uploadCoverImage(file)
+
+    if (response.data.success) {
+      // 更新用戶資料中的封面圖片
+      userProfile.cover_image = response.data.url
+
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '封面圖片已更新',
+        life: 3000,
+      })
+    }
+  } catch (error) {
+    console.error('封面圖片上傳失敗:', error)
+    const errorMessage = error.response?.data?.message || '封面圖片上傳失敗'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    isUploadingCoverImage.value = false
+    // 清空 input 值，允許重複上傳相同檔案
+    event.target.value = ''
+  }
+}
+
+// 移除封面圖片
+const removeCoverImage = async () => {
+  try {
+    // 立即呼叫 API 移除封面圖片
+    await userService.updateMe({
+      cover_image: null,
+    })
+
+    // 更新封面圖片顯示
+    userProfile.cover_image = null
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '封面圖片已移除',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('封面圖片移除失敗:', error)
+    const errorMessage = error.response?.data?.message || '封面圖片移除失敗'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
   }
 }
 

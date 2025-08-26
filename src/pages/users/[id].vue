@@ -1,12 +1,47 @@
 <template>
   <div class="w-full relative">
     <!-- 背景圖片 -->
-    <div class="w-full z-0 relative top-0 left-0 h-60">
+    <div class="w-full z-0 relative top-0 left-0 h-60 group">
       <img
-        src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1755748262/announcements/ftwo79lbkiwcp0m2ov3n.jpg"
+        :src="
+          userProfile?.cover_image ||
+          'https://res.cloudinary.com/dkhexh4fp/image/upload/v1755748262/announcements/ftwo79lbkiwcp0m2ov3n.jpg'
+        "
         alt="banner"
         class="w-full h-full object-cover rounded-b-2xl"
       />
+      <!-- 編輯按鈕 - 只有當前用戶才能看到 -->
+      <div
+        v-if="isCurrentUser"
+        class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+      >
+        <Button
+          icon="pi pi-camera"
+          severity="secondary"
+          size="small"
+          class="w-10 h-10 rounded-full shadow-lg"
+          @click="$refs.coverImageInput.click()"
+          aria-label="編輯封面圖片"
+          title="建議尺寸：1920x242 像素"
+        />
+        <input
+          ref="coverImageInput"
+          type="file"
+          accept="image/*"
+          class="hidden"
+          @change="handleCoverImageChange"
+        />
+      </div>
+
+      <!-- 尺寸提示 - 只有當前用戶才能看到 -->
+      <div
+        v-if="isCurrentUser"
+        class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+      >
+        <div class="bg-black/70 text-white text-xs px-2 py-1 rounded">
+          建議尺寸：1920x242 像素
+        </div>
+      </div>
     </div>
 
     <!-- 內容區域 -->
@@ -406,6 +441,10 @@ const searchQuery = ref('')
 const sortOrder = ref('comprehensive')
 const activeTab = ref('posts')
 
+// 封面圖片相關
+const coverImageInput = ref(null)
+const isUploadingCoverImage = ref(false)
+
 // 用戶資訊快取，避免重複載入相同用戶的資訊
 const userCache = ref(new Map())
 
@@ -481,6 +520,14 @@ const sortOptions = computed(() => {
 // 計算屬性
 const userId = computed(() => route.params.id)
 
+// 判斷是否為當前用戶
+const isCurrentUser = computed(() => {
+  // 這裡需要從 store 或 localStorage 獲取當前用戶 ID
+  // 暫時使用 localStorage 中的用戶 ID
+  const currentUserId = localStorage.getItem('userId')
+  return currentUserId === userId.value
+})
+
 const filteredMemes = computed(() => {
   // 直接返回 memes，因為搜尋和排序現在由後端處理
   return memes.value
@@ -510,6 +557,66 @@ const loadUserProfile = async () => {
       avatar: null,
       bio: '',
     }
+  }
+}
+
+// 處理封面圖片變更
+const handleCoverImageChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    // 檢查檔案大小 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '封面圖片大小不能超過 5MB',
+        life: 3000,
+      })
+      return
+    }
+
+    // 檢查檔案類型
+    if (!file.type.startsWith('image/')) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '只能上傳圖片檔案',
+        life: 3000,
+      })
+      return
+    }
+
+    isUploadingCoverImage.value = true
+
+    // 上傳封面圖片
+    const response = await userService.uploadCoverImage(file)
+
+    if (response.data.success) {
+      // 更新用戶資料中的封面圖片
+      userProfile.value.cover_image = response.data.url
+
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '封面圖片已更新',
+        life: 3000,
+      })
+    }
+  } catch (error) {
+    console.error('封面圖片上傳失敗:', error)
+    const errorMessage = error.response?.data?.message || '封面圖片上傳失敗'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    isUploadingCoverImage.value = false
+    // 清空 input 值，允許重複上傳相同檔案
+    event.target.value = ''
   }
 }
 
