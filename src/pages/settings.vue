@@ -527,7 +527,7 @@
                   <div class="flex items-center space-x-4">
                     <div class="relative group">
                       <Avatar
-                        :image="userProfile.avatar"
+                        :image="userProfile.avatarUrl || userProfile.avatar"
                         shape="circle"
                         size="xlarge"
                         class="border-2 border-gray-200 dark:border-gray-600"

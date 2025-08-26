@@ -52,7 +52,7 @@
           <!-- 用戶頭像 -->
           <div>
             <Avatar
-              :image="userProfile?.avatar"
+              :image="userProfile?.avatarUrl || userProfile?.avatar"
               shape="circle"
               size="xlarge"
               class="border-3 border-surface-200 w-28 h-28"
@@ -461,7 +461,7 @@ const loadUserInfo = async (authorId) => {
       _id: userProfile.value._id || userId.value,
       username: userProfile.value.username || 'unknown',
       display_name: userProfile.value.display_name || '未知用戶',
-      avatar: userProfile.value.avatar || null,
+      avatar: userProfile.value.avatarUrl || userProfile.value.avatar || null,
     }
     userCache.value.set(authorId, userInfo)
     return userInfo
@@ -700,7 +700,8 @@ const loadUserMemes = async (reset = false) => {
           _id: userProfile.value?._id || userId.value,
           username: userProfile.value?.username || 'unknown',
           display_name: userProfile.value?.display_name || '未知用戶',
-          avatar: userProfile.value?.avatar || null,
+          avatar:
+            userProfile.value?.avatarUrl || userProfile.value?.avatar || null,
         }
         return meme
       })
@@ -1141,8 +1142,8 @@ watch(
 
 <route lang="yaml">
 meta:
-  title: '用戶檔案'
-  description: '查看用戶的頭像、簡介、貼文、收藏與互動資訊，探索創作者的迷因作品。'
+  title: '使用者檔案'
+  description: '查看使用者的頭像、簡介、貼文、收藏與互動資訊，探索創作者的迷因作品。'
   login: ''
   admin: false
 </route>

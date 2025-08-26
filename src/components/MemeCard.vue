@@ -8,7 +8,7 @@
       <div class="flex items-center justify-between p-4 pb-0">
         <div class="flex items-center space-x-3">
           <Avatar
-            :image="meme.author?.avatar"
+            :image="meme.author?.avatarUrl || meme.author?.avatar"
             shape="circle"
             size="large"
             class="border-2 border-gray-200"

@@ -220,7 +220,7 @@
             <template #header>
               <div class="flex items-center gap-2 py-2">
                 <Avatar
-                  :image="user.avatar"
+                  :image="user.avatarUrl || user.avatar"
                   shape="circle"
                   size="large"
                   :data-user-id="user._id"

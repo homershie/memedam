@@ -22,7 +22,7 @@
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-3">
         <Avatar
-          :image="getUserInfo(comment).avatar"
+          :image="getUserInfo(comment).avatarUrl || getUserInfo(comment).avatar"
           shape="circle"
           size="normal"
           class="border border-gray-200"
