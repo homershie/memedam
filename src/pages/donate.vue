@@ -297,11 +297,20 @@ const toast = useToast()
 
 // 處理贊助功能
 const handleDonate = (amount) => {
-  // 這裡可以整合金流系統
+  // 取得當前用戶ID（如果已登入）
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+  const userId = currentUser._id || 'anonymous'
+
+  // 建立 Buy Me a Coffee 贊助連結
+  const buyMeACoffeeUrl = `https://www.buymeacoffee.com/memedam?amount=${amount}&user_id=${userId}`
+
+  // 開啟新視窗進行贊助
+  window.open(buyMeACoffeeUrl, '_blank', 'width=500,height=600')
+
   toast.add({
     severity: 'info',
     summary: '贊助功能',
-    detail: `感謝您的贊助！金額：${amount} 元。此功能正在開發中，敬請期待。`,
+    detail: `正在開啟 Buy Me a Coffee 贊助頁面，金額：${amount} 元。`,
     life: 3000,
   })
 }

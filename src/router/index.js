@@ -3,6 +3,11 @@ import routes from 'virtual:generated-pages'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { useUserStore } from '@/stores/userStore'
 import { setPageMeta, cleanUrlParams } from '@/utils/seoUtils'
+import {
+  validateSponsorTransaction,
+  logSponsorPageAccess,
+  SPONSOR_VALIDATION_STATUS,
+} from '@/utils/sponsorValidation'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,7 +15,7 @@ const router = createRouter({
 })
 
 // 路由守衛
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
   console.log('路由守衛檢查:', {
@@ -37,6 +42,64 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // 贊助成功頁面驗證
+  if (to.path === '/sponsor/success') {
+    const transactionId = to.query.transaction_id
+
+    // 記錄訪問嘗試
+    logSponsorPageAccess('success', transactionId)
+
+    if (!transactionId) {
+      console.log('贊助成功頁面缺少交易ID，重定向到贊助頁面')
+      next('/donate')
+      return
+    }
+
+    try {
+      // 使用驗證工具驗證交易
+      const validation = await validateSponsorTransaction(transactionId)
+
+      switch (validation.status) {
+        case SPONSOR_VALIDATION_STATUS.VALID:
+          console.log('贊助成功頁面驗證通過')
+          break
+
+        case SPONSOR_VALIDATION_STATUS.PENDING:
+          console.log('贊助尚未完成，重定向到錯誤頁面')
+          next(
+            `/sponsor/error?message=${encodeURIComponent(validation.message)}`,
+          )
+          return
+
+        case SPONSOR_VALIDATION_STATUS.INVALID:
+          console.log('交易驗證失敗，重定向到贊助頁面')
+          next('/donate')
+          return
+
+        case SPONSOR_VALIDATION_STATUS.ERROR:
+          console.log('驗證過程中發生錯誤，重定向到贊助頁面')
+          next('/donate')
+          return
+
+        default:
+          console.log('未知驗證狀態，重定向到贊助頁面')
+          next('/donate')
+          return
+      }
+    } catch (error) {
+      console.error('驗證贊助交易時發生錯誤:', error)
+      next('/donate')
+      return
+    }
+  }
+
+  // 贊助錯誤頁面驗證
+  if (to.path === '/sponsor/error') {
+    const message = to.query.message
+    logSponsorPageAccess('error', null, message)
+    console.log('訪問贊助錯誤頁面')
+  }
+
   // 其他情況正常通過
   console.log('路由守衛通過')
   next()
@@ -44,7 +107,8 @@ router.beforeEach((to, from, next) => {
 
 router.afterEach((to) => {
   const baseTitle = '迷因典 MemeDam'
-  const pageTitle = to.meta && to.meta.title ? `${to.meta.title} | ${baseTitle}` : baseTitle
+  const pageTitle =
+    to.meta && to.meta.title ? `${to.meta.title} | ${baseTitle}` : baseTitle
   document.title = pageTitle
 
   // 根據當前路由自動設定 canonical 與基本 Open Graph
