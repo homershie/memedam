@@ -606,15 +606,12 @@
                       </div>
                       <!-- Hover 覆蓋層 - 編輯按鈕 -->
                       <div
-                        class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        class="absolute cursor-pointer inset-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent opacity-0 transition-all duration-500 ease-out group-hover:opacity-100 rounded-lg"
+                        @click="$refs.coverImageInput.click()"
+                        aria-label="編輯封面圖片"
                       >
-                        <Button
-                          icon="pi pi-camera"
-                          severity="secondary"
-                          size="small"
-                          class="w-10 h-10 rounded-full shadow-lg"
-                          @click="$refs.coverImageInput.click()"
-                          aria-label="上傳封面圖片"
+                        <i
+                          class="pi pi-pen-to-square rounded-full text-lg text-white absolute top-4 right-4"
                         />
                       </div>
                       <!-- Hover 覆蓋層 - 移除按鈕 -->

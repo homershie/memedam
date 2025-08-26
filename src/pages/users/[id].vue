@@ -13,16 +13,12 @@
       <!-- 編輯按鈕 - 只有當前用戶才能看到 -->
       <div
         v-if="isCurrentUser"
-        class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        class="absolute cursor-pointer inset-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent opacity-0 transition-all duration-300 ease-out group-hover:opacity-100 rounded-b-2xl"
+        @click="$refs.coverImageInput.click()"
+        aria-label="編輯封面圖片"
       >
-        <Button
-          icon="pi pi-camera"
-          severity="secondary"
-          size="small"
-          class="w-10 h-10 rounded-full shadow-lg"
-          @click="$refs.coverImageInput.click()"
-          aria-label="編輯封面圖片"
-          title="建議尺寸：1920x242 像素"
+        <i
+          class="pi pi-pen-to-square rounded-full text-lg text-white absolute top-4 right-4"
         />
         <input
           ref="coverImageInput"
@@ -50,12 +46,30 @@
       <div class="mx-auto">
         <div class="flex flex-col items-center gap-8">
           <!-- 用戶頭像 -->
-          <div>
+          <div class="relative group">
             <Avatar
               :image="userProfile?.avatarUrl || userProfile?.avatar"
               shape="circle"
               size="xlarge"
               class="border-3 border-surface-200 w-28 h-28"
+            />
+            <!-- 編輯按鈕 - 只有當前用戶才能看到 -->
+            <div
+              v-if="isCurrentUser"
+              class="absolute cursor-pointer inset-0 bg-black/70 to-transparent opacity-0 transition-all duration-300 ease-out group-hover:opacity-100 rounded-full"
+              @click="$refs.avatarInput.click()"
+              aria-label="編輯頭像"
+            >
+              <i
+                class="pi pi-pen-to-square rounded-full text-lg text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              />
+            </div>
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleAvatarChange"
             />
           </div>
 
@@ -420,6 +434,7 @@ import collectionService from '@/services/collectionService'
 import likeService from '@/services/likeService'
 import followService from '@/services/followService'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
+import { useUserStore } from '@/stores/userStore'
 
 // 組件名稱 (修復linter錯誤)
 defineOptions({
@@ -429,6 +444,7 @@ defineOptions({
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const userStore = useUserStore()
 
 // 響應式數據
 const userProfile = ref(null)
@@ -444,6 +460,10 @@ const activeTab = ref('posts')
 // 封面圖片相關
 const coverImageInput = ref(null)
 const isUploadingCoverImage = ref(false)
+
+// 頭像相關
+const avatarInput = ref(null)
+const isUploadingAvatar = ref(false)
 
 // 用戶資訊快取，避免重複載入相同用戶的資訊
 const userCache = ref(new Map())
@@ -522,10 +542,8 @@ const userId = computed(() => route.params.id)
 
 // 判斷是否為當前用戶
 const isCurrentUser = computed(() => {
-  // 這裡需要從 store 或 localStorage 獲取當前用戶 ID
-  // 暫時使用 localStorage 中的用戶 ID
-  const currentUserId = localStorage.getItem('userId')
-  return currentUserId === userId.value
+  // 使用 Pinia store 中的用戶 ID
+  return userStore.userId === userId.value
 })
 
 const filteredMemes = computed(() => {
@@ -615,6 +633,67 @@ const handleCoverImageChange = async (event) => {
     })
   } finally {
     isUploadingCoverImage.value = false
+    // 清空 input 值，允許重複上傳相同檔案
+    event.target.value = ''
+  }
+}
+
+// 處理頭像變更
+const handleAvatarChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    // 檢查檔案大小 (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '頭像大小不能超過 2MB',
+        life: 3000,
+      })
+      return
+    }
+
+    // 檢查檔案類型
+    if (!file.type.startsWith('image/')) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '只能上傳圖片檔案',
+        life: 3000,
+      })
+      return
+    }
+
+    isUploadingAvatar.value = true
+
+    // 上傳頭像
+    const response = await userService.uploadAvatar(file)
+
+    if (response.data.success) {
+      // 更新用戶資料中的頭像
+      userProfile.value.avatarUrl = response.data.url
+      userProfile.value.avatar = response.data.url
+
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '頭像已更新',
+        life: 3000,
+      })
+    }
+  } catch (error) {
+    console.error('頭像上傳失敗:', error)
+    const errorMessage = error.response?.data?.message || '頭像上傳失敗'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
+  } finally {
+    isUploadingAvatar.value = false
     // 清空 input 值，允許重複上傳相同檔案
     event.target.value = ''
   }
@@ -1142,8 +1221,8 @@ watch(
 
 <route lang="yaml">
 meta:
-  title: '使用者檔案'
-  description: '查看使用者的頭像、簡介、貼文、收藏與互動資訊，探索創作者的迷因作品。'
+  title: '個人頁面'
+  description: '查看個人的頭像、簡介、貼文、收藏與互動資訊，探索創作者的迷因作品。'
   login: ''
   admin: false
 </route>
