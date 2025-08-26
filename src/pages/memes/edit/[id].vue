@@ -283,13 +283,7 @@
           <div class="field">
             <label class="block font-semibold mb-2">詳細介紹</label>
             <div class="overflow-hidden">
-              <QuillEditor
-                v-model:content="detailMarkdown"
-                content-type="html"
-                theme="snow"
-                :options="editorOptions"
-                class="min-h-[300px]"
-              />
+              <TipTapEditor v-model="detailMarkdown" />
             </div>
             <small class="text-gray-500"
               >支援富文本編輯，可以添加圖片、連結、表格等豐富內容。</small
@@ -380,9 +374,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Chip from 'primevue/chip'
 import Message from 'primevue/message'
 import FileUpload from 'primevue/fileupload'
-import Toast from 'primevue/toast'
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import TipTapEditor from '@/components/TipTapEditor.vue'
 import memeService from '@/services/memeService'
 import tagService from '@/services/tagService'
 import memeTagService from '@/services/memeTagService'
@@ -422,28 +414,7 @@ const loading = ref(false)
 const submitError = ref('')
 const loadError = ref('')
 const uploadedImageFile = ref(null)
-const editorOptions = {
-  modules: {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block'],
-      [{ header: 1 }, { header: 2 }],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ script: 'sub' }, { script: 'super' }],
-      [{ indent: '-1' }, { indent: '+1' }],
-      [{ direction: 'rtl' }],
-      [{ size: ['small', false, 'large', 'huge'] }],
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ color: [] }, { background: [] }],
-      [{ font: [] }],
-      [{ align: [] }],
-      ['clean'],
-      ['link', 'image', 'video'],
-    ],
-  },
-  placeholder: '請輸入詳細介紹...',
-  theme: 'snow',
-}
+// TipTap 編輯器無需本頁 options 設定
 const typeOptions = [
   { label: '純文字', value: 'text', icon: 'pi pi-file-edit' },
   { label: '圖片/GIF', value: 'image', icon: 'pi pi-image' },
@@ -951,16 +922,7 @@ const handleSubmit = async () => {
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
-:deep(.quill-editor) {
-  min-height: 300px;
-}
-:deep(.quill-editor .ql-editor) {
-  outline: none;
-  padding: 1rem;
-}
-:deep(.quill-editor .ql-container) {
-  outline: none;
-}
+/* TipTap 編輯器樣式已在組件內統一處理 */
 </style>
 
 <route lang="yaml">

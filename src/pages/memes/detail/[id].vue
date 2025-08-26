@@ -221,7 +221,10 @@
             </div>
 
             <!-- 內容描述 - 使用 detail_markdown 欄位 -->
-            <div v-if="meme.detail_markdown" class="prose max-w-none">
+            <div
+              v-if="meme.detail_markdown"
+              class="prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-gray-900 dark:prose-strong:text-white prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-blockquote:text-gray-600 dark:prose-blockquote:text-gray-400 prose-blockquote:border-blue-500"
+            >
               <div v-html="renderMarkdown(meme.detail_markdown)"></div>
             </div>
             <!-- 如果沒有 detail_markdown，則顯示原本的 content -->
@@ -1688,6 +1691,9 @@ meta:
 </route>
 
 <style scoped>
+/* TipTap 內容使用 Tailwind prose 類別，無需額外樣式 */
+
+/* 保留舊的 prose 樣式給非 TipTap 內容 */
 .prose {
   max-width: none;
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto">
+  <div class="mx-auto">
     <div class="overflow-hidden">
       <div class="text-center py-6">
         <h1 class="text-3xl font-bold text-gray-800">投稿迷因</h1>
@@ -17,7 +17,7 @@
               v-model="form.title"
               placeholder="為你的迷因取個有趣的標題..."
               maxlength="200"
-              required
+              requia
               class="w-full"
               :class="{ 'p-invalid': errors.title }"
             />
@@ -66,7 +66,7 @@
             }}</small>
             <small
               class="text-gray-500"
-              :class="{ 'text-red-500': getCharCount(form.content) > 350 }"
+              :class="{ 'text-primary-500': getCharCount(form.content) > 350 }"
             >
               {{ getCharCount(form.content) }}/350
             </small>
@@ -231,7 +231,7 @@
                   :label="tag.name"
                   removable
                   @remove="removeTag(tag)"
-                  class="bg-blue-100 text-blue-800"
+                  class="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
                 />
               </div>
 
@@ -265,13 +265,7 @@
           <div class="field">
             <label class="block font-semibold mb-2">詳細介紹</label>
             <div class="overflow-hidden">
-              <QuillEditor
-                v-model:content="detailMarkdown"
-                content-type="html"
-                theme="snow"
-                :options="editorOptions"
-                class="min-h-[300px]"
-              />
+              <TipTapEditor v-model="detailMarkdown" />
             </div>
             <small class="text-gray-500">
               支援富文本編輯，可以添加圖片、連結、表格等豐富內容。
@@ -291,22 +285,6 @@
               <small class="text-gray-500 block mt-1">
                 勾選此項表示內容可能不適合工作場所觀看
               </small>
-            </div>
-
-            <!-- 語言選擇 -->
-            <div class="field">
-              <label for="language" class="block font-semibold mb-2"
-                >語言</label
-              >
-              <Dropdown
-                id="language"
-                v-model="form.language"
-                :options="languageOptions"
-                optionLabel="label"
-                optionValue="value"
-                class="w-full"
-                appendTo="body"
-              />
             </div>
           </div>
 
@@ -369,11 +347,9 @@ import AutoComplete from 'primevue/autocomplete'
 import Chip from 'primevue/chip'
 import Message from 'primevue/message'
 import FileUpload from 'primevue/fileupload'
-import Toast from 'primevue/toast'
 
-// VueQuill 編輯器
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+// TipTap 編輯器
+import TipTapEditor from '@/components/TipTapEditor.vue'
 
 // API 服務
 import memeService from '@/services/memeService'
@@ -418,43 +394,14 @@ const loading = ref(false)
 const submitError = ref('')
 const uploadedImageFile = ref(null)
 
-// 編輯器選項
-const editorOptions = {
-  modules: {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'], // 文字格式
-      ['blockquote', 'code-block'], // 引用、程式碼區塊
-      [{ header: 1 }, { header: 2 }], // 標題
-      [{ list: 'ordered' }, { list: 'bullet' }], // 列表
-      [{ script: 'sub' }, { script: 'super' }], // 上標、下標
-      [{ indent: '-1' }, { indent: '+1' }], // 縮排
-      [{ direction: 'rtl' }], // 文字方向
-      [{ size: ['small', false, 'large', 'huge'] }], // 字體大小
-      [{ header: [1, 2, 3, 4, 5, 6, false] }], // 標題
-      [{ color: [] }, { background: [] }], // 文字、背景顏色
-      [{ font: [] }], // 字體
-      [{ align: [] }], // 對齊方式
-      ['clean'], // 清除格式
-      ['link', 'image', 'video'], // 連結、圖片、影片
-    ],
-  },
-  placeholder: '請輸入詳細介紹...',
-  theme: 'snow',
-}
+// TipTap 編輯器不需要額外的本地 options 設定
 
 // 選項資料
 const typeOptions = [
-  { label: '純文字', value: 'text', icon: 'pi pi-file-edit' },
+  { label: '用語', value: 'text', icon: 'pi pi-file-edit' },
   { label: '圖片/GIF', value: 'image', icon: 'pi pi-image' },
   { label: '影片', value: 'video', icon: 'pi pi-video' },
   { label: '音訊', value: 'audio', icon: 'pi pi-volume-up' },
-]
-
-const languageOptions = [
-  { label: '繁體中文', value: 'zh' },
-  { label: 'English', value: 'en' },
-  { label: '日本語', value: 'ja' },
-  { label: '한국어', value: 'ko' },
 ]
 
 // 載入標籤資料
@@ -838,19 +785,7 @@ const handleSubmit = async () => {
   margin-top: 0.25rem;
 }
 
-/* VueQuill 編輯器樣式 */
-:deep(.quill-editor) {
-  min-height: 300px;
-}
-
-:deep(.quill-editor .ql-editor) {
-  outline: none;
-  padding: 1rem;
-}
-
-:deep(.quill-editor .ql-container) {
-  outline: none;
-}
+/* TipTap 編輯器樣式已在組件內統一處理 */
 </style>
 
 <route lang="yaml">
