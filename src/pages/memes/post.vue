@@ -6,30 +6,34 @@
         <p class="mt-2">分享你的創意，讓大家一起歡樂！</p>
       </div>
       <div class="p-6">
-        <form @submit.prevent="handleSubmit" class="space-y-6">
+        <form @submit.prevent="handleSubmit" novalidate class="space-y-6">
           <!-- 迷因標題 -->
           <div class="field">
             <label for="title" class="block font-semibold mb-2">
-              迷因標題 <span class="text-danger-500">*</span>
+              迷因標題 <span class="text-primary-500">*</span>
             </label>
             <InputText
               id="title"
               v-model="form.title"
               placeholder="為你的迷因取個有趣的標題..."
               maxlength="200"
-              requia
               class="w-full"
               :class="{ 'p-invalid': errors.title }"
             />
-            <small v-if="errors.title" class="p-error">{{
-              errors.title
-            }}</small>
+            <Message
+              v-if="errors.title"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.title }}
+            </Message>
           </div>
 
-          <!-- 迷因型態 -->
+          <!-- 迷因類型 -->
           <div class="field">
             <label for="type" class="block font-semibold mb-2">
-              迷因型態 <span class="text-danger-500">*</span>
+              迷因類型 <span class="text-primary-500">*</span>
             </label>
             <Dropdown
               id="type"
@@ -40,30 +44,40 @@
               placeholder="選擇迷因類型"
               class="w-full"
               appendTo="body"
-              required
               :class="{ 'p-invalid': errors.type }"
             />
-            <small v-if="errors.type" class="p-error">{{ errors.type }}</small>
+            <Message
+              v-if="errors.type"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.type }}
+            </Message>
           </div>
 
           <!-- 迷因內容簡介 -->
           <div class="field">
             <label for="content" class="block font-semibold mb-2">
-              迷因內容簡介 <span class="text-danger-500">*</span>
+              迷因內容簡介 <span class="text-primary-500">*</span>
             </label>
             <Textarea
               id="content"
               v-model="form.content"
-              placeholder="簡單描述這個迷因的內容或梗點..."
+              placeholder="簡單描述這個迷因的內容或有趣的特點..."
               rows="4"
               maxlength="350"
-              required
               class="w-full"
               :class="{ 'p-invalid': errors.content }"
             />
-            <small v-if="errors.content" class="p-error">{{
-              errors.content
-            }}</small>
+            <Message
+              v-if="errors.content"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.content }}
+            </Message>
             <small
               class="text-gray-500"
               :class="{ 'text-primary-500': getCharCount(form.content) > 350 }"
@@ -77,7 +91,7 @@
             <label class="block font-semibold mb-2">
               <i :class="getTypeIcon(form.type)" class="mr-1"></i>
               {{ getMediaLabel(form.type) }}
-              <span class="text-danger-500">*</span>
+              <span class="text-primary-500">*</span>
             </label>
 
             <!-- 圖片上傳 -->
@@ -135,7 +149,7 @@
                   />
                   <div
                     v-if="imagePreviewError"
-                    class="text-center text-danger-500 p-4"
+                    class="text-center text-primary-500 p-4"
                   >
                     <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
                     <p>圖片載入失敗，請檢查連結是否正確</p>
@@ -214,9 +228,14 @@
               </div>
             </div>
 
-            <small v-if="errors.mediaUrl" class="p-error">{{
-              errors.mediaUrl
-            }}</small>
+            <Message
+              v-if="errors.mediaUrl"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.mediaUrl }}
+            </Message>
           </div>
 
           <!-- 標籤選擇與新增 -->
@@ -244,8 +263,9 @@
                   @keydown.enter.prevent="addTag"
                   optionLabel="name"
                   placeholder="輸入標籤名稱..."
-                  class="flex-1"
                   appendTo="body"
+                  class="w-80"
+                  fluid
                 />
                 <Button
                   type="button"
@@ -264,7 +284,7 @@
           <!-- 詳細介紹編輯器 -->
           <div class="field">
             <label class="block font-semibold mb-2">詳細介紹</label>
-            <div class="overflow-hidden">
+            <div class="overflow-hidden" @click.stop @submit.prevent>
               <TipTapEditor v-model="detailMarkdown" />
             </div>
             <small class="text-gray-500">
@@ -777,12 +797,6 @@ const handleSubmit = async () => {
 <style scoped>
 .field {
   margin-bottom: 1.5rem;
-}
-
-.p-error {
-  color: #ef4444;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
 }
 
 /* TipTap 編輯器樣式已在組件內統一處理 */

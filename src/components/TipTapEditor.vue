@@ -1,9 +1,10 @@
 <template>
-  <div class="tiptap-editor">
+  <div class="tiptap-editor" @click.stop @submit.prevent @keydown.stop>
     <div v-if="editor" class="editor-toolbar">
       <!-- 文字格式 -->
       <div class="toolbar-group">
         <button
+          type="button"
           @click="editor.chain().focus().toggleBold().run()"
           :class="{ 'is-active': editor.isActive('bold') }"
           class="toolbar-btn"
@@ -12,6 +13,7 @@
           <i class="ri-bold"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().toggleItalic().run()"
           :class="{ 'is-active': editor.isActive('italic') }"
           class="toolbar-btn"
@@ -19,7 +21,30 @@
         >
           <i class="ri-italic"></i>
         </button>
+
+        <!-- 輔助文字 -->
         <button
+          type="button"
+          @click="editor.chain().focus().toggleSuperscript().run()"
+          :class="{ 'is-active': editor.isActive('superscript') }"
+          class="toolbar-btn"
+          title="上標"
+        >
+          <i class="ri-superscript"></i>
+        </button>
+
+        <button
+          type="button"
+          @click="editor.chain().focus().toggleSubscript().run()"
+          :class="{ 'is-active': editor.isActive('subscript') }"
+          class="toolbar-btn"
+          title="下標"
+        >
+          <i class="ri-subscript"></i>
+        </button>
+
+        <button
+          type="button"
           @click="editor.chain().focus().toggleStrike().run()"
           :class="{ 'is-active': editor.isActive('strike') }"
           class="toolbar-btn"
@@ -28,6 +53,7 @@
           <i class="ri-strikethrough"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().toggleUnderline().run()"
           :class="{ 'is-active': editor.isActive('underline') }"
           class="toolbar-btn"
@@ -37,6 +63,7 @@
         </button>
 
         <button
+          type="button"
           @click="toggleCode"
           :class="{
             'is-active':
@@ -54,6 +81,7 @@
       <!-- 標題 -->
       <div class="toolbar-group">
         <button
+          type="button"
           @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
           :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
           class="toolbar-btn"
@@ -62,6 +90,7 @@
           <i class="ri-h-1"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
           :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
           class="toolbar-btn"
@@ -70,6 +99,7 @@
           <i class="ri-h-2"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
           :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
           class="toolbar-btn"
@@ -84,6 +114,7 @@
       <!-- 列表 -->
       <div class="toolbar-group">
         <button
+          type="button"
           @click="editor.chain().focus().toggleBulletList().run()"
           :class="{ 'is-active': editor.isActive('bulletList') }"
           class="toolbar-btn"
@@ -92,6 +123,7 @@
           <i class="ri-list-unordered"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().toggleOrderedList().run()"
           :class="{ 'is-active': editor.isActive('orderedList') }"
           class="toolbar-btn"
@@ -106,6 +138,7 @@
       <!-- 其他格式 -->
       <div class="toolbar-group">
         <button
+          type="button"
           @click="editor.chain().focus().toggleBlockquote().run()"
           :class="{ 'is-active': editor.isActive('blockquote') }"
           class="toolbar-btn"
@@ -115,6 +148,7 @@
         </button>
 
         <button
+          type="button"
           @click="toggleLink"
           :class="{ 'is-active': editor.isActive('link') }"
           class="toolbar-btn"
@@ -125,11 +159,17 @@
           ></i>
         </button>
 
-        <button @click="addImage" class="toolbar-btn" title="插入圖片">
+        <button
+          type="button"
+          @click="addImage"
+          class="toolbar-btn"
+          title="插入圖片"
+        >
           <i class="ri-image-add-line"></i>
         </button>
 
         <button
+          type="button"
           @click="editor.chain().focus().setHorizontalRule().run()"
           class="toolbar-btn"
           title="插入分隔線"
@@ -142,10 +182,16 @@
 
       <!-- 表格 -->
       <div class="toolbar-group">
-        <button @click="insertTable" class="toolbar-btn" title="插入表格">
+        <button
+          type="button"
+          @click="insertTable"
+          class="toolbar-btn"
+          title="插入表格"
+        >
           <i class="ri-table-line"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().addRowBefore().run()"
           :disabled="!editor?.isActive('table')"
           class="toolbar-btn"
@@ -154,6 +200,7 @@
           <i class="ri-insert-row-top"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().addColumnBefore().run()"
           :disabled="!editor?.isActive('table')"
           class="toolbar-btn"
@@ -162,6 +209,7 @@
           <i class="ri-insert-column-left"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().deleteTable().run()"
           :disabled="!editor?.isActive('table')"
           class="toolbar-btn"
@@ -176,6 +224,7 @@
       <!-- 操作 -->
       <div class="toolbar-group">
         <button
+          type="button"
           @click="editor.chain().focus().undo().run()"
           :disabled="!editor.can().undo()"
           class="toolbar-btn"
@@ -184,6 +233,7 @@
           <i class="ri-arrow-go-back-line"></i>
         </button>
         <button
+          type="button"
           @click="editor.chain().focus().redo().run()"
           :disabled="!editor.can().redo()"
           class="toolbar-btn"
@@ -193,12 +243,184 @@
         </button>
       </div>
     </div>
-    <EditorContent :editor="editor" class="editor-content" />
+    <EditorContent
+      :editor="editor"
+      class="editor-content"
+      @click="handleEditorClick"
+    />
+
+    <!-- 連結對話框 -->
+    <Dialog
+      v-model:visible="linkDialogVisible"
+      :header="linkDialogTitle"
+      :style="{ width: '25rem' }"
+      :modal="true"
+      :closable="true"
+      :closeOnEscape="true"
+    >
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+          <label
+            for="linkUrl"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            連結網址
+          </label>
+          <InputText
+            id="linkUrl"
+            v-model="linkUrl"
+            placeholder="https://example.com"
+            class="w-full"
+            @keyup.enter="confirmLink"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="取消"
+            severity="secondary"
+            @click="cancelLink"
+            outlined
+          />
+          <Button
+            label="確認"
+            @click="confirmLink"
+            :disabled="!linkUrl.trim()"
+          />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- 圖片對話框 -->
+    <Dialog
+      v-model:visible="imageDialogVisible"
+      header="插入圖片"
+      :style="{ width: '30rem' }"
+      :modal="true"
+      :closable="true"
+      :closeOnEscape="true"
+    >
+      <div class="flex flex-col gap-4">
+        <!-- 圖片類型選擇 -->
+        <div class="flex gap-4">
+          <div class="flex items-center gap-2">
+            <RadioButton
+              v-model="imageType"
+              value="upload"
+              :inputId="'upload'"
+              @change="switchImageType('upload')"
+            />
+            <label :for="'upload'" class="text-sm">上傳圖片</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <RadioButton
+              v-model="imageType"
+              value="url"
+              :inputId="'url'"
+              @change="switchImageType('url')"
+            />
+            <label :for="'url'" class="text-sm">使用連結</label>
+          </div>
+        </div>
+
+        <!-- 上傳圖片模式 -->
+        <div v-if="imageType === 'upload'">
+          <!-- 圖片預覽 -->
+          <div v-if="selectedImage" class="relative inline-block">
+            <img
+              :src="getImagePreviewUrl(selectedImage)"
+              :alt="selectedImage.name"
+              class="w-auto max-w-xs h-40 object-cover rounded-lg border"
+              draggable="false"
+            />
+            <div
+              class="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer rounded-lg flex items-center justify-center"
+              @click="removeImage"
+            >
+              <i class="pi pi-trash text-white text-xl" />
+            </div>
+          </div>
+
+          <!-- 圖片上傳元件 -->
+          <FileUpload
+            mode="basic"
+            name="image"
+            accept="image/*"
+            :maxFileSize="5000000"
+            @select="onImageSelect"
+            chooseLabel="選擇圖片"
+            :auto="false"
+            class="w-full"
+          />
+          <small class="text-gray-500"
+            >支援 JPG、PNG、GIF、WebP 格式，最大 5MB</small
+          >
+        </div>
+
+        <!-- 圖片連結模式 -->
+        <div v-if="imageType === 'url'">
+          <div class="flex flex-col gap-2">
+            <label
+              for="imageUrl"
+              class="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              圖片網址
+            </label>
+            <InputText
+              id="imageUrl"
+              v-model="imageUrl"
+              placeholder="https://example.com/image.jpg"
+              class="w-full"
+              @keyup.enter="confirmImage"
+            />
+          </div>
+
+          <!-- 圖片連結預覽 -->
+          <div
+            v-if="imageUrl && validateImageUrl(imageUrl)"
+            class="relative inline-block"
+          >
+            <img
+              :src="imageUrl"
+              alt="預覽圖片"
+              class="w-auto max-w-xs h-40 object-cover rounded-lg border"
+              @error="$event.target.style.display = 'none'"
+            />
+            <div
+              class="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer rounded-lg flex items-center justify-center"
+              @click="
+                () => {
+                  imageUrl = ''
+                }
+              "
+            >
+              <i class="pi pi-trash text-white text-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="取消"
+            severity="secondary"
+            @click="cancelImage"
+            outlined
+          />
+          <Button
+            label="確認"
+            @click="confirmImage"
+            :disabled="!canConfirmImage()"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { watch, onBeforeUnmount } from 'vue'
+import { watch, onBeforeUnmount, ref } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { Table } from '@tiptap/extension-table'
@@ -208,6 +430,13 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { Image } from '@tiptap/extension-image'
 import { Link } from '@tiptap/extension-link'
 import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
+import { Subscript } from '@tiptap/extension-subscript'
+import { Superscript } from '@tiptap/extension-superscript'
+import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import FileUpload from 'primevue/fileupload'
+import RadioButton from 'primevue/radiobutton'
 
 defineOptions({ name: 'TipTapEditor' })
 
@@ -219,6 +448,17 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+// 對話框狀態
+const linkDialogVisible = ref(false)
+const imageDialogVisible = ref(false)
+const linkUrl = ref('')
+const imageUrl = ref('')
+const linkDialogTitle = ref('插入連結')
+
+// 圖片上傳相關狀態
+const imageType = ref('upload') // 'upload' 或 'url'
+const selectedImage = ref(null)
 
 const editor = useEditor({
   content: props.modelValue,
@@ -233,6 +473,8 @@ const editor = useEditor({
     Image,
     Link,
     HorizontalRule,
+    Subscript,
+    Superscript,
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -244,6 +486,13 @@ const editor = useEditor({
     },
   },
 })
+
+// 處理編輯器點擊事件，確保點擊任何地方都能 focus
+const handleEditorClick = () => {
+  if (editor.value && !editor.value.isFocused) {
+    editor.value.commands.focus()
+  }
+}
 
 watch(
   () => props.modelValue,
@@ -289,23 +538,118 @@ const toggleLink = () => {
     // 如果已經是連結，則移除連結
     editor.value.chain().focus().unsetLink().run()
   } else {
-    // 如果不是連結，則添加連結
-    const url = window.prompt('請輸入連結網址：')
-    if (url) {
-      editor.value
-        ?.chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url })
-        .run()
-    }
+    // 如果不是連結，則顯示連結對話框
+    linkDialogTitle.value = '插入連結'
+    linkUrl.value = ''
+    linkDialogVisible.value = true
   }
 }
 
+const confirmLink = () => {
+  if (linkUrl.value.trim()) {
+    editor.value
+      ?.chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: linkUrl.value.trim() })
+      .run()
+    linkDialogVisible.value = false
+    linkUrl.value = ''
+  }
+}
+
+const cancelLink = () => {
+  linkDialogVisible.value = false
+  linkUrl.value = ''
+}
+
 const addImage = () => {
-  const url = window.prompt('請輸入圖片網址：')
-  if (url) {
-    editor.value?.chain().focus().setImage({ src: url }).run()
+  imageUrl.value = ''
+  imageType.value = 'upload'
+  selectedImage.value = null
+  imageDialogVisible.value = true
+}
+
+const confirmImage = () => {
+  let imageSrc = ''
+
+  if (imageType.value === 'upload' && selectedImage.value) {
+    // 使用上傳的圖片
+    imageSrc = getImagePreviewUrl(selectedImage.value)
+  } else if (imageType.value === 'url' && imageUrl.value.trim()) {
+    // 使用圖片連結
+    imageSrc = imageUrl.value.trim()
+  }
+
+  if (imageSrc) {
+    editor.value?.chain().focus().setImage({ src: imageSrc }).run()
+    imageDialogVisible.value = false
+    imageUrl.value = ''
+    selectedImage.value = null
+  }
+}
+
+const cancelImage = () => {
+  imageDialogVisible.value = false
+  imageUrl.value = ''
+  selectedImage.value = null
+}
+
+// 圖片上傳相關方法
+const onImageSelect = (event) => {
+  if (event.files && event.files.length > 0) {
+    // 清理之前的 URL 物件
+    if (selectedImage.value && selectedImage.value._previewUrl) {
+      URL.revokeObjectURL(selectedImage.value._previewUrl)
+    }
+
+    const file = event.files[0]
+    // 為檔案添加預覽 URL
+    if (typeof window !== 'undefined') {
+      file._previewUrl = URL.createObjectURL(file)
+    }
+    selectedImage.value = file
+  }
+}
+
+const removeImage = () => {
+  if (selectedImage.value && selectedImage.value._previewUrl) {
+    URL.revokeObjectURL(selectedImage.value._previewUrl)
+  }
+  selectedImage.value = null
+}
+
+const getImagePreviewUrl = (file) => {
+  if (file && file._previewUrl) {
+    return file._previewUrl
+  }
+  return ''
+}
+
+const switchImageType = (type) => {
+  imageType.value = type
+  if (type === 'upload') {
+    imageUrl.value = ''
+  } else {
+    // 清理之前的圖片預覽 URL
+    if (selectedImage.value && selectedImage.value._previewUrl) {
+      URL.revokeObjectURL(selectedImage.value._previewUrl)
+    }
+    selectedImage.value = null
+  }
+}
+
+const validateImageUrl = (url) => {
+  if (!url) return true
+  const imageUrlPattern = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i
+  return imageUrlPattern.test(url)
+}
+
+const canConfirmImage = () => {
+  if (imageType.value === 'upload') {
+    return selectedImage.value !== null
+  } else {
+    return imageUrl.value.trim() !== '' && validateImageUrl(imageUrl.value)
   }
 }
 
@@ -320,6 +664,10 @@ const insertTable = () => {
 onBeforeUnmount(() => {
   if (editor.value) {
     editor.value.destroy()
+  }
+  // 清理圖片預覽 URL
+  if (selectedImage.value && selectedImage.value._previewUrl) {
+    URL.revokeObjectURL(selectedImage.value._previewUrl)
   }
 })
 </script>

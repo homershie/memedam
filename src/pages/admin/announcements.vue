@@ -263,6 +263,20 @@ async function saveAnnouncement() {
       current.image = selectedImage.value
     } else if (imageType.value === 'url' && imageUrl.value.trim()) {
       current.image = imageUrl.value.trim()
+    } else if (
+      imageType.value === 'upload' &&
+      current.image &&
+      current.image.includes('cloudinary.com')
+    ) {
+      // 保持原有的上傳圖片
+      current.image = current.image
+    } else if (
+      imageType.value === 'url' &&
+      current.image &&
+      !current.image.includes('cloudinary.com')
+    ) {
+      // 保持原有的外部圖片連結
+      current.image = current.image
     } else {
       // 如果沒有圖片，清除圖片欄位
       current.image = null
@@ -318,7 +332,7 @@ function editAnnouncement(row) {
   }
   selectedImage.value = null
 
-  // 設定圖片類型
+  // 設定圖片類型和 URL
   if (row.image) {
     // 判斷是否為 Cloudinary URL
     if (row.image.includes('cloudinary.com')) {
