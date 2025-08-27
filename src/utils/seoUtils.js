@@ -5,6 +5,9 @@
 
 import { ref, nextTick } from 'vue'
 
+// 固定 canonical 主機，避免 www 與非 www 造成重複內容
+export const CANONICAL_ORIGIN = 'https://www.memedam.com'
+
 /**
  * 動態設定頁面的 meta 標籤
  * @param {Object} meta - meta 資訊
@@ -111,7 +114,7 @@ function addCanonicalTag(url) {
  * @returns {string} canonical URL
  */
 export function generateCanonicalUrl(basePath, params = {}, page = 1) {
-  const url = new URL(window.location.origin + basePath)
+  const url = new URL(CANONICAL_ORIGIN + basePath)
 
   // 只保留重要的查詢參數
   const importantParams = ['search', 'tags', 'type', 'status']

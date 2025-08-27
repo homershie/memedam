@@ -26,7 +26,7 @@ Disallow: /*?page=1$
 Disallow: /*?search=$
 Disallow: /*?tags=$
 
-# 站點地圖位置
+# 站點地圖位置（固定 www 主域）
 Sitemap: https://www.memedam.com/sitemap.xml
 
 # 抓取延遲（毫秒）
