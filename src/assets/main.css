@@ -364,6 +364,15 @@ a {
   .tiptap-editor {
     @apply border border-surface-300 rounded-lg overflow-hidden bg-white;
 
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply mb-4;
+    }
+
     ul {
       @apply list-[list-marker] list-inside;
       p {

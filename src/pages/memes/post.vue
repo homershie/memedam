@@ -1,8 +1,8 @@
 <template>
-  <div class="mx-auto">
+  <div class="max-w-5xl mx-auto">
     <div class="overflow-hidden">
       <div class="text-center py-6">
-        <h1 class="text-3xl font-bold text-gray-800">投稿迷因</h1>
+        <h1 class="text-3xl font-bold text-surface-800">投稿迷因</h1>
         <p class="mt-2">分享你的創意，讓大家一起歡樂！</p>
       </div>
       <div class="p-6">
@@ -79,7 +79,7 @@
               {{ errors.content }}
             </Message>
             <small
-              class="text-gray-500"
+              class="text-surface-500"
               :class="{ 'text-primary-500': getCharCount(form.content) > 350 }"
             >
               {{ getCharCount(form.content) }}/350
@@ -113,7 +113,7 @@
                     @select="onImageSelect"
                     @clear="onImageClear"
                   />
-                  <small class="text-gray-500 mt-1 block">
+                  <small class="text-surface-500 mt-1 block">
                     支援 JPG, PNG, GIF, WebP (最大 10MB)
                   </small>
                 </div>
@@ -130,7 +130,7 @@
                     class="w-full"
                     :class="{ 'p-invalid': errors.mediaUrl }"
                   />
-                  <small class="text-gray-500 mt-1 block">
+                  <small class="text-surface-500 mt-1 block">
                     支援常見圖片網站：Imgur、Reddit、Discord 等
                   </small>
                 </div>
@@ -139,7 +139,9 @@
               <!-- 圖片預覽 -->
               <div v-if="form.image_url || uploadedImageUrl" class="mt-3">
                 <label class="block text-sm font-medium mb-2">預覽</label>
-                <div class="border rounded-lg p-2 bg-gray-50">
+                <div
+                  class="border rounded-lg p-2 bg-surface-50 dark:bg-surface-800"
+                >
                   <img
                     :src="uploadedImageUrl || form.image_url"
                     alt="圖片預覽"
@@ -167,14 +169,16 @@
                 class="w-full"
                 :class="{ 'p-invalid': errors.mediaUrl }"
               />
-              <small class="text-gray-500">
+              <small class="text-surface-500">
                 支援 YouTube、Vimeo、TikTok、Twitch 等影片平台連結
               </small>
 
               <!-- 影片預覽 -->
               <div v-if="form.video_url" class="mt-3">
                 <label class="block text-sm font-medium mb-2">預覽</label>
-                <div class="border rounded-lg p-2 bg-gray-50">
+                <div
+                  class="border rounded-lg p-2 bg-surface-50 dark:bg-surface-800"
+                >
                   <div v-if="isYouTubeUrl(form.video_url)" class="aspect-video">
                     <iframe
                       :src="getYouTubeEmbedUrl(form.video_url)"
@@ -182,7 +186,7 @@
                       allowfullscreen
                     ></iframe>
                   </div>
-                  <div v-else class="text-center p-4 text-gray-500">
+                  <div v-else class="text-center p-4 text-surface-500">
                     <i class="pi pi-video text-2xl mb-2"></i>
                     <p>影片連結：{{ form.video_url }}</p>
                     <small class="block mt-1"
@@ -202,14 +206,14 @@
                 class="w-full"
                 :class="{ 'p-invalid': errors.mediaUrl }"
               />
-              <small class="text-gray-500">
+              <small class="text-surface-500">
                 支援 YouTube、SoundCloud、Spotify、Podcast 等音訊平台連結
               </small>
 
               <!-- 音訊預覽 -->
               <div v-if="form.audio_url" class="mt-3">
                 <label class="block text-sm font-medium mb-2">預覽</label>
-                <div class="border rounded-lg p-4 bg-gray-50">
+                <div class="border rounded-lg p-4 bg-surface-50">
                   <div v-if="isYouTubeUrl(form.audio_url)" class="aspect-video">
                     <iframe
                       :src="getYouTubeEmbedUrl(form.audio_url)"
@@ -217,7 +221,7 @@
                       allowfullscreen
                     ></iframe>
                   </div>
-                  <div v-else class="text-center text-gray-500">
+                  <div v-else class="text-center text-surface-500">
                     <i class="pi pi-volume-up text-2xl mb-2"></i>
                     <p>音訊連結：{{ form.audio_url }}</p>
                     <small class="block mt-1"
@@ -275,7 +279,7 @@
                   :disabled="!tagInput.trim()"
                 />
               </div>
-              <small class="text-gray-500">
+              <small class="text-surface-500">
                 輸入標籤名稱，按 Enter 或點擊新增。如果標籤不存在會自動建立。
               </small>
             </div>
@@ -291,7 +295,7 @@
                 :onImageUpload="handleDetailImageUpload"
               />
             </div>
-            <small class="text-gray-500">
+            <small class="text-surface-500">
               支援文本編輯，可以添加圖片、影片、連結、表格等豐富內容。
             </small>
           </div>
@@ -306,7 +310,7 @@
                   成人/限制級內容 (NSFW)
                 </label>
               </div>
-              <small class="text-gray-500 block mt-1">
+              <small class="text-surface-500 block mt-1">
                 勾選此項表示內容可能不適合工作場所觀看
               </small>
             </div>
@@ -324,7 +328,7 @@
               type="url"
               class="w-full"
             />
-            <small class="text-gray-500">選填，標註內容來源以示尊重</small>
+            <small class="text-surface-500">選填，標註內容來源以示尊重</small>
           </div>
 
           <!-- 錯誤訊息 -->

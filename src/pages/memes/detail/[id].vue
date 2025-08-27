@@ -15,8 +15,8 @@
           <i
             class="pi pi-exclamation-triangle text-6xl text-primary-400 mb-4"
           ></i>
-          <h2 class="text-2xl font-bold text-gray-800 mb-2">載入失敗</h2>
-          <p class="text-gray-600 mb-4">{{ error }}</p>
+          <h2 class="text-2xl font-bold text-surface-800 mb-2">載入失敗</h2>
+          <p class="text-surface-600 mb-4">{{ error }}</p>
           <Button label="重新載入" @click="loadMeme" />
         </template>
       </Card>
@@ -35,10 +35,12 @@
             <!-- 標題區域 -->
             <div class="flex items-start justify-between mb-6">
               <div class="flex-1">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <h1 class="text-3xl font-bold text-surface-900 mb-2">
                   {{ meme.title }}
                 </h1>
-                <div class="flex items-center text-sm text-gray-600 space-x-4">
+                <div
+                  class="flex items-center text-sm text-surface-600 space-x-4"
+                >
                   <span>
                     由
                     <router-link
@@ -86,19 +88,19 @@
             <div v-if="!isDesktop" class="border-t pt-4 mb-6">
               <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span class="font-medium text-gray-600">類型：</span
+                  <span class="font-medium text-surface-600">類型：</span
                   >{{ typeDisplayName }}
                 </div>
                 <div>
-                  <span class="font-medium text-gray-600">按讚：</span
+                  <span class="font-medium text-surface-600">按讚：</span
                   >{{ likesCount }}
                 </div>
                 <div>
-                  <span class="font-medium text-gray-600">瀏覽：</span
+                  <span class="font-medium text-surface-600">瀏覽：</span
                   >{{ viewCount }}
                 </div>
                 <div>
-                  <span class="font-medium text-gray-600">評論：</span
+                  <span class="font-medium text-surface-600">評論：</span
                   >{{ commentsCount }}
                 </div>
               </div>
@@ -223,13 +225,13 @@
             <!-- 內容描述 - 使用 detail_markdown 欄位 -->
             <div
               v-if="meme.detail_markdown"
-              class="prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-gray-900 dark:prose-strong:text-white prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-blockquote:text-gray-600 dark:prose-blockquote:text-gray-400 prose-blockquote:border-blue-500"
+              class="prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert prose-headings:text-surface-900 dark:prose-headings:text-white prose-p:text-surface-700 dark:prose-p:text-surface-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-surface-900 dark:prose-strong:text-white prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-blockquote:text-surface-600 dark:prose-blockquote:text-surface-400 prose-blockquote:border-blue-500"
             >
               <div v-html="renderMarkdown(meme.detail_markdown)"></div>
             </div>
             <!-- 如果沒有 detail_markdown，則顯示原本的 content -->
             <div v-else-if="meme.content" class="prose max-w-none">
-              <p class="text-gray-700 leading-relaxed">{{ meme.content }}</p>
+              <p class="text-surface-700 leading-relaxed">{{ meme.content }}</p>
             </div>
 
             <!-- 互動按鈕 -->
@@ -272,10 +274,10 @@
             id="details"
             class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
           >
-            <h2 class="text-xl font-bold text-gray-900 mb-4">詳細資訊</h2>
+            <h2 class="text-xl font-bold text-surface-900 mb-4">詳細資訊</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h3 class="font-semibold text-gray-700 mb-2">基本資訊</h3>
+                <h3 class="font-semibold text-surface-700 mb-2">基本資訊</h3>
                 <div class="space-y-2 text-sm">
                   <div>
                     <span class="font-medium">類型：</span>{{ typeDisplayName }}
@@ -300,7 +302,7 @@
                 </div>
               </div>
               <div>
-                <h3 class="font-semibold text-gray-700 mb-2">統計資料</h3>
+                <h3 class="font-semibold text-surface-700 mb-2">統計資料</h3>
                 <div class="space-y-2 text-sm">
                   <div>
                     <span class="font-medium">瀏覽次數：</span>{{ viewCount }}
@@ -320,7 +322,7 @@
 
             <!-- 瀏覽統計詳情 -->
             <div v-if="viewStats.total_views > 0" class="mt-6">
-              <h3 class="font-semibold text-gray-700 mb-2">瀏覽統計詳情</h3>
+              <h3 class="font-semibold text-surface-700 mb-2">瀏覽統計詳情</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div class="space-y-2">
                   <div>
@@ -355,7 +357,7 @@
 
             <!-- 標籤 -->
             <div v-if="tags.length > 0" class="mt-6">
-              <h3 class="font-semibold text-gray-700 mb-2">標籤</h3>
+              <h3 class="font-semibold text-surface-700 mb-2">標籤</h3>
               <div class="flex flex-wrap gap-2">
                 <Tag
                   v-for="tag in tags"
@@ -375,16 +377,16 @@
             id="related"
             class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
           >
-            <h2 class="text-xl font-bold text-gray-900 mb-4">相關迷因</h2>
+            <h2 class="text-xl font-bold text-surface-900 mb-4">相關迷因</h2>
             <div v-if="relatedMemes.length > 0" class="space-y-3">
               <div
                 v-for="relatedMeme in relatedMemes"
                 :key="relatedMeme._id"
-                class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded cursor-pointer border"
+                class="flex items-center space-x-3 p-3 hover:bg-surface-50 rounded cursor-pointer border"
                 @click="navigateToMeme(relatedMeme)"
               >
                 <div
-                  class="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0"
+                  class="w-20 h-20 bg-surface-100 rounded overflow-hidden flex-shrink-0"
                 >
                   <img
                     v-if="relatedMeme.image_url"
@@ -394,7 +396,7 @@
                   />
                   <div
                     v-else
-                    class="w-full h-full flex items-center justify-center text-gray-400"
+                    class="w-full h-full flex items-center justify-center text-surface-400"
                   >
                     <i class="pi pi-image"></i>
                   </div>
@@ -403,14 +405,14 @@
                   <div class="font-medium text-sm truncate">
                     {{ relatedMeme.title }}
                   </div>
-                  <div class="text-xs text-gray-500 mt-1">
+                  <div class="text-xs text-surface-500 mt-1">
                     {{ relatedMeme.likes_count || 0 }} 讚 •
                     {{ relatedMeme.view_count || 0 }} 瀏覽
                   </div>
                 </div>
               </div>
             </div>
-            <div v-else class="text-center py-8 text-gray-500">
+            <div v-else class="text-center py-8 text-surface-500">
               <i class="pi pi-image text-4xl mb-2"></i>
               <p>暫無相關迷因</p>
             </div>
@@ -422,7 +424,7 @@
             class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
           >
             <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-bold text-gray-900">
+              <h2 class="text-xl font-bold text-surface-900">
                 討論 ({{ commentsCount }})
               </h2>
               <Button
@@ -443,7 +445,7 @@
                 @update="loadComments"
               />
             </div>
-            <div v-else class="text-center py-8 text-gray-500">
+            <div v-else class="text-center py-8 text-surface-500">
               <i class="pi pi-comment text-4xl mb-2"></i>
               <p>還沒有人留言，成為第一個留言的人吧！</p>
             </div>
@@ -467,7 +469,7 @@
             id="versions"
             class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
           >
-            <h2 class="text-xl font-bold text-gray-900 mb-4">版本歷史</h2>
+            <h2 class="text-xl font-bold text-surface-900 mb-4">版本歷史</h2>
             <div v-if="versions.length > 0" class="space-y-3">
               <div
                 v-for="version in versions"
@@ -478,7 +480,7 @@
                   <div class="font-medium">
                     {{ version.description || '更新內容' }}
                   </div>
-                  <div class="text-sm text-gray-600">
+                  <div class="text-sm text-surface-600">
                     {{ formatDate(version.created_at) }} by
                     {{ version.editor?.username || '系統' }}
                   </div>
@@ -491,7 +493,7 @@
                 />
               </div>
             </div>
-            <div v-else class="text-center py-4 text-gray-500">
+            <div v-else class="text-center py-4 text-surface-500">
               <p>目前沒有版本歷史記錄</p>
             </div>
           </div>
@@ -513,7 +515,7 @@
                 <!-- 縮圖 -->
                 <div class="flex justify-center">
                   <div
-                    class="w-48 h-32 bg-gray-100 rounded border overflow-hidden"
+                    class="w-48 h-32 bg-surface-100 rounded border overflow-hidden"
                   >
                     <img
                       v-if="meme.image_url"
@@ -523,7 +525,7 @@
                     />
                     <div
                       v-else
-                      class="w-full h-full flex items-center justify-center text-gray-400"
+                      class="w-full h-full flex items-center justify-center text-surface-400"
                     >
                       <i class="pi pi-image text-2xl"></i>
                     </div>
@@ -534,31 +536,39 @@
                 <table class="w-full text-sm">
                   <tbody>
                     <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-gray-600">類型</td>
+                      <td class="py-2 pr-2 font-medium text-surface-600">
+                        類型
+                      </td>
                       <td class="py-2">{{ typeDisplayName }}</td>
                     </tr>
                     <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-gray-600">作者</td>
+                      <td class="py-2 pr-2 font-medium text-surface-600">
+                        作者
+                      </td>
                       <td class="py-2">{{ authorName }}</td>
                     </tr>
                     <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-gray-600">
+                      <td class="py-2 pr-2 font-medium text-surface-600">
                         發布時間
                       </td>
                       <td class="py-2">{{ shortPublishedTime }}</td>
                     </tr>
                     <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-gray-600">
+                      <td class="py-2 pr-2 font-medium text-surface-600">
                         瀏覽次數
                       </td>
                       <td class="py-2">{{ viewCount }}</td>
                     </tr>
                     <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-gray-600">按讚</td>
+                      <td class="py-2 pr-2 font-medium text-surface-600">
+                        按讚
+                      </td>
                       <td class="py-2">{{ likesCount }}</td>
                     </tr>
                     <tr>
-                      <td class="py-2 pr-2 font-medium text-gray-600">評論</td>
+                      <td class="py-2 pr-2 font-medium text-surface-600">
+                        評論
+                      </td>
                       <td class="py-2">{{ commentsCount }}</td>
                     </tr>
                   </tbody>
@@ -569,20 +579,20 @@
                   v-if="viewStats.total_views > 0"
                   class="mt-4 pt-4 border-t"
                 >
-                  <h4 class="font-semibold text-gray-700 mb-2 text-sm">
+                  <h4 class="font-semibold text-surface-700 mb-2 text-sm">
                     瀏覽統計
                   </h4>
                   <div class="space-y-1 text-xs">
                     <div class="flex justify-between">
-                      <span class="text-gray-600">有效瀏覽：</span>
+                      <span class="text-surface-600">有效瀏覽：</span>
                       <span>{{ viewStats.effective_views }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-600">獨立用戶：</span>
+                      <span class="text-surface-600">獨立用戶：</span>
                       <span>{{ viewStats.unique_users }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-600">平均時間：</span>
+                      <span class="text-surface-600">平均時間：</span>
                       <span>{{ Math.round(viewStats.avg_duration) }}秒</span>
                     </div>
                   </div>
@@ -608,11 +618,11 @@
                 <div
                   v-for="relatedMeme in relatedMemes"
                   :key="relatedMeme._id"
-                  class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                  class="flex items-center space-x-3 p-2 hover:bg-surface-50 rounded cursor-pointer"
                   @click="navigateToMeme(relatedMeme)"
                 >
                   <div
-                    class="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0"
+                    class="w-16 h-16 bg-surface-100 rounded overflow-hidden flex-shrink-0"
                   >
                     <img
                       v-if="relatedMeme.image_url"
@@ -622,7 +632,7 @@
                     />
                     <div
                       v-else
-                      class="w-full h-full flex items-center justify-center text-gray-400"
+                      class="w-full h-full flex items-center justify-center text-surface-400"
                     >
                       <i class="pi pi-image"></i>
                     </div>
@@ -631,13 +641,13 @@
                     <div class="font-medium text-sm truncate">
                       {{ relatedMeme.title }}
                     </div>
-                    <div class="text-xs text-gray-500">
+                    <div class="text-xs text-surface-500">
                       {{ relatedMeme.likes_count || 0 }} 讚
                     </div>
                   </div>
                 </div>
               </div>
-              <div v-else class="text-center py-4 text-gray-500">
+              <div v-else class="text-center py-4 text-surface-500">
                 <p class="text-sm">暫無相關迷因</p>
               </div>
             </template>
@@ -938,7 +948,7 @@ const renderMarkdown = (markdown) => {
   return markdown
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 粗體
     .replace(/\*(.*?)\*/g, '<em>$1</em>') // 斜體
-    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>') // 行內代碼
+    .replace(/`(.*?)`/g, '<code class="bg-surface-100 px-1 rounded">$1</code>') // 行內代碼
     .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>') // 三級標題
     .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>') // 二級標題
     .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>') // 一級標題
