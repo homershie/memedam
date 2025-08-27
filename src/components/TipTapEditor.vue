@@ -367,6 +367,74 @@
           >
         </div>
 
+        <!-- 圖片方向選擇 -->
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            圖片方向
+          </label>
+          <div class="flex gap-4">
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="selectedImageOrientation"
+                value="landscape"
+                :inputId="'img-landscape'"
+              />
+              <label :for="'img-landscape'" class="text-sm">橫式 (4:3)</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="selectedImageOrientation"
+                value="portrait"
+                :inputId="'img-portrait'"
+              />
+              <label :for="'img-portrait'" class="text-sm">直式 (3:4)</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 圖片尺寸選擇 -->
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            圖片尺寸
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="option in selectedImageOrientation === 'portrait'
+                ? imageSizeOptionsPortrait
+                : imageSizeOptions"
+              :key="option.value"
+              @click="selectedImageSize = option.value"
+              :class="[
+                'p-3 border rounded-lg cursor-pointer transition-colors',
+                selectedImageSize === option.value
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500',
+              ]"
+            >
+              <div class="font-medium text-sm">{{ option.label }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                {{ option.description }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 圖片註解 -->
+        <div class="flex flex-col gap-2">
+          <label
+            for="imageAnnotation"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            圖片註解
+          </label>
+          <InputText
+            id="imageAnnotation"
+            v-model="imageAnnotation"
+            placeholder="請輸入圖片註解（選填）"
+            class="w-full"
+          />
+        </div>
+
         <!-- 圖片連結模式 -->
         <div v-if="imageType === 'url'">
           <div class="flex flex-col gap-2">
@@ -465,6 +533,31 @@
           </ul>
         </div>
 
+        <!-- 影片方向選擇 -->
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            影片方向
+          </label>
+          <div class="flex gap-4">
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="selectedVideoOrientation"
+                value="landscape"
+                :inputId="'landscape'"
+              />
+              <label :for="'landscape'" class="text-sm">橫式 (16:9)</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="selectedVideoOrientation"
+                value="portrait"
+                :inputId="'portrait'"
+              />
+              <label :for="'portrait'" class="text-sm">直式 (9:16)</label>
+            </div>
+          </div>
+        </div>
+
         <!-- 影片預覽 -->
         <div v-if="videoUrl && isExternalVideoUrl(videoUrl)" class="relative">
           <div
@@ -494,6 +587,49 @@
           <i class="ri-error-warning-line mr-2"></i>
           不支援的影片格式，請使用支援的影片平台連結。
         </div>
+
+        <!-- 影片尺寸選擇 -->
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            影片尺寸
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="option in selectedVideoOrientation === 'portrait'
+                ? videoSizeOptionsPortrait
+                : videoSizeOptions"
+              :key="option.value"
+              @click="selectedVideoSize = option.value"
+              :class="[
+                'p-3 border rounded-lg cursor-pointer transition-colors',
+                selectedVideoSize === option.value
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500',
+              ]"
+            >
+              <div class="font-medium text-sm">{{ option.label }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                {{ option.description }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 影片註解 -->
+        <div class="flex flex-col gap-2">
+          <label
+            for="videoAnnotation"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            影片註解
+          </label>
+          <InputText
+            id="videoAnnotation"
+            v-model="videoAnnotation"
+            placeholder="請輸入影片註解（選填）..."
+            class="w-full"
+          />
+        </div>
       </div>
       <template #footer>
         <div class="flex justify-end gap-2">
@@ -522,12 +658,12 @@ import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
-import { Image } from '@tiptap/extension-image'
 import { Link } from '@tiptap/extension-link'
 import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { VideoEmbed } from '../utils/tipTapVideoExtension.js'
+import { CustomImage } from '../utils/tipTapImageExtension.js'
 import { isExternalVideoUrl, getEmbedUrl } from '../utils/mediaUtils.js'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
@@ -567,6 +703,46 @@ const linkDialogTitle = ref('插入連結')
 // 圖片上傳相關狀態
 const imageType = ref('upload') // 'upload' 或 'url'
 const selectedImage = ref(null)
+const imageAnnotation = ref('') // 圖片註解
+
+// 影片相關狀態
+const videoAnnotation = ref('') // 影片註解
+
+// 尺寸選擇相關狀態
+const selectedImageSize = ref('m') // 's', 'm', 'l', 'full'
+const selectedImageOrientation = ref('landscape') // 'landscape', 'portrait'
+const selectedVideoSize = ref('m') // 's', 'm', 'l', 'full'
+const selectedVideoOrientation = ref('landscape') // 'landscape', 'portrait'
+
+// 橫式圖片尺寸選項
+const imageSizeOptions = [
+  { value: 's', label: '小', description: '320×240，適合插圖' },
+  { value: 'm', label: '中', description: '640×480，一般內容' },
+  { value: 'l', label: '大', description: '960×720，重點圖片' },
+  { value: 'full', label: '滿版', description: '自適應寬度' },
+]
+
+// 直式圖片尺寸選項
+const imageSizeOptionsPortrait = [
+  { value: 's', label: '小', description: '240×320，適合手機' },
+  { value: 'm', label: '中', description: '480×640，一般內容' },
+  { value: 'l', label: '大', description: '720×960，重點圖片' },
+]
+
+// 影片尺寸選項
+const videoSizeOptions = [
+  { value: 's', label: '小', description: '480×270 (16:9)' },
+  { value: 'm', label: '中', description: '640×360 (16:9)' },
+  { value: 'l', label: '大', description: '960×540 (16:9)' },
+  { value: 'full', label: '滿版', description: '自適應寬度' },
+]
+
+const videoSizeOptionsPortrait = [
+  { value: 's', label: '小', description: '360×640 (9:16)' },
+  { value: 'm', label: '中', description: '450×800 (9:16)' },
+  { value: 'l', label: '大', description: '540×960 (9:16)' },
+  { value: 'full', label: '滿版', description: '自適應寬度' },
+]
 
 const editor = useEditor({
   content: props.modelValue,
@@ -578,7 +754,7 @@ const editor = useEditor({
     TableRow,
     TableHeader,
     TableCell,
-    Image,
+    CustomImage,
     Link,
     HorizontalRule,
     Subscript,
@@ -593,7 +769,7 @@ const editor = useEditor({
   editorProps: {
     attributes: {
       class:
-        'prose prose-sm sm:prose-base lg:prose-lg max-w-none focus:outline-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-gray-900 dark:prose-strong:text-white prose-code:text-primary-600 dark:prose-code:text-primary-400',
+        'prose prose-sm sm:prose-base lg:prose-lg max-w-none focus:outline-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-gray-900 dark:prose-strong:text-white prose-code:text-primary-600 dark:prose-code:text-primary-400 prose-img:max-w-none',
     },
   },
 })
@@ -687,13 +863,19 @@ const cancelLink = () => {
 
 const addImage = () => {
   imageUrl.value = ''
+  imageAnnotation.value = ''
   imageType.value = 'upload'
   selectedImage.value = null
+  selectedImageSize.value = 'm'
+  selectedImageOrientation.value = 'landscape'
   imageDialogVisible.value = true
 }
 
 const addVideo = () => {
   videoUrl.value = ''
+  videoAnnotation.value = ''
+  selectedVideoSize.value = 'm'
+  selectedVideoOrientation.value = 'landscape'
   videoDialogVisible.value = true
 }
 
@@ -714,10 +896,21 @@ const confirmImage = async () => {
   }
 
   if (imageSrc) {
-    editor.value?.chain().focus().setImage({ src: imageSrc }).run()
+    // 根據選擇的尺寸設定圖片屬性
+    const imageAttrs = {
+      src: imageSrc,
+      size: selectedImageSize.value,
+      orientation: selectedImageOrientation.value,
+      annotation: imageAnnotation.value, // 使用使用者輸入的註解
+    }
+
+    editor.value?.chain().focus().setImage(imageAttrs).run()
     imageDialogVisible.value = false
     imageUrl.value = ''
     selectedImage.value = null
+    imageAnnotation.value = ''
+    selectedImageSize.value = 'm'
+    selectedImageOrientation.value = 'landscape'
   }
 }
 
@@ -725,26 +918,37 @@ const cancelImage = () => {
   imageDialogVisible.value = false
   imageUrl.value = ''
   selectedImage.value = null
+  imageAnnotation.value = ''
+  selectedImageSize.value = 'm'
+  selectedImageOrientation.value = 'landscape'
 }
 
 const confirmVideo = () => {
   if (videoUrl.value.trim()) {
-    editor.value
-      ?.chain()
-      .focus()
-      .setVideoEmbed({
-        src: videoUrl.value.trim(),
-        title: '嵌入影片',
-      })
-      .run()
+    // 根據選擇的尺寸設定影片屬性
+    const videoAttrs = {
+      src: videoUrl.value.trim(),
+      title: '嵌入影片',
+      size: selectedVideoSize.value,
+      orientation: selectedVideoOrientation.value,
+      annotation: videoAnnotation.value, // 使用使用者輸入的註解
+    }
+
+    editor.value?.chain().focus().setVideoEmbed(videoAttrs).run()
     videoDialogVisible.value = false
     videoUrl.value = ''
+    videoAnnotation.value = ''
+    selectedVideoSize.value = 'm' // 重置為預設值
+    selectedVideoOrientation.value = 'landscape' // 重置為預設值
   }
 }
 
 const cancelVideo = () => {
   videoDialogVisible.value = false
   videoUrl.value = ''
+  videoAnnotation.value = ''
+  selectedVideoSize.value = 'm'
+  selectedVideoOrientation.value = 'landscape'
 }
 
 // 圖片上傳相關方法

@@ -442,7 +442,7 @@ a {
   }
 
   .editor-content {
-    @apply p-4 min-h-[200px] cursor-text;
+    @apply p-4 min-h-[600px] cursor-text;
   }
 
   .editor-content :deep(.ProseMirror) {
@@ -553,5 +553,36 @@ a {
 
   .dark .editor-content :deep(.video-embed-error) {
     @apply bg-red-900/20 border-red-800 text-red-400;
+  }
+
+  /* 圖片樣式 */
+  .editor-content .custom-image-wrapper {
+    @apply relative inline-block w-full py-8;
+  }
+
+  .editor-content .video-embed-wrapper {
+    @apply relative w-full py-8;
+  }
+
+  .editor-content .custom-image {
+    @apply block w-full h-auto;
+  }
+
+  .editor-content .image-annotation {
+    @apply mt-2 text-center text-sm text-surface-600 italic;
+  }
+
+  .editor-content .video-annotation {
+    @apply mt-2 text-center text-sm text-surface-600 italic;
+  }
+
+  /* 深色模式圖片樣式 */
+  .dark .editor-content .image-annotation {
+    @apply text-surface-400;
+  }
+
+  /* 深色模式影片樣式 */
+  .dark .editor-content .video-annotation {
+    @apply text-surface-400;
   }
 }
