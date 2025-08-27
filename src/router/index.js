@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import routes from 'virtual:generated-pages'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { useUserStore } from '@/stores/userStore'
-import { setPageMeta, cleanUrlParams } from '@/utils/seoUtils'
+import { setPageMeta, cleanUrlParams, CANONICAL_ORIGIN } from '@/utils/seoUtils'
 import {
   validateSponsorTransaction,
   logSponsorPageAccess,
@@ -116,7 +116,8 @@ router.afterEach((to) => {
     const rawQuery = to.query || {}
     const cleaned = cleanUrlParams(rawQuery)
 
-    const url = new URL(window.location.origin + to.path)
+    // 強制使用 www 主域作為 canonical
+    const url = new URL(CANONICAL_ORIGIN + to.path)
     const searchParams = new URLSearchParams()
     Object.keys(cleaned).forEach((key) => {
       const value = cleaned[key]
@@ -138,15 +139,32 @@ router.afterEach((to) => {
       ? `${url.origin}${url.pathname}?${searchParams.toString()}`
       : `${url.origin}${url.pathname}`
 
+    // 特定頁面標記 noindex：使用者頁、個人化列表、OAuth、帳務頁等
+    const noindexPaths = new Set([
+      '/login',
+      '/reset-password',
+      '/forgot-password',
+      '/oauth-callback',
+      '/settings',
+      '/admin',
+      '/memes/liked',
+      '/users', // 使用者個人頁避免薄內容索引
+    ])
+
+    const robotsMeta = [...noindexPaths].some((p) => to.path.startsWith(p))
+      ? 'noindex,follow'
+      : undefined
+
     setPageMeta({
       title: to.meta?.title || baseTitle,
       description: to.meta?.description,
       canonical,
+      robots: robotsMeta,
       openGraph: {
         title: pageTitle,
         description: to.meta?.description,
         url: canonical,
-        image: `${window.location.origin}/favicon/apple-touch-icon.png`,
+        image: `${CANONICAL_ORIGIN}/favicon/apple-touch-icon.png`,
       },
     })
   } catch (e) {
