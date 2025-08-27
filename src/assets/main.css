@@ -527,4 +527,31 @@ a {
   .dark .toolbar-divider {
     @apply bg-surface-600;
   }
+
+  /* 影片嵌入樣式 */
+  .editor-content :deep(.video-embed-container) {
+    @apply my-4;
+  }
+
+  .editor-content :deep(.video-embed-iframe) {
+    @apply w-full rounded-lg shadow-lg;
+    aspect-ratio: 16 / 9;
+  }
+
+  .editor-content :deep(.video-embed-placeholder) {
+    @apply flex items-center justify-center p-8 bg-surface-100 border-2 border-dashed border-surface-300 rounded-lg text-surface-500;
+  }
+
+  .editor-content :deep(.video-embed-error) {
+    @apply flex items-center justify-center p-4 bg-red-50 border border-red-200 rounded-lg text-red-600;
+  }
+
+  /* 深色模式影片嵌入樣式 */
+  .dark .editor-content :deep(.video-embed-placeholder) {
+    @apply bg-surface-800 border-surface-600 text-surface-400;
+  }
+
+  .dark .editor-content :deep(.video-embed-error) {
+    @apply bg-red-900/20 border-red-800 text-red-400;
+  }
 }

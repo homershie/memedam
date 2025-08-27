@@ -170,6 +170,15 @@
 
         <button
           type="button"
+          @click="addVideo"
+          class="toolbar-btn"
+          title="插入影片"
+        >
+          <i class="ri-video-add-line"></i>
+        </button>
+
+        <button
+          type="button"
           @click="editor.chain().focus().setHorizontalRule().run()"
           class="toolbar-btn"
           title="插入分隔線"
@@ -416,6 +425,92 @@
         </div>
       </template>
     </Dialog>
+
+    <!-- 影片對話框 -->
+    <Dialog
+      v-model:visible="videoDialogVisible"
+      header="插入影片"
+      :style="{ width: '30rem' }"
+      :modal="true"
+      :closable="true"
+      :closeOnEscape="true"
+    >
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+          <label
+            for="videoUrl"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            影片網址
+          </label>
+          <InputText
+            id="videoUrl"
+            v-model="videoUrl"
+            placeholder="https://www.youtube.com/watch?v=..."
+            class="w-full"
+            @keyup.enter="confirmVideo"
+          />
+        </div>
+
+        <!-- 支援的影片平台說明 -->
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          <p class="font-medium mb-2">支援的影片平台：</p>
+          <ul class="list-disc list-inside space-y-1">
+            <li>YouTube</li>
+            <li>Vimeo</li>
+            <li>TikTok</li>
+            <li>Twitch</li>
+            <li>Dailymotion</li>
+            <li>Bilibili</li>
+          </ul>
+        </div>
+
+        <!-- 影片預覽 -->
+        <div v-if="videoUrl && isExternalVideoUrl(videoUrl)" class="relative">
+          <div
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            預覽：
+          </div>
+          <div
+            class="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden"
+          >
+            <iframe
+              :src="getEmbedUrl(videoUrl)"
+              title="影片預覽"
+              class="w-full h-full"
+              frameborder="0"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+
+        <!-- 不支援的影片格式提示 -->
+        <div
+          v-if="videoUrl && !isExternalVideoUrl(videoUrl)"
+          class="text-sm text-primary-600 dark:text-primary-400 bg-primatext-primary-50 dark:bg-primatext-primary-900/20 p-3 rounded-lg"
+        >
+          <i class="ri-error-warning-line mr-2"></i>
+          不支援的影片格式，請使用支援的影片平台連結。
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="取消"
+            severity="secondary"
+            @click="cancelVideo"
+            outlined
+          />
+          <Button
+            label="確認"
+            @click="confirmVideo"
+            :disabled="!videoUrl.trim() || !isExternalVideoUrl(videoUrl)"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -432,6 +527,8 @@ import { Link } from '@tiptap/extension-link'
 import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
+import { VideoEmbed } from '../utils/tipTapVideoExtension.js'
+import { isExternalVideoUrl, getEmbedUrl } from '../utils/mediaUtils.js'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -461,8 +558,10 @@ const emit = defineEmits(['update:modelValue'])
 // 對話框狀態
 const linkDialogVisible = ref(false)
 const imageDialogVisible = ref(false)
+const videoDialogVisible = ref(false)
 const linkUrl = ref('')
 const imageUrl = ref('')
+const videoUrl = ref('')
 const linkDialogTitle = ref('插入連結')
 
 // 圖片上傳相關狀態
@@ -484,6 +583,7 @@ const editor = useEditor({
     HorizontalRule,
     Subscript,
     Superscript,
+    VideoEmbed,
   ],
   onUpdate: ({ editor }) => {
     // 根據 outputJson 屬性決定輸出格式
@@ -592,6 +692,11 @@ const addImage = () => {
   imageDialogVisible.value = true
 }
 
+const addVideo = () => {
+  videoUrl.value = ''
+  videoDialogVisible.value = true
+}
+
 const confirmImage = async () => {
   let imageSrc = ''
 
@@ -620,6 +725,26 @@ const cancelImage = () => {
   imageDialogVisible.value = false
   imageUrl.value = ''
   selectedImage.value = null
+}
+
+const confirmVideo = () => {
+  if (videoUrl.value.trim()) {
+    editor.value
+      ?.chain()
+      .focus()
+      .setVideoEmbed({
+        src: videoUrl.value.trim(),
+        title: '嵌入影片',
+      })
+      .run()
+    videoDialogVisible.value = false
+    videoUrl.value = ''
+  }
+}
+
+const cancelVideo = () => {
+  videoDialogVisible.value = false
+  videoUrl.value = ''
 }
 
 // 圖片上傳相關方法
@@ -698,3 +823,5 @@ onBeforeUnmount(() => {
   }
 })
 </script>
+
+<style scoped></style>
