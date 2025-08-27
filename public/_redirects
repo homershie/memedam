@@ -11,8 +11,6 @@ http://www.memedam.com/* https://www.memedam.com/:splat 301!
 https://memedam.com/* https://www.memedam.com/:splat 301!
 
 # 防止 URL 短網域造成抓取誤判（將任何子域 *.memedam.com 強制到主網域）
-http://:sub.memedam.com/* https://www.memedam.com/:splat 301!
-https://:sub.memedam.com/* https://www.memedam.com/:splat 301!
 
 # 舊的分頁 URL 重新導向到新格式
 /memes/all?page=1 /memes/all 301
