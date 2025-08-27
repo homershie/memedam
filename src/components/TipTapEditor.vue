@@ -442,8 +442,17 @@ defineOptions({ name: 'TipTapEditor' })
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    type: [String, Object],
     default: '',
+  },
+  outputJson: {
+    type: Boolean,
+    default: false,
+  },
+  // 新增：圖片上傳回調函數
+  onImageUpload: {
+    type: Function,
+    default: null,
   },
 })
 
@@ -477,7 +486,9 @@ const editor = useEditor({
     Superscript,
   ],
   onUpdate: ({ editor }) => {
-    emit('update:modelValue', editor.getHTML())
+    // 根據 outputJson 屬性決定輸出格式
+    const content = props.outputJson ? editor.getJSON() : editor.getHTML()
+    emit('update:modelValue', content)
   },
   editorProps: {
     attributes: {
@@ -497,9 +508,20 @@ const handleEditorClick = () => {
 watch(
   () => props.modelValue,
   (newValue) => {
-    const isSame = editor.value?.getHTML() === newValue
-    if (!isSame && editor.value) {
-      editor.value.commands.setContent(newValue || '', false)
+    if (!editor.value) return
+
+    // 根據 outputJson 屬性決定如何比較和設置內容
+    if (props.outputJson) {
+      const currentJson = editor.value.getJSON()
+      const isSame = JSON.stringify(currentJson) === JSON.stringify(newValue)
+      if (!isSame) {
+        editor.value.commands.setContent(newValue || null, false)
+      }
+    } else {
+      const isSame = editor.value.getHTML() === newValue
+      if (!isSame) {
+        editor.value.commands.setContent(newValue || '', false)
+      }
     }
   },
 )
@@ -570,12 +592,17 @@ const addImage = () => {
   imageDialogVisible.value = true
 }
 
-const confirmImage = () => {
+const confirmImage = async () => {
   let imageSrc = ''
 
   if (imageType.value === 'upload' && selectedImage.value) {
-    // 使用上傳的圖片
+    // 使用本地預覽作為佔位符，實際上傳會在發布時處理
     imageSrc = getImagePreviewUrl(selectedImage.value)
+
+    // 如果有提供上傳回調函數，將檔案傳遞給父組件處理
+    if (props.onImageUpload) {
+      props.onImageUpload(selectedImage.value)
+    }
   } else if (imageType.value === 'url' && imageUrl.value.trim()) {
     // 使用圖片連結
     imageSrc = imageUrl.value.trim()

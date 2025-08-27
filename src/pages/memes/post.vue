@@ -285,7 +285,11 @@
           <div class="field">
             <label class="block font-semibold mb-2">詳細介紹</label>
             <div class="overflow-hidden" @click.stop @submit.prevent>
-              <TipTapEditor v-model="detailMarkdown" />
+              <TipTapEditor
+                v-model="detailContent"
+                :outputJson="true"
+                :onImageUpload="handleDetailImageUpload"
+              />
             </div>
             <small class="text-gray-500">
               支援富文本編輯，可以添加圖片、連結、表格等豐富內容。
@@ -356,6 +360,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
 
 // PrimeVue 組件
 import InputText from 'primevue/inputtext'
@@ -380,6 +385,7 @@ defineOptions({ name: 'PostMemePage' })
 
 const toast = useToast()
 const router = useRouter()
+const userStore = useUserStore()
 
 // 表單資料
 const form = reactive({
@@ -409,7 +415,8 @@ const selectedTags = ref([])
 const tagInput = ref('')
 const tagSuggestions = ref([])
 const allTags = ref([])
-const detailMarkdown = ref('')
+const detailContent = ref(null) // 改為 JSON 格式
+const detailImages = ref([]) // 新增：詳細介紹中的圖片陣列
 const loading = ref(false)
 const submitError = ref('')
 const uploadedImageFile = ref(null)
@@ -562,6 +569,14 @@ const getTypeName = (type) => {
   return nameMap[type] || '未知'
 }
 
+// 收集詳細介紹中待上傳的圖片檔案
+const pendingDetailImages = ref([])
+
+const handleDetailImageUpload = (file) => {
+  // 將檔案加入待上傳清單，而不是立即上傳
+  pendingDetailImages.value.push(file)
+}
+
 // 表單驗證
 const validateForm = () => {
   // 清空錯誤
@@ -621,7 +636,9 @@ const resetForm = () => {
   imagePreviewError.value = false
   selectedTags.value = []
   tagInput.value = ''
-  detailMarkdown.value = ''
+  detailContent.value = null
+  detailImages.value = []
+  pendingDetailImages.value = []
   submitError.value = ''
 
   Object.keys(errors).forEach((key) => (errors[key] = ''))
@@ -635,13 +652,22 @@ const handleSubmit = async () => {
   submitError.value = ''
 
   try {
-    // 送出時才上傳圖片
+    // 取得認證 token
+    const token = userStore.token
+    if (!token) {
+      throw new Error('未提供授權 token')
+    }
+
+    // 送出時才上傳主圖片
     if (form.type === 'image' && uploadedImageFile.value) {
       const formData = new FormData()
       formData.append('image', uploadedImageFile.value) // key 必須是 'image'
 
       const res = await fetch('/api/upload/image', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
         // 不要加 headers: Content-Type
       })
@@ -707,10 +733,11 @@ const handleSubmit = async () => {
     const tagIds = allSelectedTags.map((tag) => tag._id).filter(Boolean)
     const tagNames = allSelectedTags.map((tag) => tag.name)
 
-    // 建立迷因
+    // 先建立迷因，獲得 memeId
     const memeData = {
       ...form,
-      detail_markdown: detailMarkdown.value,
+      detail_content: detailContent.value,
+      detail_images: detailImages.value,
       tags_cache: tagNames,
       // 標記為實質性修改，讓後端更新 modified_at
       _markAsModified: true,
@@ -723,13 +750,63 @@ const handleSubmit = async () => {
     if (memeData.source_url === '') memeData.source_url = undefined
 
     const memeResponse = await memeService.create(memeData)
-
-    // 修正：後端返回 {success: true, data: {迷因對象}, error: null}
     const meme = memeResponse.data.data
 
     // 檢查迷因ID是否存在
     if (!meme || !meme._id) {
       throw new Error('迷因創建失敗：沒有返回有效的迷因ID')
+    }
+
+    // 現在有了 memeId，上傳詳細介紹中的圖片
+    if (pendingDetailImages.value.length > 0) {
+      const uploadedUrls = []
+
+      for (const file of pendingDetailImages.value) {
+        try {
+          const formData = new FormData()
+          formData.append('image', file)
+
+          // 使用 URL 查詢參數來傳遞這些值，因為 multer 可能無法正確解析 FormData 中的文字欄位
+          const uploadUrl = `/api/upload/image?isDetailImage=true&memeId=${meme._id}`
+
+          const res = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          })
+
+          const data = await res.json()
+          if (
+            data.success &&
+            data.url &&
+            data.url.startsWith('https://res.cloudinary.com/')
+          ) {
+            // 將上傳的圖片 URL 加入 detail_images 陣列
+            if (!detailImages.value.includes(data.url)) {
+              detailImages.value.push(data.url)
+            }
+            uploadedUrls.push(data.url)
+          } else {
+            console.error('詳細介紹圖片上傳失敗:', data.message || '未知錯誤')
+          }
+        } catch (error) {
+          console.error('詳細介紹圖片上傳失敗:', error)
+        }
+      }
+
+      // 如果有新的圖片上傳成功，更新迷因的 detail_images
+      if (uploadedUrls.length > 0) {
+        try {
+          await memeService.update(meme._id, {
+            detail_images: detailImages.value,
+            _markAsModified: true,
+          })
+        } catch (error) {
+          console.error('更新迷因詳細介紹圖片失敗:', error)
+        }
+      }
     }
 
     // 建立標籤關聯
@@ -773,7 +850,9 @@ const handleSubmit = async () => {
     })
 
     // 清空詳細介紹欄位
-    detailMarkdown.value = ''
+    detailContent.value = null
+    detailImages.value = []
+    pendingDetailImages.value = []
 
     // 跳轉到所有迷因頁面
     router.push('/memes/all')

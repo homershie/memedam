@@ -18,7 +18,7 @@
               <router-link
                 v-if="meme.author && (meme.author._id || meme.author.id)"
                 :to="`/users/${meme.author._id || meme.author.id}`"
-                class="font-semibold text-gray-800 hover:text-blue-600 transition-colors cursor-pointer"
+                class="font-semibold text-gray-800 dark:text-gray-200 hover:text-primary-500 transition-colors cursor-pointer"
                 @click.stop
               >
                 {{
@@ -27,7 +27,12 @@
                   '匿名用戶'
                 }}
               </router-link>
-              <span v-else class="font-semibold text-gray-800"> 匿名用戶 </span>
+              <span
+                v-else
+                class="font-semibold text-gray-800 dark:text-gray-200"
+              >
+                匿名用戶
+              </span>
               <span class="text-xs text-gray-400">· {{ publishedTime }}</span>
             </div>
           </div>

@@ -682,8 +682,17 @@ const handleSubmit = async () => {
       const formData = new FormData()
       formData.append('image', uploadedImageFile.value) // key 必須是 'image'
 
+      // 取得認證 token
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('未提供授權 token')
+      }
+
       const res = await fetch('/api/upload/image', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
         // 不要加 headers: Content-Type
       })
