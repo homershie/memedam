@@ -4,27 +4,79 @@
     <div
       class="mb-4 px-4 py-16 flex flex-col lg:flex-row items-center gap-8 lg:px-32"
     >
-      <div class="py-40 flex-1 space-y-6">
+      <div class="py-40 flex-1 space-y-6 order-last lg:order-first">
         <p class="text-sm text-gray-500 mb-2">About</p>
         <h1 class="text-5xl font-bold">關於迷因典</h1>
         <div class="space-y-4 text-base text-gray-600">
           <p>
-            迷因典成立於2025年，是一個專注於迷因文化的社群平台。希望能讓喜歡迷因的怪咖們集結起來，打造一個迷因的理想鄉，互相分享和交流奇奇怪怪的東西。
+            迷因典成立於2025年，是一個專注於迷因文化的社群平台，希望盡量以去中心化的方式經營，讓大家可以用互動的方式，讓迷因可以依照熱度排序。在符合迷因典的宗旨下，希望能讓喜歡迷因的怪咖們集結起來，打造一個迷因的理想鄉，互相分享和交流奇奇怪怪的東西。
           </p>
           <p>
             在這裡你可以追蹤最新梗潮、上傳你最愛的地獄梗，跟同好互相一起搭上地獄列車（誤）。也可以安靜地當個角落人潛水，等著下一個噴飯的瞬間。
           </p>
           <p>
-            迷因典的宗旨很簡單：讓迷因更容易被了解和傳播。透過技術創新與用戶體驗優化，迷因典能集結各路迷因愛好者，讓迷因能讓更多人知道。
+            迷因典的宗旨很簡單：讓迷因在合乎倫理的範圍內更容易被了解和傳播。透過技術創新與用戶體驗優化，迷因典能集結各路迷因愛好者，讓迷因能讓更多人知道。
           </p>
         </div>
       </div>
-      <div class="flex-1 flex justify-center">
+      <div class="flex-1 flex justify-center order-first lg:order-last">
         <img
           src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756045758/memedam-c-1024t_tnwl5r.png"
           alt="logo"
           class="w-100 h-100 drop-shadow-lg transform transition-transform duration-200 hover:scale-[1.02]"
         />
+      </div>
+    </div>
+
+    <!-- 迷因典的作者 -->
+    <div
+      class="mb-4 px-4 py-16 flex flex-col lg:flex-row items-center gap-8 lg:px-32"
+    >
+      <div class="py-40 flex items-center gap-40 space-y-6">
+        <div
+          class="flex-1 flex justify-center rounded-full overflow-hidden aspect-square"
+        >
+          <img
+            src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1754649874/memes/d1j6eq0dho1yleoiy4y7.png"
+            alt="logo"
+            class="object-cover aspect-square w-full h-full transform transition-transform duration-200 hover:scale-[1.02]"
+          />
+        </div>
+
+        <div class="space-y-2 flex-1">
+          <p class="text-sm text-gray-500 mb-2">Author</p>
+          <h1 class="text-5xl font-bold mb-4">關於作者</h1>
+          <p>
+            我是荷馬桑，迷因典的開發者兼站長。是一位喜歡迷因的怪咖，原本是平面設計、UI
+            設計和動畫製作出身，興趣很多，包含健身、動漫、遊戲、音樂和各種冷知識。喜歡把抽象的想法變成有趣的作品。最近在學前端工程當作武器庫，把設計腦和工程腦融合在一起，做出這個充滿歡樂與惡搞的迷因平台。
+          </p>
+          <p>
+            如果你對迷因典有建議或合作想法，歡迎使用聯絡頁面，或是意見反饋功能，也可以直接聯絡我：
+          </p>
+          <div class="flex items-center gap-2">
+            <i class="pi pi-envelope"></i>
+            <a
+              href="mailto:support@memedam.com"
+              class="underline hover:text-primary-500!"
+              >support@memedam.com</a
+            >
+          </div>
+          <p>
+            另外，如果你覺得迷因典不錯，也可以贊助我，讓我可以繼續維護這個平台：
+          </p>
+          <div class="flex items-center gap-2">
+            <i class="pi pi-money-bill"></i>
+            歐付寶會員編號: 1018892
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="pi pi-money-bill"></i>
+            <a
+              class="underline hover:text-primary-500!"
+              href="https://ko-fi.com/homershie"
+              >KO-FI贊助頁面</a
+            >
+          </div>
+        </div>
       </div>
     </div>
 
@@ -172,7 +224,7 @@ export default {
         color: 'var(--p-primary-500)',
       },
       {
-        date: '2024.09',
+        date: '2025.09',
         title: '核心功能',
         description:
           '帳號、迷因編輯、社群互動、標籤、搜尋等基礎功能到位。開始發現光怪陸離的奇聞軼事。',
