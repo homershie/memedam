@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-[calc(100vh-100px)]">
+  <div class="max-w-6xl w-full mx-auto min-h-[calc(100vh-100px)]">
     <!-- 載入狀態 -->
     <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
       <ProgressSpinner />
@@ -23,489 +23,100 @@
     </div>
 
     <!-- 主要內容 -->
-    <div v-else-if="meme" class="container mx-auto px-4 py-6">
-      <div class="flex gap-6 max-w-[1400px] mx-auto">
-        <!-- 左側主要內容 -->
-        <div class="flex-1 space-y-6">
-          <!-- 標題和內容展示區 -->
-          <div
-            id="content"
-            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
-          >
-            <!-- 標題區域 -->
-            <div class="flex items-start justify-between mb-6">
-              <div class="flex-1">
-                <h1 class="text-3xl font-bold text-surface-900 mb-2">
-                  {{ meme.title }}
-                </h1>
-                <div
-                  class="flex items-center text-sm text-surface-600 space-x-4"
-                >
-                  <span>
-                    由
-                    <router-link
-                      v-if="meme.author && (meme.author._id || meme.author.id)"
-                      :to="`/users/${meme.author._id || meme.author.id}`"
-                      class="text-primary-600 hover:text-primary-800 font-medium transition-colors"
-                    >
-                      {{ authorName }}
-                    </router-link>
-                    <span v-else class="font-medium">{{ authorName }}</span>
-                    發布
-                  </span>
-                  <span>{{ publishedTime }}</span>
-                  <span>已瀏覽 {{ viewCount }} 次</span>
-                </div>
-              </div>
-              <div class="flex items-center space-x-2">
-                <Button
-                  v-if="canEdit"
-                  icon="pi pi-pencil"
-                  label="編輯"
-                  severity="secondary"
-                  size="small"
-                  @click="editMeme"
-                />
-                <Button
-                  v-if="canEdit"
-                  icon="pi pi-cog"
-                  label="側邊欄"
-                  severity="secondary"
-                  size="small"
-                  @click="showSidebarEditor"
-                />
-                <Button
-                  icon="pi pi-share-alt"
-                  severity="secondary"
-                  size="small"
-                  @click="showShareOptions"
-                  v-tooltip.bottom="'分享'"
-                />
-              </div>
-            </div>
-
-            <!-- 手機版基本資訊 -->
-            <div v-if="!isDesktop" class="border-t pt-4 mb-6">
-              <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span class="font-medium text-surface-600">類型：</span
-                  >{{ typeDisplayName }}
-                </div>
-                <div>
-                  <span class="font-medium text-surface-600">按讚：</span
-                  >{{ likesCount }}
-                </div>
-                <div>
-                  <span class="font-medium text-surface-600">瀏覽：</span
-                  >{{ viewCount }}
-                </div>
-                <div>
-                  <span class="font-medium text-surface-600">評論：</span
-                  >{{ commentsCount }}
-                </div>
-              </div>
-            </div>
-
-            <!-- 快速導航 -->
-            <nav class="border-t pt-4 mb-6">
-              <ScrollPanel style="width: 100%; height: 50px">
-                <div class="flex space-x-6 text-sm">
-                  <a href="#content" class="text-primary-600 hover:underline"
-                    >內容</a
-                  >
-                  <a href="#details" class="text-primary-600 hover:underline"
-                    >詳細資訊</a
-                  >
-                  <a href="#comments" class="text-primary-600 hover:underline"
-                    >討論</a
-                  >
-                  <a href="#related" class="text-primary-600 hover:underline"
-                    >相關迷因</a
-                  >
-                  <a href="#versions" class="text-primary-600 hover:underline"
-                    >版本歷史</a
-                  >
-                </div>
-              </ScrollPanel>
-            </nav>
-
-            <!-- 內容展示區 -->
-            <div class="text-center mb-6">
-              <!-- 圖片類型 -->
-              <div v-if="meme.type === 'image' && meme.image_url" class="mb-4">
-                <Image
-                  :src="meme.image_url"
-                  :alt="meme.title"
-                  class="max-w-full max-h-[600px] mx-auto rounded-lg shadow-lg"
-                  preview
-                />
-              </div>
-
-              <!-- 影片類型 -->
-              <div
-                v-else-if="meme.type === 'video' && meme.video_url"
-                class="mb-4"
-              >
-                <div
-                  v-if="isExternalVideoUrl(meme.video_url)"
-                  class="aspect-video max-w-4xl mx-auto"
-                >
-                  <iframe
-                    :src="getEmbedUrl(meme.video_url)"
-                    class="w-full h-full rounded-lg shadow-lg"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                  ></iframe>
-                </div>
-                <video
-                  v-else
-                  controls
-                  class="max-w-4xl w-full rounded-lg shadow-lg"
-                  :poster="meme.image_url"
-                >
-                  <source :src="meme.video_url" type="video/mp4" />
-                  您的瀏覽器不支援影片播放
-                </video>
-              </div>
-
-              <!-- 音訊類型 -->
-              <div
-                v-else-if="meme.type === 'audio' && meme.audio_url"
-                class="mb-4"
-              >
-                <div
-                  v-if="isExternalAudioUrl(meme.audio_url)"
-                  class="w-full max-w-2xl mx-auto h-32"
-                >
-                  <iframe
-                    :src="getAudioEmbedUrl(meme.audio_url)"
-                    class="w-full h-full rounded-lg shadow-lg"
-                    frameborder="0"
-                    allow="autoplay"
-                  ></iframe>
-                </div>
-                <audio
-                  v-else
-                  controls
-                  class="w-full max-w-2xl rounded-lg shadow-lg"
-                  preload="metadata"
-                >
-                  <source :src="meme.audio_url" type="audio/mpeg" />
-                  <source :src="meme.audio_url" type="audio/ogg" />
-                  <source :src="meme.audio_url" type="audio/wav" />
-                  您的瀏覽器不支援音訊播放
-                </audio>
-              </div>
-
-              <!-- GIF類型 -->
-              <div
-                v-else-if="meme.type === 'gif' && meme.image_url"
-                class="mb-4"
-              >
-                <img
-                  :src="meme.image_url"
-                  :alt="meme.title"
-                  class="max-w-full max-h-[600px] mx-auto rounded-lg shadow-lg"
-                />
-              </div>
-
-              <!-- 文字類型 -->
-              <div v-else-if="meme.type === 'text'" class="mb-4">
-                <TextMemeCard
-                  :title="meme.title"
-                  variant="random"
-                  size="large"
-                  :hover-effect="false"
-                  :auto-resize="true"
-                />
-              </div>
-            </div>
-
-            <!-- 內容描述 - 使用 detail_content 欄位 -->
-            <div
-              v-if="meme.detail_content"
-              class="prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert prose-headings:text-surface-900 dark:prose-headings:text-white prose-p:text-surface-700 dark:prose-p:text-surface-300 prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-strong:text-surface-900 dark:prose-strong:text-white prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-blockquote:text-surface-600 dark:prose-blockquote:text-surface-400 prose-blockquote:border-primary-500"
-            >
-              <div v-html="renderTipTapContent(meme.detail_content)"></div>
-            </div>
-            <!-- 如果沒有 detail_content，則顯示原本的 content -->
-            <div v-else-if="meme.content" class="prose max-w-none">
-              <p class="text-surface-700 leading-relaxed">{{ meme.content }}</p>
-            </div>
-
-            <!-- 互動按鈕 -->
-            <div class="flex items-center justify-between mt-6 pt-6 border-t">
-              <div class="flex items-center space-x-4">
-                <Button
-                  :icon="isLiked ? 'pi pi-thumbs-up-fill' : 'pi pi-thumbs-up'"
-                  :severity="isLiked ? 'success' : 'secondary'"
-                  :label="likesCount.toString()"
-                  @click="toggleLike"
-                />
-                <Button
-                  :icon="
-                    isDisliked ? 'pi pi-thumbs-down-fill' : 'pi pi-thumbs-down'
-                  "
-                  :severity="isDisliked ? 'danger' : 'secondary'"
-                  :label="dislikesCount.toString()"
-                  @click="toggleDislike"
-                />
-                <Button
-                  icon="pi pi-comment"
-                  severity="secondary"
-                  :label="commentsCount.toString()"
-                  @click="scrollToComments"
-                />
-              </div>
-              <div class="flex items-center space-x-2">
-                <Button
-                  :icon="isCollected ? 'pi pi-bookmark-fill' : 'pi pi-bookmark'"
-                  :severity="isCollected ? 'warning' : 'secondary'"
-                  @click="toggleCollection"
-                  v-tooltip.top="isCollected ? '取消收藏' : '收藏'"
-                />
-              </div>
-            </div>
+    <div v-else-if="meme" class="mx-auto px-4 py-6">
+      <!-- 標題區域 -->
+      <div class="flex items-start justify-between mb-6">
+        <div class="flex-1">
+          <h1 class="text-3xl font-bold text-surface-900 mb-2">
+            {{ meme.title }}
+          </h1>
+          <!-- 標籤 -->
+          <div class="flex items-center space-x-2">
+            <Tag
+              v-for="tag in tags"
+              :key="tag._id || tag.id"
+              :label="tag.name"
+              class="bg-primary-50 text-primary-700 cursor-pointer hover:bg-primary-100 transition-colors"
+              @click="navigateToTag(tag)"
+            />
           </div>
-
-          <!-- 詳細資訊 -->
           <div
-            id="details"
-            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+            class="flex items-center text-sm text-surface-600 space-x-4 dark:text-surface-400"
           >
-            <h2 class="text-xl font-bold text-surface-900 mb-4">詳細資訊</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 class="font-semibold text-surface-700 mb-2">基本資訊</h3>
-                <div class="space-y-2 text-sm">
-                  <div>
-                    <span class="font-medium">類型：</span>{{ typeDisplayName }}
-                  </div>
-                  <div>
-                    <span class="font-medium">建立時間：</span
-                    >{{ fullPublishedTime }}
-                  </div>
-                  <div
-                    v-if="
-                      (meme.modified_at || meme.modifiedAt) &&
-                      (meme.modified_at !== meme.created_at ||
-                        meme.modifiedAt !== meme.createdAt)
-                    "
-                  >
-                    <span class="font-medium">最後修改：</span
-                    >{{ lastUpdatedTime }}
-                  </div>
-                  <div>
-                    <span class="font-medium">作者：</span>{{ authorName }}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h3 class="font-semibold text-surface-700 mb-2">統計資料</h3>
-                <div class="space-y-2 text-sm">
-                  <div>
-                    <span class="font-medium">瀏覽次數：</span>{{ viewCount }}
-                  </div>
-                  <div>
-                    <span class="font-medium">按讚數：</span>{{ likesCount }}
-                  </div>
-                  <div>
-                    <span class="font-medium">按噓數：</span>{{ dislikesCount }}
-                  </div>
-                  <div>
-                    <span class="font-medium">評論數：</span>{{ commentsCount }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 瀏覽統計詳情 -->
-            <div v-if="viewStats.total_views > 0" class="mt-6">
-              <h3 class="font-semibold text-surface-700 mb-2">瀏覽統計詳情</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div class="space-y-2">
-                  <div>
-                    <span class="font-medium">總瀏覽數：</span
-                    >{{ viewStats.total_views }}
-                  </div>
-                  <div>
-                    <span class="font-medium">有效瀏覽：</span
-                    >{{ viewStats.effective_views }}
-                  </div>
-                  <div>
-                    <span class="font-medium">重複瀏覽：</span
-                    >{{ viewStats.duplicate_views }}
-                  </div>
-                </div>
-                <div class="space-y-2">
-                  <div>
-                    <span class="font-medium">獨立用戶：</span
-                    >{{ viewStats.unique_users }}
-                  </div>
-                  <div>
-                    <span class="font-medium">平均瀏覽時間：</span
-                    >{{ Math.round(viewStats.avg_duration) }}秒
-                  </div>
-                  <div>
-                    <span class="font-medium">總瀏覽時間：</span
-                    >{{ Math.round(viewStats.total_duration / 60) }}分鐘
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 標籤 -->
-            <div v-if="tags.length > 0" class="mt-6">
-              <h3 class="font-semibold text-surface-700 mb-2">標籤</h3>
-              <div class="flex flex-wrap gap-2">
-                <Tag
-                  v-for="tag in tags"
-                  :key="tag._id"
-                  :value="`#${tag.name}`"
-                  severity="info"
-                  class="cursor-pointer"
-                  @click="navigateToTag(tag)"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- 手機板相關迷因 -->
-          <div
-            v-if="!isDesktop"
-            id="related"
-            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
-          >
-            <h2 class="text-xl font-bold text-surface-900 mb-4">相關迷因</h2>
-            <div v-if="relatedMemes.length > 0" class="space-y-3">
-              <div
-                v-for="relatedMeme in relatedMemes"
-                :key="relatedMeme._id"
-                class="flex items-center space-x-3 p-3 hover:bg-surface-50 rounded cursor-pointer border"
-                @click="navigateToMeme(relatedMeme)"
+            <span>
+              由
+              <router-link
+                v-if="meme.author && (meme.author._id || meme.author.id)"
+                :to="`/users/${meme.author._id || meme.author.id}`"
+                class="text-primary-500 hover:text-primary-700 font-medium transition-colors"
               >
-                <div
-                  class="w-20 h-20 bg-surface-100 rounded overflow-hidden flex-shrink-0"
-                >
-                  <img
-                    v-if="relatedMeme.image_url"
-                    :src="relatedMeme.image_url"
-                    :alt="relatedMeme.title"
-                    class="w-full h-full object-cover"
-                  />
-                  <div
-                    v-else
-                    class="w-full h-full flex items-center justify-center text-surface-400"
-                  >
-                    <i class="pi pi-image"></i>
-                  </div>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="font-medium text-sm truncate">
-                    {{ relatedMeme.title }}
-                  </div>
-                  <div class="text-xs text-surface-500 mt-1">
-                    {{ relatedMeme.likes_count || 0 }} 讚 •
-                    {{ relatedMeme.view_count || 0 }} 瀏覽
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="text-center py-8 text-surface-500">
-              <i class="pi pi-image text-4xl mb-2"></i>
-              <p>暫無相關迷因</p>
-            </div>
+                {{ authorName }}
+              </router-link>
+              <span v-else class="font-medium">{{ authorName }}</span>
+              發布
+            </span>
           </div>
-
-          <!-- 討論區 -->
           <div
-            id="comments"
-            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+            class="flex items-center text-sm text-surface-600 space-x-4 dark:text-surface-400"
           >
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-bold text-surface-900">
-                討論 ({{ commentsCount }})
-              </h2>
-              <Button
-                v-if="userStore.isLoggedIn"
-                label="新增留言"
-                icon="pi pi-plus"
-                @click="showCommentForm"
-              />
-            </div>
-
-            <!-- 評論列表 -->
-            <div v-if="comments.length > 0" class="space-y-4">
-              <CommentItem
-                v-for="comment in comments"
-                :key="comment._id"
-                :comment="comment"
-                @reply="handleReply"
-                @update="loadComments"
-              />
-            </div>
-            <div v-else class="text-center py-8 text-surface-500">
-              <i class="pi pi-comment text-4xl mb-2"></i>
-              <p>還沒有人留言，成為第一個留言的人吧！</p>
-            </div>
-
-            <!-- 分頁 -->
-            <div
-              v-if="totalComments > pageSize"
-              class="flex justify-center mt-6"
-            >
-              <Paginator
-                :rows="pageSize"
-                :total-records="totalComments"
-                :first="(currentPage - 1) * pageSize"
-                @page="onPageChange"
-              />
-            </div>
-          </div>
-
-          <!-- 版本歷史 -->
-          <div
-            id="versions"
-            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
-          >
-            <h2 class="text-xl font-bold text-surface-900 mb-4">版本歷史</h2>
-            <div v-if="versions.length > 0" class="space-y-3">
-              <div
-                v-for="version in versions"
-                :key="version._id"
-                class="flex items-center justify-between py-3 border-b last:border-b-0"
-              >
-                <div class="flex-1">
-                  <div class="font-medium">
-                    {{ version.description || '更新內容' }}
-                  </div>
-                  <div class="text-sm text-surface-600">
-                    {{ formatDate(version.created_at) }} by
-                    {{ version.editor?.username || '系統' }}
-                  </div>
-                </div>
-                <Button
-                  label="查看"
-                  size="small"
-                  severity="secondary"
-                  @click="viewVersion"
-                />
-              </div>
-            </div>
-            <div v-else class="text-center py-4 text-surface-500">
-              <p>目前沒有版本歷史記錄</p>
-            </div>
+            <span>{{ lastUpdatedTime }}</span>
+            <span>已瀏覽 {{ viewCount }} 次</span>
           </div>
         </div>
+        <div class="flex items-center space-x-2">
+          <Button
+            v-if="canEdit && isDesktop"
+            icon="pi pi-pencil"
+            label="編輯"
+            severity="secondary"
+            size="small"
+            @click="editMeme"
+          />
+          <Button
+            v-if="canEdit && isDesktop"
+            icon="pi pi-cog"
+            label="側邊欄"
+            severity="secondary"
+            size="small"
+            @click="showSidebarEditor"
+          />
+          <Button
+            icon="pi pi-share-alt"
+            severity="secondary"
+            size="small"
+            @click="showShareOptions"
+            v-tooltip.bottom="'分享'"
+          />
+          <Button
+            icon="pi pi-flag"
+            severity="secondary"
+            size="small"
+            @click="reportMeme"
+          />
+        </div>
+      </div>
 
-        <!-- 右側資訊欄 - 僅桌面版顯示 -->
-        <div v-if="isDesktop" class="w-80 space-y-6 s">
+      <Divider class="my-6" />
+
+      <!-- 廣告 -->
+      <div v-if="!isVipUser" class="flex justify-center items-center my-8">
+        <AdInlineDetail />
+      </div>
+
+      <!-- 使用 float 實現維基百科式文繞圖效果 -->
+      <div class="relative">
+        <!-- 右側側邊欄 - 使用 float，僅在大螢幕上浮動 -->
+        <div
+          class="lg:float-right lg:ml-6 lg:mb-6 w-full max-w-80 lg:w-80 flex-shrink-0 space-y-6"
+        >
           <!-- 迷因資訊框 -->
-          <Card class="shadow dark:bg-surface-800" v-if="!sidebarData">
+          <Card
+            class="shadow-lg border border-surface-200 dark:bg-surface-800 dark:border-surface-700"
+            v-if="!sidebarData"
+          >
             <template #title>
               <div
-                class="text-lg font-bold text-center rounded-t-lg -m-6 mb-4 p-3"
+                class="text-lg font-bold text-center rounded-t-lg -m-6 mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
               >
                 {{ meme.title }}
               </div>
@@ -573,30 +184,6 @@
                     </tr>
                   </tbody>
                 </table>
-
-                <!-- 瀏覽統計詳情 -->
-                <div
-                  v-if="viewStats.total_views > 0"
-                  class="mt-4 pt-4 border-t"
-                >
-                  <h4 class="font-semibold text-surface-700 mb-2 text-sm">
-                    瀏覽統計
-                  </h4>
-                  <div class="space-y-1 text-xs">
-                    <div class="flex justify-between">
-                      <span class="text-surface-600">有效瀏覽：</span>
-                      <span>{{ viewStats.effective_views }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-surface-600">獨立用戶：</span>
-                      <span>{{ viewStats.unique_users }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-surface-600">平均時間：</span>
-                      <span>{{ Math.round(viewStats.avg_duration) }}秒</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </template>
           </Card>
@@ -604,100 +191,195 @@
           <!-- 自定義側邊欄 -->
           <div
             v-if="sidebarData"
-            class="p-4 rounded-lg dark:bg-surface-800"
+            class="p-4 rounded-lg shadow-sm border border-surface-200 dark:bg-surface-800 dark:border-surface-700"
             v-html="sidebarHtml"
           ></div>
+        </div>
+
+        <!-- 主要內容區域 -->
+        <div class="space-y-6">
+          <!-- 標題和內容展示區 -->
+          <div id="content">
+            <!-- 內容描述 - 使用 detail_content 欄位 -->
+            <div v-if="meme.detail_content" class="tiptap-content">
+              <div v-html="renderTipTapContent(meme.detail_content)"></div>
+            </div>
+            <!-- 如果沒有 detail_content，則顯示原本的 content -->
+            <div v-else-if="meme.content" class="prose max-w-none">
+              <p class="text-surface-700 leading-relaxed">{{ meme.content }}</p>
+            </div>
+
+            <!-- 廣告 -->
+            <div
+              v-if="!isVipUser"
+              class="flex justify-center items-center my-8"
+            >
+              <AdInlineDetail />
+            </div>
+
+            <!-- 互動按鈕 -->
+            <div class="flex items-center justify-between mt-6 pt-6 border-t">
+              <div class="flex items-center space-x-4">
+                <Button
+                  :icon="isLiked ? 'pi pi-thumbs-up-fill' : 'pi pi-thumbs-up'"
+                  :severity="isLiked ? 'success' : 'secondary'"
+                  :label="likesCount.toString()"
+                  @click="toggleLike"
+                />
+                <Button
+                  :icon="
+                    isDisliked ? 'pi pi-thumbs-down-fill' : 'pi pi-thumbs-down'
+                  "
+                  :severity="isDisliked ? 'danger' : 'secondary'"
+                  :label="dislikesCount.toString()"
+                  @click="toggleDislike"
+                />
+                <Button
+                  icon="pi pi-comment"
+                  severity="secondary"
+                  :label="commentsCount.toString()"
+                  @click="scrollToComments"
+                />
+              </div>
+              <div class="flex items-center space-x-2">
+                <Button
+                  :icon="isCollected ? 'pi pi-bookmark-fill' : 'pi pi-bookmark'"
+                  :severity="isCollected ? 'warning' : 'secondary'"
+                  @click="toggleCollection"
+                  v-tooltip.top="isCollected ? '取消收藏' : '收藏'"
+                />
+              </div>
+            </div>
+          </div>
 
           <!-- 相關迷因 -->
-          <Card class="shadow dark:bg-surface-800" id="related">
-            <template #title>
-              <div class="text-lg font-bold">相關迷因</div>
-            </template>
-            <template #content>
-              <div v-if="relatedMemes.length > 0" class="space-y-3">
+          <div
+            id="related"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-900"
+          >
+            <h2 class="text-xl font-bold text-surface-900 mb-4">相關迷因</h2>
+            <div
+              v-if="relatedMemes.length > 0"
+              class="grid grid-cols-3 gap-4 md:grid-cols-5"
+            >
+              <div
+                v-for="relatedMeme in relatedMemes"
+                :key="relatedMeme._id"
+                class="flex flex-col items-center p-3 hover:bg-surface-50 dark:hover:bg-surface-700 rounded cursor-pointer border dark:border-surface-600"
+                @click="navigateToMeme(relatedMeme)"
+              >
                 <div
-                  v-for="relatedMeme in relatedMemes"
-                  :key="relatedMeme._id"
-                  class="flex items-center space-x-3 p-2 hover:bg-surface-50 rounded cursor-pointer"
-                  @click="navigateToMeme(relatedMeme)"
+                  class="w-full h-auto aspect-square bg-surface-100 rounded overflow-hidden"
                 >
+                  <img
+                    v-if="relatedMeme.image_url"
+                    :src="relatedMeme.image_url"
+                    :alt="relatedMeme.title"
+                    class="w-full h-full object-cover"
+                  />
                   <div
-                    class="w-16 h-16 bg-surface-100 rounded overflow-hidden flex-shrink-0"
+                    v-else
+                    class="w-full h-full flex items-center justify-center text-surface-400"
                   >
-                    <img
-                      v-if="relatedMeme.image_url"
-                      :src="relatedMeme.image_url"
-                      :alt="relatedMeme.title"
-                      class="w-full h-full object-cover"
-                    />
-                    <div
-                      v-else
-                      class="w-full h-full flex items-center justify-center text-surface-400"
-                    >
-                      <i class="pi pi-image"></i>
-                    </div>
+                    <i class="pi pi-image"></i>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="font-medium text-sm truncate">
-                      {{ relatedMeme.title }}
-                    </div>
-                    <div class="text-xs text-surface-500">
-                      {{ relatedMeme.likes_count || 0 }} 讚
-                    </div>
+                </div>
+                <div class="w-full text-center mt-2">
+                  <div class="font-medium text-sm truncate px-2">
+                    {{ relatedMeme.title }}
                   </div>
                 </div>
               </div>
-              <div v-else class="text-center py-4 text-surface-500">
-                <p class="text-sm">暫無相關迷因</p>
-              </div>
-            </template>
-          </Card>
+            </div>
+            <div v-else class="text-center py-8 text-surface-500">
+              <i class="pi pi-image text-4xl mb-2"></i>
+              <p>暫無相關迷因</p>
+            </div>
+          </div>
 
-          <!-- 工具箱 -->
-          <Card class="shadow dark:bg-surface-800">
-            <template #title>
-              <div class="text-lg font-bold">工具</div>
-            </template>
-            <template #content>
-              <div class="space-y-2">
+          <!-- 留言區 -->
+          <div
+            id="comments"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-900"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-bold text-surface-900">
+                留言 <span class="text-base">({{ commentsCount }})</span>
+              </h2>
+              <Button
+                v-if="userStore.isLoggedIn"
+                label="新增留言"
+                icon="pi pi-plus"
+                @click="showCommentForm"
+              />
+            </div>
+
+            <!-- 評論列表 -->
+            <div v-if="comments.length > 0" class="space-y-4">
+              <CommentItem
+                v-for="comment in comments"
+                :key="comment._id"
+                :comment="comment"
+                @reply="handleReply"
+                @update="loadComments"
+              />
+            </div>
+            <div v-else class="text-center py-8 text-surface-500">
+              <i class="pi pi-comment text-4xl mb-2"></i>
+              <p>還沒有人留言，成為第一個留言的人吧！</p>
+            </div>
+
+            <!-- 分頁 -->
+            <div
+              v-if="totalComments > pageSize"
+              class="flex justify-center mt-6"
+            >
+              <Paginator
+                :rows="pageSize"
+                :total-records="totalComments"
+                :first="(currentPage - 1) * pageSize"
+                @page="onPageChange"
+              />
+            </div>
+          </div>
+
+          <!-- 版本歷史 -->
+          <!-- <div
+            id="versions"
+            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
+          >
+            <h2 class="text-xl font-bold text-surface-900 mb-4">版本歷史</h2>
+            <div v-if="versions.length > 0" class="space-y-3">
+              <div
+                v-for="version in versions"
+                :key="version._id"
+                class="flex items-center justify-between py-3 border-b last:border-b-0"
+              >
+                <div class="flex-1">
+                  <div class="font-medium">
+                    {{ version.description || '更新內容' }}
+                  </div>
+                  <div class="text-sm text-surface-600">
+                    {{ formatDate(version.created_at) }} by
+                    {{ version.editor?.username || '系統' }}
+                  </div>
+                </div>
                 <Button
-                  label="檢舉內容"
-                  icon="pi pi-flag"
-                  severity="contrast"
-                  class="w-full justify-start"
+                  label="查看"
                   size="small"
-                  @click="reportMeme"
-                />
-                <Button
-                  label="永久連結"
-                  icon="pi pi-link"
-                  severity="contrast"
-                  class="w-full justify-start"
-                  size="small"
-                  @click="copyPermalink"
-                />
-                <Button
-                  v-if="canEdit"
-                  label="編輯迷因"
-                  icon="pi pi-pencil"
-                  severity="contrast"
-                  class="w-full justify-start"
-                  size="small"
-                  @click="editMeme"
-                />
-                <Button
-                  v-if="isDev"
-                  label="測試瀏覽統計"
-                  icon="pi pi-chart-bar"
-                  severity="contrast"
-                  class="w-full justify-start"
-                  size="small"
-                  @click="testViewStats"
+                  severity="secondary"
+                  @click="viewVersion"
                 />
               </div>
-            </template>
-          </Card>
+            </div>
+            <div v-else class="text-center py-4 text-surface-500">
+              <p>目前沒有版本歷史記錄</p>
+            </div>
+          </div> -->
         </div>
+
+        <!-- 清除浮動 -->
+        <div class="clear-both"></div>
       </div>
     </div>
 
@@ -746,6 +428,19 @@
         @save="onSidebarSave"
       />
     </Dialog>
+
+    <!-- 檢舉對話框 -->
+    <ReportDialog
+      v-model:visible="showReportDialog"
+      target-type="meme"
+      :target-id="memeId"
+      :target-info="{
+        type: 'meme',
+        title: meme?.title,
+        author: authorName,
+      }"
+      @submitted="onReportSubmitted"
+    />
   </div>
 </template>
 
@@ -758,16 +453,15 @@ import { useUserStore } from '@/stores/userStore'
 // PrimeVue 組件
 import Card from 'primevue/card'
 import Button from 'primevue/button'
-import Image from 'primevue/image'
 import Tag from 'primevue/tag'
 import ProgressSpinner from 'primevue/progressspinner'
-import ScrollPanel from 'primevue/scrollpanel'
+import Divider from 'primevue/divider'
 import OverlayPanel from 'primevue/overlaypanel'
 import Dialog from 'primevue/dialog'
+import ReportDialog from '@/components/ReportDialog.vue'
 import Paginator from 'primevue/paginator'
 
 // 自定義組件
-import TextMemeCard from '@/components/TextMemeCard.vue'
 import CommentForm from '@/components/CommentForm.vue'
 import CommentItem from '@/components/CommentItem.vue'
 import SidebarEditor from '@/components/SidebarEditor.vue'
@@ -785,18 +479,13 @@ import userService from '@/services/userService'
 import viewService from '@/services/viewService'
 import sidebarService from '@/services/sidebarService'
 import recommendationService from '@/services/recommendationService'
+import AdInlineDetail from '@/components/AdInlineDetail.vue'
 
 // 工具函數
-import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
-import {
-  isExternalVideoUrl,
-  getEmbedUrl,
-  isExternalAudioUrl,
-  getAudioEmbedUrl,
-} from '@/utils/mediaUtils'
+import { getId, getMemeId } from '@/utils/dataUtils'
+import { isExternalVideoUrl, getEmbedUrl } from '@/utils/mediaUtils'
 import { getShareOptions, handlePlatformShare } from '@/utils/shareUtils'
 import { requireLogin } from '@/utils/authUtils'
-import { isDevelopment } from '@/utils/envUtils'
 
 // 路由和狀態
 const route = useRoute()
@@ -834,23 +523,22 @@ const sidebarHtml = ref('')
 const showSidebarEditorDialog = ref(false)
 const sidebarEditorData = ref({})
 
+// 檢舉相關
+const showReportDialog = ref(false)
+
 // 瀏覽統計
 const viewCount = ref(0)
-const viewStats = ref({
-  total_views: 0,
-  unique_users: 0,
-  avg_duration: 0,
-  total_duration: 0,
-  duplicate_views: 0,
-  effective_views: 0,
-})
 
 // 其他
 const shareMenuRef = ref(null)
-const isDev = isDevelopment()
 
 // 桌面版判斷
 const isDesktop = ref(false)
+
+// VIP 用戶判定
+const isVipUser = computed(() => {
+  return userStore.role === 'vip'
+})
 
 // 檢查螢幕尺寸
 const checkScreenSize = () => {
@@ -865,26 +553,6 @@ const authorName = computed(() => {
   return (
     meme.value.author.display_name || meme.value.author.username || '匿名用戶'
   )
-})
-
-const publishedTime = computed(() => {
-  if (!meme.value) return ''
-  return formatPublishedTime(meme.value)
-})
-
-const fullPublishedTime = computed(() => {
-  if (!meme.value) return ''
-  // 優先使用 modified_at，如果沒有則使用 created_at
-  let time =
-    meme.value.modified_at ||
-    meme.value.modifiedAt ||
-    meme.value.created_at ||
-    meme.value.createdAt
-  if (typeof time === 'object' && time.$date) {
-    time = time.$date
-  }
-  if (!time) return ''
-  return new Date(time).toLocaleString('zh-TW')
 })
 
 const shortPublishedTime = computed(() => {
@@ -914,7 +582,14 @@ const lastUpdatedTime = computed(() => {
     time = time.$date
   }
   if (!time) return ''
-  return new Date(time).toLocaleString('zh-TW')
+  return (
+    new Date(time).toLocaleDateString('zh-TW') +
+    ' ' +
+    new Date(time).toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  )
 })
 
 const typeDisplayName = computed(() => {
@@ -991,60 +666,124 @@ const renderTipTapNodes = (nodes) => {
     .map((node) => {
       switch (node.type) {
         case 'paragraph':
-          return `<p class="leading-relaxed mb-4">${renderTipTapMarks(node.content)}</p>`
+          return `<p>${renderTipTapMarks(node.content)}</p>`
 
         case 'heading': {
           const level = node.attrs?.level || 1
-          const headingClass =
-            level === 1
-              ? 'text-2xl font-bold mt-8 mb-4'
-              : level === 2
-                ? 'text-xl font-bold mt-6 mb-3'
-                : 'text-lg font-bold mt-4 mb-2'
-          return `<h${level} class="${headingClass}">${renderTipTapMarks(node.content)}</h${level}>`
+          return `<h${level}>${renderTipTapMarks(node.content)}</h${level}>`
         }
 
         case 'image': {
-          const { src, alt, annotation } = node.attrs || {}
-          let imageHtml = `<img src="${src}" alt="${alt || ''}" class="max-w-full h-auto rounded-lg shadow-lg mb-4" />`
-          if (annotation) {
-            imageHtml += `<p class="text-sm text-surface-600 italic mb-4">${annotation}</p>`
+          const {
+            src,
+            alt,
+            annotation,
+            size = 'm',
+            orientation = 'landscape',
+          } = node.attrs || {}
+
+          // 根據尺寸和方向設定樣式
+          const getSizeStyles = (size, orientation) => {
+            const landscapeMap = {
+              s: { width: '320px', maxWidth: '320px' },
+              m: { width: '640px', maxWidth: '640px' },
+              l: { width: '960px', maxWidth: '960px' },
+              full: { width: '100%', maxWidth: '100%' },
+            }
+            const portraitMap = {
+              s: { width: '240px', maxWidth: '240px' },
+              m: { width: '480px', maxWidth: '480px' },
+              l: { width: '720px', maxWidth: '720px' },
+              full: { width: '100%', maxWidth: '100%' },
+            }
+            const sizeMap =
+              orientation === 'portrait' ? portraitMap : landscapeMap
+            return sizeMap[size] || sizeMap.m
           }
+
+          const sizeStyles = getSizeStyles(size, orientation)
+          const imageStyle =
+            size === 'full'
+              ? 'width: 100%; max-width: 100%; height: auto; display: block;'
+              : `width: 100%; max-width: ${sizeStyles.maxWidth}; height: auto; display: block;`
+
+          let imageHtml = `<div class="custom-image-wrapper" style="width: 100%; max-width: ${sizeStyles.maxWidth};"><img src="${src}" alt="${alt || ''}" class="custom-image" style="${imageStyle}" />`
+          if (annotation) {
+            imageHtml += `<p class="image-annotation">${annotation}</p>`
+          }
+          imageHtml += `</div>`
           return imageHtml
         }
 
         case 'videoEmbed': {
-          const { src: videoSrc } = node.attrs || {}
+          const {
+            src: videoSrc,
+            size = 'm',
+            orientation = 'landscape',
+            annotation,
+          } = node.attrs || {}
+
           if (videoSrc && isExternalVideoUrl(videoSrc)) {
-            return `<div class="aspect-video max-w-4xl mx-auto mb-4">
+            // 根據尺寸和方向設定樣式
+            const getSizeStyles = (size, orientation) => {
+              const landscapeMap = {
+                s: { width: '100%', maxWidth: '480px' },
+                m: { width: '100%', maxWidth: '640px' },
+                l: { width: '100%', maxWidth: '960px' },
+                full: { width: '100%', maxWidth: 'none' },
+              }
+              const portraitMap = {
+                s: { width: '100%', maxWidth: '360px' },
+                m: { width: '100%', maxWidth: '450px' },
+                l: { width: '100%', maxWidth: '540px' },
+                full: { width: '100%', maxWidth: 'none' },
+              }
+              const sizeMap =
+                orientation === 'portrait' ? portraitMap : landscapeMap
+              return sizeMap[size] || sizeMap.m
+            }
+
+            const sizeStyles = getSizeStyles(size, orientation)
+            const aspectRatio = orientation === 'portrait' ? '9/16' : '16/9'
+
+            let videoHtml = `<div class="video-embed-wrapper" style="width: 100%; max-width: ${sizeStyles.maxWidth};">
+            <div class="video-embed-container">
             <iframe src="${getEmbedUrl(videoSrc)}"
-                    class="w-full h-full rounded-lg shadow-lg"
+                    class="video-embed-iframe"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen>
+                    allowfullscreen
+                    style="aspect-ratio: ${aspectRatio};">
             </iframe>
           </div>`
+
+            if (annotation) {
+              videoHtml += `<p class="video-annotation">${annotation}</p>`
+            }
+
+            videoHtml += `</div>`
+            return videoHtml
           }
           return ''
         }
 
         case 'bulletList':
-          return `<ul class="list-disc list-inside mb-4 space-y-2">${renderTipTapNodes(node.content)}</ul>`
+          return `<ul>${renderTipTapNodes(node.content)}</ul>`
 
         case 'orderedList':
-          return `<ol class="list-decimal list-inside mb-4 space-y-2">${renderTipTapNodes(node.content)}</ol>`
+          return `<ol>${renderTipTapNodes(node.content)}</ol>`
 
         case 'listItem':
-          return `<li class="ml-4">${renderTipTapMarks(node.content)}</li>`
+          return `<li>${renderTipTapMarks(node.content)}</li>`
 
         case 'blockquote':
-          return `<blockquote class="border-l-4 border-primary-500 pl-4 italic text-surface-600 mb-4">${renderTipTapMarks(node.content)}</blockquote>`
+          return `<blockquote >${renderTipTapMarks(node.content)}</blockquote>`
 
         case 'codeBlock':
-          return `<pre class="bg-surface-100 p-4 rounded-lg overflow-x-auto mb-4"><code>${node.content?.[0]?.text || ''}</code></pre>`
+          return `<pre><code>${node.content?.[0]?.text || ''}</code></pre>`
 
         case 'horizontalRule':
-          return `<hr class="my-6 border-surface-300" />`
+          return `<hr />`
 
         default:
           return ''
@@ -1079,11 +818,11 @@ const renderTipTapMarks = (content) => {
                 text = `<del>${text}</del>`
                 break
               case 'code':
-                text = `<code class="bg-surface-100 px-1 rounded text-sm">${text}</code>`
+                text = `<code class="bg-surface-100 text-surface-800 p-1 rounded-md dark:bg-surface-900 dark:text-surface-300 font-mono">${text}</code>`
                 break
               case 'link': {
                 const { href, target, rel } = mark.attrs || {}
-                text = `<a href="${href}" target="${target || '_blank'}" rel="${rel || 'noopener noreferrer'}" class="text-primary-600 hover:text-primary-800 underline">${text}</a>`
+                text = `<a href="${href}" target="${target || '_blank'}" rel="${rel || 'noopener noreferrer'}" class="decoration-0 cursor-pointer font-medium text-surface-800 transition-all p-1 dark:text-surface-300 hover:text-primary-500 underline">${text}</a>`
                 break
               }
             }
@@ -1161,7 +900,6 @@ const loadMeme = async () => {
         loadComments(),
         loadRelatedMemes(),
         loadVersions(),
-        loadViewStats(),
         loadSidebarData(),
       ])
 
@@ -1174,7 +912,6 @@ const loadMeme = async () => {
             'loadComments',
             'loadRelatedMemes',
             'loadVersions',
-            'loadViewStats',
             'loadSidebarData',
           ]
           console.warn(`${services[index]} 載入失敗:`, result.reason)
@@ -1204,17 +941,15 @@ const loadTags = async () => {
 
     const response = await memeTagService.getTagsByMemeId(id)
 
-    // 檢查資料結構，參考 MemeCard.vue
-    if (response.data && Array.isArray(response.data)) {
-      tags.value = response.data
-    } else if (response.data && Array.isArray(response.data.tags)) {
-      tags.value = response.data.tags
-    } else if (
+    // 根據後端 API 回應格式處理
+    if (
       response.data &&
-      response.data.data &&
-      Array.isArray(response.data.data)
+      response.data.tags &&
+      Array.isArray(response.data.tags)
     ) {
-      tags.value = response.data.data
+      tags.value = response.data.tags
+    } else if (response.data && Array.isArray(response.data)) {
+      tags.value = response.data
     } else {
       console.warn('標籤資料格式不正確:', response.data)
       tags.value = []
@@ -1430,33 +1165,6 @@ const recordView = async () => {
   }
 }
 
-// 載入瀏覽統計
-const loadViewStats = async () => {
-  try {
-    const response = await viewService.getStats(memeId.value, 'all')
-
-    if (response.data && response.data.data) {
-      const stats = response.data.data
-
-      // 更新統計數據
-      viewCount.value =
-        stats.effective_views || stats.total_views || viewCount.value
-
-      // 更新詳細統計數據
-      viewStats.value = {
-        total_views: stats.total_views || 0,
-        unique_users: stats.unique_users || 0,
-        avg_duration: stats.avg_duration || 0,
-        total_duration: stats.total_duration || 0,
-        duplicate_views: stats.duplicate_views || 0,
-        effective_views: stats.effective_views || 0,
-      }
-    }
-  } catch (error) {
-    console.error('載入瀏覽統計失敗:', error)
-  }
-}
-
 // 載入側邊欄資料
 const loadSidebarData = async () => {
   try {
@@ -1656,34 +1364,16 @@ const onSidebarSave = async (_data) => {
 }
 
 const reportMeme = () => {
-  // TODO: 實作檢舉功能
-  toast.add({
-    severity: 'info',
-    summary: '功能開發中',
-    detail: '檢舉功能即將推出',
-    life: 3000,
-  })
+  if (!requireLogin(userStore, toast)) {
+    router.push('/login')
+    return
+  }
+  showReportDialog.value = true
 }
 
-const copyPermalink = async () => {
-  try {
-    const url = `${window.location.origin}/memes/detail/${memeId.value}`
-    await navigator.clipboard.writeText(url)
-    toast.add({
-      severity: 'success',
-      summary: '已複製',
-      detail: '永久連結已複製到剪貼簿',
-      life: 3000,
-    })
-  } catch (error) {
-    console.error('複製連結失敗:', error)
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: '無法複製連結',
-      life: 3000,
-    })
-  }
+const onReportSubmitted = (reportData) => {
+  console.log('檢舉已提交:', reportData)
+  // 可以在這裡添加額外的處理邏輯，例如更新 UI 狀態等
 }
 
 // 評論功能
@@ -1717,65 +1407,24 @@ const onPageChange = (event) => {
 }
 
 // 版本相關
-const viewVersion = () => {
-  // TODO: 實作版本查看功能
-  toast.add({
-    severity: 'info',
-    summary: '功能開發中',
-    detail: '版本查看功能即將推出',
-    life: 3000,
-  })
-}
+// const viewVersion = () => {
+//   // TODO: 實作版本查看功能
+//   toast.add({
+//     severity: 'info',
+//     summary: '功能開發中',
+//     detail: '版本查看功能即將推出',
+//     life: 3000,
+//   })
+// }
 
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  let time = dateString
-  if (typeof time === 'object' && time.$date) {
-    time = time.$date
-  }
-  return new Date(time).toLocaleString('zh-TW')
-}
-
-// 測試瀏覽統計功能
-const testViewStats = async () => {
-  try {
-    toast.add({
-      severity: 'info',
-      summary: '測試中',
-      detail: '正在測試瀏覽統計功能...',
-      life: 2000,
-    })
-
-    // 測試記錄瀏覽
-    const testViewData = {
-      duration: 30,
-      referrer: 'test',
-    }
-
-    await viewService.recordView(memeId.value, testViewData)
-
-    // 測試取得統計
-    await viewService.getStats(memeId.value, 'all')
-
-    // 更新統計數據
-    await loadViewStats()
-
-    toast.add({
-      severity: 'success',
-      summary: '測試完成',
-      detail: '瀏覽統計功能測試完成',
-      life: 3000,
-    })
-  } catch (error) {
-    console.error('測試瀏覽統計失敗:', error)
-    toast.add({
-      severity: 'error',
-      summary: '測試失敗',
-      detail: '瀏覽統計功能測試失敗',
-      life: 3000,
-    })
-  }
-}
+// const formatDate = (dateString) => {
+//   if (!dateString) return ''
+//   let time = dateString
+//   if (typeof time === 'object' && time.$date) {
+//     time = time.$date
+//   }
+//   return new Date(time).toLocaleString('zh-TW')
+// }
 
 // 監聽路由變化
 watch(

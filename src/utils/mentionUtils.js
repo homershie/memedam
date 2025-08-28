@@ -63,13 +63,13 @@ export function convertMentionsToHTML(text, userLinkGenerator = null) {
     const needsSpace = afterMention.length > 0 && !afterMention.startsWith(' ')
     const spaceAfter = needsSpace ? ' ' : ''
 
-    let replacement = `<span class="inline-block px-2 py-1 mx-1 bg-gray-100 rounded font-medium cursor-pointer transition-all duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-500" data-username="${username}">@${username}</span>${spaceAfter}`
+    let replacement = `<span class="inline-block px-2 py-1 mx-1 bg-surface-100 rounded font-medium cursor-pointer transition-all duration-200 hover:bg-surface-200 dark:bg-surface-700 dark:hover:bg-surface-500" data-username="${username}">@${username}</span>${spaceAfter}`
 
     // 如果提供了連結生成器，則生成連結
     if (userLinkGenerator) {
       const userLink = userLinkGenerator(username)
       if (userLink) {
-        replacement = `<a href="${userLink}" class="inline-block px-2 py-1 mx-1 bg-gray-100 rounded font-medium cursor-pointer transition-all duration-200 hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800  dark:hover:bg-gray-700 no-underline" data-username="${username}">@${username}</a>${spaceAfter}`
+        replacement = `<a href="${userLink}" class="inline-block px-2 py-1 mx-1 bg-surface-100 rounded font-medium cursor-pointer transition-all duration-200 hover:bg-surface-200 dark:bg-surface-700  dark:hover:bg-surface-600 no-underline" data-username="${username}">@${username}</a>${spaceAfter}`
       }
     }
 

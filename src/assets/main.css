@@ -362,7 +362,7 @@ a {
 /* TipTap 編輯器樣式 - 使用 Tailwind CSS */
 @layer components {
   .tiptap-editor {
-    @apply border border-surface-300 rounded-lg overflow-hidden bg-white;
+    @apply border border-surface-300 rounded-lg overflow-hidden bg-white dark:border-surface-600 dark:bg-surface-800;
 
     h1,
     h2,
@@ -402,7 +402,7 @@ a {
     table {
       @apply border-collapse table-fixed w-full my-4 overflow-hidden;
       th {
-        @apply font-bold text-left bg-surface-100 border-surface-200;
+        @apply font-bold text-left bg-surface-100 border-surface-200 dark:bg-surface-700 dark:border-surface-600;
       }
       td {
         @apply min-w-[1em] border-1 border-surface-200 p-2 align-top box-border relative dark:border-surface-600;
@@ -414,8 +414,87 @@ a {
     }
   }
 
+  /* 顯示狀態的 TipTap 內容樣式 */
+  .tiptap-content {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply my-4;
+    }
+
+    ul {
+      @apply list-[list-marker] list-inside;
+      p {
+        @apply inline-block;
+      }
+    }
+
+    ol {
+      @apply list-decimal list-inside;
+      p {
+        @apply inline-block;
+      }
+    }
+
+    a {
+      @apply decoration-0 cursor-pointer font-medium text-surface-800 transition-all p-1 dark:text-surface-300 hover:text-primary-500 underline;
+    }
+
+    code {
+      @apply bg-surface-100 text-surface-800 p-1 rounded-md dark:bg-surface-900 dark:text-surface-300 font-mono;
+    }
+
+    blockquote {
+      @apply ml-4 border-l-4 border-surface-300 pl-4 text-surface-800 dark:border-surface-600 dark:text-surface-300;
+    }
+
+    table {
+      @apply border-collapse table-fixed w-full my-4 overflow-hidden;
+      th {
+        @apply font-bold text-left bg-surface-100 border-surface-200 dark:bg-surface-700 dark:border-surface-600;
+      }
+      td {
+        @apply min-w-[1em] border-1 border-surface-200 p-2 align-top box-border relative dark:border-surface-600;
+      }
+    }
+
+    hr {
+      @apply my-4 border-surface-200 dark:border-surface-600;
+    }
+
+    /* 圖片樣式 */
+    .custom-image-wrapper {
+      @apply relative inline-block py-10 text-center;
+    }
+
+    .custom-image {
+      @apply block w-full h-auto;
+    }
+
+    .image-annotation {
+      @apply mt-2 text-center text-sm! text-surface-600 italic dark:text-surface-400;
+    }
+
+    /* 影片樣式 */
+    .video-embed-wrapper {
+      @apply relative  py-10;
+    }
+
+    .video-embed-iframe {
+      @apply w-full;
+      aspect-ratio: 16 / 9;
+    }
+
+    .video-annotation {
+      @apply mt-2 text-center text-sm text-surface-600 italic dark:text-surface-400;
+    }
+  }
+
   .editor-toolbar {
-    @apply flex items-center gap-2 p-3 bg-surface-50 border-b border-surface-200 flex-wrap;
+    @apply flex items-center gap-2 p-3 bg-surface-50 border-b border-surface-200 flex-wrap dark:bg-surface-800 dark:border-surface-700;
   }
 
   .toolbar-group {
@@ -423,11 +502,11 @@ a {
   }
 
   .toolbar-divider {
-    @apply w-px h-6 bg-surface-300 mx-1;
+    @apply w-px h-6 bg-surface-300 mx-1 dark:bg-surface-600;
   }
 
   .toolbar-btn {
-    @apply flex items-center justify-center min-w-8 h-8 px-2 border-none rounded bg-transparent cursor-pointer transition-all duration-150 text-surface-500 text-sm font-medium whitespace-nowrap;
+    @apply flex items-center justify-center min-w-8 h-8 px-2 border-none rounded bg-transparent cursor-pointer transition-all duration-150 text-surface-500 text-sm font-medium whitespace-nowrap dark:text-surface-400;
   }
 
   .toolbar-btn i {
@@ -435,15 +514,15 @@ a {
   }
 
   .toolbar-btn:hover {
-    @apply bg-surface-200 text-surface-700;
+    @apply bg-surface-200 text-surface-700 dark:bg-surface-700 dark:text-surface-200;
   }
 
   .toolbar-btn.is-active {
-    @apply bg-primary-500 text-white;
+    @apply bg-primary-500 text-white dark:bg-primary-600;
   }
 
   .toolbar-btn:disabled {
-    @apply opacity-50 cursor-not-allowed;
+    @apply opacity-50 cursor-not-allowed dark:text-surface-500;
   }
 
   .toolbar-btn:disabled:hover {
@@ -454,123 +533,66 @@ a {
     @apply p-4 min-h-[600px] cursor-text;
   }
 
-  .editor-content :deep(.ProseMirror) {
+  .editor-content .ProseMirror {
     @apply outline-none min-h-[200px];
   }
 
-  .editor-content :deep(.ProseMirror p.is-editor-empty:first-child::before) {
-    @apply text-surface-400 float-left h-0 pointer-events-none;
+  .editor-content .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-surface-400 float-left h-0 pointer-events-none dark:text-surface-500;
     content: attr(data-placeholder);
   }
 
-  .dark
-    .editor-content
-    :deep(.ProseMirror p.is-editor-empty:first-child::before) {
-    @apply text-surface-500;
-  }
-
   /* TipTap 編輯器表格樣式 */
-  .editor-content :deep(table) {
+  .editor-content table {
     @apply border-collapse table-fixed w-full my-6 overflow-hidden;
   }
 
-  .editor-content :deep(table td),
-  .editor-content :deep(table th) {
-    @apply min-w-[1em] border-2 border-surface-200 p-2 align-top box-border relative;
+  .editor-content table td,
+  .editor-content table th {
+    @apply min-w-[1em] border-2 border-surface-200 p-2 align-top box-border relative dark:border-surface-600;
   }
 
-  .editor-content :deep(table th) {
-    @apply font-bold text-left bg-surface-100;
+  .editor-content table th {
+    @apply font-bold text-left bg-surface-100 dark:bg-surface-700;
   }
 
-  .dark .editor-content :deep(table th) {
-    @apply bg-surface-700;
-  }
-
-  .dark .editor-content :deep(table td),
-  .dark .editor-content :deep(table th) {
-    @apply border-surface-600;
-  }
-
-  .editor-content :deep(.selectedCell:after) {
+  .editor-content .selectedCell:after {
     @apply z-[2] absolute content-[''] left-0 right-0 top-0 bottom-0 bg-primary-200/40 pointer-events-none;
   }
 
-  .editor-content :deep(.column-resize-handle) {
+  .editor-content .column-resize-handle {
     @apply absolute -right-0.5 top-0 -bottom-0.5 w-1 bg-primary-500 pointer-events-none;
   }
 
-  .editor-content :deep(table .tableWrapper) {
+  .editor-content table .tableWrapper {
     @apply py-4 overflow-x-auto;
   }
 
-  /* 深色模式支援 */
-  .dark .tiptap-editor {
-    @apply border-surface-600 bg-surface-800;
-  }
-
-  .dark .editor-toolbar {
-    @apply bg-surface-800 border-surface-700;
-  }
-
-  .dark .toolbar-btn {
-    @apply text-surface-400;
-  }
-
-  .dark .toolbar-btn:hover {
-    @apply bg-surface-700 text-surface-200;
-  }
-
-  .dark .toolbar-btn.is-active {
-    @apply bg-primary-600 text-white;
-  }
-
-  .dark .toolbar-btn:disabled {
-    @apply text-surface-500;
-  }
-
-  .dark .toolbar-btn:disabled:hover {
-    @apply text-surface-500;
-  }
-
-  .dark .toolbar-divider {
-    @apply bg-surface-600;
-  }
-
   /* 影片嵌入樣式 */
-  .editor-content :deep(.video-embed-container) {
+  .editor-content .video-embed-container {
     @apply my-4;
   }
 
-  .editor-content :deep(.video-embed-iframe) {
-    @apply w-full rounded-lg shadow-lg;
+  .editor-content .video-embed-iframe {
+    @apply w-full;
     aspect-ratio: 16 / 9;
   }
 
-  .editor-content :deep(.video-embed-placeholder) {
-    @apply flex items-center justify-center p-8 bg-surface-100 border-2 border-dashed border-surface-300 rounded-lg text-surface-500;
+  .editor-content .video-embed-placeholder {
+    @apply flex items-center justify-center p-8 bg-surface-100 border-2 border-dashed border-surface-300 rounded-lg text-surface-500 dark:bg-surface-800 dark:border-surface-600 dark:text-surface-400;
   }
 
-  .editor-content :deep(.video-embed-error) {
-    @apply flex items-center justify-center p-4 bg-red-50 border border-red-200 rounded-lg text-red-600;
-  }
-
-  /* 深色模式影片嵌入樣式 */
-  .dark .editor-content :deep(.video-embed-placeholder) {
-    @apply bg-surface-800 border-surface-600 text-surface-400;
-  }
-
-  .dark .editor-content :deep(.video-embed-error) {
-    @apply bg-red-900/20 border-red-800 text-red-400;
+  .editor-content .video-embed-error {
+    @apply flex items-center justify-center p-4 bg-primary-50 border border-primary-200 rounded-lg text-primary-600 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400;
   }
 
   /* 圖片樣式 */
   .editor-content .custom-image-wrapper {
-    @apply relative inline-block w-full py-8;
+    @apply relative inline-block py-10 text-center;
   }
 
   .editor-content .video-embed-wrapper {
-    @apply relative w-full py-8;
+    @apply relative py-10;
   }
 
   .editor-content .custom-image {
@@ -578,20 +600,10 @@ a {
   }
 
   .editor-content .image-annotation {
-    @apply mt-2 text-center text-sm text-surface-600 italic;
+    @apply mt-2 text-center text-sm! text-surface-600 italic dark:text-surface-400;
   }
 
   .editor-content .video-annotation {
-    @apply mt-2 text-center text-sm text-surface-600 italic;
-  }
-
-  /* 深色模式圖片樣式 */
-  .dark .editor-content .image-annotation {
-    @apply text-surface-400;
-  }
-
-  /* 深色模式影片樣式 */
-  .dark .editor-content .video-annotation {
-    @apply text-surface-400;
+    @apply mt-2 text-center text-sm text-surface-600 italic dark:text-surface-400;
   }
 }

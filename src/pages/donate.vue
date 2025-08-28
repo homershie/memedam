@@ -301,16 +301,16 @@ const handleDonate = (amount) => {
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
   const userId = currentUser._id || 'anonymous'
 
-  // 建立 Buy Me a Coffee 贊助連結
-  const buyMeACoffeeUrl = `https://www.buymeacoffee.com/memedam?amount=${amount}&user_id=${userId}`
+  // 建立 Ko-fi 贊助連結
+  const koFiUrl = `https://ko-fi.com/memedam?amount=${amount}&user_id=${userId}`
 
   // 開啟新視窗進行贊助
-  window.open(buyMeACoffeeUrl, '_blank', 'width=500,height=600')
+  window.open(koFiUrl, '_blank', 'width=500,height=600')
 
   toast.add({
     severity: 'info',
     summary: '贊助功能',
-    detail: `正在開啟 Buy Me a Coffee 贊助頁面，金額：${amount} 元。`,
+    detail: `正在開啟 Ko-fi 贊助頁面，金額：${amount} 元。`,
     life: 3000,
   })
 }

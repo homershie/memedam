@@ -48,15 +48,15 @@ export const CustomImage = Image.extend({
     // 根據尺寸和方向設定樣式
     const getSizeStyles = (size, orientation) => {
       const landscapeMap = {
-        s: { width: '320px', maxWidth: '320px' },
-        m: { width: '640px', maxWidth: '640px' },
-        l: { width: '960px', maxWidth: '960px' },
+        s: { width: '100%', maxWidth: '320px' },
+        m: { width: '100%', maxWidth: '640px' },
+        l: { width: '100%', maxWidth: '960px' },
         full: { width: '100%', maxWidth: '100%' },
       }
       const portraitMap = {
-        s: { width: '240px', maxWidth: '240px' },
-        m: { width: '480px', maxWidth: '480px' },
-        l: { width: '720px', maxWidth: '720px' },
+        s: { width: '100%', maxWidth: '240px' },
+        m: { width: '100%', maxWidth: '480px' },
+        l: { width: '100%', maxWidth: '720px' },
         full: { width: '100%', maxWidth: '100%' },
       }
       const sizeMap = orientation === 'portrait' ? portraitMap : landscapeMap
@@ -72,10 +72,10 @@ export const CustomImage = Image.extend({
     let imageStyle
     if (size === 'full') {
       // 滿版圖片：自適應容器寬度
-      imageStyle = `width: 100% !important; max-width: 100% !important; height: auto !important; display: block !important; margin: auto !important;`
+      imageStyle = `width: 100% !important; max-width: 100% !important; height: auto !important; display: block !important;;`
     } else {
-      // 固定尺寸圖片：使用指定的寬度和最大寬度
-      imageStyle = `width: ${sizeStyles.width} !important; max-width: ${sizeStyles.maxWidth} !important; height: auto !important; display: block !important; margin: auto !important;`
+      // 響應式圖片：寬度自適應，最大寬度限制
+      imageStyle = `width: 100% !important; max-width: ${sizeStyles.maxWidth} !important; height: auto !important; display: block !important;`
     }
 
     return [

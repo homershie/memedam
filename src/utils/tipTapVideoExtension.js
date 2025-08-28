@@ -108,15 +108,15 @@ export const VideoEmbed = Node.create({
     // 根據尺寸和方向設定樣式
     const getSizeStyles = (size, orientation) => {
       const landscapeMap = {
-        s: { width: '480px', maxWidth: '480px' },
-        m: { width: '640px', maxWidth: '640px' },
-        l: { width: '960px', maxWidth: '960px' },
+        s: { width: '100%', maxWidth: '480px' },
+        m: { width: '100%', maxWidth: '640px' },
+        l: { width: '100%', maxWidth: '960px' },
         full: { width: '100%', maxWidth: 'none' },
       }
       const portraitMap = {
-        s: { width: '360px', maxWidth: '360px' },
-        m: { width: '450px', maxWidth: '450px' },
-        l: { width: '540px', maxWidth: '540px' },
+        s: { width: '100%', maxWidth: '360px' },
+        m: { width: '100%', maxWidth: '450px' },
+        l: { width: '100%', maxWidth: '540px' },
         full: { width: '100%', maxWidth: 'none' },
       }
       const sizeMap = orientation === 'portrait' ? portraitMap : landscapeMap
@@ -133,7 +133,7 @@ export const VideoEmbed = Node.create({
         {
           'data-type': 'video-embed',
           class: 'video-embed-wrapper',
-          style: `width: ${sizeStyles.width}; max-width: ${sizeStyles.maxWidth}; margin: auto;`,
+          style: `max-width: ${sizeStyles.maxWidth};`,
         },
         [
           'div',

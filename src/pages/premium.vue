@@ -89,6 +89,7 @@
                     label="選擇月繳"
                     class="w-full mt-6"
                     severity="primary"
+                    @click="handlePremium('monthly', 100)"
                   />
                 </div>
               </template>
@@ -137,6 +138,7 @@
                     label="選擇季繳"
                     class="w-full mt-6"
                     severity="primary"
+                    @click="handlePremium('quarterly', 270)"
                   />
                 </div>
               </template>
@@ -187,6 +189,7 @@
                     label="選擇年繳"
                     class="w-full mt-6"
                     severity="primary"
+                    @click="handlePremium('yearly', 1000)"
                   />
                 </div>
               </template>
@@ -197,7 +200,7 @@
           <div class="my-10 p-4">
             <small class="text-center text-surface-300 block">
               金流由
-              <strong class="text-white">藍新金流（NewebPay）</strong>
+              <strong class="text-white">Ko-fi</strong>
               處理；如選擇續訂方案，到期將自動續訂，可隨時登入網站取消。
             </small>
             <small class="text-center mt-2 text-surface-400 block">
@@ -268,7 +271,8 @@
           >
           <AccordionContent>
             <p class="m-0">
-              A：目前預計串接藍新金流（NewebPay），支援方式以藍新提供為準（如信用卡等）。
+              A：目前使用 Ko-fi 平台處理付款，支援信用卡、PayPal
+              等多種付款方式。
             </p>
           </AccordionContent>
         </AccordionPanel>
@@ -356,6 +360,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useSEO } from '@/composables/useSEO'
+import { useToast } from 'primevue/usetoast'
 
 import Card from 'primevue/card'
 import Divider from 'primevue/divider'
@@ -373,6 +378,7 @@ defineOptions({
 })
 
 const { updateSEO } = useSEO()
+const toast = useToast()
 
 const scrollToPricePlans = () => {
   console.log('Button clicked!')
@@ -381,6 +387,23 @@ const scrollToPricePlans = () => {
   if (element) {
     element.scrollIntoView({ behavior: 'smooth' })
   }
+}
+
+// 處理會員功能
+const handlePremium = (type, amount) => {
+  const planNames = {
+    monthly: '月繳方案',
+    quarterly: '季繳方案',
+    yearly: '年繳方案',
+    cta: '頂級會員',
+  }
+
+  toast.add({
+    severity: 'info',
+    summary: '會員功能',
+    detail: `正在處理 ${planNames[type]}，金額：${amount} 元。目前為 MVP 階段，功能開發中。`,
+    life: 3000,
+  })
 }
 
 onMounted(() => {

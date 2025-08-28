@@ -31,7 +31,7 @@
           <router-link
             v-if="getUserInfo(comment)._id"
             :to="`/users/${getUserInfo(comment)._id}`"
-            class="font-semibold text-gray-800 hover:text-secondary-600 transition-colors cursor-pointer block"
+            class="font-semibold text-gray-800 hover:text-primary-500 dark:text-gray-200 transition-colors cursor-pointer block"
           >
             {{
               getUserInfo(comment).display_name ||
@@ -40,7 +40,7 @@
             }}
           </router-link>
           <div v-else class="font-semibold text-gray-800">匿名用戶</div>
-          <div class="text-xs text-gray-500">
+          <div class="text-xs text-gray-500 dark:text-gray-400">
             {{ formatTime(comment.createdAt || comment.created_at) }}
             <span
               v-if="
