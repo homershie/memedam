@@ -46,7 +46,7 @@
                     <router-link
                       v-if="meme.author && (meme.author._id || meme.author.id)"
                       :to="`/users/${meme.author._id || meme.author.id}`"
-                      class="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      class="text-primary-600 hover:text-primary-800 font-medium transition-colors"
                     >
                       {{ authorName }}
                     </router-link>
@@ -110,19 +110,19 @@
             <nav class="border-t pt-4 mb-6">
               <ScrollPanel style="width: 100%; height: 50px">
                 <div class="flex space-x-6 text-sm">
-                  <a href="#content" class="text-blue-600 hover:underline"
+                  <a href="#content" class="text-primary-600 hover:underline"
                     >內容</a
                   >
-                  <a href="#details" class="text-blue-600 hover:underline"
+                  <a href="#details" class="text-primary-600 hover:underline"
                     >詳細資訊</a
                   >
-                  <a href="#comments" class="text-blue-600 hover:underline"
+                  <a href="#comments" class="text-primary-600 hover:underline"
                     >討論</a
                   >
-                  <a href="#related" class="text-blue-600 hover:underline"
+                  <a href="#related" class="text-primary-600 hover:underline"
                     >相關迷因</a
                   >
-                  <a href="#versions" class="text-blue-600 hover:underline"
+                  <a href="#versions" class="text-primary-600 hover:underline"
                     >版本歷史</a
                   >
                 </div>
@@ -222,14 +222,14 @@
               </div>
             </div>
 
-            <!-- 內容描述 - 使用 detail_markdown 欄位 -->
+            <!-- 內容描述 - 使用 detail_content 欄位 -->
             <div
-              v-if="meme.detail_markdown"
-              class="prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert prose-headings:text-surface-900 dark:prose-headings:text-white prose-p:text-surface-700 dark:prose-p:text-surface-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-surface-900 dark:prose-strong:text-white prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-blockquote:text-surface-600 dark:prose-blockquote:text-surface-400 prose-blockquote:border-blue-500"
+              v-if="meme.detail_content"
+              class="prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert prose-headings:text-surface-900 dark:prose-headings:text-white prose-p:text-surface-700 dark:prose-p:text-surface-300 prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-strong:text-surface-900 dark:prose-strong:text-white prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-blockquote:text-surface-600 dark:prose-blockquote:text-surface-400 prose-blockquote:border-primary-500"
             >
-              <div v-html="renderMarkdown(meme.detail_markdown)"></div>
+              <div v-html="renderTipTapContent(meme.detail_content)"></div>
             </div>
-            <!-- 如果沒有 detail_markdown，則顯示原本的 content -->
+            <!-- 如果沒有 detail_content，則顯示原本的 content -->
             <div v-else-if="meme.content" class="prose max-w-none">
               <p class="text-surface-700 leading-relaxed">{{ meme.content }}</p>
             </div>
@@ -940,22 +940,166 @@ const canEdit = computed(() => {
 
 const shareOptions = computed(() => getShareOptions())
 
-// 渲染 Markdown 內容
-const renderMarkdown = (markdown) => {
-  if (!markdown) return ''
+// 渲染 TipTap JSON 內容
+const renderTipTapContent = (content) => {
+  if (!content) return ''
 
-  // 簡單的 Markdown 渲染（可以根據需要擴展）
-  return markdown
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 粗體
-    .replace(/\*(.*?)\*/g, '<em>$1</em>') // 斜體
-    .replace(/`(.*?)`/g, '<code class="bg-surface-100 px-1 rounded">$1</code>') // 行內代碼
-    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>') // 三級標題
-    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>') // 二級標題
-    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>') // 一級標題
-    .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>') // 無序列表
-    .replace(/^\d+\. (.*$)/gim, '<li class="ml-4">$1</li>') // 有序列表
-    .replace(/\n\n/g, '</p><p class="mt-4">') // 段落
-    .replace(/^(.+)$/gm, '<p class="leading-relaxed">$1</p>') // 一般文字
+  // 如果是字串，可能是舊的 markdown 格式，使用原本的處理方式
+  if (typeof content === 'string') {
+    return content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 粗體
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // 斜體
+      .replace(
+        /`(.*?)`/g,
+        '<code class="bg-surface-100 px-1 rounded">$1</code>',
+      ) // 行內代碼
+      .replace(
+        /^### (.*$)/gim,
+        '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>',
+      ) // 三級標題
+      .replace(
+        /^## (.*$)/gim,
+        '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>',
+      ) // 二級標題
+      .replace(
+        /^# (.*$)/gim,
+        '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>',
+      ) // 一級標題
+      .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>') // 無序列表
+      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4">$1</li>') // 有序列表
+      .replace(/\n\n/g, '</p><p class="mt-4">') // 段落
+      .replace(/^(.+)$/gm, '<p class="leading-relaxed">$1</p>') // 一般文字
+  }
+
+  // 如果是 TipTap JSON 格式
+  if (
+    typeof content === 'object' &&
+    content.type === 'doc' &&
+    content.content
+  ) {
+    return renderTipTapNodes(content.content)
+  }
+
+  return ''
+}
+
+// 遞迴渲染 TipTap 節點
+const renderTipTapNodes = (nodes) => {
+  if (!Array.isArray(nodes)) return ''
+
+  return nodes
+    .map((node) => {
+      switch (node.type) {
+        case 'paragraph':
+          return `<p class="leading-relaxed mb-4">${renderTipTapMarks(node.content)}</p>`
+
+        case 'heading': {
+          const level = node.attrs?.level || 1
+          const headingClass =
+            level === 1
+              ? 'text-2xl font-bold mt-8 mb-4'
+              : level === 2
+                ? 'text-xl font-bold mt-6 mb-3'
+                : 'text-lg font-bold mt-4 mb-2'
+          return `<h${level} class="${headingClass}">${renderTipTapMarks(node.content)}</h${level}>`
+        }
+
+        case 'image': {
+          const { src, alt, annotation } = node.attrs || {}
+          let imageHtml = `<img src="${src}" alt="${alt || ''}" class="max-w-full h-auto rounded-lg shadow-lg mb-4" />`
+          if (annotation) {
+            imageHtml += `<p class="text-sm text-surface-600 italic mb-4">${annotation}</p>`
+          }
+          return imageHtml
+        }
+
+        case 'videoEmbed': {
+          const { src: videoSrc } = node.attrs || {}
+          if (videoSrc && isExternalVideoUrl(videoSrc)) {
+            return `<div class="aspect-video max-w-4xl mx-auto mb-4">
+            <iframe src="${getEmbedUrl(videoSrc)}"
+                    class="w-full h-full rounded-lg shadow-lg"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+            </iframe>
+          </div>`
+          }
+          return ''
+        }
+
+        case 'bulletList':
+          return `<ul class="list-disc list-inside mb-4 space-y-2">${renderTipTapNodes(node.content)}</ul>`
+
+        case 'orderedList':
+          return `<ol class="list-decimal list-inside mb-4 space-y-2">${renderTipTapNodes(node.content)}</ol>`
+
+        case 'listItem':
+          return `<li class="ml-4">${renderTipTapMarks(node.content)}</li>`
+
+        case 'blockquote':
+          return `<blockquote class="border-l-4 border-primary-500 pl-4 italic text-surface-600 mb-4">${renderTipTapMarks(node.content)}</blockquote>`
+
+        case 'codeBlock':
+          return `<pre class="bg-surface-100 p-4 rounded-lg overflow-x-auto mb-4"><code>${node.content?.[0]?.text || ''}</code></pre>`
+
+        case 'horizontalRule':
+          return `<hr class="my-6 border-surface-300" />`
+
+        default:
+          return ''
+      }
+    })
+    .join('')
+}
+
+// 渲染 TipTap 標記
+const renderTipTapMarks = (content) => {
+  if (!Array.isArray(content)) return ''
+
+  return content
+    .map((item) => {
+      if (item.type === 'text') {
+        let text = item.text || ''
+
+        // 處理標記
+        if (item.marks) {
+          item.marks.forEach((mark) => {
+            switch (mark.type) {
+              case 'bold':
+                text = `<strong>${text}</strong>`
+                break
+              case 'italic':
+                text = `<em>${text}</em>`
+                break
+              case 'underline':
+                text = `<u>${text}</u>`
+                break
+              case 'strike':
+                text = `<del>${text}</del>`
+                break
+              case 'code':
+                text = `<code class="bg-surface-100 px-1 rounded text-sm">${text}</code>`
+                break
+              case 'link': {
+                const { href, target, rel } = mark.attrs || {}
+                text = `<a href="${href}" target="${target || '_blank'}" rel="${rel || 'noopener noreferrer'}" class="text-primary-600 hover:text-primary-800 underline">${text}</a>`
+                break
+              }
+            }
+          })
+        }
+
+        return text
+      }
+
+      if (item.type === 'hardBreak') {
+        return '<br />'
+      }
+
+      return ''
+    })
+    .join('')
 }
 
 // 載入迷因資料
@@ -1010,8 +1154,8 @@ const loadMeme = async () => {
       // 記錄瀏覽
       await recordView()
 
-      // 載入相關數據
-      await Promise.all([
+      // 載入相關數據 - 使用 Promise.allSettled 避免單一服務失敗影響整體
+      const results = await Promise.allSettled([
         loadTags(),
         loadUserInteractionStatus(),
         loadComments(),
@@ -1020,6 +1164,22 @@ const loadMeme = async () => {
         loadViewStats(),
         loadSidebarData(),
       ])
+
+      // 記錄失敗的服務
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          const services = [
+            'loadTags',
+            'loadUserInteractionStatus',
+            'loadComments',
+            'loadRelatedMemes',
+            'loadVersions',
+            'loadViewStats',
+            'loadSidebarData',
+          ]
+          console.warn(`${services[index]} 載入失敗:`, result.reason)
+        }
+      })
     } else {
       error.value = '找不到該迷因'
     }
@@ -1184,44 +1344,50 @@ const loadRelatedMemes = async () => {
       console.log('設定相關迷因:', relatedMemes.value)
     } else {
       console.log('推薦服務沒有結果，嘗試回退到標籤推薦')
-      // 如果推薦服務沒有結果，回退到基於標籤的推薦
-      if (tags.value.length > 0) {
-        const tagNames = tags.value.map((tag) => tag.name)
-        const fallbackResponse = await memeService.getByTags(tagNames, {
-          limit: 5,
-        })
-        if (fallbackResponse.data) {
-          const memesData = fallbackResponse.data.data || fallbackResponse.data
-          const memesArray = Array.isArray(memesData) ? memesData : []
-          relatedMemes.value = memesArray
-            .filter((item) => getMemeId(item) !== memeId.value)
-            .slice(0, 5)
-          console.log('回退標籤推薦結果:', relatedMemes.value)
-        }
-      }
+      await loadFallbackRecommendations()
     }
   } catch (error) {
     console.error('載入相關迷因失敗:', error)
     // 錯誤時也嘗試回退到標籤推薦
-    try {
-      if (tags.value.length > 0) {
-        const tagNames = tags.value.map((tag) => tag.name)
-        const fallbackResponse = await memeService.getByTags(tagNames, {
-          limit: 5,
-        })
-        if (fallbackResponse.data) {
-          const memesData = fallbackResponse.data.data || fallbackResponse.data
-          const memesArray = Array.isArray(memesData) ? memesData : []
-          relatedMemes.value = memesArray
-            .filter((item) => getMemeId(item) !== memeId.value)
-            .slice(0, 5)
-          console.log('錯誤回退標籤推薦結果:', relatedMemes.value)
-        }
+    await loadFallbackRecommendations()
+  }
+}
+
+// 回退推薦方法
+const loadFallbackRecommendations = async () => {
+  try {
+    if (tags.value.length > 0) {
+      const tagNames = tags.value.map((tag) => tag.name)
+      const fallbackResponse = await memeService.getByTags(tagNames, {
+        limit: 5,
+      })
+      if (fallbackResponse.data) {
+        const memesData = fallbackResponse.data.data || fallbackResponse.data
+        const memesArray = Array.isArray(memesData) ? memesData : []
+        relatedMemes.value = memesArray
+          .filter((item) => getMemeId(item) !== memeId.value)
+          .slice(0, 5)
+        console.log('回退標籤推薦結果:', relatedMemes.value)
       }
-    } catch (fallbackError) {
-      console.error('回退推薦也失敗:', fallbackError)
-      relatedMemes.value = []
+    } else {
+      // 如果沒有標籤，嘗試取得最新迷因
+      const latestResponse = await memeService.getAll({
+        limit: 5,
+        sort: 'created_at',
+        order: 'desc',
+      })
+      if (latestResponse.data) {
+        const memesData = latestResponse.data.data || latestResponse.data
+        const memesArray = Array.isArray(memesData) ? memesData : []
+        relatedMemes.value = memesArray
+          .filter((item) => getMemeId(item) !== memeId.value)
+          .slice(0, 5)
+        console.log('回退最新迷因結果:', relatedMemes.value)
+      }
     }
+  } catch (fallbackError) {
+    console.error('回退推薦也失敗:', fallbackError)
+    relatedMemes.value = []
   }
 }
 
