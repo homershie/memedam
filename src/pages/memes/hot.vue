@@ -92,12 +92,6 @@
       <div v-if="infiniteLoading" class="space-y-6 pb-10">
         <MemeCardSkeleton v-for="n in 2" :key="`infinite-${n}`" />
       </div>
-      <!-- 調試資訊 -->
-      <div v-else class="text-xs text-gray-400 text-center">
-        Debug: infiniteHasMore={{ infiniteHasMore }}, memes.length={{
-          memes.length
-        }}
-      </div>
     </div>
 
     <!-- 評論對話框 -->
@@ -146,7 +140,7 @@ const memes = ref([])
 const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
-const pageSize = ref(10) // 從5改為10，加快載入速度
+const pageSize = ref(5)
 const totalCount = ref(0)
 const totalPages = ref(1)
 
@@ -187,26 +181,50 @@ const loadMemes = async (reset = true) => {
       params.types = types.join(',')
     }
 
-    console.log('Hot page request params:', params)
-    const response = await recommendationService.getHotRecommendations(params)
-    console.log('Hot page response:', response.data)
+    // 如果有已載入的迷因，排除它們以避免重複
+    if (memes.value.length > 0) {
+      const excludeIds = memes.value
+        .map((meme) => {
+          // 確保返回正確的ID格式
+          if (meme.id) {
+            return meme.id.toString()
+          } else if (meme._id) {
+            return meme._id.toString()
+          }
+          return null
+        })
+        .filter(Boolean)
+      if (excludeIds.length > 0) {
+        params.exclude_ids = excludeIds.join(',')
+      }
+    }
 
-    // 處理不同的回應格式
+    const response = await recommendationService.getHotRecommendations(params)
+
+    // 處理推薦系統的回應格式
     let memesData = []
     if (
       response.data &&
+      response.data.success &&
       response.data.data &&
       response.data.data.recommendations
     ) {
       // 處理後端返回的標準結構
       memesData = response.data.data.recommendations
+    } else if (
+      response.data &&
+      response.data.data &&
+      response.data.data.recommendations
+    ) {
+      // 處理後端返回的標準結構（沒有 success 欄位）
+      memesData = response.data.data.recommendations
     } else if (Array.isArray(response.data)) {
       memesData = response.data
-    } else if (response.data.memes) {
+    } else if (response.data && response.data.memes) {
       memesData = response.data.memes
-    } else if (response.data.recommendations) {
+    } else if (response.data && response.data.recommendations) {
       memesData = response.data.recommendations
-    } else if (response.data.data) {
+    } else if (response.data && response.data.data) {
       // 處理巢狀 data 結構
       const nestedData = response.data.data
       if (Array.isArray(nestedData)) {
@@ -218,8 +236,10 @@ const loadMemes = async (reset = true) => {
       } else {
         memesData = [nestedData]
       }
-    } else {
+    } else if (response.data) {
       memesData = [response.data]
+    } else {
+      memesData = []
     }
 
     // 為每個迷因載入作者資訊
@@ -255,8 +275,18 @@ const loadMemes = async (reset = true) => {
                 authorId = meme.author_id
               }
 
-              const authorResponse = await userService.get(authorId)
-              meme.author = authorResponse.data.user
+              try {
+                const authorResponse = await userService.get(authorId)
+                meme.author = authorResponse.data.user
+              } catch (authorError) {
+                console.warn(`載入作者 ${authorId} 失敗:`, authorError.message)
+                // 如果載入作者失敗，設定預設值
+                meme.author = {
+                  display_name: '未知用戶',
+                  username: 'unknown',
+                  avatar: null,
+                }
+              }
             }
           } else {
             // 沒有作者 ID，設定預設值
@@ -268,8 +298,11 @@ const loadMemes = async (reset = true) => {
           }
           return meme
         } catch (error) {
-          console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
-          // 如果載入作者失敗，設定預設值
+          console.warn(
+            `處理迷因 ${meme._id || meme.id} 時發生錯誤:`,
+            error.message,
+          )
+          // 如果處理迷因失敗，設定預設值
           meme.author = {
             display_name: '未知用戶',
             username: 'unknown',
@@ -288,43 +321,28 @@ const loadMemes = async (reset = true) => {
 
     // 檢查是否還有更多資料
     let backendHasMore = false
-    if (response.data && response.data.data && response.data.data.pagination) {
+    if (
+      response.data &&
+      response.data.success &&
+      response.data.data &&
+      response.data.data.pagination
+    ) {
       backendHasMore = response.data.data.pagination.hasMore
-      console.log('Hot page pagination:', response.data.data.pagination)
+    } else if (
+      response.data &&
+      response.data.data &&
+      response.data.data.pagination
+    ) {
+      backendHasMore = response.data.data.pagination.hasMore
     } else if (response.data && response.data.pagination) {
       backendHasMore = response.data.pagination.hasMore
-      console.log('Hot page pagination (fallback):', response.data.pagination)
     } else {
       backendHasMore = memesWithAuthors.length === pageSize.value
-      console.log(
-        'Hot page hasMore (fallback):',
-        backendHasMore,
-        'memesWithAuthors.length:',
-        memesWithAuthors.length,
-        'pageSize:',
-        pageSize.value,
-      )
     }
 
-    // 智能 hasMore 邏輯：如果後端返回了數據，且數據量等於頁面大小，或者後端明確表示還有更多數據
-    hasMore.value =
-      memesWithAuthors.length > 0 &&
-      (memesWithAuthors.length >= pageSize.value || backendHasMore)
+    // 簡化的 hasMore 邏輯：直接使用後端的 hasMore 狀態
+    hasMore.value = backendHasMore
 
-    console.log(
-      'Hot page currentPage:',
-      currentPage.value,
-      'hasMore:',
-      hasMore.value,
-      'memes count:',
-      memesWithAuthors.length,
-      'pageSize:',
-      pageSize.value,
-      'backendHasMore:',
-      backendHasMore,
-    )
-
-    // 更新無限滾動狀態
     // 更新總數和頁數資訊
     if (response.data?.pagination) {
       totalCount.value = response.data.pagination.total || 0
@@ -342,10 +360,7 @@ const loadMemes = async (reset = true) => {
     // 更新 SEO 設定
     updateSEOSettings()
 
-    console.log(
-      'Hot page updateLoadingState: loading=false, hasMore=',
-      hasMore.value,
-    )
+    // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)
   } catch (error) {
     console.error('載入熱門迷因失敗:', error)
@@ -367,19 +382,10 @@ const loadMemes = async (reset = true) => {
 const loadMoreContent = async () => {
   // 防止在初始載入時觸發
   if (memes.value.length === 0) {
-    console.log('Hot page loadMoreContent: memes is empty, skipping')
     return
   }
 
-  console.log(
-    'Hot page loadMoreContent: currentPage before increment:',
-    currentPage.value,
-  )
   currentPage.value++
-  console.log(
-    'Hot page loadMoreContent: currentPage after increment:',
-    currentPage.value,
-  )
   await loadMemes(false)
 }
 
@@ -393,9 +399,6 @@ const {
   distance: 200,
   interval: 100,
 })
-
-// 添加調試資訊
-console.log('Hot page infiniteHasMore:', infiniteHasMore.value)
 
 // 檢查標籤是否已選擇
 const isTagSelected = (tag) => {

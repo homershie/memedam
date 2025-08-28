@@ -239,13 +239,37 @@ const loadMemes = async (reset = true) => {
         newMemes.map(async (meme) => {
           try {
             if (meme.author_id) {
-              // 修正：支援 { $oid: ... } 格式
-              const authorId =
-                typeof meme.author_id === 'object' && meme.author_id.$oid
-                  ? meme.author_id.$oid
-                  : meme.author_id
-              const authorResponse = await userService.get(authorId)
-              meme.author = authorResponse.data.user
+              // 檢查是否已經是完整的用戶物件
+              if (typeof meme.author_id === 'object' && meme.author_id._id) {
+                // 如果 author_id 已經是完整的用戶物件，直接使用
+                meme.author = {
+                  _id: meme.author_id._id,
+                  username: meme.author_id.username || 'unknown',
+                  display_name: meme.author_id.display_name || '未知用戶',
+                  avatar:
+                    meme.author_id.avatar || meme.author_id.avatarUrl || null,
+                }
+              } else {
+                // 處理不同格式的作者 ID
+                let authorId = null
+
+                if (typeof meme.author_id === 'string') {
+                  authorId = meme.author_id
+                } else if (typeof meme.author_id === 'object') {
+                  if (meme.author_id.$oid) {
+                    authorId = meme.author_id.$oid
+                  } else if (meme.author_id.toString) {
+                    authorId = meme.author_id.toString()
+                  } else {
+                    authorId = meme.author_id
+                  }
+                } else {
+                  authorId = meme.author_id
+                }
+
+                const authorResponse = await userService.get(authorId)
+                meme.author = authorResponse.data.user
+              }
             } else {
               // 沒有作者 ID，設定預設值
               meme.author = {
@@ -390,13 +414,37 @@ const loadRecommendations = async (recommendationType, params) => {
       recommendations.map(async (meme) => {
         try {
           if (meme.author_id) {
-            // 修正：支援 { $oid: ... } 格式
-            const authorId =
-              typeof meme.author_id === 'object' && meme.author_id.$oid
-                ? meme.author_id.$oid
-                : meme.author_id
-            const authorResponse = await userService.get(authorId)
-            meme.author = authorResponse.data.user
+            // 檢查是否已經是完整的用戶物件
+            if (typeof meme.author_id === 'object' && meme.author_id._id) {
+              // 如果 author_id 已經是完整的用戶物件，直接使用
+              meme.author = {
+                _id: meme.author_id._id,
+                username: meme.author_id.username || 'unknown',
+                display_name: meme.author_id.display_name || '未知用戶',
+                avatar:
+                  meme.author_id.avatar || meme.author_id.avatarUrl || null,
+              }
+            } else {
+              // 處理不同格式的作者 ID
+              let authorId = null
+
+              if (typeof meme.author_id === 'string') {
+                authorId = meme.author_id
+              } else if (typeof meme.author_id === 'object') {
+                if (meme.author_id.$oid) {
+                  authorId = meme.author_id.$oid
+                } else if (meme.author_id.toString) {
+                  authorId = meme.author_id.toString()
+                } else {
+                  authorId = meme.author_id
+                }
+              } else {
+                authorId = meme.author_id
+              }
+
+              const authorResponse = await userService.get(authorId)
+              meme.author = authorResponse.data.user
+            }
           } else {
             // 沒有作者 ID，設定預設值
             meme.author = {

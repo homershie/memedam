@@ -208,15 +208,11 @@ const loadMemes = async (reset = true) => {
       params.types = types.join(',')
     }
 
-    console.log('Smart recommendations request params:', params)
-    console.log('User login status:', isLoggedIn)
-
     // 使用智能推薦服務
     const response = await recommendationService.getSmartRecommendations(
       params,
       isLoggedIn,
     )
-    console.log('Smart recommendations response:', response.data)
 
     // 處理推薦系統的回應格式
     let memesData = []
@@ -345,59 +341,22 @@ const loadMemes = async (reset = true) => {
       response.data.data.pagination
     ) {
       backendHasMore = response.data.data.pagination.hasMore
-      console.log(
-        'Smart recommendations pagination:',
-        response.data.data.pagination,
-      )
     } else if (
       response.data &&
       response.data.data &&
       response.data.data.pagination
     ) {
       backendHasMore = response.data.data.pagination.hasMore
-      console.log(
-        'Smart recommendations pagination (fallback):',
-        response.data.data.pagination,
-      )
     } else if (response.data && response.data.pagination) {
       backendHasMore = response.data.pagination.hasMore
-      console.log(
-        'Smart recommendations pagination (fallback):',
-        response.data.pagination,
-      )
     } else {
       backendHasMore = memesWithAuthors.length === pageSize.value
-      console.log(
-        'Smart recommendations hasMore (fallback):',
-        backendHasMore,
-        'memesWithAuthors.length:',
-        memesWithAuthors.length,
-        'pageSize:',
-        pageSize.value,
-      )
     }
 
     // 簡化的 hasMore 邏輯：直接使用後端的 hasMore 狀態
     hasMore.value = backendHasMore
 
-    console.log(
-      'Smart recommendations currentPage:',
-      currentPage.value,
-      'hasMore:',
-      hasMore.value,
-      'memes count:',
-      memesWithAuthors.length,
-      'pageSize:',
-      pageSize.value,
-      'backendHasMore:',
-      backendHasMore,
-    )
-
     // 更新無限滾動狀態
-    console.log(
-      'Smart recommendations updateLoadingState: loading=false, hasMore=',
-      hasMore.value,
-    )
     updateLoadingState(false, hasMore.value)
   } catch (error) {
     console.error('載入智能推薦失敗:', error)
@@ -428,21 +387,10 @@ const loadMemes = async (reset = true) => {
 const loadMoreContent = async () => {
   // 防止在初始載入時觸發
   if (memes.value.length === 0) {
-    console.log(
-      'Smart recommendations loadMoreContent: memes is empty, skipping',
-    )
     return
   }
 
-  console.log(
-    'Smart recommendations loadMoreContent: currentPage before increment:',
-    currentPage.value,
-  )
   currentPage.value++
-  console.log(
-    'Smart recommendations loadMoreContent: currentPage after increment:',
-    currentPage.value,
-  )
   await loadMemes(false)
 }
 

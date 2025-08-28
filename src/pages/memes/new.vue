@@ -198,10 +198,8 @@ const loadMemes = async (reset = true) => {
       }
     }
 
-    console.log('Latest recommendations request params:', params)
     const response =
       await recommendationService.getLatestRecommendations(params)
-    console.log('Latest recommendations response:', response.data)
 
     // 處理推薦系統的回應格式
     let memesData = []
@@ -330,36 +328,16 @@ const loadMemes = async (reset = true) => {
       response.data.data.pagination
     ) {
       backendHasMore = response.data.data.pagination.hasMore
-      console.log(
-        'Latest recommendations pagination:',
-        response.data.data.pagination,
-      )
     } else if (
       response.data &&
       response.data.data &&
       response.data.data.pagination
     ) {
       backendHasMore = response.data.data.pagination.hasMore
-      console.log(
-        'Latest recommendations pagination (fallback):',
-        response.data.data.pagination,
-      )
     } else if (response.data && response.data.pagination) {
       backendHasMore = response.data.pagination.hasMore
-      console.log(
-        'Latest recommendations pagination (fallback):',
-        response.data.pagination,
-      )
     } else {
       backendHasMore = memesWithAuthors.length === pageSize.value
-      console.log(
-        'Latest recommendations hasMore (fallback):',
-        backendHasMore,
-        'memesWithAuthors.length:',
-        memesWithAuthors.length,
-        'pageSize:',
-        pageSize.value,
-      )
     }
 
     // 智能 hasMore 邏輯：如果後端返回了數據，且數據量等於頁面大小，或者後端明確表示還有更多數據
@@ -367,24 +345,7 @@ const loadMemes = async (reset = true) => {
       memesWithAuthors.length > 0 &&
       (memesWithAuthors.length >= pageSize.value || backendHasMore)
 
-    console.log(
-      'Latest recommendations currentPage:',
-      currentPage.value,
-      'hasMore:',
-      hasMore.value,
-      'memes count:',
-      memesWithAuthors.length,
-      'pageSize:',
-      pageSize.value,
-      'backendHasMore:',
-      backendHasMore,
-    )
-
     // 更新無限滾動狀態
-    console.log(
-      'Latest recommendations updateLoadingState: loading=false, hasMore=',
-      hasMore.value,
-    )
     updateLoadingState(false, hasMore.value)
   } catch (error) {
     console.error('載入最新推薦失敗:', error)
@@ -415,21 +376,10 @@ const loadMemes = async (reset = true) => {
 const loadMoreContent = async () => {
   // 防止在初始載入時觸發
   if (memes.value.length === 0) {
-    console.log(
-      'Latest recommendations loadMoreContent: memes is empty, skipping',
-    )
     return
   }
 
-  console.log(
-    'Latest recommendations loadMoreContent: currentPage before increment:',
-    currentPage.value,
-  )
   currentPage.value++
-  console.log(
-    'Latest recommendations loadMoreContent: currentPage after increment:',
-    currentPage.value,
-  )
   await loadMemes(false)
 }
 
