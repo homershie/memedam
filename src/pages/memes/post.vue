@@ -19,6 +19,7 @@
               maxlength="200"
               class="w-full"
               :class="{ 'p-invalid': errors.title }"
+              @input="onTitleChange"
             />
             <Message
               v-if="errors.title"
@@ -28,6 +29,59 @@
             >
               {{ errors.title }}
             </Message>
+          </div>
+
+          <!-- Slug 欄位 -->
+          <div class="field">
+            <label for="slug" class="block font-semibold mb-2">
+              網址代稱 (Slug)
+              <span class="text-surface-500 text-sm font-normal ml-2">
+                （選填，留空將自動產生）
+              </span>
+            </label>
+            <div class="flex gap-2">
+              <InputText
+                id="slug"
+                v-model="form.slug"
+                placeholder="例如：funny-cat-meme"
+                maxlength="80"
+                class="flex-1"
+                :class="{ 'p-invalid': errors.slug || !slug_ok }"
+                @input="onSlugInput"
+                @blur="checkSlugAvailable"
+              />
+              <div v-if="slug_checking" class="flex items-center px-3">
+                <i class="pi pi-spin pi-spinner text-primary-500"></i>
+              </div>
+              <div v-else-if="form.slug && slug_ok" class="flex items-center px-3">
+                <i class="pi pi-check-circle text-green-500"></i>
+              </div>
+              <div v-else-if="form.slug && !slug_ok" class="flex items-center px-3">
+                <i class="pi pi-times-circle text-red-500"></i>
+              </div>
+            </div>
+            
+            <!-- 預覽 URL -->
+            <div v-if="form.slug" class="mt-2 text-sm text-surface-600">
+              <i class="pi pi-link mr-1"></i>
+              預覽網址：
+              <span class="font-mono text-primary-600">
+                https://memedam.com/meme/{{ form.slug }}
+              </span>
+            </div>
+            
+            <Message
+              v-if="errors.slug || slug_error"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.slug || slug_error }}
+            </Message>
+            
+            <small class="text-surface-500">
+              只能使用小寫字母、數字和連字號，長度 3-80 個字元
+            </small>
           </div>
 
           <!-- 迷因類型 -->
@@ -84,6 +138,34 @@
             >
               {{ getCharCount(form.content) }}/350
             </small>
+          </div>
+
+          <!-- 來源選擇 -->
+          <div class="field">
+            <div class="flex items-center mb-3">
+              <Checkbox
+                v-model="form.has_source"
+                inputId="hasSource"
+                :binary="true"
+              />
+              <label for="hasSource" class="ml-2 font-semibold">
+                此迷因有來源作品
+              </label>
+            </div>
+            
+            <SourceScenePicker
+              v-if="form.has_source"
+              v-model="sourceSceneData"
+            />
+            
+            <Message
+              v-if="errors.source"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.source }}
+            </Message>
           </div>
 
           <!-- 媒體內容 (根據類型顯示不同輸入方式) -->
@@ -331,6 +413,35 @@
             <small class="text-surface-500">選填，標註內容來源以示尊重</small>
           </div>
 
+          <!-- 變體/混剪選擇 -->
+          <div class="field">
+            <div class="flex items-center mb-3">
+              <Checkbox
+                v-model="form.is_variant"
+                inputId="isVariant"
+                :binary="true"
+              />
+              <label for="isVariant" class="ml-2 font-semibold">
+                這是某個迷因的變體/混剪
+              </label>
+            </div>
+            
+            <MemeRemoteSelect
+              v-if="form.is_variant"
+              v-model="form.variant_of"
+              :required="form.is_variant"
+            />
+            
+            <Message
+              v-if="errors.variant"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.variant }}
+            </Message>
+          </div>
+
           <!-- 錯誤訊息 -->
           <Message v-if="submitError" severity="error" :closable="false">
             {{ submitError }}
@@ -361,7 +472,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
@@ -380,10 +491,17 @@ import FileUpload from 'primevue/fileupload'
 // TipTap 編輯器
 import TipTapEditor from '@/components/TipTapEditor.vue'
 
+// 自訂元件
+import SourceScenePicker from '@/components/SourceScenePicker.vue'
+import MemeRemoteSelect from '@/components/MemeRemoteSelect.vue'
+
 // API 服務
 import memeService from '@/services/memeService'
 import tagService from '@/services/tagService'
 import memeTagService from '@/services/memeTagService'
+
+// 工具函數
+import { slugify, validateSlug, isReservedSlug, generateAlternativeSlug } from '@/utils/slugify'
 
 defineOptions({ name: 'PostMemePage' })
 
@@ -394,6 +512,7 @@ const userStore = useUserStore()
 // 表單資料
 const form = reactive({
   title: '',
+  slug: '',
   type: 'text',
   content: '',
   image_url: '',
@@ -402,14 +521,22 @@ const form = reactive({
   nsfw: false,
   language: 'zh',
   source_url: '',
+  has_source: false,
+  source_id: null,
+  scene_id: null,
+  is_variant: false,
+  variant_of: null,
 })
 
 // 表單驗證錯誤
 const errors = reactive({
   title: '',
+  slug: '',
   type: '',
   content: '',
   mediaUrl: '',
+  source: '',
+  variant: '',
 })
 
 // 其他狀態
@@ -424,6 +551,13 @@ const detailImages = ref([]) // 新增：詳細介紹中的圖片陣列
 const loading = ref(false)
 const submitError = ref('')
 const uploadedImageFile = ref(null)
+
+// Slug 相關狀態
+const user_edited_slug = ref(false)
+const slug_checking = ref(false)
+const slug_ok = ref(true)
+const slug_error = ref('')
+let slugCheckTimer = null
 
 // TipTap 編輯器不需要額外的本地 options 設定
 
@@ -581,6 +715,105 @@ const handleDetailImageUpload = (file) => {
   pendingDetailImages.value.push(file)
 }
 
+// Source/Scene 資料綁定
+const sourceSceneData = ref({
+  source_id: null,
+  scene_id: null,
+})
+
+// 監聽 sourceSceneData 變化，同步到 form
+watch(sourceSceneData, (newVal) => {
+  if (newVal) {
+    form.source_id = newVal.source_id
+    form.scene_id = newVal.scene_id
+  }
+}, { deep: true })
+
+// 處理標題變化
+const onTitleChange = () => {
+  // 如果使用者還沒手動編輯過 slug，自動生成
+  if (!user_edited_slug.value && form.title) {
+    const generatedSlug = slugify(form.title, { maxLength: 60 })
+    if (generatedSlug) {
+      form.slug = generatedSlug
+      // 檢查可用性
+      checkSlugAvailable()
+    }
+  }
+}
+
+// 處理 slug 輸入
+const onSlugInput = (event) => {
+  // 標記使用者已手動編輯
+  user_edited_slug.value = true
+  
+  // 只保留合法字元
+  const cleanSlug = event.target.value
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/--+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  
+  form.slug = cleanSlug
+  
+  // 清除之前的計時器
+  if (slugCheckTimer) {
+    clearTimeout(slugCheckTimer)
+  }
+  
+  // 設定新的計時器（debounce 500ms）
+  slugCheckTimer = setTimeout(() => {
+    checkSlugAvailable()
+  }, 500)
+}
+
+// 檢查 slug 是否可用
+const checkSlugAvailable = async () => {
+  if (!form.slug) {
+    slug_ok.value = true
+    slug_error.value = ''
+    return
+  }
+  
+  // 先做本地驗證
+  const validation = validateSlug(form.slug)
+  if (!validation.valid) {
+    slug_ok.value = false
+    slug_error.value = validation.error
+    return
+  }
+  
+  // 檢查是否為保留字
+  if (isReservedSlug(form.slug)) {
+    slug_ok.value = false
+    slug_error.value = '此 Slug 為保留字，請選擇其他名稱'
+    return
+  }
+  
+  slug_checking.value = true
+  slug_error.value = ''
+  
+  try {
+    const response = await fetch(`/api/memes/slug-available?slug=${encodeURIComponent(form.slug)}`)
+    const data = await response.json()
+    
+    if (data.ok) {
+      slug_ok.value = true
+      slug_error.value = ''
+    } else {
+      slug_ok.value = false
+      slug_error.value = data.reason || 'Slug 已被使用'
+    }
+  } catch (error) {
+    console.error('檢查 slug 失敗:', error)
+    // 發生錯誤時假設可用，讓後端做最終檢查
+    slug_ok.value = true
+    slug_error.value = ''
+  } finally {
+    slug_checking.value = false
+  }
+}
+
 // 表單驗證
 const validateForm = () => {
   // 清空錯誤
@@ -593,11 +826,35 @@ const validateForm = () => {
     isValid = false
   }
 
+  // 驗證 slug
+  if (form.slug) {
+    const slugValidation = validateSlug(form.slug)
+    if (!slugValidation.valid) {
+      errors.slug = slugValidation.error
+      isValid = false
+    } else if (!slug_ok) {
+      errors.slug = slug_error.value || 'Slug 已被使用'
+      isValid = false
+    }
+  }
+
   if (!form.content.trim()) {
     errors.content = '請輸入迷因內容簡介'
     isValid = false
   } else if (getCharCount(form.content) > 350) {
     errors.content = '內容簡介不能超過 350 個字元'
+    isValid = false
+  }
+
+  // 檢查來源
+  if (form.has_source && !form.source_id) {
+    errors.source = '請選擇來源作品'
+    isValid = false
+  }
+
+  // 檢查變體
+  if (form.is_variant && !form.variant_of) {
+    errors.variant = '請選擇原始迷因'
     isValid = false
   }
 
@@ -626,6 +883,7 @@ const validateForm = () => {
 const resetForm = () => {
   Object.assign(form, {
     title: '',
+    slug: '',
     type: 'text',
     content: '',
     image_url: '',
@@ -634,7 +892,17 @@ const resetForm = () => {
     nsfw: false,
     language: 'zh',
     source_url: '',
+    has_source: false,
+    source_id: null,
+    scene_id: null,
+    is_variant: false,
+    variant_of: null,
   })
+
+  // 重設 slug 狀態
+  user_edited_slug.value = false
+  slug_ok.value = true
+  slug_error.value = ''
 
   uploadedImageUrl.value = ''
   imagePreviewError.value = false
@@ -740,6 +1008,10 @@ const handleSubmit = async () => {
     // 先建立迷因，獲得 memeId
     const memeData = {
       ...form,
+      slug: form.slug || undefined,
+      source_id: form.has_source ? form.source_id : null,
+      scene_id: form.has_source ? form.scene_id : null,
+      variant_of: form.is_variant ? form.variant_of : null,
       detail_content: detailContent.value,
       detail_images: detailImages.value,
       tags_cache: tagNames,
@@ -865,12 +1137,31 @@ const handleSubmit = async () => {
     submitError.value =
       error?.response?.data?.message || error.message || '投稿失敗，請稍後再試'
 
-    toast.add({
-      severity: 'error',
-      summary: '投稿失敗',
-      detail: submitError.value,
-      life: 5000,
-    })
+    // 處理 slug 重複的 409 錯誤
+    if (error?.response?.status === 409 && form.slug) {
+      const suggestedSlug = generateAlternativeSlug(form.slug)
+      form.slug = suggestedSlug
+      slug_error.value = `Slug 已被使用，建議使用：${suggestedSlug}`
+      
+      // 聚焦到 slug 欄位
+      setTimeout(() => {
+        document.getElementById('slug')?.focus()
+      }, 100)
+      
+      toast.add({
+        severity: 'warn',
+        summary: 'Slug 重複',
+        detail: `Slug "${form.slug}" 已被使用，請修改後重試`,
+        life: 5000,
+      })
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: '投稿失敗',
+        detail: submitError.value,
+        life: 5000,
+      })
+    }
   } finally {
     loading.value = false
   }
