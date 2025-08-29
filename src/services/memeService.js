@@ -51,6 +51,12 @@ export default {
   create(data) {
     return apiService.httpAuth.post('/api/memes', data)
   },
+  // 檢查 slug 是否可用
+  checkSlugAvailable(slug) {
+    return apiService.http.get('/api/memes/slug-available', {
+      params: { slug },
+    })
+  },
   getAll(params = {}) {
     const processedParams = processParams(params)
     // 使用帶權杖的客戶端，讓後端可辨識管理者並放寬狀態限制
