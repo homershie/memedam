@@ -1,11 +1,12 @@
 {
-	"folders": [
-		{
-			"path": "../memedam_backend"
-		},
-		{
-			"path": "."
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "name": "Backend",
+      "path": "D:/git/memedam_backend",
+    },
+    {
+      "name": "Frontend",
+      "path": "D:/git/memedam",
+    },
+  ],
 }
