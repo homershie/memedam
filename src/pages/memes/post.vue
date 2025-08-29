@@ -53,23 +53,29 @@
               <div v-if="slug_checking" class="flex items-center px-3">
                 <i class="pi pi-spin pi-spinner text-primary-500"></i>
               </div>
-              <div v-else-if="form.slug && slug_ok" class="flex items-center px-3">
+              <div
+                v-else-if="form.slug && slug_ok"
+                class="flex items-center px-3"
+              >
                 <i class="pi pi-check-circle text-green-500"></i>
               </div>
-              <div v-else-if="form.slug && !slug_ok" class="flex items-center px-3">
+              <div
+                v-else-if="form.slug && !slug_ok"
+                class="flex items-center px-3"
+              >
                 <i class="pi pi-times-circle text-red-500"></i>
               </div>
             </div>
-            
+
             <!-- 預覽 URL -->
             <div v-if="form.slug" class="mt-2 text-sm text-surface-600">
               <i class="pi pi-link mr-1"></i>
               預覽網址：
               <span class="font-mono text-primary-600">
-                https://memedam.com/meme/{{ form.slug }}
+                https://memedam.com/memes/{{ form.slug }}
               </span>
             </div>
-            
+
             <Message
               v-if="errors.slug || slug_error"
               severity="error"
@@ -78,7 +84,7 @@
             >
               {{ errors.slug || slug_error }}
             </Message>
-            
+
             <small class="text-surface-500">
               只能使用小寫字母、數字和連字號，長度 3-80 個字元
             </small>
@@ -152,12 +158,12 @@
                 此迷因有來源作品
               </label>
             </div>
-            
+
             <SourceScenePicker
               v-if="form.has_source"
               v-model="sourceSceneData"
             />
-            
+
             <Message
               v-if="errors.source"
               severity="error"
@@ -356,7 +362,7 @@
                 <Button
                   type="button"
                   icon="pi pi-plus"
-                  label="新增"
+                  label="新增標籤"
                   @click="addTag"
                   :disabled="!tagInput.trim()"
                 />
@@ -425,13 +431,13 @@
                 這是某個迷因的變體/混剪
               </label>
             </div>
-            
+
             <MemeRemoteSelect
               v-if="form.is_variant"
               v-model="form.variant_of"
               :required="form.is_variant"
             />
-            
+
             <Message
               v-if="errors.variant"
               severity="error"
@@ -501,7 +507,12 @@ import tagService from '@/services/tagService'
 import memeTagService from '@/services/memeTagService'
 
 // 工具函數
-import { slugify, validateSlug, isReservedSlug, generateAlternativeSlug } from '@/utils/slugify'
+import {
+  slugify,
+  validateSlug,
+  isReservedSlug,
+  generateAlternativeSlug,
+} from '@/utils/slugify'
 
 defineOptions({ name: 'PostMemePage' })
 
@@ -722,12 +733,16 @@ const sourceSceneData = ref({
 })
 
 // 監聽 sourceSceneData 變化，同步到 form
-watch(sourceSceneData, (newVal) => {
-  if (newVal) {
-    form.source_id = newVal.source_id
-    form.scene_id = newVal.scene_id
-  }
-}, { deep: true })
+watch(
+  sourceSceneData,
+  (newVal) => {
+    if (newVal) {
+      form.source_id = newVal.source_id
+      form.scene_id = newVal.scene_id
+    }
+  },
+  { deep: true },
+)
 
 // 處理標題變化
 const onTitleChange = () => {
@@ -746,21 +761,21 @@ const onTitleChange = () => {
 const onSlugInput = (event) => {
   // 標記使用者已手動編輯
   user_edited_slug.value = true
-  
+
   // 只保留合法字元
   const cleanSlug = event.target.value
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-')
     .replace(/--+/g, '-')
     .replace(/^-+|-+$/g, '')
-  
+
   form.slug = cleanSlug
-  
+
   // 清除之前的計時器
   if (slugCheckTimer) {
     clearTimeout(slugCheckTimer)
   }
-  
+
   // 設定新的計時器（debounce 500ms）
   slugCheckTimer = setTimeout(() => {
     checkSlugAvailable()
@@ -774,7 +789,7 @@ const checkSlugAvailable = async () => {
     slug_error.value = ''
     return
   }
-  
+
   // 先做本地驗證
   const validation = validateSlug(form.slug)
   if (!validation.valid) {
@@ -782,27 +797,29 @@ const checkSlugAvailable = async () => {
     slug_error.value = validation.error
     return
   }
-  
+
   // 檢查是否為保留字
   if (isReservedSlug(form.slug)) {
     slug_ok.value = false
     slug_error.value = '此 Slug 為保留字，請選擇其他名稱'
     return
   }
-  
+
   slug_checking.value = true
   slug_error.value = ''
-  
+
   try {
-    const response = await fetch(`/api/memes/slug-available?slug=${encodeURIComponent(form.slug)}`)
+    const response = await fetch(
+      `/api/memes/slug-available?slug=${encodeURIComponent(form.slug)}`,
+    )
     const data = await response.json()
-    
-    if (data.ok) {
+
+    if (data.success && data.data.available) {
       slug_ok.value = true
       slug_error.value = ''
     } else {
       slug_ok.value = false
-      slug_error.value = data.reason || 'Slug 已被使用'
+      slug_error.value = data.error || 'Slug 已被使用'
     }
   } catch (error) {
     console.error('檢查 slug 失敗:', error)
@@ -832,7 +849,7 @@ const validateForm = () => {
     if (!slugValidation.valid) {
       errors.slug = slugValidation.error
       isValid = false
-    } else if (!slug_ok) {
+    } else if (!slug_ok.value) {
       errors.slug = slug_error.value || 'Slug 已被使用'
       isValid = false
     }
@@ -1142,12 +1159,12 @@ const handleSubmit = async () => {
       const suggestedSlug = generateAlternativeSlug(form.slug)
       form.slug = suggestedSlug
       slug_error.value = `Slug 已被使用，建議使用：${suggestedSlug}`
-      
+
       // 聚焦到 slug 欄位
       setTimeout(() => {
         document.getElementById('slug')?.focus()
       }, 100)
-      
+
       toast.add({
         severity: 'warn',
         summary: 'Slug 重複',

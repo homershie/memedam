@@ -850,11 +850,20 @@ const loadMeme = async () => {
     const response = await memeService.get(memeId.value)
     if (response.data) {
       // 處理可能的嵌套數據結構
-      const memeData = response.data.data || response.data
+      const memeData =
+        response.data.data?.meme || response.data.data || response.data
 
       // 載入作者資料（參考 memes/all.vue 的實現）
       try {
-        if (memeData.author_id) {
+        // 檢查是否已經有完整的作者資料
+        if (
+          memeData.author &&
+          typeof memeData.author === 'object' &&
+          memeData.author.username
+        ) {
+          // 作者資料已經完整，不需要額外載入
+          console.log('作者資料已完整:', memeData.author)
+        } else if (memeData.author_id) {
           // 支援 { $oid: ... } 格式
           let authorId = memeData.author_id
           if (typeof authorId === 'object') {
@@ -871,8 +880,8 @@ const loadMeme = async () => {
           }
           const authorResponse = await userService.get(authorId)
           memeData.author = authorResponse.data.user || authorResponse.data
-        } else if (!memeData.author || typeof memeData.author === 'string') {
-          // 沒有作者 ID 或 author 只是字符串 ID，設定預設值
+        } else {
+          // 沒有作者資料，設定預設值
           memeData.author = {
             display_name: '匿名用戶',
             username: 'anonymous',

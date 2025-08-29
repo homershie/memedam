@@ -5,7 +5,7 @@
       <label class="block font-semibold mb-2">
         選擇來源作品 <span class="text-primary-500">*</span>
       </label>
-      
+
       <div class="flex gap-2">
         <AutoComplete
           v-model="sourceSearchText"
@@ -14,18 +14,21 @@
           @item-select="selectSource"
           optionLabel="display"
           placeholder="搜尋作品名稱..."
-          class="flex-1"
+          class="w-80"
           :minLength="2"
           :delay="300"
           appendTo="body"
           :dropdown="false"
           :forceSelection="false"
+          fluid
         >
           <template #option="slotProps">
             <div class="source-option">
               <div class="font-semibold">{{ slotProps.option.title }}</div>
               <div class="text-sm text-surface-500">
-                <span v-if="slotProps.option.year">{{ slotProps.option.year }}年</span>
+                <span v-if="slotProps.option.year"
+                  >{{ slotProps.option.year }}年</span
+                >
                 <span v-if="slotProps.option.type" class="ml-2">
                   {{ getTypeLabel(slotProps.option.type) }}
                 </span>
@@ -33,18 +36,20 @@
             </div>
           </template>
         </AutoComplete>
-        
+
         <Button
           type="button"
           icon="pi pi-plus"
           label="新增來源"
           @click="showCreateSourceDialog = true"
-          severity="secondary"
         />
       </div>
 
       <!-- 已選擇的來源顯示 -->
-      <div v-if="selectedSource" class="mt-2 p-3 bg-surface-100 dark:bg-surface-800 rounded">
+      <div
+        v-if="selectedSource"
+        class="mt-2 p-3 bg-surface-100 dark:bg-surface-800 rounded"
+      >
         <div class="flex items-center justify-between">
           <div>
             <span class="font-semibold">{{ selectedSource.title }}</span>
@@ -62,7 +67,12 @@
         </div>
       </div>
 
-      <Message v-if="sourceError" severity="error" size="small" variant="simple">
+      <Message
+        v-if="sourceError"
+        severity="error"
+        size="small"
+        variant="simple"
+      >
         {{ sourceError }}
       </Message>
     </div>
@@ -72,7 +82,7 @@
       <label class="block font-semibold mb-2">
         選擇片段 <span class="text-surface-500">（選填）</span>
       </label>
-      
+
       <div class="flex gap-2">
         <AutoComplete
           v-model="sceneSearchText"
@@ -92,10 +102,16 @@
               <div v-if="slotProps.option.title" class="font-semibold">
                 {{ slotProps.option.title }}
               </div>
-              <div v-if="slotProps.option.quote" class="text-sm italic text-surface-600">
+              <div
+                v-if="slotProps.option.quote"
+                class="text-sm italic text-surface-600"
+              >
                 "{{ slotProps.option.quote }}"
               </div>
-              <div v-if="slotProps.option.start_time" class="text-sm text-surface-500">
+              <div
+                v-if="slotProps.option.start_time"
+                class="text-sm text-surface-500"
+              >
                 時間：{{ formatTime(slotProps.option.start_time) }}
                 <span v-if="slotProps.option.end_time">
                   - {{ formatTime(slotProps.option.end_time) }}
@@ -104,7 +120,7 @@
             </div>
           </template>
         </AutoComplete>
-        
+
         <Button
           type="button"
           icon="pi pi-plus"
@@ -115,16 +131,25 @@
       </div>
 
       <!-- 已選擇的片段顯示 -->
-      <div v-if="selectedScene" class="mt-2 p-3 bg-surface-100 dark:bg-surface-800 rounded">
+      <div
+        v-if="selectedScene"
+        class="mt-2 p-3 bg-surface-100 dark:bg-surface-800 rounded"
+      >
         <div class="flex items-center justify-between">
           <div>
             <div v-if="selectedScene.title" class="font-semibold">
               {{ selectedScene.title }}
             </div>
-            <div v-if="selectedScene.quote" class="text-sm italic text-surface-600">
+            <div
+              v-if="selectedScene.quote"
+              class="text-sm italic text-surface-600"
+            >
               "{{ selectedScene.quote }}"
             </div>
-            <div v-if="selectedScene.start_time" class="text-sm text-surface-500">
+            <div
+              v-if="selectedScene.start_time"
+              class="text-sm text-surface-500"
+            >
               時間：{{ formatTime(selectedScene.start_time) }}
             </div>
           </div>
@@ -183,13 +208,40 @@
           <label for="newSourceSlug" class="block font-semibold mb-2">
             網址代稱 (Slug)
           </label>
-          <InputText
-            id="newSourceSlug"
-            v-model="newSource.slug"
-            placeholder="自動產生或手動輸入..."
-            class="w-full"
-            @input="onNewSourceSlugInput"
-          />
+          <div class="flex gap-2">
+            <InputText
+              id="newSourceSlug"
+              v-model="newSource.slug"
+              placeholder="自動產生或手動輸入..."
+              class="flex-1"
+              :class="{ 'p-invalid': newSourceSlugError }"
+              @input="onNewSourceSlugInput"
+              @blur="checkNewSourceSlugAvailable"
+            />
+            <div v-if="newSourceSlugChecking" class="flex items-center px-3">
+              <i class="pi pi-spin pi-spinner text-primary-500"></i>
+            </div>
+            <div
+              v-else-if="newSource.slug && newSourceSlugOk"
+              class="flex items-center px-3"
+            >
+              <i class="pi pi-check-circle text-green-500"></i>
+            </div>
+            <div
+              v-else-if="newSource.slug && !newSourceSlugOk"
+              class="flex items-center px-3"
+            >
+              <i class="pi pi-times-circle text-red-500"></i>
+            </div>
+          </div>
+          <Message
+            v-if="newSourceSlugError"
+            severity="error"
+            size="small"
+            variant="simple"
+          >
+            {{ newSourceSlugError }}
+          </Message>
           <small class="text-surface-500">
             留空將自動產生。只能使用小寫字母、數字和連字號
           </small>
@@ -317,7 +369,11 @@
             截圖連結
           </label>
           <div class="space-y-2">
-            <div v-for="(image, index) in newScene.images" :key="index" class="flex gap-2">
+            <div
+              v-for="(image, index) in newScene.images"
+              :key="index"
+              class="flex gap-2"
+            >
               <InputText
                 v-model="newScene.images[index]"
                 placeholder="圖片網址..."
@@ -360,11 +416,11 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import sourceService from '@/services/sourceService'
 import sceneService from '@/services/sceneService'
-import { slugify } from '@/utils/slugify'
+import { slugify, validateSlug, isReservedSlug } from '@/utils/slugify'
 
 // PrimeVue 組件
 import AutoComplete from 'primevue/autocomplete'
@@ -409,6 +465,12 @@ const newSource = ref({
   synopsis: '',
 })
 
+// Slug 驗證狀態
+const newSourceSlugOk = ref(true)
+const newSourceSlugError = ref('')
+const newSourceSlugChecking = ref(false)
+let newSourceSlugCheckTimer = null
+
 // 新增片段表單
 const newScene = ref({
   title: '',
@@ -439,9 +501,9 @@ const searchSources = async (event) => {
 
   try {
     const { data } = await sourceService.search(query, 10)
-    sourceSuggestions.value = data.data.map(source => ({
+    sourceSuggestions.value = data.data.map((source) => ({
       ...source,
-      display: `${source.title}${source.year ? ` (${source.year})` : ''}`
+      display: `${source.title}${source.year ? ` (${source.year})` : ''}`,
     }))
   } catch (error) {
     console.error('搜尋來源失敗:', error)
@@ -455,10 +517,10 @@ const selectSource = (event) => {
   selectedSource.value = source
   sourceSearchText.value = source.display
   sourceError.value = ''
-  
+
   // 清空片段選擇
   clearScene()
-  
+
   // 更新父組件
   updateValue()
 }
@@ -479,17 +541,18 @@ const searchScenes = async (event) => {
   }
 
   const query = event.query
-  
+
   try {
     const { data } = await sourceService.getScenes(selectedSource.value._id, {
       query,
       page: 1,
       limit: 10,
     })
-    
-    sceneSuggestions.value = data.data.map(scene => ({
+
+    sceneSuggestions.value = data.data.map((scene) => ({
       ...scene,
-      display: scene.title || scene.quote || `場景 ${formatTime(scene.start_time)}`
+      display:
+        scene.title || scene.quote || `場景 ${formatTime(scene.start_time)}`,
     }))
   } catch (error) {
     console.error('搜尋片段失敗:', error)
@@ -525,7 +588,7 @@ const createSource = async () => {
   }
 
   creatingSource.value = true
-  
+
   try {
     const payload = {
       type: newSource.value.type,
@@ -534,16 +597,16 @@ const createSource = async () => {
       year: newSource.value.year || undefined,
       synopsis: newSource.value.synopsis || undefined,
     }
-    
+
     const { data } = await sourceService.create(payload)
-    
+
     // 設定為選中的來源
     selectedSource.value = data.data
     sourceSearchText.value = `${data.data.title}${data.data.year ? ` (${data.data.year})` : ''}`
-    
+
     // 關閉對話框
     showCreateSourceDialog.value = false
-    
+
     // 重置表單
     newSource.value = {
       type: 'video',
@@ -552,14 +615,14 @@ const createSource = async () => {
       year: null,
       synopsis: '',
     }
-    
+
     toast.add({
       severity: 'success',
       summary: '成功',
       detail: '來源已建立',
       life: 3000,
     })
-    
+
     updateValue()
   } catch (error) {
     console.error('建立來源失敗:', error)
@@ -587,7 +650,7 @@ const createScene = async () => {
   }
 
   creatingScene.value = true
-  
+
   try {
     const payload = {
       source_id: selectedSource.value._id,
@@ -595,18 +658,21 @@ const createScene = async () => {
       quote: newScene.value.quote || undefined,
       start_time: newScene.value.start_time || undefined,
       end_time: newScene.value.end_time || undefined,
-      images: newScene.value.images.filter(img => img),
+      images: newScene.value.images.filter((img) => img),
     }
-    
+
     const { data } = await sceneService.create(payload)
-    
+
     // 設定為選中的片段
     selectedScene.value = data.data
-    sceneSearchText.value = data.data.title || data.data.quote || `場景 ${formatTime(data.data.start_time)}`
-    
+    sceneSearchText.value =
+      data.data.title ||
+      data.data.quote ||
+      `場景 ${formatTime(data.data.start_time)}`
+
     // 關閉對話框
     showCreateSceneDialog.value = false
-    
+
     // 重置表單
     newScene.value = {
       title: '',
@@ -615,14 +681,14 @@ const createScene = async () => {
       end_time: null,
       images: [],
     }
-    
+
     toast.add({
       severity: 'success',
       summary: '成功',
       detail: '片段已建立',
       life: 3000,
     })
-    
+
     updateValue()
   } catch (error) {
     console.error('建立片段失敗:', error)
@@ -655,16 +721,75 @@ const onNewSourceSlugInput = (event) => {
     .replace(/[^a-z0-9-]/g, '-')
     .replace(/--+/g, '-')
     .replace(/^-+|-+$/g, '')
+
+  // 清除之前的計時器
+  if (newSourceSlugCheckTimer) {
+    clearTimeout(newSourceSlugCheckTimer)
+  }
+
+  // 設定新的計時器（debounce 500ms）
+  newSourceSlugCheckTimer = setTimeout(() => {
+    checkNewSourceSlugAvailable()
+  }, 500)
+}
+
+// 檢查新來源 slug 是否可用
+const checkNewSourceSlugAvailable = async () => {
+  if (!newSource.value.slug) {
+    newSourceSlugOk.value = true
+    newSourceSlugError.value = ''
+    return
+  }
+
+  // 先做本地驗證
+  const validation = validateSlug(newSource.value.slug)
+  if (!validation.valid) {
+    newSourceSlugOk.value = false
+    newSourceSlugError.value = validation.error
+    return
+  }
+
+  // 檢查是否為保留字
+  if (isReservedSlug(newSource.value.slug)) {
+    newSourceSlugOk.value = false
+    newSourceSlugError.value = '此 Slug 為保留字，請選擇其他名稱'
+    return
+  }
+
+  newSourceSlugChecking.value = true
+  newSourceSlugError.value = ''
+
+  try {
+    const response = await fetch(
+      `/api/sources/slug-available?slug=${encodeURIComponent(newSource.value.slug)}`,
+    )
+    const data = await response.json()
+
+    if (data.success && data.data.available) {
+      newSourceSlugOk.value = true
+      newSourceSlugError.value = ''
+    } else {
+      newSourceSlugOk.value = false
+      newSourceSlugError.value = data.error || 'Slug 已被使用'
+    }
+  } catch (error) {
+    console.error('檢查來源 slug 失敗:', error)
+    // 發生錯誤時假設可用，讓後端做最終檢查
+    newSourceSlugOk.value = true
+    newSourceSlugError.value = ''
+  } finally {
+    newSourceSlugChecking.value = false
+  }
 }
 
 // 格式化時間
 const formatTime = (seconds) => {
   if (!seconds && seconds !== 0) return ''
-  
+
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const secs = Math.floor(seconds % 60)
-  
+
   if (hours > 0) {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
@@ -673,7 +798,7 @@ const formatTime = (seconds) => {
 
 // 取得類型標籤
 const getTypeLabel = (type) => {
-  const option = sourceTypeOptions.find(opt => opt.value === type)
+  const option = sourceTypeOptions.find((opt) => opt.value === type)
   return option ? option.label : type
 }
 
@@ -686,21 +811,28 @@ const updateValue = () => {
 }
 
 // 監聽 props 變化
-watch(() => props.modelValue, (newVal) => {
-  if (!newVal) {
-    clearSource()
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (!newVal) {
+      clearSource()
+    }
+  },
+  { immediate: true },
+)
 
 // 自動從標題生成 slug（新增來源時）
-watch(() => newSource.value.title, (title) => {
-  if (title && !newSource.value.slug) {
-    const slug = slugify(title, { maxLength: 60 })
-    if (slug) {
-      newSource.value.slug = slug
+watch(
+  () => newSource.value.title,
+  (title) => {
+    if (title && !newSource.value.slug) {
+      const slug = slugify(title, { maxLength: 60 })
+      if (slug) {
+        newSource.value.slug = slug
+      }
     }
-  }
-})
+  },
+)
 </script>
 
 <style scoped>

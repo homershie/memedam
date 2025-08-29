@@ -4,7 +4,7 @@
       <label class="block font-semibold mb-2">
         選擇原始迷因 <span class="text-primary-500">*</span>
       </label>
-      
+
       <AutoComplete
         v-model="searchText"
         :suggestions="suggestions"
@@ -27,7 +27,7 @@
                 :src="slotProps.option.image_url"
                 :alt="slotProps.option.title"
                 class="w-16 h-16 object-cover rounded"
-                @error="(e) => e.target.src = '/images/placeholder.png'"
+                @error="(e) => (e.target.src = '/images/placeholder.png')"
               />
               <div
                 v-else-if="slotProps.option.type === 'text'"
@@ -39,19 +39,27 @@
                 v-else
                 class="w-16 h-16 bg-surface-200 dark:bg-surface-700 rounded flex items-center justify-center"
               >
-                <i :class="getTypeIcon(slotProps.option.type)" class="text-2xl text-surface-500"></i>
+                <i
+                  :class="getTypeIcon(slotProps.option.type)"
+                  class="text-2xl text-surface-500"
+                ></i>
               </div>
             </div>
-            
+
             <!-- 資訊 -->
             <div class="meme-info flex-1">
               <div class="font-semibold">{{ slotProps.option.title }}</div>
               <div class="text-sm text-surface-500">
-                作者：{{ slotProps.option.author_id?.display_name || slotProps.option.author_id?.username || '未知' }}
+                作者：{{
+                  slotProps.option.author_id?.display_name ||
+                  slotProps.option.author_id?.username ||
+                  '未知'
+                }}
               </div>
               <div class="text-sm text-surface-400">
                 <span v-if="slotProps.option.like_count">
-                  <i class="pi pi-thumbs-up"></i> {{ slotProps.option.like_count }}
+                  <i class="pi pi-thumbs-up"></i>
+                  {{ slotProps.option.like_count }}
                 </span>
                 <span v-if="slotProps.option.view_count" class="ml-3">
                   <i class="pi pi-eye"></i> {{ slotProps.option.view_count }}
@@ -63,7 +71,10 @@
       </AutoComplete>
 
       <!-- 已選擇的迷因顯示 -->
-      <div v-if="selectedMeme" class="mt-3 p-3 bg-surface-100 dark:bg-surface-800 rounded">
+      <div
+        v-if="selectedMeme"
+        class="mt-3 p-3 bg-surface-100 dark:bg-surface-800 rounded"
+      >
         <div class="flex items-start gap-3">
           <!-- 縮圖 -->
           <div class="flex-shrink-0">
@@ -72,7 +83,7 @@
               :src="selectedMeme.image_url"
               :alt="selectedMeme.title"
               class="w-20 h-20 object-cover rounded"
-              @error="(e) => e.target.src = '/images/placeholder.png'"
+              @error="(e) => (e.target.src = '/images/placeholder.png')"
             />
             <div
               v-else-if="selectedMeme.type === 'text'"
@@ -84,21 +95,31 @@
               v-else
               class="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded flex items-center justify-center"
             >
-              <i :class="getTypeIcon(selectedMeme.type)" class="text-2xl text-surface-500"></i>
+              <i
+                :class="getTypeIcon(selectedMeme.type)"
+                class="text-2xl text-surface-500"
+              ></i>
             </div>
           </div>
-          
+
           <!-- 資訊 -->
           <div class="flex-1">
             <div class="font-semibold text-lg">{{ selectedMeme.title }}</div>
             <div class="text-sm text-surface-500 mt-1">
-              作者：{{ selectedMeme.author_id?.display_name || selectedMeme.author_id?.username || '未知' }}
+              作者：{{
+                selectedMeme.author_id?.display_name ||
+                selectedMeme.author_id?.username ||
+                '未知'
+              }}
             </div>
-            <div v-if="selectedMeme.content" class="text-sm text-surface-600 mt-2">
+            <div
+              v-if="selectedMeme.content"
+              class="text-sm text-surface-600 mt-2"
+            >
               {{ truncateText(selectedMeme.content, 100) }}
             </div>
           </div>
-          
+
           <!-- 清除按鈕 -->
           <Button
             icon="pi pi-times"
@@ -113,7 +134,7 @@
       <Message v-if="error" severity="error" size="small" variant="simple">
         {{ error }}
       </Message>
-      
+
       <small class="text-surface-500 block mt-2">
         <i class="pi pi-info-circle"></i>
         選擇原始迷因後，系統會自動計算變體系譜（lineage）
@@ -157,14 +178,23 @@ const searchMemes = async (event) => {
   }
 
   searching.value = true
-  
+
   try {
     const { data } = await memeService.search(query, {
       limit: 10,
-      fields: 'title,type,image_url,video_url,content,author_id,like_count,view_count',
     })
-    
-    suggestions.value = data.data || []
+
+    // 根據後端 API 回應格式處理
+    if (data && data.memes && Array.isArray(data.memes)) {
+      suggestions.value = data.memes
+    } else if (data && data.data && Array.isArray(data.data)) {
+      suggestions.value = data.data
+    } else if (data && Array.isArray(data)) {
+      suggestions.value = data
+    } else {
+      console.warn('搜尋結果格式不正確:', data)
+      suggestions.value = []
+    }
   } catch (err) {
     console.error('搜尋迷因失敗:', err)
     suggestions.value = []
@@ -179,7 +209,7 @@ const selectMeme = (event) => {
   selectedMeme.value = meme
   searchText.value = meme.title
   error.value = ''
-  
+
   // 更新父組件
   emit('update:modelValue', meme._id)
 }
@@ -210,21 +240,25 @@ const truncateText = (text, maxLength) => {
 }
 
 // 監聽 props 變化
-watch(() => props.modelValue, async (newVal) => {
-  if (newVal && !selectedMeme.value) {
-    // 如果有值但還沒載入，嘗試載入迷因資料
-    try {
-      const { data } = await memeService.get(newVal)
-      selectedMeme.value = data.data
-      searchText.value = data.data.title
-    } catch (err) {
-      console.error('載入迷因失敗:', err)
-      error.value = '載入迷因資料失敗'
+watch(
+  () => props.modelValue,
+  async (newVal) => {
+    if (newVal && !selectedMeme.value) {
+      // 如果有值但還沒載入，嘗試載入迷因資料
+      try {
+        const { data } = await memeService.get(newVal)
+        selectedMeme.value = data.data
+        searchText.value = data.data.title
+      } catch (err) {
+        console.error('載入迷因失敗:', err)
+        error.value = '載入迷因資料失敗'
+      }
+    } else if (!newVal) {
+      clearSelection()
     }
-  } else if (!newVal) {
-    clearSelection()
-  }
-}, { immediate: true })
+  },
+  { immediate: true },
+)
 
 // 驗證必填
 watch([() => props.required, () => props.modelValue], ([required, value]) => {
