@@ -398,11 +398,19 @@ const checkDailyMemeStatus = async () => {
           // 已經有作者資訊，直接使用
         } else if (parsedMeme.author_id) {
           try {
-            const authorId =
-              typeof parsedMeme.author_id === 'object' &&
-              parsedMeme.author_id.$oid
-                ? parsedMeme.author_id.$oid
-                : parsedMeme.author_id
+            let authorId = parsedMeme.author_id
+            if (typeof authorId === 'object') {
+              if (authorId.$oid) {
+                authorId = authorId.$oid
+              } else if (authorId._id) {
+                authorId = authorId._id
+              } else {
+                throw new Error('無法解析作者ID')
+              }
+            }
+            if (!authorId || typeof authorId !== 'string') {
+              throw new Error('無效的作者ID')
+            }
             const authorResponse = await userService.get(authorId)
             parsedMeme.author = authorResponse.data.user
           } catch (error) {
@@ -705,10 +713,19 @@ const loadFeaturedMemes = async () => {
       topFeatured.map(async (meme) => {
         try {
           if (meme.author_id) {
-            const authorId =
-              typeof meme.author_id === 'object' && meme.author_id.$oid
-                ? meme.author_id.$oid
-                : meme.author_id
+            let authorId = meme.author_id
+            if (typeof authorId === 'object') {
+              if (authorId.$oid) {
+                authorId = authorId.$oid
+              } else if (authorId._id) {
+                authorId = authorId._id
+              } else {
+                throw new Error('無法解析作者ID')
+              }
+            }
+            if (!authorId || typeof authorId !== 'string') {
+              throw new Error('無效的作者ID')
+            }
             const authorResponse = await userService.get(authorId)
             meme.author = authorResponse.data.user
           } else {
@@ -818,11 +835,19 @@ const getDailyMeme = async () => {
         // 後端已經提供了作者資訊
       } else if (randomMeme.author_id) {
         try {
-          const authorId =
-            typeof randomMeme.author_id === 'object' &&
-            randomMeme.author_id.$oid
-              ? randomMeme.author_id.$oid
-              : randomMeme.author_id
+          let authorId = randomMeme.author_id
+          if (typeof authorId === 'object') {
+            if (authorId.$oid) {
+              authorId = authorId.$oid
+            } else if (authorId._id) {
+              authorId = authorId._id
+            } else {
+              throw new Error('無法解析作者ID')
+            }
+          }
+          if (!authorId || typeof authorId !== 'string') {
+            throw new Error('無效的作者ID')
+          }
           const authorResponse = await userService.get(authorId)
           randomMeme.author = authorResponse.data.user
         } catch (error) {

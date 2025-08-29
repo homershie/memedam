@@ -913,10 +913,19 @@ const loadUserCollections = async (reset = false) => {
 
             // 載入作者資訊（使用快取機制）
             if (meme.author_id) {
-              const authorId =
-                typeof meme.author_id === 'object' && meme.author_id.$oid
-                  ? meme.author_id.$oid
-                  : meme.author_id
+              let authorId = meme.author_id
+              if (typeof authorId === 'object') {
+                if (authorId.$oid) {
+                  authorId = authorId.$oid
+                } else if (authorId._id) {
+                  authorId = authorId._id
+                } else {
+                  throw new Error('無法解析作者ID')
+                }
+              }
+              if (!authorId || typeof authorId !== 'string') {
+                throw new Error('無效的作者ID')
+              }
               meme.author = await loadUserInfo(authorId)
             } else {
               meme.author = {
@@ -1001,10 +1010,19 @@ const loadUserLikedMemes = async (reset = false) => {
 
             // 載入作者資訊（使用快取機制）
             if (meme.author_id) {
-              const authorId =
-                typeof meme.author_id === 'object' && meme.author_id.$oid
-                  ? meme.author_id.$oid
-                  : meme.author_id
+              let authorId = meme.author_id
+              if (typeof authorId === 'object') {
+                if (authorId.$oid) {
+                  authorId = authorId.$oid
+                } else if (authorId._id) {
+                  authorId = authorId._id
+                } else {
+                  throw new Error('無法解析作者ID')
+                }
+              }
+              if (!authorId || typeof authorId !== 'string') {
+                throw new Error('無效的作者ID')
+              }
               meme.author = await loadUserInfo(authorId)
             } else {
               meme.author = {

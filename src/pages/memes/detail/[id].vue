@@ -856,10 +856,19 @@ const loadMeme = async () => {
       try {
         if (memeData.author_id) {
           // 支援 { $oid: ... } 格式
-          const authorId =
-            typeof memeData.author_id === 'object' && memeData.author_id.$oid
-              ? memeData.author_id.$oid
-              : memeData.author_id
+          let authorId = memeData.author_id
+          if (typeof authorId === 'object') {
+            if (authorId.$oid) {
+              authorId = authorId.$oid
+            } else if (authorId._id) {
+              authorId = authorId._id
+            } else {
+              throw new Error('無法解析作者ID')
+            }
+          }
+          if (!authorId || typeof authorId !== 'string') {
+            throw new Error('無效的作者ID')
+          }
           const authorResponse = await userService.get(authorId)
           memeData.author = authorResponse.data.user || authorResponse.data
         } else if (!memeData.author || typeof memeData.author === 'string') {
