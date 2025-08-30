@@ -691,25 +691,15 @@ onMounted(async () => {
     // 載入迷因數據 - 使用認證的 API 調用
     const { data } = await apiService.httpAuth.get(`/api/memes/${memeId}`)
 
-    console.log('API 響應數據:', { memeId, data })
-
     // 更靈活的數據解析 - 處理嵌套結構
     const meme = data.data?.meme || data.meme || data.data || data || {}
 
-    console.log('解析後的迷因數據:', meme)
-
     // 檢查迷因數據是否有效
     if (!meme) {
-      console.error('迷因數據解析失敗: 沒有找到迷因對象', {
-        memeId,
-        data,
-        meme,
-      })
       throw new Error('迷因數據無效或不存在')
     }
 
     if (!meme.title || meme.title.trim() === '') {
-      console.error('迷因數據解析失敗: 標題為空', { memeId, data, meme })
       throw new Error('迷因標題不能為空')
     }
 
@@ -805,8 +795,6 @@ onMounted(async () => {
       scene_id: null,
     }
   } catch (error) {
-    console.error('載入迷因失敗:', error)
-
     // 根據錯誤類型提供更詳細的錯誤信息
     if (error.response?.status === 404) {
       loadError.value = '迷因不存在或已被刪除'
