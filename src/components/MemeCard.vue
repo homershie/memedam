@@ -82,11 +82,13 @@
           <!-- 根據類型顯示不同內容 -->
           <div class="mb-4 w-full lg:w-1/4">
             <div
-              v-if="meme.type === 'image' && meme.image_url"
+              v-if="
+                meme.cover_image || (meme.type === 'image' && meme.image_url)
+              "
               class="relative aspect-square overflow-hidden rounded-lg"
             >
               <Image
-                :src="meme.image_url"
+                :src="meme.cover_image || meme.image_url"
                 :alt="meme.title"
                 class="w-full object-none rounded-lg"
               />

@@ -16,11 +16,11 @@
       <div class="h-60 flex items-center justify-center overflow-hidden">
         <!-- 根據類型顯示不同內容 -->
         <div
-          v-if="meme.type === 'image' && meme.image_url"
+          v-if="meme.cover_image || (meme.type === 'image' && meme.image_url)"
           class="w-full h-full overflow-hidden rounded-t-lg"
         >
           <Image
-            :src="meme.image_url"
+            :src="meme.cover_image || meme.image_url"
             :alt="meme.title"
             class="w-full h-full object-cover"
           />

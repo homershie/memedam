@@ -90,6 +90,92 @@
             </small>
           </div>
 
+          <!-- 迷因主圖 -->
+          <div class="field">
+            <label class="block font-semibold mb-2">
+              <i class="pi pi-image mr-1"></i>
+              迷因主圖
+              <span class="text-surface-500 text-sm font-normal ml-2">
+                （選填，用於卡片顯示）
+              </span>
+            </label>
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 檔案上傳 -->
+                <div>
+                  <label class="block text-sm font-medium mb-2"
+                    >上傳主圖檔案</label
+                  >
+                  <FileUpload
+                    mode="basic"
+                    name="cover_image"
+                    :maxFileSize="10000000"
+                    accept="image/*"
+                    :auto="false"
+                    chooseLabel="選擇圖片"
+                    class="w-full"
+                    @select="onCoverImageSelect"
+                    @clear="onCoverImageClear"
+                  />
+                  <small class="text-surface-500 mt-1 block">
+                    支援 JPG, PNG, GIF, WebP (最大 10MB)
+                  </small>
+                </div>
+
+                <!-- 或是連結（只有沒選檔案時才顯示） -->
+                <div v-if="!uploadedCoverImageFile">
+                  <label class="block text-sm font-medium mb-2"
+                    >或提供主圖連結</label
+                  >
+                  <InputText
+                    v-model="form.cover_image"
+                    placeholder="https://example.com/cover.jpg"
+                    type="url"
+                    class="w-full"
+                    :class="{ 'p-invalid': errors.coverImage }"
+                  />
+                  <small class="text-surface-500 mt-1 block">
+                    支援常見圖片網站：Imgur、Reddit、Discord 等
+                  </small>
+                </div>
+              </div>
+
+              <!-- 主圖預覽 -->
+              <div
+                v-if="form.cover_image || uploadedCoverImageUrl"
+                class="mt-3"
+              >
+                <label class="block text-sm font-medium mb-2">預覽</label>
+                <div
+                  class="border rounded-lg p-2 bg-surface-50 dark:bg-surface-800"
+                >
+                  <img
+                    :src="uploadedCoverImageUrl || form.cover_image"
+                    alt="主圖預覽"
+                    class="max-w-full max-h-64 rounded object-contain mx-auto"
+                    @error="onCoverImageError"
+                    @load="coverImagePreviewError = false"
+                  />
+                  <div
+                    v-if="coverImagePreviewError"
+                    class="text-center text-primary-500 p-4"
+                  >
+                    <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
+                    <p>圖片載入失敗，請檢查連結是否正確</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Message
+              v-if="errors.coverImage"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.coverImage }}
+            </Message>
+          </div>
+
           <!-- 迷因類型 -->
           <div class="field">
             <label for="type" class="block font-semibold mb-2">
@@ -116,36 +202,6 @@
             </Message>
           </div>
 
-          <!-- 迷因內容簡介 -->
-          <div class="field">
-            <label for="content" class="block font-semibold mb-2">
-              迷因內容簡介 <span class="text-primary-500">*</span>
-            </label>
-            <Textarea
-              id="content"
-              v-model="form.content"
-              placeholder="簡單描述這個迷因的內容或有趣的特點..."
-              rows="4"
-              maxlength="350"
-              class="w-full"
-              :class="{ 'p-invalid': errors.content }"
-            />
-            <Message
-              v-if="errors.content"
-              severity="error"
-              size="small"
-              variant="simple"
-            >
-              {{ errors.content }}
-            </Message>
-            <small
-              class="text-surface-500"
-              :class="{ 'text-primary-500': getCharCount(form.content) > 350 }"
-            >
-              {{ getCharCount(form.content) }}/350
-            </small>
-          </div>
-
           <!-- 媒體內容 (根據類型顯示不同輸入方式) -->
           <div v-if="form.type !== 'text'" class="field">
             <label class="block font-semibold mb-2">
@@ -154,65 +210,32 @@
               <span class="text-primary-500">*</span>
             </label>
 
-            <!-- 圖片上傳 -->
+            <!-- 圖片連結 -->
             <div v-if="form.type === 'image'" class="space-y-3">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- 檔案上傳 -->
-                <div>
-                  <label class="block text-sm font-medium mb-2"
-                    >上傳圖片檔案</label
-                  >
-                  <FileUpload
-                    mode="basic"
-                    name="image"
-                    :maxFileSize="10000000"
-                    accept="image/*"
-                    :auto="false"
-                    chooseLabel="選擇圖片"
-                    class="w-full"
-                    @select="onImageSelect"
-                    @clear="onImageClear"
-                  />
-                  <small class="text-surface-500 mt-1 block">
-                    支援 JPG, PNG, GIF, WebP (最大 10MB)
-                  </small>
-                </div>
-
-                <!-- 或是連結（只有沒選檔案時才顯示） -->
-                <div v-if="!uploadedImageFile">
-                  <label class="block text-sm font-medium mb-2"
-                    >或提供圖片連結</label
-                  >
-                  <InputText
-                    v-model="form.image_url"
-                    placeholder="https://example.com/image.jpg"
-                    type="url"
-                    class="w-full"
-                    :class="{ 'p-invalid': errors.mediaUrl }"
-                  />
-                  <small class="text-surface-500 mt-1 block">
-                    支援常見圖片網站：Imgur、Reddit、Discord 等
-                  </small>
-                </div>
-              </div>
+              <InputText
+                v-model="form.image_url"
+                placeholder="https://example.com/image.jpg 或其他圖片連結"
+                type="url"
+                class="w-full"
+                :class="{ 'p-invalid': errors.mediaUrl }"
+              />
+              <small class="text-surface-500">
+                支援常見圖片網站：Imgur、Reddit、Discord 等
+              </small>
 
               <!-- 圖片預覽 -->
-              <div v-if="form.image_url || uploadedImageUrl" class="mt-3">
+              <div v-if="form.image_url" class="mt-3">
                 <label class="block text-sm font-medium mb-2">預覽</label>
                 <div
                   class="border rounded-lg p-2 bg-surface-50 dark:bg-surface-800"
                 >
                   <img
-                    :src="uploadedImageUrl || form.image_url"
+                    :src="form.image_url"
                     alt="圖片預覽"
                     class="max-w-full max-h-64 rounded object-contain mx-auto"
                     @error="onImageError"
-                    @load="imagePreviewError = false"
                   />
-                  <div
-                    v-if="imagePreviewError"
-                    class="text-center text-primary-500 p-4"
-                  >
+                  <div v-if="false" class="text-center text-primary-500 p-4">
                     <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
                     <p>圖片載入失敗，請檢查連結是否正確</p>
                   </div>
@@ -300,6 +323,36 @@
             >
               {{ errors.mediaUrl }}
             </Message>
+          </div>
+
+          <!-- 迷因內容簡介 -->
+          <div class="field">
+            <label for="content" class="block font-semibold mb-2">
+              迷因內容簡介 <span class="text-primary-500">*</span>
+            </label>
+            <Textarea
+              id="content"
+              v-model="form.content"
+              placeholder="簡單描述這個迷因的內容或有趣的特點..."
+              rows="4"
+              maxlength="350"
+              class="w-full"
+              :class="{ 'p-invalid': errors.content }"
+            />
+            <Message
+              v-if="errors.content"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.content }}
+            </Message>
+            <small
+              class="text-surface-500"
+              :class="{ 'text-primary-500': getCharCount(form.content) > 350 }"
+            >
+              {{ getCharCount(form.content) }}/350
+            </small>
           </div>
 
           <!-- 標籤選擇與新增 -->
@@ -451,7 +504,7 @@
                 :binary="true"
               />
               <label for="isVariant" class="ml-2 font-semibold">
-                這是某個迷因的變體/二創
+                這是某個迷因的變體/二創/其他用法
               </label>
             </div>
 
@@ -560,6 +613,7 @@ const form = reactive({
   scene_id: null,
   is_variant: false,
   variant_of: null,
+  cover_image: '', // 新增主圖欄位
 })
 
 // 表單驗證錯誤
@@ -571,11 +625,10 @@ const errors = reactive({
   mediaUrl: '',
   source: '',
   variant: '',
+  coverImage: '', // 新增主圖錯誤
 })
 
 // 其他狀態
-const uploadedImageUrl = ref('')
-const imagePreviewError = ref(false)
 const selectedTags = ref([])
 const tagInput = ref('')
 const tagSuggestions = ref([])
@@ -584,7 +637,9 @@ const detailContent = ref(null) // 改為 JSON 格式
 const detailImages = ref([]) // 新增：詳細介紹中的圖片陣列
 const loading = ref(false)
 const submitError = ref('')
-const uploadedImageFile = ref(null)
+const uploadedCoverImageFile = ref(null) // 新增主圖檔案狀態
+const uploadedCoverImageUrl = ref('') // 新增主圖預覽 URL
+const coverImagePreviewError = ref(false) // 新增主圖預覽錯誤狀態
 
 // Slug 相關狀態
 const user_edited_slug = ref(false)
@@ -634,28 +689,32 @@ const getCharCount = (text) => {
   return text.length
 }
 
-// 圖片上傳處理
-const onImageSelect = (event) => {
+const onImageError = () => {
+  // 圖片預覽錯誤處理
+}
+
+// 主圖上傳處理
+const onCoverImageSelect = (event) => {
   const file = event.files[0]
   if (file) {
-    uploadedImageFile.value = file
+    uploadedCoverImageFile.value = file
     // 本地預覽
     const reader = new FileReader()
     reader.onload = (e) => {
-      uploadedImageUrl.value = e.target.result
-      form.image_url = ''
+      uploadedCoverImageUrl.value = e.target.result
+      form.cover_image = ''
     }
     reader.readAsDataURL(file)
     // 不上傳，僅預覽
   }
 }
 
-const onImageClear = () => {
-  uploadedImageUrl.value = ''
+const onCoverImageClear = () => {
+  uploadedCoverImageUrl.value = ''
 }
 
-const onImageError = () => {
-  imagePreviewError.value = true
+const onCoverImageError = () => {
+  coverImagePreviewError.value = true
 }
 
 // YouTube 支援 (影片和音訊都可以用)
@@ -901,12 +960,11 @@ const validateForm = () => {
   // 檢查媒體內容
   if (form.type !== 'text') {
     if (form.type === 'image') {
-      // 沒選檔案也沒填連結才報錯
-      if (!uploadedImageFile.value && !form.image_url) {
-        errors.mediaUrl = '請上傳圖片或提供圖片連結'
+      // 圖片類型需要提供圖片連結
+      if (!form.image_url || form.image_url.trim() === '') {
+        errors.mediaUrl = '請提供圖片連結'
         isValid = false
       }
-      // 如果有填連結，可加強合法性檢查（可選）
     } else {
       const urlField = `${form.type}_url`
       if (!form[urlField] || form[urlField].trim() === '') {
@@ -950,6 +1008,7 @@ const resetForm = () => {
     scene_id: null,
     is_variant: false,
     variant_of: null,
+    cover_image: '', // 重設主圖欄位
   })
 
   // 重設 slug 狀態
@@ -957,13 +1016,13 @@ const resetForm = () => {
   slug_ok.value = true
   slug_error.value = ''
 
-  uploadedImageUrl.value = ''
-  imagePreviewError.value = false
   selectedTags.value = []
   tagInput.value = ''
   detailContent.value = null
   detailImages.value = []
   pendingDetailImages.value = []
+  uploadedCoverImageUrl.value = '' // 重設主圖預覽
+  coverImagePreviewError.value = false // 重設主圖預覽錯誤
   submitError.value = ''
 
   Object.keys(errors).forEach((key) => (errors[key] = ''))
@@ -984,9 +1043,9 @@ const handleSubmit = async () => {
     }
 
     // 送出時才上傳主圖片
-    if (form.type === 'image' && uploadedImageFile.value) {
+    if (uploadedCoverImageFile.value) {
       const formData = new FormData()
-      formData.append('image', uploadedImageFile.value) // key 必須是 'image'
+      formData.append('image', uploadedCoverImageFile.value) // key 必須是 'image'
 
       const res = await fetch('/api/upload/image', {
         method: 'POST',
@@ -1002,9 +1061,9 @@ const handleSubmit = async () => {
         data.url &&
         data.url.startsWith('https://res.cloudinary.com/')
       ) {
-        form.image_url = data.url
+        form.cover_image = data.url
       } else {
-        throw new Error(data.message || '圖片上傳失敗')
+        throw new Error(data.message || '主圖上傳失敗')
       }
     }
 
@@ -1076,6 +1135,7 @@ const handleSubmit = async () => {
     if (memeData.image_url === '') memeData.image_url = undefined
     if (memeData.video_url === '') memeData.video_url = undefined
     if (memeData.audio_url === '') memeData.audio_url = undefined
+    if (memeData.cover_image === '') memeData.cover_image = undefined
 
     // 過濾空的來源資料
     if (memeData.sources && Array.isArray(memeData.sources)) {
