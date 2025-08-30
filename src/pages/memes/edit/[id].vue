@@ -89,6 +89,92 @@
               </Message>
             </div>
 
+            <!-- 迷因主圖 -->
+            <div class="field">
+              <label class="block font-semibold mb-2">
+                <i class="pi pi-image mr-1"></i>
+                迷因主圖
+                <span class="text-surface-500 text-sm font-normal ml-2">
+                  （選填，用於卡片顯示）
+                </span>
+              </label>
+              <div class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- 檔案上傳 -->
+                  <div>
+                    <label class="block text-sm font-medium mb-2"
+                      >上傳主圖檔案</label
+                    >
+                    <FileUpload
+                      mode="basic"
+                      name="cover_image"
+                      :maxFileSize="10000000"
+                      accept="image/*"
+                      :auto="false"
+                      chooseLabel="選擇圖片"
+                      class="w-full"
+                      @select="onCoverImageSelect"
+                      @clear="onCoverImageClear"
+                    />
+                    <small class="text-surface-500 mt-1 block">
+                      支援 JPG, PNG, GIF, WebP (最大 10MB)
+                    </small>
+                  </div>
+
+                  <!-- 或是連結（只有沒選檔案時才顯示） -->
+                  <div v-if="!uploadedCoverImageFile">
+                    <label class="block text-sm font-medium mb-2"
+                      >或提供主圖連結</label
+                    >
+                    <InputText
+                      v-model="form.cover_image"
+                      placeholder="https://example.com/cover.jpg"
+                      type="url"
+                      class="w-full"
+                      :class="{ 'p-invalid': errors.coverImage }"
+                    />
+                    <small class="text-surface-500 mt-1 block">
+                      支援常見圖片網站：Imgur、Reddit、Discord 等
+                    </small>
+                  </div>
+                </div>
+
+                <!-- 主圖預覽 -->
+                <div
+                  v-if="form.cover_image || uploadedCoverImageUrl"
+                  class="mt-3"
+                >
+                  <label class="block text-sm font-medium mb-2">預覽</label>
+                  <div
+                    class="border rounded-lg p-2 bg-surface-50 dark:bg-surface-800"
+                  >
+                    <img
+                      :src="uploadedCoverImageUrl || form.cover_image"
+                      alt="主圖預覽"
+                      class="max-w-full max-h-64 rounded object-contain mx-auto"
+                      @error="onCoverImageError"
+                      @load="coverImagePreviewError = false"
+                    />
+                    <div
+                      v-if="coverImagePreviewError"
+                      class="text-center text-primary-500 p-4"
+                    >
+                      <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
+                      <p>圖片載入失敗，請檢查連結是否正確</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Message
+                v-if="errors.coverImage"
+                severity="error"
+                size="small"
+                variant="simple"
+              >
+                {{ errors.coverImage }}
+              </Message>
+            </div>
+
             <!-- 迷因內容簡介 -->
             <div class="field">
               <label for="content" class="block font-semibold mb-2">
@@ -357,6 +443,63 @@
               </div>
             </div>
 
+            <!-- 來源選擇 -->
+            <div class="field">
+              <div class="flex items-center mb-3">
+                <Checkbox
+                  v-model="form.has_source"
+                  inputId="hasSource"
+                  :binary="true"
+                />
+                <label for="hasSource" class="ml-2 font-semibold">
+                  此迷因有來源作品
+                </label>
+              </div>
+
+              <SourceScenePicker
+                v-if="form.has_source"
+                v-model="sourceSceneData"
+              />
+
+              <Message
+                v-if="errors.source"
+                severity="error"
+                size="small"
+                variant="simple"
+              >
+                {{ errors.source }}
+              </Message>
+            </div>
+
+            <!-- 變體/二創選擇 -->
+            <div class="field">
+              <div class="flex items-center mb-3">
+                <Checkbox
+                  v-model="form.is_variant"
+                  inputId="isVariant"
+                  :binary="true"
+                />
+                <label for="isVariant" class="ml-2 font-semibold">
+                  這是某個迷因的變體/二創/其他用法
+                </label>
+              </div>
+
+              <MemeRemoteSelect
+                v-if="form.is_variant"
+                v-model="form.variant_of"
+                :required="form.is_variant"
+              />
+
+              <Message
+                v-if="errors.variant"
+                severity="error"
+                size="small"
+                variant="simple"
+              >
+                {{ errors.variant }}
+              </Message>
+            </div>
+
             <!-- 引用來源 -->
             <div class="field">
               <label class="block font-semibold mb-2">引用來源</label>
@@ -434,7 +577,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
@@ -453,10 +596,15 @@ import FileUpload from 'primevue/fileupload'
 // TipTap 編輯器
 import TipTapEditor from '@/components/TipTapEditor.vue'
 
+// 自訂元件
+import SourceScenePicker from '@/components/SourceScenePicker.vue'
+import MemeRemoteSelect from '@/components/MemeRemoteSelect.vue'
+
 // API 服務
 import memeService from '@/services/memeService'
 import tagService from '@/services/tagService'
 import memeTagService from '@/services/memeTagService'
+import apiService from '@/services/apiService' // 新增 apiService
 
 defineOptions({ name: 'EditMemePage' })
 
@@ -477,6 +625,12 @@ const form = reactive({
   nsfw: false,
   language: 'zh',
   sources: [],
+  cover_image: '', // 新增主圖欄位
+  has_source: false,
+  source_id: null,
+  scene_id: null,
+  is_variant: false,
+  variant_of: null,
 })
 
 // 表單驗證錯誤
@@ -485,6 +639,9 @@ const errors = reactive({
   type: '',
   content: '',
   mediaUrl: '',
+  coverImage: '', // 新增主圖錯誤
+  source: '',
+  variant: '',
 })
 
 // 其他狀態
@@ -500,6 +657,9 @@ const loading = ref(false)
 const submitError = ref('')
 const loadError = ref('')
 const uploadedImageFile = ref(null)
+const uploadedCoverImageFile = ref(null) // 新增主圖檔案狀態
+const uploadedCoverImageUrl = ref('') // 新增主圖預覽 URL
+const coverImagePreviewError = ref(false) // 新增主圖預覽錯誤狀態
 
 // 選項資料
 const typeOptions = [
@@ -528,15 +688,29 @@ onMounted(async () => {
       allTags.value = []
     }
 
-    // 載入迷因數據
-    const { data } = await memeService.get(memeId)
+    // 載入迷因數據 - 使用認證的 API 調用
+    const { data } = await apiService.httpAuth.get(`/api/memes/${memeId}`)
 
-    // 更靈活的數據解析
-    const meme = data.data || data.meme || data || {}
+    console.log('API 響應數據:', { memeId, data })
+
+    // 更靈活的數據解析 - 處理嵌套結構
+    const meme = data.data?.meme || data.meme || data.data || data || {}
+
+    console.log('解析後的迷因數據:', meme)
 
     // 檢查迷因數據是否有效
-    if (!meme || !meme.title) {
+    if (!meme) {
+      console.error('迷因數據解析失敗: 沒有找到迷因對象', {
+        memeId,
+        data,
+        meme,
+      })
       throw new Error('迷因數據無效或不存在')
+    }
+
+    if (!meme.title || meme.title.trim() === '') {
+      console.error('迷因數據解析失敗: 標題為空', { memeId, data, meme })
+      throw new Error('迷因標題不能為空')
     }
 
     // 設置表單數據
@@ -548,6 +722,19 @@ onMounted(async () => {
     form.audio_url = meme.audio_url || ''
     form.nsfw = meme.nsfw || false
     form.language = meme.language || 'zh'
+    form.cover_image = meme.cover_image || '' // 設置主圖
+    form.has_source = meme.has_source || false
+    form.source_id = meme.source_id || null
+    form.scene_id = meme.scene_id || null
+    form.is_variant = meme.is_variant || false
+    form.variant_of = meme.variant_of || null
+
+    // 設置 sourceSceneData
+    sourceSceneData.value = {
+      source_id: meme.source_id || null,
+      scene_id: meme.scene_id || null,
+    }
+
     // 處理來源資料 - 支援舊格式轉換
     if (meme.sources && Array.isArray(meme.sources)) {
       form.sources = [...meme.sources]
@@ -608,9 +795,30 @@ onMounted(async () => {
     imagePreviewError.value = false
     tagInput.value = ''
     tagSuggestions.value = []
+    uploadedCoverImageFile.value = null
+    uploadedCoverImageUrl.value = ''
+    coverImagePreviewError.value = false
+
+    // 重設 sourceSceneData
+    sourceSceneData.value = {
+      source_id: null,
+      scene_id: null,
+    }
   } catch (error) {
     console.error('載入迷因失敗:', error)
-    loadError.value = error.message || '無法載入迷因資料'
+
+    // 根據錯誤類型提供更詳細的錯誤信息
+    if (error.response?.status === 404) {
+      loadError.value = '迷因不存在或已被刪除'
+    } else if (error.response?.status === 403) {
+      loadError.value = '您沒有權限編輯此迷因'
+    } else if (error.response?.status === 401) {
+      loadError.value = '請先登入後再編輯迷因'
+    } else {
+      loadError.value =
+        error.response?.data?.message || error.message || '無法載入迷因資料'
+    }
+
     toast.add({
       severity: 'error',
       summary: '載入失敗',
@@ -664,6 +872,30 @@ const onImageClear = () => {
 
 const onImageError = () => {
   imagePreviewError.value = true
+}
+
+// 主圖上傳處理
+const onCoverImageSelect = (event) => {
+  const file = event.files[0]
+  if (file) {
+    uploadedCoverImageFile.value = file
+    // 本地預覽
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      uploadedCoverImageUrl.value = e.target.result
+      form.cover_image = ''
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const onCoverImageClear = () => {
+  uploadedCoverImageUrl.value = ''
+  uploadedCoverImageFile.value = null
+}
+
+const onCoverImageError = () => {
+  coverImagePreviewError.value = true
 }
 
 // YouTube 支援 (影片和音訊都可以用)
@@ -757,6 +989,24 @@ const handleDetailImageUpload = (file) => {
   pendingDetailImages.value.push(file)
 }
 
+// Source/Scene 資料綁定
+const sourceSceneData = ref({
+  source_id: null,
+  scene_id: null,
+})
+
+// 監聽 sourceSceneData 變化，同步到 form
+watch(
+  sourceSceneData,
+  (newVal) => {
+    if (newVal) {
+      form.source_id = newVal.source_id
+      form.scene_id = newVal.scene_id
+    }
+  },
+  { deep: true },
+)
+
 // 表單驗證
 const validateForm = () => {
   // 清空錯誤
@@ -774,6 +1024,18 @@ const validateForm = () => {
     isValid = false
   } else if (getCharCount(form.content) > 350) {
     errors.content = '內容簡介不能超過 350 個字元'
+    isValid = false
+  }
+
+  // 檢查來源
+  if (form.has_source && !form.source_id) {
+    errors.source = '請選擇來源作品'
+    isValid = false
+  }
+
+  // 檢查變體
+  if (form.is_variant && !form.variant_of) {
+    errors.variant = '請選擇原始迷因'
     isValid = false
   }
 
@@ -822,6 +1084,12 @@ const resetForm = () => {
     nsfw: false,
     language: 'zh',
     sources: [],
+    cover_image: '', // 重置主圖
+    has_source: false,
+    source_id: null,
+    scene_id: null,
+    is_variant: false,
+    variant_of: null,
   })
 
   uploadedImageUrl.value = ''
@@ -833,6 +1101,9 @@ const resetForm = () => {
   pendingDetailImages.value = []
   submitError.value = ''
   loadError.value = ''
+  uploadedCoverImageFile.value = null
+  uploadedCoverImageUrl.value = ''
+  coverImagePreviewError.value = false
 
   Object.keys(errors).forEach((key) => (errors[key] = ''))
 }
@@ -852,6 +1123,31 @@ const handleSubmit = async () => {
     }
 
     // 送出時才上傳主圖片
+    if (uploadedCoverImageFile.value) {
+      const formData = new FormData()
+      formData.append('image', uploadedCoverImageFile.value) // key 必須是 'image'
+
+      const res = await fetch('/api/upload/image', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+        // 不要加 headers: Content-Type
+      })
+      const data = await res.json()
+      if (
+        data.success &&
+        data.url &&
+        data.url.startsWith('https://res.cloudinary.com/')
+      ) {
+        form.cover_image = data.url
+      } else {
+        throw new Error(data.message || '主圖上傳失敗')
+      }
+    }
+
+    // 送出時才上傳圖片（如果是圖片類型）
     if (form.type === 'image' && uploadedImageFile.value) {
       const formData = new FormData()
       formData.append('image', uploadedImageFile.value) // key 必須是 'image'
@@ -928,6 +1224,9 @@ const handleSubmit = async () => {
     // 準備迷因數據
     const memeData = {
       ...form,
+      source_id: form.has_source ? form.source_id : null,
+      scene_id: form.has_source ? form.scene_id : null,
+      variant_of: form.is_variant ? form.variant_of : null,
       detail_content: detailContent.value,
       detail_images: detailImages.value,
       tags_cache: tagNames,
@@ -939,6 +1238,7 @@ const handleSubmit = async () => {
     if (memeData.image_url === '') memeData.image_url = undefined
     if (memeData.video_url === '') memeData.video_url = undefined
     if (memeData.audio_url === '') memeData.audio_url = undefined
+    if (memeData.cover_image === '') memeData.cover_image = undefined
 
     // 過濾空的來源資料
     if (memeData.sources && Array.isArray(memeData.sources)) {

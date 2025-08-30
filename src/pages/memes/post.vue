@@ -414,56 +414,13 @@
           </div>
 
           <!-- 其他選項 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- NSFW 選項 -->
-            <div class="field">
-              <div class="flex items-center">
-                <Checkbox v-model="form.nsfw" inputId="nsfw" :binary="true" />
-                <label for="nsfw" class="ml-2 font-medium">
-                  成人/限制級內容 (NSFW)
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- 引用來源 -->
+          <!-- NSFW 選項 -->
           <div class="field">
-            <div class="flex items-center justify-between mb-3">
-              <label class="block font-semibold">引用來源</label>
-              <Button
-                type="button"
-                icon="pi pi-plus"
-                label="新增來源"
-                severity="primary"
-                @click="addSource"
-              />
-            </div>
-
-            <div
-              v-for="(source, index) in form.sources"
-              :key="index"
-              class="flex gap-2 items-center mb-2 last:mb-10"
-            >
-              <div class="flex flex-col flex-1 md:flex-row gap-2 md:gap-8">
-                <FloatLabel variant="on">
-                  <label for="name"
-                    >來源名稱 (例如：原始影片、參考文章...)</label
-                  >
-                  <InputText v-model="source.name" fluid maxlength="100" />
-                </FloatLabel>
-                <FloatLabel variant="on">
-                  <label for="url">來源網址 (https://example.com)</label>
-                  <InputText v-model="source.url" type="url" fluid />
-                </FloatLabel>
-              </div>
-              <Button
-                type="button"
-                icon="pi pi-trash"
-                severity="danger"
-                text
-                @click="removeSource(index)"
-                class="mt-1"
-              />
+            <div class="flex items-center">
+              <Checkbox v-model="form.nsfw" inputId="nsfw" :binary="true" />
+              <label for="nsfw" class="ml-2 font-medium">
+                成人/限制級內容 (NSFW)
+              </label>
             </div>
           </div>
 
@@ -522,6 +479,47 @@
             >
               {{ errors.variant }}
             </Message>
+          </div>
+
+          <!-- 引用來源 -->
+          <div class="field">
+            <div class="flex items-center justify-between mb-3">
+              <label class="block font-semibold">引用來源</label>
+              <Button
+                type="button"
+                icon="pi pi-plus"
+                label="新增來源"
+                severity="primary"
+                @click="addSource"
+              />
+            </div>
+
+            <div
+              v-for="(source, index) in form.sources"
+              :key="index"
+              class="flex gap-2 items-center mb-2 last:mb-10"
+            >
+              <div class="flex flex-col flex-1 md:flex-row gap-2 md:gap-8">
+                <FloatLabel variant="on">
+                  <label for="name"
+                    >來源名稱 (例如：原始影片、參考文章...)</label
+                  >
+                  <InputText v-model="source.name" fluid maxlength="100" />
+                </FloatLabel>
+                <FloatLabel variant="on">
+                  <label for="url">來源網址 (https://example.com)</label>
+                  <InputText v-model="source.url" type="url" fluid />
+                </FloatLabel>
+              </div>
+              <Button
+                type="button"
+                icon="pi pi-trash"
+                severity="danger"
+                text
+                @click="removeSource(index)"
+                class="mt-1"
+              />
+            </div>
           </div>
 
           <!-- 錯誤訊息 -->
