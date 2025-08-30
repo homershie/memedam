@@ -146,34 +146,6 @@
             </small>
           </div>
 
-          <!-- 來源選擇 -->
-          <div class="field">
-            <div class="flex items-center mb-3">
-              <Checkbox
-                v-model="form.has_source"
-                inputId="hasSource"
-                :binary="true"
-              />
-              <label for="hasSource" class="ml-2 font-semibold">
-                此迷因有來源作品
-              </label>
-            </div>
-
-            <SourceScenePicker
-              v-if="form.has_source"
-              v-model="sourceSceneData"
-            />
-
-            <Message
-              v-if="errors.source"
-              severity="error"
-              size="small"
-              variant="simple"
-            >
-              {{ errors.source }}
-            </Message>
-          </div>
-
           <!-- 媒體內容 (根據類型顯示不同輸入方式) -->
           <div v-if="form.type !== 'text'" class="field">
             <label class="block font-semibold mb-2">
@@ -398,28 +370,79 @@
                   成人/限制級內容 (NSFW)
                 </label>
               </div>
-              <small class="text-surface-500 block mt-1">
-                勾選此項表示內容可能不適合工作場所觀看
-              </small>
             </div>
           </div>
 
-          <!-- 來源網址 -->
+          <!-- 引用來源 -->
           <div class="field">
-            <label for="sourceUrl" class="block font-semibold mb-2"
-              >來源網址</label
+            <div class="flex items-center justify-between mb-3">
+              <label class="block font-semibold">引用來源</label>
+              <Button
+                type="button"
+                icon="pi pi-plus"
+                label="新增來源"
+                severity="primary"
+                @click="addSource"
+              />
+            </div>
+
+            <div
+              v-for="(source, index) in form.sources"
+              :key="index"
+              class="flex gap-2 items-center mb-2 last:mb-10"
             >
-            <InputText
-              id="sourceUrl"
-              v-model="form.source_url"
-              placeholder="如果有引用來源，請提供原始網址..."
-              type="url"
-              class="w-full"
-            />
-            <small class="text-surface-500">選填，標註內容來源以示尊重</small>
+              <div class="flex flex-col flex-1 md:flex-row gap-2 md:gap-8">
+                <FloatLabel variant="on">
+                  <label for="name"
+                    >來源名稱 (例如：原始影片、參考文章...)</label
+                  >
+                  <InputText v-model="source.name" fluid maxlength="100" />
+                </FloatLabel>
+                <FloatLabel variant="on">
+                  <label for="url">來源網址 (https://example.com)</label>
+                  <InputText v-model="source.url" type="url" fluid />
+                </FloatLabel>
+              </div>
+              <Button
+                type="button"
+                icon="pi pi-trash"
+                severity="danger"
+                text
+                @click="removeSource(index)"
+                class="mt-1"
+              />
+            </div>
           </div>
 
-          <!-- 變體/混剪選擇 -->
+          <!-- 來源選擇 -->
+          <div class="field">
+            <div class="flex items-center mb-3">
+              <Checkbox
+                v-model="form.has_source"
+                inputId="hasSource"
+                :binary="true"
+              />
+              <label for="hasSource" class="ml-2 font-semibold">
+                此迷因有來源作品
+              </label>
+            </div>
+
+            <SourceScenePicker
+              v-if="form.has_source"
+              v-model="sourceSceneData"
+            />
+
+            <Message
+              v-if="errors.source"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ errors.source }}
+            </Message>
+          </div>
+
+          <!-- 變體/二創選擇 -->
           <div class="field">
             <div class="flex items-center mb-3">
               <Checkbox
@@ -428,7 +451,7 @@
                 :binary="true"
               />
               <label for="isVariant" class="ml-2 font-semibold">
-                這是某個迷因的變體/混剪
+                這是某個迷因的變體/二創
               </label>
             </div>
 
@@ -531,7 +554,7 @@ const form = reactive({
   audio_url: '',
   nsfw: false,
   language: 'zh',
-  source_url: '',
+  sources: [],
   has_source: false,
   source_id: null,
   scene_id: null,
@@ -896,6 +919,19 @@ const validateForm = () => {
   return isValid
 }
 
+// 新增來源
+const addSource = () => {
+  form.sources.push({
+    name: '',
+    url: '',
+  })
+}
+
+// 移除來源
+const removeSource = (index) => {
+  form.sources.splice(index, 1)
+}
+
 // 重設表單
 const resetForm = () => {
   Object.assign(form, {
@@ -908,7 +944,7 @@ const resetForm = () => {
     audio_url: '',
     nsfw: false,
     language: 'zh',
-    source_url: '',
+    sources: [],
     has_source: false,
     source_id: null,
     scene_id: null,
@@ -1040,7 +1076,18 @@ const handleSubmit = async () => {
     if (memeData.image_url === '') memeData.image_url = undefined
     if (memeData.video_url === '') memeData.video_url = undefined
     if (memeData.audio_url === '') memeData.audio_url = undefined
-    if (memeData.source_url === '') memeData.source_url = undefined
+
+    // 過濾空的來源資料
+    if (memeData.sources && Array.isArray(memeData.sources)) {
+      memeData.sources = memeData.sources.filter(
+        (source) =>
+          source &&
+          source.name &&
+          source.name.trim() &&
+          source.url &&
+          source.url.trim(),
+      )
+    }
 
     const memeResponse = await memeService.create(memeData)
     const meme = memeResponse.data.data

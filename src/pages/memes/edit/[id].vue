@@ -357,18 +357,49 @@
               </div>
             </div>
 
-            <!-- 來源網址 -->
+            <!-- 引用來源 -->
             <div class="field">
-              <label for="sourceUrl" class="block font-semibold mb-2"
-                >來源網址</label
-              >
-              <InputText
-                id="sourceUrl"
-                v-model="form.source_url"
-                placeholder="如果有引用來源，請提供原始網址..."
-                type="url"
-                class="w-full"
-              />
+              <label class="block font-semibold mb-2">引用來源</label>
+              <div class="space-y-3">
+                <div
+                  v-for="(source, index) in form.sources"
+                  :key="index"
+                  class="flex gap-2 items-start"
+                >
+                  <div class="flex-1">
+                    <InputText
+                      :placeholder="'來源名稱 (例如：原始影片、參考文章...)'"
+                      v-model="source.name"
+                      class="w-full mb-2"
+                      maxlength="100"
+                    />
+                    <InputText
+                      :placeholder="'https://example.com'"
+                      v-model="source.url"
+                      type="url"
+                      class="w-full"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    text
+                    @click="removeSource(index)"
+                    class="mt-1"
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  icon="pi pi-plus"
+                  label="新增來源"
+                  severity="secondary"
+                  text
+                  @click="addSource"
+                  class="w-full"
+                />
+              </div>
               <small class="text-surface-500">選填，標註內容來源以示尊重</small>
             </div>
 
@@ -445,7 +476,7 @@ const form = reactive({
   audio_url: '',
   nsfw: false,
   language: 'zh',
-  source_url: '',
+  sources: [],
 })
 
 // 表單驗證錯誤
@@ -517,7 +548,20 @@ onMounted(async () => {
     form.audio_url = meme.audio_url || ''
     form.nsfw = meme.nsfw || false
     form.language = meme.language || 'zh'
-    form.source_url = meme.source_url || ''
+    // 處理來源資料 - 支援舊格式轉換
+    if (meme.sources && Array.isArray(meme.sources)) {
+      form.sources = [...meme.sources]
+    } else if (meme.source_url && meme.source_url.trim()) {
+      // 將舊的單一來源轉換為新格式
+      form.sources = [
+        {
+          name: '原始來源',
+          url: meme.source_url,
+        },
+      ]
+    } else {
+      form.sources = []
+    }
 
     // 設置詳細介紹內容 - 支援 JSON 格式
     if (meme.detail_content) {
@@ -753,6 +797,19 @@ const validateForm = () => {
   return isValid
 }
 
+// 新增來源
+const addSource = () => {
+  form.sources.push({
+    name: '',
+    url: '',
+  })
+}
+
+// 移除來源
+const removeSource = (index) => {
+  form.sources.splice(index, 1)
+}
+
 // 重設表單
 const resetForm = () => {
   Object.assign(form, {
@@ -764,7 +821,7 @@ const resetForm = () => {
     audio_url: '',
     nsfw: false,
     language: 'zh',
-    source_url: '',
+    sources: [],
   })
 
   uploadedImageUrl.value = ''
@@ -882,7 +939,18 @@ const handleSubmit = async () => {
     if (memeData.image_url === '') memeData.image_url = undefined
     if (memeData.video_url === '') memeData.video_url = undefined
     if (memeData.audio_url === '') memeData.audio_url = undefined
-    if (memeData.source_url === '') memeData.source_url = undefined
+
+    // 過濾空的來源資料
+    if (memeData.sources && Array.isArray(memeData.sources)) {
+      memeData.sources = memeData.sources.filter(
+        (source) =>
+          source &&
+          source.name &&
+          source.name.trim() &&
+          source.url &&
+          source.url.trim(),
+      )
+    }
 
     await memeService.update(memeId, memeData)
 
