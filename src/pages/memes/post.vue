@@ -502,12 +502,14 @@
               <div class="flex flex-col flex-1 md:flex-row gap-2 md:gap-8">
                 <FloatLabel variant="on">
                   <label for="name"
-                    >來源名稱 (例如：原始影片、參考文章...)</label
+                    >來源名稱 (例如：網路溫度計、維基百科、搞完君...)</label
                   >
                   <InputText v-model="source.name" fluid maxlength="100" />
                 </FloatLabel>
                 <FloatLabel variant="on">
-                  <label for="url">來源網址 (https://example.com)</label>
+                  <label for="url"
+                    >來源網址 (https://zh.wikipedia.org/zh-tw/)</label
+                  >
                   <InputText v-model="source.url" type="url" fluid />
                 </FloatLabel>
               </div>

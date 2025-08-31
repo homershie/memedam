@@ -243,7 +243,7 @@
       <div v-if="activeTab === 'login'" class="text-center mt-4">
         <router-link
           to="/forgot-password"
-          class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+          class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors"
         >
           忘記密碼？
         </router-link>

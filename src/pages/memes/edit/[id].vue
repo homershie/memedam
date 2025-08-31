@@ -502,48 +502,45 @@
 
             <!-- 引用來源 -->
             <div class="field">
-              <label class="block font-semibold mb-2">引用來源</label>
-              <div class="space-y-3">
-                <div
-                  v-for="(source, index) in form.sources"
-                  :key="index"
-                  class="flex gap-2 items-start"
-                >
-                  <div class="flex-1">
-                    <InputText
-                      :placeholder="'來源名稱 (例如：原始影片、參考文章...)'"
-                      v-model="source.name"
-                      class="w-full mb-2"
-                      maxlength="100"
-                    />
-                    <InputText
-                      :placeholder="'https://example.com'"
-                      v-model="source.url"
-                      type="url"
-                      class="w-full"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    icon="pi pi-trash"
-                    severity="danger"
-                    text
-                    @click="removeSource(index)"
-                    class="mt-1"
-                  />
-                </div>
-
+              <div class="flex items-center justify-between mb-3">
+                <label class="block font-semibold">引用來源</label>
                 <Button
                   type="button"
                   icon="pi pi-plus"
                   label="新增來源"
-                  severity="secondary"
-                  text
+                  severity="primary"
                   @click="addSource"
-                  class="w-full"
                 />
               </div>
-              <small class="text-surface-500">選填，標註內容來源以示尊重</small>
+
+              <div
+                v-for="(source, index) in form.sources"
+                :key="index"
+                class="flex gap-2 items-center mb-2 last:mb-10"
+              >
+                <div class="flex flex-col flex-1 md:flex-row gap-2 md:gap-8">
+                  <FloatLabel variant="on">
+                    <label for="name"
+                      >來源名稱 (例如：網路溫度計、維基百科、搞完君...)</label
+                    >
+                    <InputText v-model="source.name" fluid maxlength="100" />
+                  </FloatLabel>
+                  <FloatLabel variant="on">
+                    <label for="url"
+                      >來源網址 (https://zh.wikipedia.org/zh-tw/)</label
+                    >
+                    <InputText v-model="source.url" type="url" fluid />
+                  </FloatLabel>
+                </div>
+                <Button
+                  type="button"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  text
+                  @click="removeSource(index)"
+                  class="mt-1"
+                />
+              </div>
             </div>
 
             <!-- 錯誤訊息 -->

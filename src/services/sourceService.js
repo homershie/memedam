@@ -3,7 +3,7 @@ import apiService from './apiService'
 export default {
   // 搜尋來源
   search(query, limit = 10) {
-    return apiService.http.get('/api/sources/search', {
+    return apiService.http.get('/api/sources/search/autocomplete', {
       params: { q: query, limit },
     })
   },
@@ -20,7 +20,7 @@ export default {
 
   // 取得來源的片段列表
   getScenes(sourceId, params = {}) {
-    return apiService.http.get(`/api/sources/${sourceId}/scenes`, { params })
+    return apiService.http.get(`/api/scenes/source/${sourceId}`, { params })
   },
 
   // 更新來源
