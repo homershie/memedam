@@ -2018,13 +2018,9 @@ const loadPasswordStatus = async () => {
 const loadUserPreferences = async () => {
   try {
     const response = await preferencesService.getPreferences()
-    console.log('偏好設定 API 回應:', response)
 
     if (response.data && response.data.success) {
       const preferences = response.data.data
-      console.log('解析的偏好設定資料:', preferences)
-      console.log('功能 Cookie 狀態:', response.data.functionalCookiesEnabled)
-
       // 更新偏好設定
       if (preferences.theme) {
         userPreferences.theme = preferences.theme
@@ -2048,15 +2044,9 @@ const loadUserPreferences = async () => {
       // 更新功能 Cookie 狀態
       functionalCookiesEnabled.value =
         response.data.functionalCookiesEnabled !== false
-
-      console.log('已載入偏好設定:', preferences)
-      console.log('功能 Cookie 啟用狀態:', functionalCookiesEnabled.value)
-    } else {
-      console.log('API 回應格式不正確:', response)
     }
   } catch (error) {
     console.error('載入偏好設定失敗:', error)
-    console.error('錯誤詳情:', error.response?.data)
     // 如果無法載入偏好設定，使用預設值
     functionalCookiesEnabled.value = false
   }
@@ -3379,10 +3369,7 @@ const loadCurrentConsent = async () => {
         functional: syncedConsent.functional,
         analytics: syncedConsent.analytics,
       }
-
-      console.log('已載入同步後的同意設定:', syncedConsent)
     } else {
-      console.log('沒有找到同意設定')
       currentConsent.value = null
       cookiePreferences.value = {
         functional: true,
@@ -3413,8 +3400,6 @@ const saveSettings = async () => {
   }
 
   try {
-    console.log('準備同步隱私權設定到伺服器:', consent)
-
     // 同步到後端
     await privacyConsentService.createConsent({
       necessary: consent.necessary,
@@ -3434,13 +3419,10 @@ const saveSettings = async () => {
       detail: '隱私設定已成功同步到伺服器',
       life: 3000,
     })
-
-    console.log('隱私權設定同步成功')
   } catch (error) {
     console.error('隱私設定同步失敗:', {
       error: error.message,
       status: error.response?.status,
-      data: error.response?.data,
     })
 
     // 根據錯誤類型提供不同的錯誤訊息

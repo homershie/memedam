@@ -13,8 +13,6 @@ class PrivacyConsentService {
    */
   async createConsent(consentData, retryCount = 0) {
     try {
-      console.log('準備發送隱私權同意資料:', consentData)
-
       // 確保資料格式正確
       const sanitizedData = {
         necessary: consentData.necessary !== false, // 預設為 true
@@ -24,22 +22,16 @@ class PrivacyConsentService {
         consentSource: consentData.consentSource || 'settings',
       }
 
-      console.log('清理後的資料:', sanitizedData)
-
       const response = await apiService.http.post(
         '/api/privacy-consent',
         sanitizedData,
       )
 
-      console.log('隱私權同意建立成功:', response.data)
       return response
     } catch (error) {
       console.error('建立隱私權同意記錄失敗:', {
         error: error.message,
         status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        requestData: consentData,
         retryCount,
       })
 
@@ -50,8 +42,6 @@ class PrivacyConsentService {
 
       // 如果是伺服器錯誤，嘗試重試
       if (error.response?.status >= 500 && retryCount < 2) {
-        console.log(`伺服器錯誤，嘗試重試 (${retryCount + 1}/3)...`)
-
         // 延遲重試，避免立即重試
         await new Promise((resolve) =>
           setTimeout(resolve, 1000 * (retryCount + 1)),
@@ -97,8 +87,6 @@ class PrivacyConsentService {
 
       // 如果是伺服器錯誤，嘗試重試
       if (error.response?.status >= 500 && retryCount < 2) {
-        console.log(`獲取同意設定伺服器錯誤，嘗試重試 (${retryCount + 1}/3)...`)
-
         // 延遲重試
         await new Promise((resolve) =>
           setTimeout(resolve, 1000 * (retryCount + 1)),
@@ -168,26 +156,19 @@ class PrivacyConsentService {
    */
   async syncConsentData() {
     try {
-      console.log('開始同步隱私權同意資料...')
-
       // 獲取本地資料
       const localConsent = localStorage.getItem('privacy-consent')
       const localData = localConsent ? JSON.parse(localConsent) : null
 
-      console.log('本地資料:', localData)
-
       // 獲取後端資料
       let backendData = null
       try {
-        console.log('嘗試獲取後端同意資料...')
         const response = await this.getCurrentConsent()
         backendData = response.data?.consent || response.data || null
-        console.log('後端資料:', backendData)
       } catch (error) {
         console.warn('無法獲取後端同意資料:', {
           error: error.message,
           status: error.response?.status,
-          data: error.response?.data,
         })
 
         // 如果是認證錯誤，記錄但不拋出錯誤
@@ -205,15 +186,8 @@ class PrivacyConsentService {
           backendData.timestamp || backendData.createdAt || 0,
         )
 
-        console.log('時間比較:', {
-          localTime: localTime.toISOString(),
-          backendTime: backendTime.toISOString(),
-          localIsNewer: localTime > backendTime,
-        })
-
         if (localTime > backendTime) {
           // 本地資料更新，同步到後端
-          console.log('本地資料較新，同步到後端')
           try {
             await this.createConsent({
               necessary: localData.necessary,
@@ -222,7 +196,6 @@ class PrivacyConsentService {
               consentVersion: '1.0',
               consentSource: 'sync',
             })
-            console.log('本地資料已成功同步到後端')
             return localData
           } catch (syncError) {
             console.error('同步到後端失敗，但返回本地資料:', syncError)
@@ -230,7 +203,6 @@ class PrivacyConsentService {
           }
         } else {
           // 後端資料更新，同步到本地
-          console.log('後端資料較新，同步到本地')
           const updatedLocalData = {
             ...backendData,
             timestamp: new Date().toISOString(),
@@ -239,12 +211,10 @@ class PrivacyConsentService {
             'privacy-consent',
             JSON.stringify(updatedLocalData),
           )
-          console.log('後端資料已同步到本地')
           return updatedLocalData
         }
       } else if (localData && !backendData) {
         // 只有本地資料，同步到後端
-        console.log('只有本地資料，嘗試同步到後端')
         try {
           await this.createConsent({
             necessary: localData.necessary,
@@ -253,7 +223,6 @@ class PrivacyConsentService {
             consentVersion: '1.0',
             consentSource: 'sync',
           })
-          console.log('本地資料已成功同步到後端')
           return localData
         } catch (syncError) {
           console.warn('同步到後端失敗，但返回本地資料:', syncError)
@@ -261,17 +230,14 @@ class PrivacyConsentService {
         }
       } else if (!localData && backendData) {
         // 只有後端資料，同步到本地
-        console.log('只有後端資料，同步到本地')
         const localData = {
           ...backendData,
           timestamp: new Date().toISOString(),
         }
         localStorage.setItem('privacy-consent', JSON.stringify(localData))
-        console.log('後端資料已同步到本地')
         return localData
       } else {
         // 都沒有資料
-        console.log('沒有找到任何同意資料')
         return null
       }
     } catch (error) {
@@ -285,7 +251,6 @@ class PrivacyConsentService {
       if (localConsent) {
         try {
           const parsedConsent = JSON.parse(localConsent)
-          console.log('同步失敗，使用本地資料作為備用:', parsedConsent)
           return parsedConsent
         } catch (parseError) {
           console.error('解析本地資料失敗:', parseError)
