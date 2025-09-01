@@ -1,9 +1,5 @@
 <template>
-  <div
-    :class="
-      cn('relative h-screen w-full overflow-hidden', props.containerClass)
-    "
-  >
+  <div :class="cn('relative h-screen w-full', props.containerClass)">
     <div
       ref="containerRef"
       class="absolute inset-0 z-0 flex size-full items-center justify-center"

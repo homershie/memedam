@@ -13,7 +13,7 @@
       :base-radius="1"
       :range-radius="2"
     >
-      <div class="text-center relative top-20 left-0 z-20">
+      <div class="text-center relative top-14 left-0 z-20">
         <h1 class="mb-2">迷因典－中文圈迷因的終極資料庫</h1>
         <p class="mb-8">
           整理散落各平台的迷因，讓你一眼認出流行迷因。用互動、探索各式各樣的經典，讓網路文化永續傳承！
@@ -37,10 +37,10 @@
         />
       </div>
       <div
-        class="relative w-full h-[680px] -top-10 left-0 z-10 flex items-center justify-center"
+        class="relative w-full h-[700px] -top-2 left-0 z-10 flex items-center justify-center"
       >
         <div
-          class="w-2xl max-w-full h-auto rounded-lg overflow-hidden scale-up scroll-scale-up"
+          class="w-[676px] max-w-full h-auto rounded-lg overflow-hidden scroll-scale-up"
         >
           <img
             src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655459/vZ9MbIJ3MzY_yxp12o.png"
@@ -50,27 +50,27 @@
         </div>
       </div>
       <div
-        class="relative w-[1200px] min-h-[620px] -top-[440px] left-1/2 transform -translate-x-1/2 z-5 hidden xl:block"
+        class="relative w-[1366px] min-h-[620px] -top-[640px] left-1/2 transform -translate-x-1/2 z-5 hidden xl:block"
       >
         <img
           src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655458/1_MbCyr-5f1ZcamARuAVoKrg_kkukkl.webp"
           alt="卑鄙源之助"
-          class="absolute w-60 h-auto rounded-lg left-24 top-0 fade-in-left scroll-fade-out-left"
+          class="absolute w-60 h-auto rounded-lg left-50 top-0 fade-in-left scroll-fade-out-left"
         />
         <img
           src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655458/489683234_17900609382167740_2674519705088244709_n_e1u8f4.jpg"
           alt="tralalero tralala"
-          class="absolute w-48 h-auto rounded-lg right-40 bottom-0 fade-in-right scroll-fade-out-right"
+          class="absolute w-48 h-auto rounded-lg right-50 bottom-0 fade-in-right scroll-fade-out-right"
         />
         <img
           src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655458/9226c990-1935-11ed-bfe9-1a34c47a8851_s5ctg1.webp"
           alt="Virgil Guardian"
-          class="absolute w-80 h-auto rounded-lg left-4 bottom-10 fade-in-left scroll-fade-out-left"
+          class="absolute w-80 h-auto rounded-lg left-16 bottom-10 fade-in-left scroll-fade-out-left"
         />
         <img
           src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655459/3F3F_3F_a7ponm.png"
           alt="冷傲退基佬"
-          class="absolute w-60 h-auto rounded-lg right-0 top-8 fade-in-right scroll-fade-out-right"
+          class="absolute w-60 h-auto rounded-lg right-20 top-4 fade-in-right scroll-fade-out-right"
         />
       </div>
     </VortexBackground>
@@ -1111,7 +1111,7 @@ const initGSAPAnimations = () => {
 
     // 滾動縮放動畫
     gsap.from('.scale-up', {
-      scale: 0.8,
+      width: '540px',
       opacity: 0,
       duration: 1,
       ease: 'power2.inOut',
@@ -1126,10 +1126,10 @@ const initGSAPAnimations = () => {
         start: 'top 25%',
         end: 'bottom 0%',
         scrub: 1,
-        markers: true,
       },
       width: '1024px',
       transform: 'translateY(20%)',
+      opacity: 0,
       duration: 1,
     })
 
