@@ -504,7 +504,7 @@ onUnmounted(() => {
 const mapBindErrorMessage = (provider, err, status) => {
   const providerNameMap = {
     google: 'Google',
-    facebook: 'Facebook',
+    // facebook: 'Facebook',
     discord: 'Discord',
     twitter: 'Twitter',
   }

@@ -273,7 +273,8 @@
               class="pi pi-google text-xl text-surface-700 dark:text-surface-300"
             ></i>
           </button>
-          <button
+          <!-- Facebook 登入 -->
+          <!-- <button
             @click="handleSocialLogin('facebook')"
             :disabled="socialLoginLoading"
             class="w-12 h-12 border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-surface-400 dark:hover:border-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -283,7 +284,7 @@
             <i
               class="pi pi-facebook text-xl text-surface-700 dark:text-surface-300"
             ></i>
-          </button>
+          </button> -->
           <button
             @click="handleSocialLogin('twitter')"
             :disabled="socialLoginLoading"

@@ -2142,14 +2142,14 @@ const socialAccounts = ref([
     connected: false,
     loading: false,
   },
-  {
-    platform: 'facebook',
-    name: 'Facebook',
-    email: '',
-    icon: 'pi pi-facebook',
-    connected: false,
-    loading: false,
-  },
+  // {
+  //   platform: 'facebook',
+  //   name: 'Facebook',
+  //   email: '',
+  //   icon: 'pi pi-facebook',
+  //   connected: false,
+  //   loading: false,
+  // },
   {
     platform: 'discord',
     name: 'Discord',
@@ -2901,7 +2901,7 @@ const handleOAuthCallback = async () => {
 const mapBindErrorMessage = (provider, err, status) => {
   const providerNameMap = {
     google: 'Google',
-    facebook: 'Facebook',
+    // facebook: 'Facebook',
     discord: 'Discord',
     twitter: 'Twitter',
   }
