@@ -1,10 +1,10 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div class="w-full max-w-full px-4 space-y-12">
+  <div class="w-full max-w-full space-y-12 page-scroll">
     <!-- 首頁標題與搜尋/上傳 -->
     <VortexBackground
-      content-class="flex items-center justify-center min-h-180"
-      container-class="min-h-screen w-full overflow-hidden"
+      content-class="top-0 left-0 overflow-hidden"
+      container-class="min-h-screen w-full"
       :particle-count="700"
       :rangeY="400"
       :base-hue="220"
@@ -13,13 +13,13 @@
       :base-radius="1"
       :range-radius="2"
     >
-      <div :class="heroStyles.containerClass">
-        <h1 :class="heroStyles.titleClass">讓最新的迷因為生活增添風味</h1>
-        <p :class="heroStyles.Class">
-          探索網友們精心整理的迷因，用互動的方式參與迷因的定義，讓自己成為最新穎最顛覆的迷因。
+      <div class="text-center relative top-20 left-0 z-20">
+        <h1 class="mb-2">迷因典－中文圈迷因的終極資料庫</h1>
+        <p class="mb-8">
+          整理散落各平台的迷因，讓你一眼認出流行迷因。用互動、探索各式各樣的經典，讓網路文化永續傳承！
         </p>
         <div class="flex flex-wrap justify-center gap-2 mt-4 mb-8">
-          <p :class="heroStyles.keywordClass">熱門關鍵字：</p>
+          <p class="text-sm text-gray-500">熱門關鍵字：</p>
           <Tag
             v-for="tag in topTags"
             :key="tag._id"
@@ -34,6 +34,41 @@
           icon="pi pi-arrow-right"
           class="ml-2 p-button-primary w-48 h-14 text-lg hover:scale-105 transition-transform shadow-lg"
           @click="$router.push('/memes/all')"
+        />
+      </div>
+      <div class="relative top-20 left-0 z-10 py-12 flex justify-center">
+        <div
+          class="w-2xl h-auto rounded-lg overflow-hidden scale-up scroll-scale-up"
+        >
+          <img
+            src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655459/vZ9MbIJ3MzY_yxp12o.png"
+            alt="讓我看看"
+            class="object-cover w-full h-full"
+          />
+        </div>
+      </div>
+      <div
+        class="relative w-[1200px] min-h-[620px] -top-[440px] left-1/2 transform -translate-x-1/2 z-5 hidden xl:block"
+      >
+        <img
+          src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655458/1_MbCyr-5f1ZcamARuAVoKrg_kkukkl.webp"
+          alt="卑鄙源之助"
+          class="absolute w-60 h-auto rounded-lg left-24 top-0 fade-in-left scroll-fade-out-left"
+        />
+        <img
+          src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655458/489683234_17900609382167740_2674519705088244709_n_e1u8f4.jpg"
+          alt="tralalero tralala"
+          class="absolute w-48 h-auto rounded-lg right-40 bottom-0 fade-in-right scroll-fade-out-right"
+        />
+        <img
+          src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655458/9226c990-1935-11ed-bfe9-1a34c47a8851_s5ctg1.webp"
+          alt="Virgil Guardian"
+          class="absolute w-80 h-auto rounded-lg left-4 bottom-10 fade-in-left scroll-fade-out-left"
+        />
+        <img
+          src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655459/3F3F_3F_a7ponm.png"
+          alt="冷傲退基佬"
+          class="absolute w-60 h-auto rounded-lg right-0 top-8 fade-in-right scroll-fade-out-right"
         />
       </div>
     </VortexBackground>
@@ -308,38 +343,28 @@ import userService from '@/services/userService'
 import followService from '@/services/followService'
 import MemeCard from '@/components/MemeCard.vue'
 import memeService from '@/services/memeService'
-import VortexBackground from '@/components/VortexBackground.vue'
-import { useThemeStore } from '@/stores/themeStore'
+// import VortexBackground from '@/components/VortexBackground.vue'
 import AdInline from '@/components/AdInline.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import announcementService from '@/services/announcementService'
+
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { nextTick } from 'vue'
+gsap.registerPlugin(ScrollTrigger)
+// 除錯用：掛到 window
+window._gsap = gsap
+window._st = ScrollTrigger
 
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
-const themeStore = useThemeStore()
 
 // VIP 用戶判定
 const isVipUser = computed(() => {
   return userStore.role === 'vip'
 })
-
-// 計算 hero 區域的樣式
-const heroStyles = computed(() => ({
-  containerClass: themeStore.isDark
-    ? 'text-center text-white relative z-20'
-    : 'text-center text-gray-800 relative z-20',
-  titleClass: themeStore.isDark
-    ? 'text-4xl lg:text-6xl font-bold mb-6 text-white drop-shadow-2xl'
-    : 'text-4xl lg:text-6xl font-bold mb-6 text-gray-800 drop-shadow-2xl',
-  Class: themeStore.isDark
-    ? ' mt-1 text-lg lg:text-xl text-gray-100 mb-8 max-w-3xl mx-auto drop-shadow-lg'
-    : ' mt-1 text-lg lg:text-xl text-gray-600 mb-8 max-w-3xl mx-auto drop-shadow-lg',
-  keywordClass: themeStore.isDark
-    ? 'text-gray-200 font-medium'
-    : 'text-gray-600 font-medium',
-}))
 
 const topTags = ref([])
 const featuredMemes = ref([])
@@ -927,6 +952,109 @@ const handleOAuthCallbackOnMount = async () => {
     await handleOAuthCallback(route, router, userStore, toast)
   }
 }
+// 這三個比較，能快速判斷是不是「兩份」GSAP/ScrollTrigger
+console.log(
+  'window.gsap exists?',
+  !!window.gsap,
+  'version=',
+  window.gsap && window.gsap.version,
+)
+console.log(
+  'window.ScrollTrigger exists?',
+  !!window.ScrollTrigger,
+  'version=',
+  window.ScrollTrigger && window.ScrollTrigger.version,
+)
+
+// 比較物件身分（true 表示同一份；false 表示不同實例）
+console.log('gsap instance identical?', window.gsap === window._gsap)
+console.log(
+  'ScrollTrigger instance identical?',
+  window.ScrollTrigger === window._st,
+)
+// GSAP 動畫初始化
+const initGSAPAnimations = () => {
+  // 確保 DOM 已經渲染完成
+  nextTick(() => {
+    // 淡入動畫
+    gsap.from('.fade-in-left', {
+      opacity: 0,
+      x: -100,
+      duration: 1.2,
+      ease: 'power2.out',
+      stagger: 0.5,
+    })
+
+    gsap.from('.fade-in-right', {
+      opacity: 0,
+      x: 100,
+      duration: 1.2,
+      ease: 'power2.out',
+      stagger: 0.5,
+    })
+
+    // 滾動縮放動畫
+    gsap.from('.scale-up', {
+      scale: 0.8,
+      opacity: 0,
+      duration: 1,
+      ease: 'power2.inOut',
+    })
+
+    const scroller = document.querySelector('.page-scroll')
+
+    gsap.to('.scroll-scale-up', {
+      scrollTrigger: {
+        trigger: '.scroll-scale-up',
+        scroller,
+        start: 'top 45%',
+        end: 'bottom 0%',
+        scrub: 1,
+      },
+      scale: 1.4677,
+      transform: 'translateY(30%)',
+      duration: 1,
+    })
+
+    gsap.utils.toArray('.scroll-fade-out-left').forEach((el) => {
+      gsap.fromTo(
+        el,
+        { x: 0, opacity: 1 },
+        {
+          x: -100,
+          opacity: 0,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            scroller,
+            start: 'top 20%',
+            end: '+=25%',
+            scrub: true,
+          },
+        },
+      )
+    })
+
+    gsap.utils.toArray('.scroll-fade-out-right').forEach((el) => {
+      gsap.fromTo(
+        el,
+        { x: 0, opacity: 1 },
+        {
+          x: 100,
+          opacity: 0,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            scroller,
+            start: 'top 20%',
+            end: '+=25%',
+            scrub: true,
+          },
+        },
+      )
+    })
+  })
+}
 
 // 監聽登入狀態變化，重新載入追蹤狀態
 watch(
@@ -953,6 +1081,9 @@ onMounted(async () => {
     loadActiveUsers(),
     loadAnnouncements(),
   ])
+
+  // 初始化 GSAP 動畫
+  initGSAPAnimations()
 })
 </script>
 
@@ -961,6 +1092,14 @@ export default {
   name: 'HomePage',
 }
 </script>
+
+<style scoped>
+.page-scroll {
+  height: 100vh;
+  overflow: auto;
+  position: relative; /* 讓 markers 有定位上下文 */
+}
+</style>
 
 <route lang="yaml">
 meta:

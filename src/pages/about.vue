@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-4 space-y-12">
+  <div class="container mx-auto p-4 space-y-12 overflow-y-auto">
     <!-- 關於迷因典區塊 -->
     <div
       class="mb-4 px-4 py-16 flex flex-col lg:flex-row items-center gap-8 lg:px-32"
@@ -45,10 +45,10 @@
 
         <div class="space-y-2 flex-1">
           <p class="text-sm text-gray-500 mb-2">Author</p>
-          <h1 class="text-5xl font-bold mb-4">關於作者</h1>
+          <h1 class="text-5xl font-bold mb-4">關於迷因長</h1>
           <p>
-            我是荷馬桑，迷因典的開發者兼站長。是一位喜歡迷因的怪咖，原本是平面設計、UI
-            設計和動畫製作出身，興趣很多，包含健身、動漫、遊戲、音樂和各種冷知識。喜歡把抽象的想法變成有趣的作品。最近在學前端工程當作武器庫，把設計腦和工程腦融合在一起，做出這個充滿歡樂與惡搞的迷因平台。
+            我是荷馬桑，迷因典的開發者兼迷因長。是一位喜歡迷因的怪咖，原本是平面設計、UI
+            設計和動畫製作出身，興趣很多，包含健身、動漫、遊戲、音樂和各種冷知識。喜歡把抽象的想法變成有趣的作品。最近在學前端工程當作武器庫，把設計腦和工程腦融合在一起，做出這個充滿歡樂的迷因平台。
           </p>
           <p>
             如果你對迷因典有建議或合作想法，歡迎使用聯絡頁面，或是意見反饋功能，也可以直接聯絡我：
@@ -72,6 +72,7 @@
             <i class="pi pi-money-bill"></i>
             <a
               class="underline hover:text-primary-500!"
+              target="_blank"
               href="https://ko-fi.com/homershie"
               >KO-FI贊助頁面</a
             >

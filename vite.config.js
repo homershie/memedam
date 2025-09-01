@@ -28,6 +28,7 @@ export default defineConfig({
       primeicons: fileURLToPath(
         new URL('./node_modules/primeicons', import.meta.url),
       ),
+      gsap: 'gsap', // 明確鎖定同一路徑
     },
   },
   server: {

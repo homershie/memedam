@@ -1,5 +1,5 @@
 <template>
-  <div class="container h-fit mx-auto p-8 mb-20 space-y-8">
+  <div class="container h-fit mx-auto p-8 mb-20 space-y-8 overflow-y-auto">
     <!-- 頁面標題 -->
     <div class="mb-8 max-w-4xl mx-auto">
       <h2 class="text-4xl font-bold mb-4">迷因典 MemeDam 服務條款</h2>

@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-4 space-y-12">
+  <div class="container mx-auto p-4 space-y-12 overflow-y-auto">
     <!-- 頁面標題 -->
     <div
       class="mb-4 px-4 py-16 flex flex-col items-center gap-4 lg:px-16 xl:px-32"

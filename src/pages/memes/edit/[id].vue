@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-5xl mx-auto">
-    <div class="overflow-hidden">
+  <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
+    <div class="w-5xl mx-auto overflow-hidden">
       <!-- Loading 狀態 -->
       <div
         v-if="loading && !form.title"

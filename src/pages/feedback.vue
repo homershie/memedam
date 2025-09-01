@@ -1,6 +1,6 @@
 <template>
-  <div class="w-5xl p-8 mx-auto space-y-6">
-    <div class="mb-4">
+  <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
+    <div class="w-5xl mx-auto mb-4">
       <h1>提供意見</h1>
       <p class="mt-2">您的意見對我們很重要，請告訴我們您的想法</p>
 
@@ -50,7 +50,7 @@
     </div>
 
     <!-- 意見表單 -->
-    <div class="max-w-2xl mx-auto">
+    <div class="w-5xl max-w-2xl mx-auto">
       <form @submit.prevent="submitFeedback" class="space-y-6">
         <!-- 分類 -->
         <div>

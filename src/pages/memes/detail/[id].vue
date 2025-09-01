@@ -1,5 +1,7 @@
 <template>
-  <div class="max-w-6xl w-full mx-auto min-h-[calc(100vh-100px)]">
+  <div
+    class="max-w-6xl w-full mx-auto min-h-[calc(100vh-100px)] overflow-y-auto"
+  >
     <!-- 載入狀態 -->
     <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
       <ProgressSpinner />

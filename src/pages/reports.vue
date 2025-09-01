@@ -1,13 +1,13 @@
 <template>
-  <div class="w-5xl p-8 mx-auto space-y-6">
+  <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
     <!-- 頁面標題 -->
-    <div class="mb-6">
+    <div class="w-5xl mx-auto mb-6">
       <h1 class="text-3xl font-bold mb-2">檢舉紀錄</h1>
       <p class="text-gray-600 dark:text-gray-400">查看您的檢舉歷史和處理狀態</p>
     </div>
 
     <!-- 統計卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <Card class="text-center">
         <template #content>
           <div v-if="loading" class="flex justify-center">
@@ -50,7 +50,7 @@
     </div>
 
     <!-- 篩選器 -->
-    <Card>
+    <Card class="w-5xl mx-auto">
       <template #content>
         <div class="flex flex-wrap gap-4 items-center">
           <div class="flex items-center gap-2">
@@ -88,7 +88,7 @@
     </Card>
 
     <!-- 檢舉列表 -->
-    <Card>
+    <Card class="w-5xl mx-auto">
       <template #content>
         <!-- 載入中狀態 -->
         <div v-if="loading" class="flex justify-center py-8">
@@ -328,7 +328,7 @@ const loadStats = async () => {
       }
       stats.value = newStats
     }
-  } catch (error) {
+  } catch {
     // 如果統計 API 失敗，使用當前頁面資料計算
     calculateStatsFromCurrentPage()
   }

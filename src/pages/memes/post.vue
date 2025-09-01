@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-5xl mx-auto">
-    <div class="overflow-hidden">
+  <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
+    <div class="w-5xl mx-auto overflow-hidden">
       <div class="text-center py-6">
         <h1 class="text-3xl font-bold text-surface-800">投稿迷因</h1>
         <p class="mt-2">分享你的創意，讓大家一起歡樂！</p>

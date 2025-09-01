@@ -266,7 +266,7 @@
       <!-- 主內容區域 -->
       <div
         :class="[
-          'h-[calc(100vh-80px)] overflow-y-auto transition-all duration-300 relative flex flex-1 justify-center',
+          'h-[calc(100vh-80px)] overflow-hidden transition-all duration-300 relative flex flex-1 justify-center',
           sidebarVisible ? 'lg:w-5/6' : 'lg:w-full',
           'w-full',
         ]"

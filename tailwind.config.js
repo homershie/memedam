@@ -1,4 +1,3 @@
-import tailwindcssPrimeui from 'tailwindcss-primeui'
 import typography from '@tailwindcss/typography'
 
 export default {
@@ -120,5 +119,5 @@ export default {
       },
     },
   },
-  plugins: [tailwindcssPrimeui, typography],
+  plugins: [typography],
 }
