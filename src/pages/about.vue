@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-4 space-y-12 overflow-y-auto">
+  <div class="w-full mx-auto p-4 space-y-12 overflow-y-auto">
     <!-- 關於迷因典區塊 -->
     <div
       class="mb-4 px-4 py-16 flex flex-col lg:flex-row items-center gap-8 lg:px-32"

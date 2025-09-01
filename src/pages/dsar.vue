@@ -1,5 +1,5 @@
 <template>
-  <div class="container h-fit mx-auto p-8 mb-20 space-y-8 overflow-y-auto">
+  <div class="w-full mx-auto py-10 space-y-12 overflow-y-auto">
     <!-- 頁面標題 -->
     <div class="mb-8 max-w-4xl mx-auto">
       <h2 class="text-4xl font-bold mb-4">資料主體存取請求</h2>
