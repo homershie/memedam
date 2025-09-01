@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="max-w-6xl w-full mx-auto min-h-[calc(100vh-100px)] overflow-y-auto"
-  >
+  <div class="w-full mx-auto min-h-[calc(100vh-100px)] overflow-y-auto">
     <!-- 載入狀態 -->
     <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
       <ProgressSpinner />
@@ -25,7 +23,7 @@
     </div>
 
     <!-- 主要內容 -->
-    <div v-else-if="meme" class="mx-auto px-4 py-6">
+    <div v-else-if="meme" class="mx-auto w-6xl px-4 py-6">
       <!-- 標題區域 -->
       <div class="flex items-start justify-between mb-6">
         <div class="flex-1">
@@ -903,30 +901,12 @@ const loadMeme = async () => {
       meme.value = memeData
 
       // 更新統計數據 - 參考 MemeCard.vue 的處理方式
-      console.log('🔍 [MemeDetail] 開始更新統計數據，原始數據:', {
-        likes_count: memeData.likes_count,
-        like_count: memeData.like_count,
-        dislikes_count: memeData.dislikes_count,
-        dislike_count: memeData.dislike_count,
-        comments_count: memeData.comments_count,
-        comment_count: memeData.comment_count,
-        view_count: memeData.view_count,
-        views: memeData.views,
-      })
-
       likesCount.value = memeData.likes_count || memeData.like_count || 0
       dislikesCount.value =
         memeData.dislikes_count || memeData.dislike_count || 0
       commentsCount.value =
         memeData.comments_count || memeData.comment_count || 0
       viewCount.value = memeData.view_count || memeData.views || 0
-
-      console.log('🔍 [MemeDetail] 統計數據更新完成:', {
-        likesCount: likesCount.value,
-        dislikesCount: dislikesCount.value,
-        commentsCount: commentsCount.value,
-        viewCount: viewCount.value,
-      })
 
       // 記錄瀏覽
       await recordView()
@@ -1055,9 +1035,28 @@ const loadUserInteractionStatus = async () => {
         const newCommentsCount =
           memeData.comments_count || memeData.comment_count || 0
 
-        likesCount.value = newLikesCount
-        dislikesCount.value = newDislikesCount
-        commentsCount.value = newCommentsCount
+        // 只有在有新數據時才更新，避免覆蓋已經正確設置的計數器
+        if (
+          newLikesCount > 0 ||
+          memeData.likes_count === 0 ||
+          memeData.like_count === 0
+        ) {
+          likesCount.value = newLikesCount
+        }
+        if (
+          newDislikesCount > 0 ||
+          memeData.dislikes_count === 0 ||
+          memeData.dislike_count === 0
+        ) {
+          dislikesCount.value = newDislikesCount
+        }
+        if (
+          newCommentsCount > 0 ||
+          memeData.comments_count === 0 ||
+          memeData.comment_count === 0
+        ) {
+          commentsCount.value = newCommentsCount
+        }
       }
     } catch (error) {
       console.error('獲取統計資料失敗:', error)
@@ -1242,19 +1241,11 @@ const toggleLike = async () => {
   if (!requireLogin(userStore, toast)) return
 
   try {
-    console.log('🔍 [MemeDetail] 開始按讚操作，當前計數:', {
-      likesCount: likesCount.value,
-      dislikesCount: dislikesCount.value,
-      isLiked: isLiked.value,
-    })
-
     await likeService.toggle({
       meme_id: memeId.value,
       type: 'meme',
       user_id: userStore.userId,
     })
-
-    console.log('🔍 [MemeDetail] 按讚成功，開始更新狀態...')
 
     // 後端返回成功，立即更新本地狀態和計數器
     isLiked.value = !isLiked.value
@@ -1271,13 +1262,6 @@ const toggleLike = async () => {
     } else {
       likesCount.value = Math.max(0, likesCount.value - 1)
     }
-
-    console.log('🔍 [MemeDetail] 狀態和計數更新後:', {
-      isLiked: isLiked.value,
-      isDisliked: isDisliked.value,
-      likesCount: likesCount.value,
-      dislikesCount: dislikesCount.value,
-    })
 
     // 不需要重新載入統計資料，避免覆蓋本地更新
     // await loadUserInteractionStatus()
@@ -1296,19 +1280,11 @@ const toggleDislike = async () => {
   if (!requireLogin(userStore, toast)) return
 
   try {
-    console.log('🔍 [MemeDetail] 開始按噓操作，當前計數:', {
-      likesCount: likesCount.value,
-      dislikesCount: dislikesCount.value,
-      isDisliked: isDisliked.value,
-    })
-
     await dislikeService.toggle({
       meme_id: memeId.value,
       type: 'meme',
       user_id: userStore.userId,
     })
-
-    console.log('🔍 [MemeDetail] 按噓成功，開始更新狀態...')
 
     // 後端返回成功，立即更新本地狀態和計數器
     isDisliked.value = !isDisliked.value
@@ -1325,13 +1301,6 @@ const toggleDislike = async () => {
     } else {
       dislikesCount.value = Math.max(0, dislikesCount.value - 1)
     }
-
-    console.log('🔍 [MemeDetail] 狀態和計數更新後:', {
-      isLiked: isLiked.value,
-      isDisliked: isDisliked.value,
-      likesCount: likesCount.value,
-      dislikesCount: dislikesCount.value,
-    })
 
     // 不需要重新載入統計資料，避免覆蓋本地更新
     // await loadUserInteractionStatus()
