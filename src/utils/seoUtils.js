@@ -3,8 +3,6 @@
  * 用於處理頁面 meta 標籤、canonical 標籤等 SEO 相關功能
  */
 
-import { ref, nextTick } from 'vue'
-
 // 固定 canonical 主機，避免 www 與非 www 造成重複內容
 export const CANONICAL_ORIGIN = 'https://www.memedam.com'
 
@@ -16,7 +14,13 @@ export const CANONICAL_ORIGIN = 'https://www.memedam.com'
  * @param {string} meta.canonical - 標準網址
  * @param {Object} meta.openGraph - Open Graph 資訊
  */
-export function setPageMeta({ title, description, canonical, openGraph = {}, robots }) {
+export function setPageMeta({
+  title,
+  description,
+  canonical,
+  openGraph = {},
+  robots,
+}) {
   // 設定頁面標題
   if (title) {
     document.title = `${title} | 迷因典 MemeDam`
