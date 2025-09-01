@@ -540,7 +540,7 @@ const handleSocialLogin = async (provider) => {
     console.log(`開始 ${provider} 社群登入`)
 
     // 直接跳轉到後端 OAuth 路由，不使用彈窗
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    const baseUrl = import.meta.env.VITE_API_URL || ''
     const oauthUrl = `${baseUrl}/api/users/auth/${provider}`
 
     // 使用原視窗跳轉
