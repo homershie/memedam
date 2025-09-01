@@ -229,14 +229,14 @@
             </template>
             <template #end>
               <!-- Google Adsense 廣告 - VIP 用戶不顯示 -->
-              <div
+              <!-- <div
                 v-if="!isVipUser"
                 class="flex justify-center items-center my-2"
               >
                 <AdSidebar />
               </div>
-              <Divider />
-              <div class="mb-10">
+              <Divider /> -->
+              <div class="my-4">
                 <div class="mb-2">© 2025 迷因典 MemeDam</div>
 
                 <div class="text-xs">
@@ -421,13 +421,13 @@
                 <template #end
                   ><!-- Google Adsense 佔位符 -->
                   <!-- Google Adsense 廣告 - VIP 用戶不顯示 -->
-                  <div
+                  <!-- <div
                     v-if="!isVipUser"
                     class="flex justify-center items-center my-2"
                   >
                     <AdSidebar />
                   </div>
-                  <Divider />
+                  <Divider /> -->
                   <div class="mb-10">
                     <div class="mb-2">© 2025 迷因典 MemeDam</div>
 
@@ -470,11 +470,11 @@ import Menubar from 'primevue/menubar'
 import DynamicDialog from 'primevue/dynamicdialog'
 import userService from '@/services/userService'
 import Menu from 'primevue/menu'
-import Divider from 'primevue/divider'
+// import Divider from 'primevue/divider'
 import SearchBox from '@/components/SearchBox.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import NotificationButton from '@/components/NotificationButton.vue'
-import AdSidebar from '@/components/AdSidebar.vue'
+// import AdSidebar from '@/components/AdSidebar.vue'
 import PrivacyConsentDialog from '@/components/PrivacyConsentDialog.vue'
 
 const user = useUserStore()

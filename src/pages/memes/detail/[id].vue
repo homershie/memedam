@@ -99,9 +99,9 @@
       <Divider class="my-6" />
 
       <!-- 廣告 -->
-      <div v-if="!isVipUser" class="flex justify-center items-center my-8">
+      <!-- <div v-if="!isVipUser" class="flex justify-center items-center my-8">
         <AdInlineDetail />
-      </div>
+      </div> -->
 
       <!-- 使用 float 實現維基百科式文繞圖效果 -->
       <div class="relative">
@@ -210,12 +210,12 @@
             </div>
 
             <!-- 廣告 -->
-            <div
+            <!-- <div
               v-if="!isVipUser"
               class="flex justify-center items-center my-8"
             >
               <AdInlineDetail />
-            </div>
+            </div> -->
 
             <!-- 互動按鈕 -->
             <div class="flex items-center justify-between mt-6 pt-6 border-t">
@@ -479,7 +479,7 @@ import userService from '@/services/userService'
 import viewService from '@/services/viewService'
 import sidebarService from '@/services/sidebarService'
 import recommendationService from '@/services/recommendationService'
-import AdInlineDetail from '@/components/AdInlineDetail.vue'
+// import AdInlineDetail from '@/components/AdInlineDetail.vue'
 
 // 工具函數
 import { getId, getMemeId } from '@/utils/dataUtils'
@@ -536,9 +536,9 @@ const shareMenuRef = ref(null)
 const isDesktop = ref(false)
 
 // VIP 用戶判定
-const isVipUser = computed(() => {
-  return userStore.role === 'vip'
-})
+// const isVipUser = computed(() => {
+//   return userStore.role === 'vip'
+// })
 
 // 檢查螢幕尺寸
 const checkScreenSize = () => {
