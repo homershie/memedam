@@ -268,9 +268,13 @@ const router = useRouter()
 const tags = ref([])
 const isLiked = ref(false)
 const isDisliked = ref(false)
-const likesCount = ref(props.meme.likes_count || 0)
-const dislikesCount = ref(props.meme.dislikes_count || 0)
-const commentsCount = ref(props.meme.comments_count || 0)
+const likesCount = ref(props.meme.like_count || props.meme.likes_count || 0)
+const dislikesCount = ref(
+  props.meme.dislike_count || props.meme.dislikes_count || 0,
+)
+const commentsCount = ref(
+  props.meme.comment_count || props.meme.comments_count || 0,
+)
 
 const memeId = computed(() => getMemeId(props.meme))
 const publishedTime = computed(() => formatPublishedTime(props.meme))
@@ -355,21 +359,45 @@ const loadUserInteractionStatus = async () => {
     // 獲取最新的統計資料
     try {
       const memeResponse = await memeService.get(memeId.value)
-      if (memeResponse.data) {
-        const newLikesCount =
-          memeResponse.data.like_count || memeResponse.data.likes_count || 0
-        const newDislikesCount =
-          memeResponse.data.dislike_count ||
-          memeResponse.data.dislikes_count ||
-          0
-        const newCommentsCount =
-          memeResponse.data.comment_count ||
-          memeResponse.data.comments_count ||
-          0
 
-        likesCount.value = newLikesCount
-        dislikesCount.value = newDislikesCount
-        commentsCount.value = newCommentsCount
+      if (memeResponse.data) {
+        // 處理嵌套的數據結構
+        let memeData = memeResponse.data
+        if (
+          memeResponse.data.data &&
+          typeof memeResponse.data.data === 'object'
+        ) {
+          memeData = memeResponse.data.data
+        }
+
+        const newLikesCount = memeData.like_count || memeData.likes_count || 0
+        const newDislikesCount =
+          memeData.dislike_count || memeData.dislikes_count || 0
+        const newCommentsCount =
+          memeData.comment_count || memeData.comments_count || 0
+
+        // 只有在有新數據時才更新，避免覆蓋現有數據
+        if (
+          newLikesCount > 0 ||
+          memeData.like_count === 0 ||
+          memeData.likes_count === 0
+        ) {
+          likesCount.value = newLikesCount
+        }
+        if (
+          newDislikesCount > 0 ||
+          memeData.dislike_count === 0 ||
+          memeData.dislikes_count === 0
+        ) {
+          dislikesCount.value = newDislikesCount
+        }
+        if (
+          newCommentsCount > 0 ||
+          memeData.comment_count === 0 ||
+          memeData.comments_count === 0
+        ) {
+          commentsCount.value = newCommentsCount
+        }
       }
     } catch (error) {
       console.error('獲取統計資料失敗:', error)
@@ -408,11 +436,21 @@ const toggleLike = async () => {
     })
 
     if (response && response.data && response.data.success) {
+      // 後端返回成功，立即更新本地狀態和計數器
       isLiked.value = !isLiked.value
+
+      // 如果之前是按噓狀態，取消按噓
       if (isLiked.value && isDisliked.value) {
         isDisliked.value = false
+        dislikesCount.value = Math.max(0, dislikesCount.value - 1)
       }
-      await loadUserInteractionStatus()
+
+      // 立即更新按讚計數
+      if (isLiked.value) {
+        likesCount.value += 1
+      } else {
+        likesCount.value = Math.max(0, likesCount.value - 1)
+      }
     } else {
       console.error('按讚失敗或響應格式異常')
     }
@@ -451,11 +489,21 @@ const toggleDislike = async () => {
     })
 
     if (response && response.data && response.data.success) {
+      // 後端返回成功，立即更新本地狀態和計數器
       isDisliked.value = !isDisliked.value
+
+      // 如果之前是按讚狀態，取消按讚
       if (isDisliked.value && isLiked.value) {
         isLiked.value = false
+        likesCount.value = Math.max(0, likesCount.value - 1)
       }
-      await loadUserInteractionStatus()
+
+      // 立即更新按噓計數
+      if (isDisliked.value) {
+        dislikesCount.value += 1
+      } else {
+        dislikesCount.value = Math.max(0, dislikesCount.value - 1)
+      }
     } else {
       console.error('按噓失敗或響應格式異常')
     }

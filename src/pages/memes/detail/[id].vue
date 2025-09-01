@@ -903,12 +903,30 @@ const loadMeme = async () => {
       meme.value = memeData
 
       // 更新統計數據 - 參考 MemeCard.vue 的處理方式
+      console.log('🔍 [MemeDetail] 開始更新統計數據，原始數據:', {
+        likes_count: memeData.likes_count,
+        like_count: memeData.like_count,
+        dislikes_count: memeData.dislikes_count,
+        dislike_count: memeData.dislike_count,
+        comments_count: memeData.comments_count,
+        comment_count: memeData.comment_count,
+        view_count: memeData.view_count,
+        views: memeData.views,
+      })
+
       likesCount.value = memeData.likes_count || memeData.like_count || 0
       dislikesCount.value =
         memeData.dislikes_count || memeData.dislike_count || 0
       commentsCount.value =
         memeData.comments_count || memeData.comment_count || 0
       viewCount.value = memeData.view_count || memeData.views || 0
+
+      console.log('🔍 [MemeDetail] 統計數據更新完成:', {
+        likesCount: likesCount.value,
+        dislikesCount: dislikesCount.value,
+        commentsCount: commentsCount.value,
+        viewCount: viewCount.value,
+      })
 
       // 記錄瀏覽
       await recordView()
@@ -1019,9 +1037,16 @@ const loadUserInteractionStatus = async () => {
     // 獲取最新的統計資料（參考 MemeCard.vue）
     try {
       const memeResponse = await memeService.get(memeId.value)
+
       if (memeResponse.data) {
         // 處理可能的嵌套數據結構
-        const memeData = memeResponse.data.data || memeResponse.data
+        let memeData = memeResponse.data
+        if (
+          memeResponse.data.data &&
+          typeof memeResponse.data.data === 'object'
+        ) {
+          memeData = memeResponse.data.data
+        }
 
         // 更新統計數據
         const newLikesCount = memeData.likes_count || memeData.like_count || 0
@@ -1217,18 +1242,45 @@ const toggleLike = async () => {
   if (!requireLogin(userStore, toast)) return
 
   try {
+    console.log('🔍 [MemeDetail] 開始按讚操作，當前計數:', {
+      likesCount: likesCount.value,
+      dislikesCount: dislikesCount.value,
+      isLiked: isLiked.value,
+    })
+
     await likeService.toggle({
       meme_id: memeId.value,
       type: 'meme',
       user_id: userStore.userId,
     })
 
+    console.log('🔍 [MemeDetail] 按讚成功，開始更新狀態...')
+
+    // 後端返回成功，立即更新本地狀態和計數器
     isLiked.value = !isLiked.value
+
+    // 如果之前是按噓狀態，取消按噓
     if (isLiked.value && isDisliked.value) {
       isDisliked.value = false
+      dislikesCount.value = Math.max(0, dislikesCount.value - 1)
     }
 
-    await loadUserInteractionStatus()
+    // 立即更新按讚計數
+    if (isLiked.value) {
+      likesCount.value += 1
+    } else {
+      likesCount.value = Math.max(0, likesCount.value - 1)
+    }
+
+    console.log('🔍 [MemeDetail] 狀態和計數更新後:', {
+      isLiked: isLiked.value,
+      isDisliked: isDisliked.value,
+      likesCount: likesCount.value,
+      dislikesCount: dislikesCount.value,
+    })
+
+    // 不需要重新載入統計資料，避免覆蓋本地更新
+    // await loadUserInteractionStatus()
   } catch (error) {
     console.error('按讚操作失敗:', error)
     toast.add({
@@ -1244,18 +1296,45 @@ const toggleDislike = async () => {
   if (!requireLogin(userStore, toast)) return
 
   try {
+    console.log('🔍 [MemeDetail] 開始按噓操作，當前計數:', {
+      likesCount: likesCount.value,
+      dislikesCount: dislikesCount.value,
+      isDisliked: isDisliked.value,
+    })
+
     await dislikeService.toggle({
       meme_id: memeId.value,
       type: 'meme',
       user_id: userStore.userId,
     })
 
+    console.log('🔍 [MemeDetail] 按噓成功，開始更新狀態...')
+
+    // 後端返回成功，立即更新本地狀態和計數器
     isDisliked.value = !isDisliked.value
+
+    // 如果之前是按讚狀態，取消按讚
     if (isDisliked.value && isLiked.value) {
       isLiked.value = false
+      likesCount.value = Math.max(0, likesCount.value - 1)
     }
 
-    await loadUserInteractionStatus()
+    // 立即更新按噓計數
+    if (isDisliked.value) {
+      dislikesCount.value += 1
+    } else {
+      dislikesCount.value = Math.max(0, dislikesCount.value - 1)
+    }
+
+    console.log('🔍 [MemeDetail] 狀態和計數更新後:', {
+      isLiked: isLiked.value,
+      isDisliked: isDisliked.value,
+      likesCount: likesCount.value,
+      dislikesCount: dislikesCount.value,
+    })
+
+    // 不需要重新載入統計資料，避免覆蓋本地更新
+    // await loadUserInteractionStatus()
   } catch (error) {
     console.error('按噓操作失敗:', error)
     toast.add({

@@ -3,7 +3,7 @@
   <div class="w-full max-w-full space-y-12 page-scroll">
     <!-- 首頁標題與搜尋/上傳 -->
     <VortexBackground
-      content-class="top-0 left-0 overflow-hidden"
+      content-class="top-0 left-0"
       container-class="w-full"
       :particle-count="700"
       :rangeY="300"
@@ -36,9 +36,11 @@
           @click="$router.push('/memes/all')"
         />
       </div>
-      <div class="relative top-20 left-0 z-10 py-12 flex justify-center">
+      <div
+        class="relative w-full h-[680px] -top-10 left-0 z-10 flex items-center justify-center"
+      >
         <div
-          class="w-2xl h-auto rounded-lg overflow-hidden scale-up scroll-scale-up"
+          class="w-2xl max-w-full h-auto rounded-lg overflow-hidden scale-up scroll-scale-up"
         >
           <img
             src="https://res.cloudinary.com/dkhexh4fp/image/upload/v1756655459/vZ9MbIJ3MzY_yxp12o.png"
@@ -136,9 +138,9 @@
     </div>
 
     <!-- 廣告 -->
-    <div v-if="!isVipUser" class="flex justify-center items-center my-8">
+    <!-- <div v-if="!isVipUser" class="flex justify-center items-center my-8">
       <AdInline />
-    </div>
+    </div> -->
 
     <!-- 公告欄 -->
     <div
@@ -1121,12 +1123,13 @@ const initGSAPAnimations = () => {
       scrollTrigger: {
         trigger: '.scroll-scale-up',
         scroller,
-        start: 'top 45%',
+        start: 'top 25%',
         end: 'bottom 0%',
         scrub: 1,
+        markers: true,
       },
-      scale: 1.4677,
-      transform: 'translateY(15%)',
+      width: '1024px',
+      transform: 'translateY(20%)',
       duration: 1,
     })
 
