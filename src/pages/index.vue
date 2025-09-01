@@ -4,9 +4,9 @@
     <!-- 首頁標題與搜尋/上傳 -->
     <VortexBackground
       content-class="top-0 left-0 overflow-hidden"
-      container-class="min-h-screen w-full"
+      container-class="w-full"
       :particle-count="700"
-      :rangeY="400"
+      :rangeY="300"
       :base-hue="220"
       :base-speed="0.0"
       :range-speed="1.5"

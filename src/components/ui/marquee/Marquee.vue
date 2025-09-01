@@ -2,7 +2,7 @@
   <div
     :class="
       cn(
-        'group flex overflow-hidden p-2 [--duration:40s] [--gap:1rem] [gap:var(--gap)]',
+        'group flex overflow-hidden p-2 [--gap:1rem] [gap:var(--gap)]',
         vertical ? 'flex-col' : 'flex-row',
         $props.class,
       )
@@ -17,12 +17,15 @@
           vertical
             ? 'animate-marquee-vertical flex-col'
             : 'animate-marquee flex-row',
-          pauseOnHover ? 'group-hover:[animation-play-state:paused]' : '',
         )
       "
       :style="{
         animationDirection: reverse ? 'reverse' : 'normal',
+        animationDuration: `${duration}s`,
+        animationPlayState: isPaused ? 'paused' : 'running',
       }"
+      @mouseenter="pauseOnHover && (isPaused = true)"
+      @mouseleave="pauseOnHover && (isPaused = false)"
     >
       <slot />
     </div>
@@ -31,6 +34,7 @@
 
 <script setup>
 import { cn } from '@/lib/utils'
+import { ref } from 'vue'
 
 defineProps({
   class: { type: String, required: false },
@@ -38,7 +42,10 @@ defineProps({
   pauseOnHover: { type: Boolean, required: false, default: false },
   vertical: { type: Boolean, required: false, default: false },
   repeat: { type: Number, required: false, default: 4 },
+  duration: { type: Number, required: false, default: 40 },
 })
+
+const isPaused = ref(false)
 
 // 定義組件名稱以符合多詞命名規則
 defineOptions({
@@ -48,12 +55,11 @@ defineOptions({
 
 <style scoped>
 .animate-marquee {
-  animation: marquee var(--duration) linear infinite;
-  animation-direction: reverse;
+  animation: marquee linear infinite;
 }
 
 .animate-marquee-vertical {
-  animation: marquee-vertical var(--duration) linear infinite;
+  animation: marquee-vertical linear infinite;
 }
 
 @keyframes marquee {

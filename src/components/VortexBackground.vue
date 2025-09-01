@@ -1,5 +1,9 @@
 <template>
-  <div :class="cn('relative h-full w-full', props.containerClass)">
+  <div
+    :class="
+      cn('relative h-screen w-full overflow-hidden', props.containerClass)
+    "
+  >
     <div
       ref="containerRef"
       class="absolute inset-0 z-0 flex size-full items-center justify-center"
@@ -7,7 +11,7 @@
       <canvas ref="canvasRef"></canvas>
     </div>
 
-    <div :class="cn('relative z-10', props.contentClass)">
+    <div :class="cn('relative top-0 left-0 z-10', props.contentClass)">
       <slot />
     </div>
   </div>
