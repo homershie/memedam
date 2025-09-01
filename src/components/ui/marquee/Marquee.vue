@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils'
 
 defineProps({
   class: { type: String, required: false },
@@ -38,7 +38,12 @@ defineProps({
   pauseOnHover: { type: Boolean, required: false, default: false },
   vertical: { type: Boolean, required: false, default: false },
   repeat: { type: Number, required: false, default: 4 },
-});
+})
+
+// 定義組件名稱以符合多詞命名規則
+defineOptions({
+  name: 'MarqueeComponent',
+})
 </script>
 
 <style scoped>

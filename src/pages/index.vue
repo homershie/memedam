@@ -73,19 +73,66 @@
       </div>
     </VortexBackground>
 
-    <!-- 贊助用戶橫條 -->
-    <div class="mb-4 px-4 py-16 flex flex-col items-center gap-8 lg:px-32">
-      <h3 class="text-center">特別感謝請站長喝飲料的乾爹和乾媽！</h3>
+    <!-- 贊助用戶銘謝 -->
+    <div
+      class="relative flex h-[500px] w-full flex-col items-center justify-center overflow-hidden bg-background my-30"
+    >
+      <h2 class="mb-8 text-center">感謝抖內！</h2>
+      <!-- First Marquee -->
+      <Marquee pause-on-hover class="transition-transform duration-20s">
+        <ReviewCard
+          v-for="review in firstRow"
+          :key="review.username"
+          :img="review.img"
+          :name="review.name"
+          :username="review.username"
+          :body="review.body"
+        />
+      </Marquee>
 
-      <div class="flex flex-wrap justify-center gap-8 mt-2">
-        <div v-for="n in 11" :key="n" class="flex items-center gap-4">
-          <Avatar icon="pi pi-user" shape="circle" class="mb-1" size="large" />
-          <div class="text-xs">
-            <h6>使用者名稱</h6>
-            <p class="">注入了100點快樂</p>
-          </div>
-        </div>
-      </div>
+      <!-- Second Marquee (reverse) -->
+      <Marquee reverse pause-on-hover class="transition-transform duration-20s">
+        <ReviewCardSlim
+          v-for="review in secondRow"
+          :key="review.username"
+          :img="review.img"
+          :name="review.name"
+          :username="review.username"
+        />
+      </Marquee>
+
+      <!-- Third Marquee -->
+      <Marquee pause-on-hover class="transition-transform duration-20s">
+        <ReviewCard
+          v-for="review in thirdRow"
+          :key="review.username"
+          :img="review.img"
+          :name="review.name"
+          :username="review.username"
+          :body="review.body"
+        />
+      </Marquee>
+
+      <!-- Fourth Marquee (reverse) -->
+      <Marquee reverse pause-on-hover class="transition-transform duration-20s">
+        <ReviewCardSlim
+          v-for="review in fourthRow"
+          :key="review.username"
+          :img="review.img"
+          :name="review.name"
+          :username="review.username"
+        />
+      </Marquee>
+
+      <!-- Left Gradient -->
+      <div
+        class="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-white dark:from-background"
+      ></div>
+
+      <!-- Right Gradient -->
+      <div
+        class="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-white dark:from-background"
+      ></div>
     </div>
 
     <!-- 廣告 -->
@@ -95,7 +142,7 @@
 
     <!-- 公告欄 -->
     <div
-      class="mb-4 px-4 py-16 flex flex-col items-center gap-4 md:px-32 lg:px-16 xl:px-32"
+      class="mb-4 px-4 py-24 flex flex-col items-center gap-4 md:px-32 lg:px-16 xl:px-32"
     >
       <div class="text-center mb-8">
         <p class="text-sm text-gray-500 mb-2">Announcements</p>
@@ -181,9 +228,9 @@
 
     <!-- 每日迷因 -->
     <div
-      class="mb-4 px-4 py-16 flex flex-col items-center gap-4 md:px-32 lg:px-16 xl:px-32"
+      class="min-h-[780px] px-4 py-16 flex flex-col justify-center items-center gap-4 md:px-32 lg:px-16 xl:px-32"
     >
-      <div class="text-center mb-8">
+      <div class="text-center mb-4">
         <p class="text-sm text-gray-500 mb-2">Lotttery</p>
         <h2 class="text-3xl font-bold">每日迷因</h2>
         <p class="mt-2">點擊按鈕隨機抽一個屬於你今天的迷因吧！</p>
@@ -337,6 +384,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Panel from 'primevue/panel'
 import Menu from 'primevue/menu'
 import MemeCardSlim from '@/components/MemeCardSlim.vue'
+import Marquee from '@/components/ui/marquee/Marquee.vue'
 import tagService from '@/services/tagService'
 import recommendationService from '@/services/recommendationService'
 import userService from '@/services/userService'
@@ -351,6 +399,7 @@ import announcementService from '@/services/announcementService'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { nextTick } from 'vue'
+import ReviewCardSlim from '@/components/ui/marquee/ReviewCardSlim.vue'
 gsap.registerPlugin(ScrollTrigger)
 // 除錯用：掛到 window
 window._gsap = gsap
@@ -360,6 +409,90 @@ const router = useRouter()
 const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
+
+// Reviews資料
+const reviews = [
+  {
+    name: '麥克雞塊',
+    username: '@mac55688',
+    body: '如果我贊助了60元，那迷因典就多了60元。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=mac55688',
+  },
+  {
+    name: '稻撤露庫',
+    username: '@backdrive',
+    body: '不小心中了樂透來分紅！',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=backdrive',
+  },
+  {
+    name: '騎山豬上學',
+    username: '@juniorace',
+    body: '今天老闆發獎金。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=juniorace',
+  },
+  {
+    name: '潔西卡',
+    username: '@jessieca',
+    body: '不要跟別人說，其實我上班都在偷看迷因典。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=jessieca',
+  },
+  {
+    name: '哲學家',
+    username: '@philosopher',
+    body: '在我思考存在的意義的時候，發現意義其實並不重要。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=philosopher',
+  },
+  {
+    name: '馬克吐溫',
+    username: '@marktwain',
+    body: '絕不要和愚蠢的人爭論，他們會把你拖到他們那樣的水平，然後回擊你。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=marktwain',
+  },
+  {
+    name: '夜貓子',
+    username: '@nightowl',
+    body: '凌晨滑到停不下來，乾脆斗內一下。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=nightowl',
+  },
+  {
+    name: '皮卡丘',
+    username: '@pikapika',
+    body: '皮卡！皮卡！（翻譯：支持迷因典！）',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pikapika',
+  },
+  {
+    name: '咖啡成癮',
+    username: '@coffeelover',
+    body: '少喝一杯星巴克，多支持一點迷因典。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=coffeelover',
+  },
+  {
+    name: '火箭隊',
+    username: '@teamrocket',
+    body: '為了支持迷因典，向錢錢發射！',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=teamrocket',
+  },
+  {
+    name: '隔壁老王',
+    username: '@laowang',
+    body: '我贊助只是因為偷Wi-Fi有點心虛。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=laowang',
+  },
+  {
+    name: '小熊維尼',
+    username: '@poohbear',
+    body: '贊助完記得給我一罐蜂蜜。',
+    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=poohbear',
+  },
+]
+
+// 將 reviews 分成四排
+const chunkSize = Math.ceil(reviews.length / 4)
+
+const firstRow = ref(reviews.slice(0, chunkSize))
+const secondRow = ref(reviews.slice(chunkSize, chunkSize * 2))
+const thirdRow = ref(reviews.slice(chunkSize * 2, chunkSize * 3))
+const fourthRow = ref(reviews.slice(chunkSize * 3, chunkSize * 4))
 
 // VIP 用戶判定
 const isVipUser = computed(() => {
@@ -816,7 +949,7 @@ const getDailyMeme = async () => {
   dailyMemeButtonDisabled.value = true
   dailyMemeButtonText.value = '抽取中...'
   dailyMemeButtonIcon.value = 'pi pi-spin pi-spinner'
-  dailyMemeButtonSeverity.value = 'warning'
+  dailyMemeButtonSeverity.value = 'warn'
 
   try {
     dailyMemeLoading.value = true
@@ -901,7 +1034,7 @@ const getDailyMeme = async () => {
       // 更新按鈕狀態
       dailyMemeButtonText.value = '今日已抽取'
       dailyMemeButtonIcon.value = 'pi pi-check'
-      dailyMemeButtonSeverity.value = 'success'
+      dailyMemeButtonSeverity.value = 'primary'
 
       toast.add({
         severity: 'success',
@@ -952,26 +1085,7 @@ const handleOAuthCallbackOnMount = async () => {
     await handleOAuthCallback(route, router, userStore, toast)
   }
 }
-// 這三個比較，能快速判斷是不是「兩份」GSAP/ScrollTrigger
-console.log(
-  'window.gsap exists?',
-  !!window.gsap,
-  'version=',
-  window.gsap && window.gsap.version,
-)
-console.log(
-  'window.ScrollTrigger exists?',
-  !!window.ScrollTrigger,
-  'version=',
-  window.ScrollTrigger && window.ScrollTrigger.version,
-)
 
-// 比較物件身分（true 表示同一份；false 表示不同實例）
-console.log('gsap instance identical?', window.gsap === window._gsap)
-console.log(
-  'ScrollTrigger instance identical?',
-  window.ScrollTrigger === window._st,
-)
 // GSAP 動畫初始化
 const initGSAPAnimations = () => {
   // 確保 DOM 已經渲染完成
@@ -1012,7 +1126,7 @@ const initGSAPAnimations = () => {
         scrub: 1,
       },
       scale: 1.4677,
-      transform: 'translateY(30%)',
+      transform: 'translateY(15%)',
       duration: 1,
     })
 

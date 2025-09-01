@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"
+    class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 overflow-y-auto"
   >
     <div class="max-w-md mx-auto text-center space-y-8 p-6">
       <!-- 404 圖示 -->

@@ -1,11 +1,11 @@
 <template>
   <figure
-    class="relative w-64 cursor-pointer overflow-hidden rounded-xl border border-gray-950/[.1] bg-gray-950/[.01] p-4 hover:bg-gray-950/[.05] dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
+    class="relative w-64 cursor-pointer rounded-xl border border-gray-950/[.1] bg-gray-950/[.01] p-4 hover:bg-gray-950/[.05] dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
   >
     <div class="flex flex-row items-center gap-2">
       <img
         :src="img"
-        class="rounded-full border border-surface-100 dark:border-surface-900"
+        class="rounded-full border border-surface-200 dark:border-surface-800"
         width="32"
         height="32"
         alt=""
@@ -19,7 +19,6 @@
         }}</small>
       </div>
     </div>
-    <p class="mt-2 text-sm!">{{ body }}</p>
   </figure>
 </template>
 
@@ -28,6 +27,5 @@ defineProps({
   img: { type: String, required: true },
   name: { type: String, required: true },
   username: { type: String, required: true },
-  body: { type: String, required: true },
 })
 </script>
