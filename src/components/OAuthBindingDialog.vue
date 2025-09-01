@@ -434,6 +434,7 @@ const startBinding = async () => {
       }, 500)
 
       // 後備關閉計時器：若未在期限內收到回調，主視窗顯示錯誤並關閉小窗
+      // 增加超時時間到 10 秒，避免網路延遲導致的超時
       fallbackTimeout.value = setTimeout(() => {
         if (authWindow.value && !authWindow.value.closed) {
           try {
@@ -444,7 +445,8 @@ const startBinding = async () => {
         }
         const friendly = mapBindErrorMessage(
           props.provider,
-          receivedError.value || '未收到授權回調，可能綁定失敗。',
+          receivedError.value ||
+            '未收到授權回調，可能綁定失敗。請檢查網路連接或稍後重試。',
         )
         error.value = friendly
         emit('binding-error', friendly)
@@ -455,13 +457,13 @@ const startBinding = async () => {
           life: 6000,
         })
         closeDialog()
-      }, 3000)
+      }, 10000)
 
       toast.add({
         severity: 'info',
         summary: '授權視窗已開啟',
-        detail: `請在新視窗中完成 ${props.providerName} 帳戶授權`,
-        life: 5000,
+        detail: `請在新視窗中完成 ${props.providerName} 帳戶授權。如果視窗沒有自動開啟，請檢查瀏覽器是否阻止了彈出視窗。`,
+        life: 8000,
       })
     } else {
       console.error('後端響應中沒有 authUrl:', response.data)
