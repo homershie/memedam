@@ -3413,6 +3413,8 @@ const saveSettings = async () => {
   }
 
   try {
+    console.log('準備同步隱私權設定到伺服器:', consent)
+
     // 同步到後端
     await privacyConsentService.createConsent({
       necessary: consent.necessary,
@@ -3422,24 +3424,47 @@ const saveSettings = async () => {
       consentSource: 'settings',
     })
 
+    // 更新本地儲存
+    localStorage.setItem('privacy-consent', JSON.stringify(consent))
+    currentConsent.value = consent
+
     toast.add({
       severity: 'success',
       summary: '設定已同步',
       detail: '隱私設定已成功同步到伺服器',
       life: 3000,
     })
+
+    console.log('隱私權設定同步成功')
   } catch (error) {
-    console.error('隱私設定同步失敗:', error)
+    console.error('隱私設定同步失敗:', {
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    })
+
+    // 根據錯誤類型提供不同的錯誤訊息
+    let errorDetail = '隱私設定同步失敗，但已儲存在本地'
+
+    if (error.message === '認證失敗，請重新登入') {
+      errorDetail = '認證已過期，請重新登入後再試'
+    } else if (error.message === '伺服器暫時無法處理請求，請稍後再試') {
+      errorDetail = '伺服器暫時無法處理請求，請稍後再試'
+    } else if (error.message === '資料格式錯誤，請檢查設定值') {
+      errorDetail = '資料格式錯誤，請檢查設定值'
+    }
+
     toast.add({
       severity: 'error',
       summary: '同步失敗',
-      detail: '隱私設定同步失敗，但已儲存在本地',
-      life: 3000,
+      detail: errorDetail,
+      life: 5000,
     })
-  }
 
-  localStorage.setItem('privacy-consent', JSON.stringify(consent))
-  currentConsent.value = consent
+    // 即使同步失敗，也要儲存到本地
+    localStorage.setItem('privacy-consent', JSON.stringify(consent))
+    currentConsent.value = consent
+  }
 }
 
 // 格式化日期
