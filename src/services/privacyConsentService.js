@@ -11,7 +11,7 @@ class PrivacyConsentService {
    * @param {string} consentData.consentSource - 同意來源 (initial, settings, reconsent)
    * @returns {Promise} API 回應
    */
-  async createConsent(consentData) {
+  async createConsent(consentData, retryCount = 0) {
     try {
       console.log('準備發送隱私權同意資料:', consentData)
 
@@ -40,6 +40,7 @@ class PrivacyConsentService {
         statusText: error.response?.statusText,
         data: error.response?.data,
         requestData: consentData,
+        retryCount,
       })
 
       // 如果是認證錯誤，提供更明確的訊息
@@ -47,7 +48,19 @@ class PrivacyConsentService {
         throw new Error('認證失敗，請重新登入')
       }
 
-      // 如果是伺服器錯誤，提供重試建議
+      // 如果是伺服器錯誤，嘗試重試
+      if (error.response?.status >= 500 && retryCount < 2) {
+        console.log(`伺服器錯誤，嘗試重試 (${retryCount + 1}/3)...`)
+
+        // 延遲重試，避免立即重試
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (retryCount + 1)),
+        )
+
+        return this.createConsent(consentData, retryCount + 1)
+      }
+
+      // 如果是伺服器錯誤且已重試完畢，提供重試建議
       if (error.response?.status >= 500) {
         throw new Error('伺服器暫時無法處理請求，請稍後再試')
       }
@@ -65,8 +78,38 @@ class PrivacyConsentService {
    * 獲取當前有效的同意設定
    * @returns {Promise} API 回應
    */
-  async getCurrentConsent() {
-    return apiService.http.get('/api/privacy-consent/current')
+  async getCurrentConsent(retryCount = 0) {
+    try {
+      const response = await apiService.http.get('/api/privacy-consent/current')
+      return response
+    } catch (error) {
+      console.error('獲取當前同意設定失敗:', {
+        error: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        retryCount,
+      })
+
+      // 如果是認證錯誤，直接拋出
+      if (error.response?.status === 401) {
+        throw error
+      }
+
+      // 如果是伺服器錯誤，嘗試重試
+      if (error.response?.status >= 500 && retryCount < 2) {
+        console.log(`獲取同意設定伺服器錯誤，嘗試重試 (${retryCount + 1}/3)...`)
+
+        // 延遲重試
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (retryCount + 1)),
+        )
+
+        return this.getCurrentConsent(retryCount + 1)
+      }
+
+      // 重試完畢或非伺服器錯誤，拋出錯誤
+      throw error
+    }
   }
 
   /**
