@@ -23,7 +23,7 @@
     </div>
 
     <!-- 主要內容 -->
-    <div v-else-if="meme" class="mx-auto w-6xl px-4 py-6">
+    <div v-else-if="meme" class="mx-auto max-w-6xl px-4 py-6">
       <!-- 標題區域 -->
       <div class="flex items-start justify-between mb-6">
         <div class="flex-1">
@@ -95,9 +95,15 @@
           />
         </div>
       </div>
-
       <Divider class="my-6" />
 
+      <!-- 出處資訊卡 -->
+      <SourceCard
+        v-if="source"
+        :source="source"
+        :scene="scene"
+        :from-source="fromSource"
+      />
       <!-- 廣告 -->
       <!-- <div v-if="!isVipUser" class="flex justify-center items-center my-8">
         <AdInlineDetail />
@@ -209,6 +215,22 @@
               <p class="text-surface-700 leading-relaxed">{{ meme.content }}</p>
             </div>
 
+            <!-- 引用來源（文章參考來源，來自 meme.sources） -->
+            <div v-if="sources && sources.length" class="mt-6">
+              <h4 class="text-lg font-bold text-surface-900 mb-2">引用來源</h4>
+              <div
+                v-for="citation in sources"
+                :key="citation._id || citation.url || citation.name"
+              >
+                <a
+                  :href="citation.url"
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  >{{ citation.name || citation.url }}</a
+                >
+              </div>
+            </div>
+
             <!-- 廣告 -->
             <!-- <div
               v-if="!isVipUser"
@@ -216,14 +238,6 @@
             >
               <AdInlineDetail />
             </div> -->
-
-            <!-- 出處資訊卡 -->
-            <SourceCard
-              v-if="source"
-              :source="source"
-              :scene="scene"
-              :from-source="fromSource"
-            />
 
             <!-- 互動按鈕 -->
             <div class="flex items-center justify-between mt-6 pt-6 border-t">
@@ -627,6 +641,14 @@ const canEdit = computed(() => {
 })
 
 const shareOptions = computed(() => getShareOptions())
+
+// 文章引用與參考來源（與迷因來源卡片 `source` 不同）
+const sources = computed(() => {
+  const list = meme.value?.sources
+  return Array.isArray(list)
+    ? list.filter((item) => item && (item.name || item.url))
+    : []
+})
 
 // 渲染 TipTap JSON 內容
 const renderTipTapContent = (content) => {
