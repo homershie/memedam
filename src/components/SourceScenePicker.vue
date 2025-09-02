@@ -642,6 +642,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useUserStore } from '@/stores/userStore'
 import sourceService from '@/services/sourceService'
 import sceneService from '@/services/sceneService'
 import { slugify, validateSlug, isReservedSlug } from '@/utils/slugify'
@@ -664,6 +665,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const toast = useToast()
+const userStore = useUserStore()
 
 // 狀態
 const sourceSearchText = ref('')
@@ -1111,6 +1113,7 @@ const createSource = async () => {
       tags: (newSource.value.tags || [])
         .map((t) => (t || '').toLowerCase().trim())
         .filter((t) => t),
+      created_by: userStore.userId,
     }
 
     const { data } = await sourceService.create(payload)
@@ -1192,6 +1195,7 @@ const createScene = async () => {
       start_time: newScene.value.start_time || undefined,
       end_time: newScene.value.end_time || undefined,
       images: newScene.value.images.filter((img) => img),
+      created_by: userStore.userId,
     }
 
     const { data } = await sceneService.create(payload)
