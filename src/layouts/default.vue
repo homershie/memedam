@@ -243,15 +243,15 @@
                   <router-link
                     to="/terms"
                     class="text-sm hover:underline p-0! mr-2"
-                    >條款</router-link
+                    >條款 Terms of Service</router-link
                   ><router-link
                     to="/privacy"
                     class="text-sm hover:underline p-0! mr-2"
-                    >隱私權</router-link
+                    >隱私權 Privacy Policy</router-link
                   ><a href="/dmca" class="text-sm hover:underline p-0! mr-2"
                     >DMCA</a
                   ><a href="/dsar" class="text-sm hover:underline p-0! mr-2"
-                    >資料請求</a
+                    >資料請求 DSAR</a
                   >
                 </div>
                 <div class="text-sm dark:text-surface-300">

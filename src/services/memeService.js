@@ -110,6 +110,10 @@ export default {
   get(id) {
     return apiService.http.get(`/api/memes/${id}`)
   },
+  // 新增：使用 bundle API 取得迷因及相關資料
+  getBundle(idOrSlug, params = {}) {
+    return apiService.http.get(`/api/memes/${idOrSlug}/bundle`, { params })
+  },
   update(id, data) {
     return apiService.httpAuth.put(`/api/memes/${id}`, data)
   },
@@ -243,5 +247,10 @@ export default {
       params,
       responseType: 'blob',
     })
+  },
+
+  // 新增：根據來源查詢迷因
+  getBySource(sourceId, params = {}) {
+    return apiService.http.get(`/api/memes/by-source/${sourceId}`, { params })
   },
 }

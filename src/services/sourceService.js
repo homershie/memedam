@@ -17,7 +17,10 @@ export default {
   get(id) {
     return apiService.http.get(`/api/sources/${id}`)
   },
-
+  // 新增：使用 slug 取得來源
+  getBySlug(slug) {
+    return apiService.http.get(`/api/sources/${slug}`)
+  },
   // 取得來源的片段列表
   getScenes(sourceId, params = {}) {
     return apiService.http.get(`/api/scenes/source/${sourceId}`, { params })

@@ -24,6 +24,22 @@
 
     <!-- 主要內容 -->
     <div v-else-if="meme" class="mx-auto w-6xl px-4 py-6">
+      <!-- 麵包屑導航 -->
+      <Breadcrumb :home="breadcrumbHome" :model="breadcrumbItems" class="mb-6">
+        <template #item="{ item }">
+          <router-link
+            v-if="item.url"
+            :to="item.url"
+            class="hover:text-primary-600 transition-colors"
+          >
+            {{ item.label }}
+          </router-link>
+          <span v-else class="text-surface-800 font-medium">{{
+            item.label
+          }}</span>
+        </template>
+      </Breadcrumb>
+
       <!-- 標題區域 -->
       <div class="flex items-start justify-between mb-6">
         <div class="flex-1">
@@ -97,11 +113,6 @@
       </div>
 
       <Divider class="my-6" />
-
-      <!-- 廣告 -->
-      <!-- <div v-if="!isVipUser" class="flex justify-center items-center my-8">
-        <AdInlineDetail />
-      </div> -->
 
       <!-- 使用 float 實現維基百科式文繞圖效果 -->
       <div class="relative">
@@ -208,14 +219,6 @@
             <div v-else-if="meme.content" class="prose max-w-none">
               <p class="text-surface-700 leading-relaxed">{{ meme.content }}</p>
             </div>
-
-            <!-- 廣告 -->
-            <!-- <div
-              v-if="!isVipUser"
-              class="flex justify-center items-center my-8"
-            >
-              <AdInlineDetail />
-            </div> -->
 
             <!-- 出處資訊卡 -->
             <SourceCard
@@ -350,40 +353,6 @@
               />
             </div>
           </div>
-
-          <!-- 版本歷史 -->
-          <!-- <div
-            id="versions"
-            class="bg-white rounded-lg shadow p-6 dark:bg-surface-800"
-          >
-            <h2 class="text-xl font-bold text-surface-900 mb-4">版本歷史</h2>
-            <div v-if="versions.length > 0" class="space-y-3">
-              <div
-                v-for="version in versions"
-                :key="version._id"
-                class="flex items-center justify-between py-3 border-b last:border-b-0"
-              >
-                <div class="flex-1">
-                  <div class="font-medium">
-                    {{ version.description || '更新內容' }}
-                  </div>
-                  <div class="text-sm text-surface-600">
-                    {{ formatDate(version.created_at) }} by
-                    {{ version.editor?.username || '系統' }}
-                  </div>
-                </div>
-                <Button
-                  label="查看"
-                  size="small"
-                  severity="secondary"
-                  @click="viewVersion"
-                />
-              </div>
-            </div>
-            <div v-else class="text-center py-4 text-surface-500">
-              <p>目前沒有版本歷史記錄</p>
-            </div>
-          </div> -->
         </div>
 
         <!-- 清除浮動 -->
@@ -468,6 +437,7 @@ import OverlayPanel from 'primevue/overlaypanel'
 import Dialog from 'primevue/dialog'
 import ReportDialog from '@/components/ReportDialog.vue'
 import Paginator from 'primevue/paginator'
+import Breadcrumb from 'primevue/breadcrumb'
 
 // 自定義組件
 import CommentForm from '@/components/CommentForm.vue'
@@ -487,7 +457,6 @@ import memeVersionService from '@/services/memeVersionService'
 import viewService from '@/services/viewService'
 import sidebarService from '@/services/sidebarService'
 import recommendationService from '@/services/recommendationService'
-// import AdInlineDetail from '@/components/AdInlineDetail.vue'
 
 // 工具函數
 import { getId, getMemeId } from '@/utils/dataUtils'
@@ -509,6 +478,27 @@ const tags = ref([])
 const comments = ref([])
 const relatedMemes = ref([])
 const versions = ref([])
+
+// 麵包屑相關
+const breadcrumbHome = ref({
+  icon: 'pi pi-home',
+  url: '/',
+})
+
+const breadcrumbItems = computed(() => {
+  if (!meme.value) return []
+
+  return [
+    {
+      label: '迷因',
+      url: '/memes/all',
+    },
+    {
+      label: meme.value.title,
+      url: null, // 當前頁面，不設連結
+    },
+  ]
+})
 
 // 互動狀態
 const isLiked = ref(false)
@@ -548,18 +538,13 @@ const shareMenuRef = ref(null)
 // 桌面版判斷
 const isDesktop = ref(false)
 
-// VIP 用戶判定
-// const isVipUser = computed(() => {
-//   return userStore.role === 'vip'
-// })
-
 // 檢查螢幕尺寸
 const checkScreenSize = () => {
   isDesktop.value = window.innerWidth >= 1024 // lg breakpoint
 }
 
 // 計算屬性
-const memeId = computed(() => route.params.id)
+const memeId = computed(() => route.params.slug)
 
 const authorName = computed(() => {
   if (!meme.value?.author) return '匿名用戶'
@@ -570,7 +555,6 @@ const authorName = computed(() => {
 
 const shortPublishedTime = computed(() => {
   if (!meme.value) return ''
-  // 優先使用 modified_at，如果沒有則使用 created_at
   let time =
     meme.value.modified_at ||
     meme.value.modifiedAt ||
@@ -585,7 +569,6 @@ const shortPublishedTime = computed(() => {
 
 const lastUpdatedTime = computed(() => {
   if (!meme.value) return ''
-  // 優先使用 modified_at，如果沒有則使用 updated_at
   let time =
     meme.value.modified_at ||
     meme.value.modifiedAt ||
@@ -1450,31 +1433,11 @@ const onPageChange = (event) => {
   loadComments()
 }
 
-// 版本相關
-// const viewVersion = () => {
-//   // TODO: 實作版本查看功能
-//   toast.add({
-//     severity: 'info',
-//     summary: '功能開發中',
-//     detail: '版本查看功能即將推出',
-//     life: 3000,
-//   })
-// }
-
-// const formatDate = (dateString) => {
-//   if (!dateString) return ''
-//   let time = dateString
-//   if (typeof time === 'object' && time.$date) {
-//     time = time.$date
-//   }
-//   return new Date(time).toLocaleString('zh-TW')
-// }
-
 // 監聽路由變化
 watch(
-  () => route.params.id,
-  (newId) => {
-    if (newId) {
+  () => route.params.slug,
+  (newSlug) => {
+    if (newSlug) {
       loadMeme()
     }
   },
@@ -1496,7 +1459,7 @@ const recordPageLeave = () => {
   // 檢查是否從迷因詳情頁面進入
   const wasOnMemeDetailPage = pageEnterRoute.value?.includes('/memes/detail/')
   const currentMemeId =
-    memeId.value || route.params.id || pageEnterRoute.value?.split('/').pop()
+    memeId.value || route.params.slug || pageEnterRoute.value?.split('/').pop()
 
   if (pageEnterTime.value && currentMemeId && wasOnMemeDetailPage) {
     const duration = Math.floor((Date.now() - pageEnterTime.value) / 1000)
@@ -1547,7 +1510,7 @@ onUnmounted(() => {
 
 <script>
 export default {
-  name: 'MemeDetailPage',
+  name: 'MemeDetailPageSlug',
 }
 </script>
 
@@ -1560,25 +1523,5 @@ meta:
 </route>
 
 <style scoped>
-/* TipTap 內容使用 Tailwind prose 類別，無需額外樣式 */
-
-/* 保留舊的 prose 樣式給非 TipTap 內容 */
-.prose {
-  max-width: none;
-}
-
-.prose p {
-  margin-bottom: 1em;
-  line-height: 1.6;
-}
-
-/* 平滑滾動 */
-html {
-  scroll-behavior: smooth;
-}
-
-/* 表格樣式 */
-table td {
-  vertical-align: top;
-}
+/* 樣式保持與原本的 [id].vue 相同 */
 </style>
