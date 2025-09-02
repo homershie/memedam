@@ -7,6 +7,11 @@ export default {
   },
 
   // 取得單一場景
+  get(id, params = {}) {
+    return apiService.http.get(`/api/scenes/${id}`, { params })
+  },
+
+  // 取得單一場景
   get(id) {
     return apiService.http.get(`/api/scenes/${id}`)
   },

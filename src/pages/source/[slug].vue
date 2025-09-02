@@ -275,10 +275,15 @@
       <!-- 場景及相關迷因 -->
       <Card class="p-4 mb-8">
         <template #title>
-          <h2 v-if="scenes.length > 0" class="mb-4">場景及相關迷因</h2>
+          <h2 v-if="scenesWithMemes.length > 0" class="mb-4">場景及相關迷因</h2>
         </template>
         <template #content>
-          <Panel toggleable collapsed v-for="scene in scenes" :key="scene._id">
+          <Panel
+            toggleable
+            collapsed
+            v-for="scene in scenesWithMemes"
+            :key="scene._id"
+          >
             <template #header>
               <!-- 場景 -->
 
@@ -538,6 +543,30 @@ const scenePickerValue = ref({ source_id: null, scene_id: null })
 // 計算屬性
 const sourceSlug = computed(() => route.params.slug)
 
+// 將迷因根據scene_id分組到對應場景
+const scenesWithMemes = computed(() => {
+  if (!scenes.value.length || !memes.value.length) {
+    return scenes.value.map((scene) => ({ ...scene, memes: [] }))
+  }
+
+  // 創建scene_id到迷因的映射
+  const memesBySceneId = new Map()
+  memes.value.forEach((meme) => {
+    if (meme.scene_id) {
+      if (!memesBySceneId.has(meme.scene_id)) {
+        memesBySceneId.set(meme.scene_id, [])
+      }
+      memesBySceneId.get(meme.scene_id).push(meme)
+    }
+  })
+
+  // 將迷因分配到對應的場景
+  return scenes.value.map((scene) => ({
+    ...scene,
+    memes: memesBySceneId.get(scene._id) || [],
+  }))
+})
+
 // 方法
 const getSourceTypeName = (type) => {
   const typeMap = {
@@ -698,13 +727,17 @@ const loadScenes = async () => {
     if (!source.value?._id) return
 
     const response = await sourceService.getScenes(source.value._id)
+    let sceneList = []
+
     if (response.data && response.data.success) {
-      scenes.value = response.data.data || []
+      sceneList = response.data.data || []
     } else if (response.data) {
-      scenes.value = response.data || []
+      sceneList = response.data || []
     } else {
-      scenes.value = []
+      sceneList = []
     }
+
+    scenes.value = sceneList
   } catch (error) {
     console.error('載入場景失敗:', error)
     scenes.value = []
@@ -715,13 +748,13 @@ const loadMemes = async () => {
   try {
     if (!source.value?._id) return
 
-    const params = {
+    // 使用現有的 getBySource API 獲取所有迷因
+    const response = await memeService.getBySource(source.value._id, {
       page: currentPage.value,
       limit: pageSize.value,
       sort: 'hot',
-    }
+    })
 
-    const response = await memeService.getBySource(source.value._id, params)
     if (response.data && response.data.success) {
       const data = response.data.data
       memes.value = data.memes || []
