@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-4 overflow-y-auto">
+  <div class="w-full mx-auto p-4 space-y-12 overflow-y-auto">
     <div class="max-w-2xl mx-auto text-center space-y-8 py-16">
       <!-- 錯誤圖示 -->
       <div

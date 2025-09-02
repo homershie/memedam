@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full relative">
+  <div class="w-full mx-auto space-y-12 overflow-y-auto">
     <!-- 背景圖片 -->
     <div class="w-full z-0 relative top-0 left-0 h-60 group">
       <img
