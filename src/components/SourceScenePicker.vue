@@ -334,34 +334,27 @@
         <!-- 開始時間 -->
         <div class="field">
           <label for="newSceneStartTime" class="block font-semibold mb-2">
-            開始時間（秒）
+            開始時間
           </label>
-          <InputNumber
+          <TimeInput
             id="newSceneStartTime"
             v-model="newScene.start_time"
-            placeholder="例如：120 表示 2:00"
-            class="w-full"
-            :min="0"
-            :useGrouping="false"
+            placeholder="設定開始時間"
           />
-          <small class="text-surface-500">
-            選填，場景在影片中的開始時間（秒數）
-          </small>
+          <small class="text-surface-500"> 選填，場景在影片中的開始時間 </small>
         </div>
 
         <!-- 結束時間 -->
         <div class="field">
           <label for="newSceneEndTime" class="block font-semibold mb-2">
-            結束時間（秒）
+            結束時間
           </label>
-          <InputNumber
+          <TimeInput
             id="newSceneEndTime"
             v-model="newScene.end_time"
-            placeholder="選填"
-            class="w-full"
-            :min="0"
-            :useGrouping="false"
+            placeholder="設定結束時間"
           />
+          <small class="text-surface-500"> 選填，場景在影片中的結束時間 </small>
         </div>
 
         <!-- 截圖連結 -->
@@ -432,6 +425,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Message from 'primevue/message'
+import TimeInput from './TimeInput.vue'
 
 const props = defineProps({
   modelValue: Object, // { source_id, scene_id }
