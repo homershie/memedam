@@ -60,20 +60,20 @@ const router = useRouter()
 // 方法
 const getSourceTypeName = (type) => {
   const typeMap = {
-    // 舊鍵值（向後相容）
-    movie: '電影',
-    tv: '電視劇',
-    anime: '動畫',
-    game: '遊戲',
-    book: '書籍',
-    music: '音樂',
-    other: '其他',
-    // 與 SourceScenePicker 對應
     video: '影片',
     film: '電影',
+    tv: '電視',
     ad: '廣告',
-    web: '網路影片',
+    web: '網路',
     article: '文章',
+    music: '音樂',
+    broadcast: '廣播',
+    podcast: 'Podcast',
+    game: '遊戲',
+    anime: '動畫',
+    comic: '漫畫',
+    event: '事件',
+    other: '其他',
   }
   return typeMap[type] || type
 }

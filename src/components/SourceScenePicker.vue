@@ -475,14 +475,21 @@ const newScene = ref({
   images: [],
 })
 
-// 來源類型選項
+// 來源類型選項（需與後端 enum 對應）
 const sourceTypeOptions = [
   { label: '影片', value: 'video' },
   { label: '電影', value: 'film' },
-  { label: '電視劇', value: 'tv' },
+  { label: '電視', value: 'tv' },
   { label: '廣告', value: 'ad' },
-  { label: '網路影片', value: 'web' },
+  { label: '網路', value: 'web' },
   { label: '文章', value: 'article' },
+  { label: '音樂', value: 'music' },
+  { label: '廣播', value: 'broadcast' },
+  { label: 'Podcast', value: 'podcast' },
+  { label: '遊戲', value: 'game' },
+  { label: '動畫', value: 'anime' },
+  { label: '漫畫', value: 'comic' },
+  { label: '事件', value: 'event' },
   { label: '其他', value: 'other' },
 ]
 
