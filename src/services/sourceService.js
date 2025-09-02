@@ -21,7 +21,7 @@ export default {
   getBySlug(slug) {
     return apiService.http.get(`/api/sources/${slug}`)
   },
-  // 取得來源的片段列表
+  // 取得來源的場景列表
   getScenes(sourceId, params = {}) {
     return apiService.http.get(`/api/scenes/source/${sourceId}`, { params })
   },

@@ -71,7 +71,7 @@
           <Button
             v-if="userStore.isLoggedIn"
             icon="pi pi-plus"
-            label="新增片段"
+            label="新增場景"
             severity="secondary"
             size="small"
             @click="showSceneModal"
@@ -155,7 +155,7 @@
                   <span class="font-medium">{{ memes.length }}</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-surface-600">片段數量</span>
+                  <span class="text-surface-600">場景數量</span>
                   <span class="font-medium">{{ scenes.length }}</span>
                 </div>
                 <div v-if="source.year" class="flex justify-between">
@@ -188,7 +188,7 @@
                 />
                 <Button
                   v-if="scenes.length > 0"
-                  label="查看片段時間線"
+                  label="查看場景時間線"
                   icon="pi pi-clock"
                   severity="secondary"
                   class="w-full"
@@ -200,11 +200,11 @@
         </div>
       </div>
 
-      <!-- 片段時間線 -->
+      <!-- 場景時間線 -->
       <div v-if="scenes.length > 0" id="scenes" class="mb-8">
         <Card class="shadow-sm">
           <template #title>
-            <h2 class="text-xl font-bold text-surface-900">片段時間線</h2>
+            <h2 class="text-xl font-bold text-surface-900">場景時間線</h2>
           </template>
           <template #content>
             <div class="space-y-4">
@@ -245,7 +245,7 @@
                   </div>
                 </div>
                 <Button
-                  label="查看片段"
+                  label="查看場景"
                   icon="pi pi-external-link"
                   severity="secondary"
                   size="small"
@@ -372,19 +372,19 @@
       </div>
     </Dialog>
 
-    <!-- 新增片段模態框 -->
+    <!-- 新增場景模態框 -->
     <Dialog
       v-model:visible="showSceneDialog"
-      header="新增片段"
+      header="新增場景"
       :style="{ width: '600px' }"
       :modal="true"
     >
       <div class="space-y-4">
         <p class="text-surface-600">
-          您可以為這個出處新增片段，包括時間碼、引用內容等。
+          您可以為這個出處新增場景，包括時間碼、引用內容等。
         </p>
         <Button
-          label="前往新增片段頁面"
+          label="前往新增場景頁面"
           icon="pi pi-external-link"
           severity="primary"
           @click="navigateToSceneCreate"
@@ -531,7 +531,7 @@ const loadScenes = async () => {
       scenes.value = response.data.data || response.data || []
     }
   } catch (error) {
-    console.error('載入片段失敗:', error)
+    console.error('載入場景失敗:', error)
     scenes.value = []
   }
 }
@@ -565,11 +565,11 @@ const navigateToMeme = (meme) => {
 }
 
 const viewScene = (_scene) => {
-  // TODO: 實作片段查看功能
+  // TODO: 實作場景查看功能
   toast.add({
     severity: 'info',
     summary: '功能開發中',
-    detail: '片段查看功能即將推出',
+    detail: '場景查看功能即將推出',
     life: 3000,
   })
 }
@@ -611,11 +611,11 @@ const navigateToSuggestion = () => {
 
 const navigateToSceneCreate = () => {
   showSceneDialog.value = false
-  // TODO: 導向新增片段頁面
+  // TODO: 導向新增場景頁面
   toast.add({
     severity: 'info',
     summary: '功能開發中',
-    detail: '新增片段功能即將推出',
+    detail: '新增場景功能即將推出',
     life: 3000,
   })
 }
@@ -657,7 +657,7 @@ export default {
 <route lang="yaml">
 meta:
   title: '出處詳情'
-  description: '查看出處的詳細資訊、片段時間線和相關迷因。'
+  description: '查看出處的詳細資訊、場景時間線和相關迷因。'
   login: ''
   admin: false
 </route>
