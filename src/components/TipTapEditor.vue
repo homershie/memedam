@@ -761,7 +761,20 @@ const editor = useEditor({
   onUpdate: ({ editor }) => {
     // 根據 outputJson 屬性決定輸出格式
     const content = props.outputJson ? editor.getJSON() : editor.getHTML()
-    emit('update:modelValue', content)
+
+    // 檢查內容是否真的發生變化，避免無限循環
+    if (props.outputJson) {
+      const currentJson = props.modelValue
+      const isSame = JSON.stringify(content) === JSON.stringify(currentJson)
+      if (!isSame) {
+        emit('update:modelValue', content)
+      }
+    } else {
+      const currentHtml = props.modelValue || ''
+      if (content !== currentHtml) {
+        emit('update:modelValue', content)
+      }
+    }
   },
   editorProps: {
     attributes: {
@@ -788,12 +801,23 @@ watch(
       const currentJson = editor.value.getJSON()
       const isSame = JSON.stringify(currentJson) === JSON.stringify(newValue)
       if (!isSame) {
-        editor.value.commands.setContent(newValue || null, false)
+        // 使用 setTimeout 避免在同一個更新週期中觸發 onUpdate
+        setTimeout(() => {
+          if (editor.value) {
+            editor.value.commands.setContent(newValue || null, false)
+          }
+        }, 0)
       }
     } else {
-      const isSame = editor.value.getHTML() === newValue
-      if (!isSame) {
-        editor.value.commands.setContent(newValue || '', false)
+      const currentHtml = editor.value.getHTML()
+      const newHtml = newValue || ''
+      if (currentHtml !== newHtml) {
+        // 使用 setTimeout 避免在同一個更新週期中觸發 onUpdate
+        setTimeout(() => {
+          if (editor.value) {
+            editor.value.commands.setContent(newHtml, false)
+          }
+        }, 0)
       }
     }
   },
