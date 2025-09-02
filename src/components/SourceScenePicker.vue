@@ -169,7 +169,7 @@
       v-model:visible="showCreateSourceDialog"
       modal
       header="新增來源作品"
-      :style="{ width: '500px' }"
+      :style="{ width: '720px' }"
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
     >
       <div class="space-y-4">
@@ -247,20 +247,106 @@
           </small>
         </div>
 
-        <!-- 年份 -->
+        <!-- 別名 -->
         <div class="field">
-          <label for="newSourceYear" class="block font-semibold mb-2">
-            年份
-          </label>
-          <InputNumber
-            id="newSourceYear"
-            v-model="newSource.year"
-            placeholder="例如：2024"
-            class="w-full"
-            :min="1900"
-            :max="new Date().getFullYear() + 1"
-            :useGrouping="false"
-          />
+          <label class="block font-semibold mb-2">別名/其他譯名</label>
+          <div class="space-y-2">
+            <div
+              v-for="(title, index) in newSource.alt_titles"
+              :key="index"
+              class="flex gap-2"
+            >
+              <InputText
+                v-model="newSource.alt_titles[index]"
+                placeholder="輸入別名..."
+                class="flex-1"
+              />
+              <Button
+                icon="pi pi-times"
+                severity="danger"
+                text
+                @click="removeAltTitle(index)"
+              />
+            </div>
+            <Button
+              icon="pi pi-plus"
+              label="新增別名"
+              severity="secondary"
+              size="small"
+              @click="addAltTitle"
+            />
+          </div>
+        </div>
+
+        <!-- 縮圖 -->
+        <div class="field">
+          <label class="block font-semibold mb-2">縮圖/海報</label>
+          <div class="space-y-2">
+            <div
+              v-for="(thumb, index) in newSource.thumbnails"
+              :key="index"
+              class="flex gap-2"
+            >
+              <InputText
+                v-model="newSource.thumbnails[index]"
+                placeholder="圖片 URL"
+                class="flex-1"
+              />
+              <Button
+                icon="pi pi-times"
+                severity="danger"
+                text
+                @click="removeThumbnail(index)"
+              />
+            </div>
+            <Button
+              icon="pi pi-plus"
+              label="新增縮圖"
+              severity="secondary"
+              size="small"
+              @click="addThumbnail"
+            />
+          </div>
+        </div>
+
+        <!-- 年份 / 國家 -->
+        <div class="field">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="newSourceYear" class="block font-semibold mb-2">
+                年份
+              </label>
+              <InputNumber
+                id="newSourceYear"
+                v-model="newSource.year"
+                placeholder="例如：2024"
+                class="w-full"
+                :min="1800"
+                :max="new Date().getFullYear() + 10"
+                :useGrouping="false"
+              />
+            </div>
+            <div>
+              <label
+                for="newSourceOriginCountry"
+                class="block font-semibold mb-2"
+              >
+                來源國家/地區
+              </label>
+              <Dropdown
+                id="newSourceOriginCountry"
+                v-model="newSource.origin_country"
+                :options="countryOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="選擇國家/地區"
+                class="w-full"
+                appendTo="body"
+                :filter="true"
+                filterPlaceholder="搜尋國家..."
+              />
+            </div>
+          </div>
         </div>
 
         <!-- 簡介 -->
@@ -275,6 +361,150 @@
             rows="3"
             class="w-full"
           />
+        </div>
+
+        <!-- 背景說明 -->
+        <div class="field">
+          <label for="newSourceContext" class="block font-semibold mb-2">
+            背景/補充說明
+          </label>
+          <Textarea
+            id="newSourceContext"
+            v-model="newSource.context"
+            placeholder="與作品相關的背景、爭議或影響..."
+            rows="3"
+            class="w-full"
+          />
+        </div>
+
+        <!-- 創作者 -->
+        <div class="field">
+          <label class="block font-semibold mb-2">創作者</label>
+          <div class="space-y-2">
+            <div
+              v-for="(creator, index) in newSource.creators"
+              :key="index"
+              class="grid grid-cols-2 gap-2 items-start"
+            >
+              <InputText
+                v-model="creator.role"
+                placeholder="角色（導演、演員...）"
+              />
+              <div class="flex gap-2">
+                <InputText
+                  v-model="creator.name"
+                  placeholder="姓名"
+                  class="flex-1"
+                />
+                <Button
+                  icon="pi pi-times"
+                  severity="danger"
+                  text
+                  @click="removeCreator(index)"
+                />
+              </div>
+            </div>
+            <Button
+              icon="pi pi-plus"
+              label="新增創作者"
+              severity="secondary"
+              size="small"
+              @click="addCreator"
+            />
+          </div>
+        </div>
+
+        <!-- 授權資訊 -->
+        <div class="field">
+          <label class="block font-semibold mb-2">授權</label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <Dropdown
+                v-model="newSource.license.type"
+                :options="licenseTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="選擇授權類型"
+                class="w-full"
+                appendTo="body"
+              />
+            </div>
+            <div>
+              <InputText
+                v-model="newSource.license.notes"
+                placeholder="授權說明（選填）"
+                class="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 外部連結 -->
+        <div class="field">
+          <label class="block font-semibold mb-2">外部連結</label>
+          <div class="space-y-2">
+            <div
+              v-for="(link, index) in newSource.links"
+              :key="index"
+              class="grid grid-cols-2 gap-2 items-start"
+            >
+              <InputText
+                v-model="link.label"
+                placeholder="標籤（IMDb、官網...）"
+              />
+              <div class="flex gap-2">
+                <InputText
+                  v-model="link.url"
+                  placeholder="https://..."
+                  class="flex-1"
+                />
+                <Button
+                  icon="pi pi-times"
+                  severity="danger"
+                  text
+                  @click="removeLink(index)"
+                />
+              </div>
+            </div>
+            <Button
+              icon="pi pi-plus"
+              label="新增連結"
+              severity="secondary"
+              size="small"
+              @click="addLink"
+            />
+          </div>
+        </div>
+
+        <!-- 標籤 -->
+        <div class="field">
+          <label class="block font-semibold mb-2">標籤</label>
+          <div class="space-y-2">
+            <div
+              v-for="(tag, index) in newSource.tags"
+              :key="index"
+              class="flex gap-2"
+            >
+              <InputText
+                v-model="newSource.tags[index]"
+                placeholder="輸入標籤..."
+                class="flex-1"
+              />
+              <Button
+                icon="pi pi-times"
+                severity="danger"
+                text
+                @click="removeTag(index)"
+              />
+            </div>
+            <Button
+              icon="pi pi-plus"
+              label="新增標籤"
+              severity="secondary"
+              size="small"
+              @click="addTag"
+            />
+          </div>
         </div>
       </div>
 
@@ -457,7 +687,15 @@ const newSource = ref({
   title: '',
   slug: '',
   year: null,
+  origin_country: '',
   synopsis: '',
+  context: '',
+  alt_titles: [],
+  creators: [],
+  license: { type: null, notes: '' },
+  links: [],
+  thumbnails: [],
+  tags: [],
 })
 
 // Slug 驗證狀態
@@ -491,6 +729,223 @@ const sourceTypeOptions = [
   { label: '漫畫', value: 'comic' },
   { label: '事件', value: 'event' },
   { label: '其他', value: 'other' },
+]
+
+// 授權選項（對應後端 enum）
+const licenseTypeOptions = [
+  { label: '著作權', value: 'copyright' },
+  { label: 'CC BY', value: 'cc-by' },
+  { label: 'CC BY-SA', value: 'cc-by-sa' },
+  { label: 'CC BY-NC', value: 'cc-by-nc' },
+  { label: 'CC BY-NC-SA', value: 'cc-by-nc-sa' },
+  { label: 'CC0', value: 'cc0' },
+  { label: 'Public Domain', value: 'public-domain' },
+  { label: '其他', value: 'other' },
+]
+
+// 國家選項（英文）
+const countryOptions = [
+  { label: 'Afghanistan', value: 'Afghanistan' },
+  { label: 'Albania', value: 'Albania' },
+  { label: 'Algeria', value: 'Algeria' },
+  { label: 'Andorra', value: 'Andorra' },
+  { label: 'Angola', value: 'Angola' },
+  { label: 'Antigua and Barbuda', value: 'Antigua and Barbuda' },
+  { label: 'Argentina', value: 'Argentina' },
+  { label: 'Armenia', value: 'Armenia' },
+  { label: 'Australia', value: 'Australia' },
+  { label: 'Austria', value: 'Austria' },
+  { label: 'Azerbaijan', value: 'Azerbaijan' },
+  { label: 'Bahamas', value: 'Bahamas' },
+  { label: 'Bahrain', value: 'Bahrain' },
+  { label: 'Bangladesh', value: 'Bangladesh' },
+  { label: 'Barbados', value: 'Barbados' },
+  { label: 'Belarus', value: 'Belarus' },
+  { label: 'Belgium', value: 'Belgium' },
+  { label: 'Belize', value: 'Belize' },
+  { label: 'Benin', value: 'Benin' },
+  { label: 'Bhutan', value: 'Bhutan' },
+  { label: 'Bolivia', value: 'Bolivia' },
+  { label: 'Bosnia and Herzegovina', value: 'Bosnia and Herzegovina' },
+  { label: 'Botswana', value: 'Botswana' },
+  { label: 'Brazil', value: 'Brazil' },
+  { label: 'Brunei', value: 'Brunei' },
+  { label: 'Bulgaria', value: 'Bulgaria' },
+  { label: 'Burkina Faso', value: 'Burkina Faso' },
+  { label: 'Burundi', value: 'Burundi' },
+  { label: 'Cambodia', value: 'Cambodia' },
+  { label: 'Cameroon', value: 'Cameroon' },
+  { label: 'Canada', value: 'Canada' },
+  { label: 'Cape Verde', value: 'Cape Verde' },
+  { label: 'Central African Republic', value: 'Central African Republic' },
+  { label: 'Chad', value: 'Chad' },
+  { label: 'Chile', value: 'Chile' },
+  { label: 'China', value: 'China' },
+  { label: 'Colombia', value: 'Colombia' },
+  { label: 'Comoros', value: 'Comoros' },
+  { label: 'Congo', value: 'Congo' },
+  { label: 'Costa Rica', value: 'Costa Rica' },
+  { label: 'Croatia', value: 'Croatia' },
+  { label: 'Cuba', value: 'Cuba' },
+  { label: 'Cyprus', value: 'Cyprus' },
+  { label: 'Czech Republic', value: 'Czech Republic' },
+  {
+    label: 'Democratic Republic of the Congo',
+    value: 'Democratic Republic of the Congo',
+  },
+  { label: 'Denmark', value: 'Denmark' },
+  { label: 'Djibouti', value: 'Djibouti' },
+  { label: 'Dominica', value: 'Dominica' },
+  { label: 'Dominican Republic', value: 'Dominican Republic' },
+  { label: 'East Timor', value: 'East Timor' },
+  { label: 'Ecuador', value: 'Ecuador' },
+  { label: 'Egypt', value: 'Egypt' },
+  { label: 'El Salvador', value: 'El Salvador' },
+  { label: 'Equatorial Guinea', value: 'Equatorial Guinea' },
+  { label: 'Eritrea', value: 'Eritrea' },
+  { label: 'Estonia', value: 'Estonia' },
+  { label: 'Eswatini', value: 'Eswatini' },
+  { label: 'Ethiopia', value: 'Ethiopia' },
+  { label: 'Fiji', value: 'Fiji' },
+  { label: 'Finland', value: 'Finland' },
+  { label: 'France', value: 'France' },
+  { label: 'Gabon', value: 'Gabon' },
+  { label: 'Gambia', value: 'Gambia' },
+  { label: 'Georgia', value: 'Georgia' },
+  { label: 'Germany', value: 'Germany' },
+  { label: 'Ghana', value: 'Ghana' },
+  { label: 'Greece', value: 'Greece' },
+  { label: 'Grenada', value: 'Grenada' },
+  { label: 'Guatemala', value: 'Guatemala' },
+  { label: 'Guinea', value: 'Guinea' },
+  { label: 'Guinea-Bissau', value: 'Guinea-Bissau' },
+  { label: 'Guyana', value: 'Guyana' },
+  { label: 'Haiti', value: 'Haiti' },
+  { label: 'Honduras', value: 'Honduras' },
+  { label: 'Hungary', value: 'Hungary' },
+  { label: 'Iceland', value: 'Iceland' },
+  { label: 'India', value: 'India' },
+  { label: 'Indonesia', value: 'Indonesia' },
+  { label: 'Iran', value: 'Iran' },
+  { label: 'Iraq', value: 'Iraq' },
+  { label: 'Ireland', value: 'Ireland' },
+  { label: 'Israel', value: 'Israel' },
+  { label: 'Italy', value: 'Italy' },
+  { label: 'Ivory Coast', value: 'Ivory Coast' },
+  { label: 'Jamaica', value: 'Jamaica' },
+  { label: 'Japan', value: 'Japan' },
+  { label: 'Jordan', value: 'Jordan' },
+  { label: 'Kazakhstan', value: 'Kazakhstan' },
+  { label: 'Kenya', value: 'Kenya' },
+  { label: 'Kiribati', value: 'Kiribati' },
+  { label: 'Kuwait', value: 'Kuwait' },
+  { label: 'Kyrgyzstan', value: 'Kyrgyzstan' },
+  { label: 'Laos', value: 'Laos' },
+  { label: 'Latvia', value: 'Latvia' },
+  { label: 'Lebanon', value: 'Lebanon' },
+  { label: 'Lesotho', value: 'Lesotho' },
+  { label: 'Liberia', value: 'Liberia' },
+  { label: 'Libya', value: 'Libya' },
+  { label: 'Liechtenstein', value: 'Liechtenstein' },
+  { label: 'Lithuania', value: 'Lithuania' },
+  { label: 'Luxembourg', value: 'Luxembourg' },
+  { label: 'Madagascar', value: 'Madagascar' },
+  { label: 'Malawi', value: 'Malawi' },
+  { label: 'Malaysia', value: 'Malaysia' },
+  { label: 'Maldives', value: 'Maldives' },
+  { label: 'Mali', value: 'Mali' },
+  { label: 'Malta', value: 'Malta' },
+  { label: 'Marshall Islands', value: 'Marshall Islands' },
+  { label: 'Mauritania', value: 'Mauritania' },
+  { label: 'Mauritius', value: 'Mauritius' },
+  { label: 'Mexico', value: 'Mexico' },
+  { label: 'Micronesia', value: 'Micronesia' },
+  { label: 'Moldova', value: 'Moldova' },
+  { label: 'Monaco', value: 'Monaco' },
+  { label: 'Mongolia', value: 'Mongolia' },
+  { label: 'Montenegro', value: 'Montenegro' },
+  { label: 'Morocco', value: 'Morocco' },
+  { label: 'Mozambique', value: 'Mozambique' },
+  { label: 'Myanmar', value: 'Myanmar' },
+  { label: 'Namibia', value: 'Namibia' },
+  { label: 'Nauru', value: 'Nauru' },
+  { label: 'Nepal', value: 'Nepal' },
+  { label: 'Netherlands', value: 'Netherlands' },
+  { label: 'New Zealand', value: 'New Zealand' },
+  { label: 'Nicaragua', value: 'Nicaragua' },
+  { label: 'Niger', value: 'Niger' },
+  { label: 'Nigeria', value: 'Nigeria' },
+  { label: 'North Korea', value: 'North Korea' },
+  { label: 'North Macedonia', value: 'North Macedonia' },
+  { label: 'Norway', value: 'Norway' },
+  { label: 'Oman', value: 'Oman' },
+  { label: 'Pakistan', value: 'Pakistan' },
+  { label: 'Palau', value: 'Palau' },
+  { label: 'Panama', value: 'Panama' },
+  { label: 'Papua New Guinea', value: 'Papua New Guinea' },
+  { label: 'Paraguay', value: 'Paraguay' },
+  { label: 'Peru', value: 'Peru' },
+  { label: 'Philippines', value: 'Philippines' },
+  { label: 'Poland', value: 'Poland' },
+  { label: 'Portugal', value: 'Portugal' },
+  { label: 'Qatar', value: 'Qatar' },
+  { label: 'Romania', value: 'Romania' },
+  { label: 'Russia', value: 'Russia' },
+  { label: 'Rwanda', value: 'Rwanda' },
+  { label: 'Saint Kitts and Nevis', value: 'Saint Kitts and Nevis' },
+  { label: 'Saint Lucia', value: 'Saint Lucia' },
+  {
+    label: 'Saint Vincent and the Grenadines',
+    value: 'Saint Vincent and the Grenadines',
+  },
+  { label: 'Samoa', value: 'Samoa' },
+  { label: 'San Marino', value: 'San Marino' },
+  { label: 'Sao Tome and Principe', value: 'Sao Tome and Principe' },
+  { label: 'Saudi Arabia', value: 'Saudi Arabia' },
+  { label: 'Senegal', value: 'Senegal' },
+  { label: 'Serbia', value: 'Serbia' },
+  { label: 'Seychelles', value: 'Seychelles' },
+  { label: 'Sierra Leone', value: 'Sierra Leone' },
+  { label: 'Singapore', value: 'Singapore' },
+  { label: 'Slovakia', value: 'Slovakia' },
+  { label: 'Slovenia', value: 'Slovenia' },
+  { label: 'Solomon Islands', value: 'Solomon Islands' },
+  { label: 'Somalia', value: 'Somalia' },
+  { label: 'South Africa', value: 'South Africa' },
+  { label: 'South Korea', value: 'South Korea' },
+  { label: 'South Sudan', value: 'South Sudan' },
+  { label: 'Spain', value: 'Spain' },
+  { label: 'Sri Lanka', value: 'Sri Lanka' },
+  { label: 'Sudan', value: 'Sudan' },
+  { label: 'Suriname', value: 'Suriname' },
+  { label: 'Sweden', value: 'Sweden' },
+  { label: 'Switzerland', value: 'Switzerland' },
+  { label: 'Syria', value: 'Syria' },
+  { label: 'Taiwan', value: 'Taiwan' },
+  { label: 'Tajikistan', value: 'Tajikistan' },
+  { label: 'Tanzania', value: 'Tanzania' },
+  { label: 'Thailand', value: 'Thailand' },
+  { label: 'Togo', value: 'Togo' },
+  { label: 'Tonga', value: 'Tonga' },
+  { label: 'Trinidad and Tobago', value: 'Trinidad and Tobago' },
+  { label: 'Tunisia', value: 'Tunisia' },
+  { label: 'Turkey', value: 'Turkey' },
+  { label: 'Turkmenistan', value: 'Turkmenistan' },
+  { label: 'Tuvalu', value: 'Tuvalu' },
+  { label: 'Uganda', value: 'Uganda' },
+  { label: 'Ukraine', value: 'Ukraine' },
+  { label: 'United Arab Emirates', value: 'United Arab Emirates' },
+  { label: 'United Kingdom', value: 'United Kingdom' },
+  { label: 'United States', value: 'United States' },
+  { label: 'Uruguay', value: 'Uruguay' },
+  { label: 'Uzbekistan', value: 'Uzbekistan' },
+  { label: 'Vanuatu', value: 'Vanuatu' },
+  { label: 'Vatican City', value: 'Vatican City' },
+  { label: 'Venezuela', value: 'Venezuela' },
+  { label: 'Vietnam', value: 'Vietnam' },
+  { label: 'Yemen', value: 'Yemen' },
+  { label: 'Zambia', value: 'Zambia' },
+  { label: 'Zimbabwe', value: 'Zimbabwe' },
 ]
 
 // 搜尋來源
@@ -597,7 +1052,34 @@ const createSource = async () => {
       title: newSource.value.title,
       slug: newSource.value.slug || undefined,
       year: newSource.value.year || undefined,
+      origin_country: newSource.value.origin_country || undefined,
       synopsis: newSource.value.synopsis || undefined,
+      context: newSource.value.context || undefined,
+      alt_titles: (newSource.value.alt_titles || []).filter(
+        (s) => s && s.trim(),
+      ),
+      creators: (newSource.value.creators || [])
+        .filter((c) => (c.role && c.role.trim()) || (c.name && c.name.trim()))
+        .map((c) => ({
+          role: c.role?.trim() || undefined,
+          name: c.name?.trim() || undefined,
+        })),
+      license:
+        newSource.value.license?.type || newSource.value.license?.notes
+          ? {
+              type: newSource.value.license.type || undefined,
+              notes: newSource.value.license.notes || undefined,
+            }
+          : undefined,
+      links: (newSource.value.links || [])
+        .filter((l) => l && (l.url || l.label))
+        .map((l) => ({ label: l.label || undefined, url: l.url || undefined })),
+      thumbnails: (newSource.value.thumbnails || []).filter(
+        (u) => u && u.trim(),
+      ),
+      tags: (newSource.value.tags || [])
+        .map((t) => (t || '').toLowerCase().trim())
+        .filter((t) => t),
     }
 
     const { data } = await sourceService.create(payload)
@@ -615,7 +1097,15 @@ const createSource = async () => {
       title: '',
       slug: '',
       year: null,
+      origin_country: '',
       synopsis: '',
+      context: '',
+      alt_titles: [],
+      creators: [],
+      license: { type: null, notes: '' },
+      links: [],
+      thumbnails: [],
+      tags: [],
     }
 
     toast.add({
@@ -792,6 +1282,46 @@ const checkNewSourceSlugAvailable = async () => {
   } finally {
     newSourceSlugChecking.value = false
   }
+}
+
+// 新增/移除：別名
+const addAltTitle = () => {
+  newSource.value.alt_titles.push('')
+}
+const removeAltTitle = (index) => {
+  newSource.value.alt_titles.splice(index, 1)
+}
+
+// 新增/移除：創作者
+const addCreator = () => {
+  newSource.value.creators.push({ role: '', name: '' })
+}
+const removeCreator = (index) => {
+  newSource.value.creators.splice(index, 1)
+}
+
+// 新增/移除：外部連結
+const addLink = () => {
+  newSource.value.links.push({ label: '', url: '' })
+}
+const removeLink = (index) => {
+  newSource.value.links.splice(index, 1)
+}
+
+// 新增/移除：縮圖
+const addThumbnail = () => {
+  newSource.value.thumbnails.push('')
+}
+const removeThumbnail = (index) => {
+  newSource.value.thumbnails.splice(index, 1)
+}
+
+// 新增/移除：標籤
+const addTag = () => {
+  newSource.value.tags.push('')
+}
+const removeTag = (index) => {
+  newSource.value.tags.splice(index, 1)
 }
 
 // 格式化時間
