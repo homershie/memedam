@@ -1,3 +1,6 @@
+<!--
+  eslint-disable vue/multi-word-component-names
+-->
 <template>
   <div class="w-full mx-auto min-h-[calc(100vh-100px)] overflow-y-auto">
     <!-- 載入狀態 -->
@@ -23,7 +26,7 @@
     </div>
 
     <!-- 主要內容 -->
-    <div v-else-if="meme" class="mx-auto w-6xl px-4 py-6">
+    <div v-else-if="meme" class="mx-auto max-w-6xl px-4 py-6">
       <!-- 標題區域 -->
       <div class="flex items-start justify-between mb-6">
         <div class="flex-1">
@@ -78,14 +81,6 @@
             severity="secondary"
             size="small"
             @click="editMeme"
-          />
-          <Button
-            v-if="canEdit && isDesktop"
-            icon="pi pi-cog"
-            label="側邊欄"
-            severity="secondary"
-            size="small"
-            @click="showSidebarEditor"
           />
           <Button
             icon="pi pi-share-alt"
@@ -150,26 +145,21 @@
       <div class="relative">
         <!-- 右側側邊欄 - 使用 float，僅在大螢幕上浮動 -->
         <div
-          class="lg:float-right lg:ml-6 lg:mb-6 w-full max-w-80 lg:w-80 flex-shrink-0 space-y-6"
+          class="lg:float-right lg:ml-6 lg:mb-6 w-full lg:w-80 flex-shrink-0 space-y-6 mb-10"
         >
           <!-- 迷因資訊框 -->
-          <Card
-            class="shadow-lg border border-surface-200 dark:bg-surface-800 dark:border-surface-700"
-            v-if="!sidebarData"
-          >
+          <Card v-if="meme" class="w-full">
             <template #title>
-              <div
-                class="text-lg font-bold text-center rounded-t-lg -m-6 mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
-              >
+              <h4 class="text-center">
                 {{ meme.title }}
-              </div>
+              </h4>
             </template>
             <template #content>
               <div class="space-y-3">
                 <!-- 縮圖 -->
                 <div class="flex justify-center">
                   <div
-                    class="w-48 h-32 bg-surface-100 rounded border overflow-hidden"
+                    class="w-full bg-surface-100 rounded border overflow-hidden"
                   >
                     <img
                       v-if="meme.image_url"
@@ -186,57 +176,291 @@
                   </div>
                 </div>
 
-                <!-- 基本資訊表格 -->
-                <table class="w-full text-sm">
-                  <tbody>
-                    <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-surface-600">
-                        類型
-                      </td>
-                      <td class="py-2">{{ typeDisplayName }}</td>
-                    </tr>
-                    <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-surface-600">
-                        作者
-                      </td>
-                      <td class="py-2">{{ authorName }}</td>
-                    </tr>
-                    <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-surface-600">
-                        發布時間
-                      </td>
-                      <td class="py-2">{{ shortPublishedTime }}</td>
-                    </tr>
-                    <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-surface-600">
-                        瀏覽次數
-                      </td>
-                      <td class="py-2">{{ viewCount }}</td>
-                    </tr>
-                    <tr class="border-b">
-                      <td class="py-2 pr-2 font-medium text-surface-600">
-                        按讚
-                      </td>
-                      <td class="py-2">{{ likesCount }}</td>
-                    </tr>
-                    <tr>
-                      <td class="py-2 pr-2 font-medium text-surface-600">
-                        評論
-                      </td>
-                      <td class="py-2">{{ commentsCount }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <!-- 基本資訊 -->
+                <div class="space-y-3">
+                  <div class="flex justify-between">
+                    <span class="text-surface-600 dark:text-surface-400 flex-1"
+                      >類型</span
+                    >
+                    <span class="font-medium text-right flex-1">{{
+                      typeDisplayName
+                    }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-surface-600 dark:text-surface-400 flex-1"
+                      >作者</span
+                    >
+                    <span class="font-medium text-right flex-1">{{
+                      authorName
+                    }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-surface-600 dark:text-surface-400 flex-1"
+                      >發布時間</span
+                    >
+                    <span class="font-medium text-right flex-1">{{
+                      shortPublishedTime
+                    }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-surface-600 dark:text-surface-400 flex-1"
+                      >瀏覽次數</span
+                    >
+                    <span class="font-medium text-right flex-1">{{
+                      viewCount
+                    }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-surface-600 dark:text-surface-400 flex-1"
+                      >按讚</span
+                    >
+                    <span class="font-medium text-right flex-1">{{
+                      likesCount
+                    }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-surface-600 dark:text-surface-400 flex-1"
+                      >評論</span
+                    >
+                    <span class="font-medium text-right flex-1">{{
+                      commentsCount
+                    }}</span>
+                  </div>
+
+                  <!-- 側邊欄額外資訊 -->
+                  <div v-if="meme?.sidebar_data" class="space-y-3">
+                    <div
+                      v-if="meme.sidebar_data.category"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >類別</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.category
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.short_name"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >簡稱</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.short_name
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.long_name"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >全名</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.long_name
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="
+                        meme.sidebar_data.aliases &&
+                        meme.sidebar_data.aliases.length > 0
+                      "
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >別名</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.aliases.join('、')
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.popularity_level"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >受歡迎程度</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.popularity_level
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.cultural_context"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >網路文化背景</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.cultural_context
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="
+                        meme.sidebar_data.languages &&
+                        meme.sidebar_data.languages.length > 0
+                      "
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >語言</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.languages.join('、')
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.cultural_region"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >文化圈</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.cultural_region
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.evolution_stage"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >演變階段</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.evolution_stage
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.commercialization"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >商業化程度</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.commercialization
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="
+                        meme.sidebar_data.target_audience &&
+                        meme.sidebar_data.target_audience.length > 0
+                      "
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >目標受眾</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.target_audience.join('、')
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.emotional_impact"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >情感影響</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.emotional_impact
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="
+                        meme.sidebar_data.usage_context &&
+                        meme.sidebar_data.usage_context.length > 0
+                      "
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >使用情境</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.usage_context.join('、')
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="
+                        meme.sidebar_data.related_trends &&
+                        meme.sidebar_data.related_trends.length > 0
+                      "
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >相關趨勢</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.related_trends.join('、')
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.content_rating"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >內容分級</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.content_rating
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="meme.sidebar_data.copyright"
+                      class="flex justify-between"
+                    >
+                      <span
+                        class="text-surface-600 dark:text-surface-400 flex-1"
+                        >版權</span
+                      >
+                      <span class="font-medium text-right flex-1">{{
+                        meme.sidebar_data.copyright
+                      }}</span>
+                    </div>
+                    <!-- 自訂欄位 -->
+                    <div
+                      v-if="
+                        meme.sidebar_data.custom_fields &&
+                        meme.sidebar_data.custom_fields.length > 0
+                      "
+                    >
+                      <div
+                        v-for="field in meme.sidebar_data.custom_fields"
+                        :key="field.name"
+                        class="flex justify-between"
+                      >
+                        <span class="text-surface-600 dark:text-surface-400">{{
+                          field.name
+                        }}</span>
+                        <span class="font-medium text-right flex-1">{{
+                          field.value
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </template>
           </Card>
-
-          <!-- 自定義側邊欄 -->
-          <div
-            v-if="sidebarData"
-            class="p-4 rounded-lg shadow-sm border border-surface-200 dark:bg-surface-800 dark:border-surface-700"
-            v-html="sidebarHtml"
-          ></div>
         </div>
 
         <!-- 主要內容區域 -->
@@ -439,21 +663,6 @@
       />
     </Dialog>
 
-    <!-- 側邊欄編輯器對話框 -->
-    <Dialog
-      v-model:visible="showSidebarEditorDialog"
-      header="編輯側邊欄"
-      :style="{ width: '900px', maxHeight: '80vh' }"
-      :modal="true"
-    >
-      <SidebarEditor
-        :meme-id="memeId"
-        :initial-data="sidebarEditorData"
-        @update="onSidebarUpdate"
-        @save="onSidebarSave"
-      />
-    </Dialog>
-
     <!-- 檢舉對話框 -->
     <ReportDialog
       v-model:visible="showReportDialog"
@@ -470,6 +679,9 @@
 </template>
 
 <script setup>
+/**
+ * @name MemeDetailPageSlug
+ */
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -489,7 +701,6 @@ import Breadcrumb from 'primevue/breadcrumb'
 // 自定義組件
 import CommentForm from '@/components/CommentForm.vue'
 import CommentItem from '@/components/CommentItem.vue'
-import SidebarEditor from '@/components/SidebarEditor.vue'
 import SourceCard from '@/components/SourceCard.vue'
 import CustomTag from '@/components/CustomTag.vue'
 
@@ -503,11 +714,11 @@ import collectionService from '@/services/collectionService'
 import shareService from '@/services/shareService'
 import memeVersionService from '@/services/memeVersionService'
 import viewService from '@/services/viewService'
-import sidebarService from '@/services/sidebarService'
+
 import recommendationService from '@/services/recommendationService'
 
 // 工具函數
-import { getId, getMemeId } from '@/utils/dataUtils'
+import { getId, getMemeId, getMemeSlug } from '@/utils/dataUtils'
 import { isExternalVideoUrl, getEmbedUrl } from '@/utils/mediaUtils'
 import { getShareOptions, handlePlatformShare } from '@/utils/shareUtils'
 import { requireLogin } from '@/utils/authUtils'
@@ -569,6 +780,8 @@ const isCollected = ref(false)
 const likesCount = ref(0)
 const dislikesCount = ref(0)
 const commentsCount = ref(0)
+const collectionCount = ref(0)
+const shareCount = ref(0)
 
 // 評論相關
 const currentPage = ref(1)
@@ -576,12 +789,6 @@ const pageSize = ref(10)
 const totalComments = ref(0)
 const showCommentDialog = ref(false)
 const replyToComment = ref(null)
-
-// 側邊欄相關
-const sidebarData = ref(null)
-const sidebarHtml = ref('')
-const showSidebarEditorDialog = ref(false)
-const sidebarEditorData = ref({})
 
 // 檢舉相關
 const showReportDialog = ref(false)
@@ -606,7 +813,22 @@ const checkScreenSize = () => {
 }
 
 // 計算屬性
-const memeId = computed(() => route.params.slug)
+const memeId = computed(() => {
+  const slug = route.params.slug
+
+  // 檢查是否需要URL解碼
+  try {
+    // 如果slug包含%符號，嘗試解碼
+    if (slug.includes('%')) {
+      const decoded = decodeURIComponent(slug)
+      return decoded
+    }
+    return slug
+  } catch (error) {
+    console.error('URL decode error:', error)
+    return slug
+  }
+})
 
 const authorName = computed(() => {
   // 檢查 author_id（後端 populate 的欄位）或 author
@@ -909,6 +1131,52 @@ const renderTipTapMarks = (content) => {
     .join('')
 }
 
+// 處理 API 響應數據
+const processBundleData = async (bundleData) => {
+  // 設定迷因資料
+  meme.value = bundleData.meme
+
+  // 設定出處相關資料
+  source.value = bundleData.source || null
+  scene.value = bundleData.scene || null
+  fromSource.value = bundleData.from_source || []
+
+  // 更新統計數據
+  likesCount.value = meme.value.likes_count || meme.value.like_count || 0
+  dislikesCount.value =
+    meme.value.dislikes_count || meme.value.dislike_count || 0
+  commentsCount.value =
+    meme.value.comments_count || meme.value.comment_count || 0
+  collectionCount.value = meme.value.collection_count || 0
+  shareCount.value = meme.value.share_count || 0
+  viewCount.value = meme.value.view_count || meme.value.views || 0
+
+  // 記錄瀏覽
+  await recordView()
+
+  // 載入相關數據
+  const results = await Promise.allSettled([
+    loadTags(),
+    loadUserInteractionStatus(),
+    loadComments(),
+    loadRelatedMemes(),
+    loadVersions(),
+  ])
+
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      const services = [
+        'loadTags',
+        'loadUserInteractionStatus',
+        'loadComments',
+        'loadRelatedMemes',
+        'loadVersions',
+      ]
+      console.warn(`${services[index]} 載入失敗:`, result.reason)
+    }
+  })
+}
+
 // 載入迷因資料
 const loadMeme = async () => {
   try {
@@ -916,61 +1184,35 @@ const loadMeme = async () => {
     error.value = null
 
     // 使用 bundle API 取得迷因及相關資料
+    // 注意：這裡使用原始的slug/id值，讓後端決定如何處理
     const response = await memeService.getBundle(memeId.value, {
       include: 'scene,source,from_source',
     })
 
     if (response.data && response.data.data) {
-      const bundleData = response.data.data
-
-      // 設定迷因資料
-      meme.value = bundleData.meme
-
-      // 設定出處相關資料
-      source.value = bundleData.source || null
-      scene.value = bundleData.scene || null
-      fromSource.value = bundleData.from_source || []
-
-      // 更新統計數據
-      likesCount.value = meme.value.likes_count || meme.value.like_count || 0
-      dislikesCount.value =
-        meme.value.dislikes_count || meme.value.dislike_count || 0
-      commentsCount.value =
-        meme.value.comments_count || meme.value.comment_count || 0
-      viewCount.value = meme.value.view_count || meme.value.views || 0
-
-      // 記錄瀏覽
-      await recordView()
-
-      // 載入相關數據 - 使用 Promise.allSettled 避免單一服務失敗影響整體
-      const results = await Promise.allSettled([
-        loadTags(),
-        loadUserInteractionStatus(),
-        loadComments(),
-        loadRelatedMemes(),
-        loadVersions(),
-        loadSidebarData(),
-      ])
-
-      // 記錄失敗的服務
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          const services = [
-            'loadTags',
-            'loadUserInteractionStatus',
-            'loadComments',
-            'loadRelatedMemes',
-            'loadVersions',
-            'loadSidebarData',
-          ]
-          console.warn(`${services[index]} 載入失敗:`, result.reason)
-        }
-      })
+      await processBundleData(response.data.data)
     } else {
       error.value = '找不到該迷因'
     }
   } catch (err) {
     console.error('載入迷因失敗:', err)
+
+    // 如果是 404 錯誤，嘗試將 slug 作為 ID 重新查詢
+    if (err.response?.status === 404 && memeId.value) {
+      try {
+        const fallbackResponse = await memeService.getBundle(memeId.value, {
+          include: 'scene,source,from_source',
+        })
+
+        if (fallbackResponse.data && fallbackResponse.data.data) {
+          await processBundleData(fallbackResponse.data.data)
+          return // 成功加載，提前返回
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback 查詢也失敗:', fallbackErr)
+      }
+    }
+
     error.value =
       err.response?.status === 404 ? '找不到該迷因' : '載入失敗，請稍後再試'
   } finally {
@@ -981,14 +1223,14 @@ const loadMeme = async () => {
 // 載入標籤
 const loadTags = async () => {
   try {
-    // 統一取得 memeId，參考 MemeCard.vue 的處理方式
-    let id = memeId.value
-    if (!id) {
+    // 使用真正的數據庫ID而不是slug
+    const realId = meme.value?._id || meme.value?.id || memeId.value
+    if (!realId) {
       console.warn('迷因 ID 不存在，跳過載入標籤')
       return
     }
 
-    const response = await memeTagService.getTagsByMemeId(id)
+    const response = await memeTagService.getTagsByMemeId(realId)
 
     // 根據後端 API 回應格式處理
     if (
@@ -1014,6 +1256,9 @@ const loadUserInteractionStatus = async () => {
   try {
     if (!memeId.value) return
 
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
+
     // 檢查當前用戶的互動狀態（如果已登入）
     if (userStore.userId) {
       // 檢查按讚狀態
@@ -1021,7 +1266,7 @@ const loadUserInteractionStatus = async () => {
         const likeResponse = await likeService.getAll()
         const userLikes = likeResponse.data.filter(
           (like) =>
-            like.meme_id === memeId.value && like.user_id === userStore.userId,
+            like.meme_id === realId && like.user_id === userStore.userId,
         )
         isLiked.value = userLikes.length > 0
       } catch (error) {
@@ -1033,8 +1278,7 @@ const loadUserInteractionStatus = async () => {
         const dislikeResponse = await dislikeService.getAll()
         const userDislikes = dislikeResponse.data.filter(
           (dislike) =>
-            dislike.meme_id === memeId.value &&
-            dislike.user_id === userStore.userId,
+            dislike.meme_id === realId && dislike.user_id === userStore.userId,
         )
         isDisliked.value = userDislikes.length > 0
       } catch (error) {
@@ -1047,7 +1291,7 @@ const loadUserInteractionStatus = async () => {
 
     // 獲取最新的統計資料（參考 MemeCard.vue）
     try {
-      const memeResponse = await memeService.get(memeId.value)
+      const memeResponse = await memeService.get(realId)
 
       if (memeResponse.data) {
         // 處理可能的嵌套數據結構
@@ -1100,7 +1344,9 @@ const loadUserInteractionStatus = async () => {
 // 載入評論
 const loadComments = async () => {
   try {
-    const response = await commentService.getByMemeId(memeId.value)
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
+    const response = await commentService.getByMemeId(realId)
 
     // 參考 CommentsDialog.vue 的處理方式
     if (
@@ -1127,17 +1373,16 @@ const loadComments = async () => {
 // 載入相關迷因
 const loadRelatedMemes = async () => {
   try {
-    console.log('開始載入相關迷因，memeId:', memeId.value)
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
 
     // 使用推薦服務取得相似迷因
     const response = await recommendationService.getSimilarRecommendations(
-      memeId.value,
+      realId,
       {
         limit: 5,
       },
     )
-
-    console.log('推薦服務回應:', response)
 
     if (
       response.data &&
@@ -1150,10 +1395,7 @@ const loadRelatedMemes = async () => {
       relatedMemes.value = memesArray
         .filter((item) => getMemeId(item) !== memeId.value)
         .slice(0, 5)
-
-      console.log('設定相關迷因:', relatedMemes.value)
     } else {
-      console.log('推薦服務沒有結果，嘗試回退到標籤推薦')
       await loadFallbackRecommendations()
     }
   } catch (error) {
@@ -1177,7 +1419,6 @@ const loadFallbackRecommendations = async () => {
         relatedMemes.value = memesArray
           .filter((item) => getMemeId(item) !== memeId.value)
           .slice(0, 5)
-        console.log('回退標籤推薦結果:', relatedMemes.value)
       }
     } else {
       // 如果沒有標籤，嘗試取得最新迷因
@@ -1192,7 +1433,6 @@ const loadFallbackRecommendations = async () => {
         relatedMemes.value = memesArray
           .filter((item) => getMemeId(item) !== memeId.value)
           .slice(0, 5)
-        console.log('回退最新迷因結果:', relatedMemes.value)
       }
     }
   } catch (fallbackError) {
@@ -1204,7 +1444,9 @@ const loadFallbackRecommendations = async () => {
 // 載入版本歷史
 const loadVersions = async () => {
   try {
-    const response = await memeVersionService.getByMemeId(memeId.value)
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
+    const response = await memeVersionService.getByMemeId(realId)
     if (response.data) {
       // 處理可能的嵌套數據結構
       const versionsData = response.data.data || response.data
@@ -1221,12 +1463,13 @@ const loadVersions = async () => {
 // 記錄瀏覽
 const recordView = async () => {
   try {
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
     const viewData = {
       duration: 0, // 初始瀏覽時間，後續可以根據實際瀏覽時間更新
       referrer: document.referrer || '',
     }
-
-    const response = await viewService.recordView(memeId.value, viewData)
+    const response = await viewService.recordView(realId, viewData)
 
     if (response.data && response.data.data) {
       const { isDuplicate } = response.data.data
@@ -1240,40 +1483,15 @@ const recordView = async () => {
   }
 }
 
-// 載入側邊欄資料
-const loadSidebarData = async () => {
-  try {
-    const response = await sidebarService.getMemeSidebar(memeId.value)
-    if (response.data) {
-      sidebarData.value = response.data.data
-      sidebarHtml.value = response.data.renderedHtml
-      sidebarEditorData.value = {
-        template: response.data.template,
-        data: response.data.data,
-      }
-    }
-  } catch (error) {
-    console.error('載入側邊欄資料失敗:', error)
-    console.error('錯誤詳情:', error.response?.data || error.message)
-
-    // 檢查是否是 404 錯誤（迷因不存在）
-    if (error.response?.status === 404) {
-      console.log('迷因不存在或沒有側邊欄資料，使用預設值')
-    }
-
-    // 如果沒有側邊欄資料，使用預設值
-    sidebarData.value = null
-    sidebarHtml.value = ''
-  }
-}
-
 // 互動功能
 const toggleLike = async () => {
   if (!requireLogin(userStore, toast)) return
 
   try {
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
     await likeService.toggle({
-      meme_id: memeId.value,
+      meme_id: realId,
       type: 'meme',
       user_id: userStore.userId,
     })
@@ -1311,8 +1529,10 @@ const toggleDislike = async () => {
   if (!requireLogin(userStore, toast)) return
 
   try {
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
     await dislikeService.toggle({
-      meme_id: memeId.value,
+      meme_id: realId,
       type: 'meme',
       user_id: userStore.userId,
     })
@@ -1350,8 +1570,10 @@ const toggleCollection = async () => {
   if (!requireLogin(userStore, toast)) return
 
   try {
+    // 使用真正的數據庫ID
+    const realId = meme.value?._id || meme.value?.id || memeId.value
     await collectionService.toggle({
-      meme_id: memeId.value,
+      meme_id: realId,
       type: 'meme',
       user_id: userStore.userId,
     })
@@ -1381,7 +1603,7 @@ const navigateToTag = (tag) => {
 }
 
 const navigateToMeme = (targetMeme) => {
-  router.push(`/memes/detail/${getMemeId(targetMeme)}`)
+  router.push(`/memes/detail/${getMemeSlug(targetMeme)}`)
 }
 
 const scrollToComments = () => {
@@ -1396,7 +1618,7 @@ const showShareOptions = (event) => {
 const handleShare = async (platform) => {
   try {
     const shareData = {
-      shareUrl: `${window.location.origin}/memes/detail/${memeId.value}`,
+      shareUrl: `${window.location.origin}/memes/detail/${getMemeSlug(meme.value)}`,
       shareTitle: meme.value.title || '有趣的迷因',
       shareText: meme.value.content || '',
     }
@@ -1419,8 +1641,10 @@ const handleShare = async (platform) => {
 
     // 記錄分享行為
     if (userStore.isLoggedIn) {
+      // 使用真正的數據庫ID
+      const realId = meme.value?._id || meme.value?.id || memeId.value
       await shareService.create({
-        meme_id: memeId.value,
+        meme_id: realId,
         platform_detail: platform,
       })
     }
@@ -1437,29 +1661,7 @@ const handleShare = async (platform) => {
 
 // 其他功能
 const editMeme = () => {
-  router.push(`/memes/edit/${memeId.value}`)
-}
-
-const showSidebarEditor = () => {
-  showSidebarEditorDialog.value = true
-}
-
-const onSidebarUpdate = (data) => {
-  // 即時更新預覽
-  sidebarEditorData.value = data
-}
-
-const onSidebarSave = async (_data) => {
-  // 保存成功後更新側邊欄顯示
-  await loadSidebarData()
-  showSidebarEditorDialog.value = false
-
-  toast.add({
-    severity: 'success',
-    summary: '成功',
-    detail: '側邊欄已更新',
-    life: 3000,
-  })
+  router.push(`/memes/edit/${getMemeSlug(meme.value)}`)
 }
 
 const reportMeme = () => {
@@ -1468,11 +1670,6 @@ const reportMeme = () => {
     return
   }
   showReportDialog.value = true
-}
-
-const onReportSubmitted = (reportData) => {
-  console.log('檢舉已提交:', reportData)
-  // 可以在這裡添加額外的處理邏輯，例如更新 UI 狀態等
 }
 
 // 評論功能
@@ -1531,7 +1728,11 @@ const recordPageLeave = () => {
   // 檢查是否從迷因詳情頁面進入
   const wasOnMemeDetailPage = pageEnterRoute.value?.includes('/memes/detail/')
   const currentMemeId =
-    memeId.value || route.params.slug || pageEnterRoute.value?.split('/').pop()
+    meme.value?._id ||
+    meme.value?.id ||
+    memeId.value ||
+    route.params.slug ||
+    pageEnterRoute.value?.split('/').pop()
 
   if (pageEnterTime.value && currentMemeId && wasOnMemeDetailPage) {
     const duration = Math.floor((Date.now() - pageEnterTime.value) / 1000)
@@ -1578,12 +1779,6 @@ onUnmounted(() => {
   window.removeEventListener('beforeunload', recordPageLeave)
   window.removeEventListener('pagehide', recordPageLeave)
 })
-</script>
-
-<script>
-export default {
-  name: 'MemeDetailPageSlug',
-}
 </script>
 
 <route lang="yaml">

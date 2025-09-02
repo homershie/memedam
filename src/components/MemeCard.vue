@@ -305,7 +305,12 @@ import memeTagService from '@/services/memeTagService'
 import memeService from '@/services/memeService'
 
 // 工具函數
-import { getId, formatPublishedTime, getMemeId } from '@/utils/dataUtils'
+import {
+  getId,
+  formatPublishedTime,
+  getMemeId,
+  getMemeSlug,
+} from '@/utils/dataUtils'
 import {
   isExternalVideoUrl,
   getEmbedUrl,
@@ -321,6 +326,8 @@ const props = defineProps({
     required: true,
   },
 })
+
+const { meme } = props
 
 const emit = defineEmits(['tag-click', 'show-comments', 'deleted'])
 
@@ -787,11 +794,11 @@ const showMenu = (event) => {
 }
 
 const onEdit = () => {
-  window.location.href = `/memes/edit/${memeId.value}`
+  window.location.href = `/memes/edit/${getMemeSlug(meme)}`
 }
 
 const navigateToDetail = () => {
-  router.push(`/memes/detail/${memeId.value}`)
+  router.push(`/memes/detail/${getMemeSlug(meme)}`)
 }
 
 const showDeleteConfirm = (event) => {
@@ -830,12 +837,6 @@ const showReportDialog = () => {
     return
   }
   reportDialogVisible.value = true
-}
-
-// 處理檢舉提交
-const handleReportSubmitted = (reportData) => {
-  console.log('檢舉已提交:', reportData)
-  // 可以在這裡添加額外的處理邏輯
 }
 </script>
 

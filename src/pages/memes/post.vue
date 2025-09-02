@@ -481,6 +481,9 @@
             </Message>
           </div>
 
+          <!-- 側邊欄資訊 -->
+          <SidebarDataEditor v-model="form.sidebar_data" />
+
           <!-- 引用來源 -->
           <div class="field">
             <div class="flex items-center justify-between mb-3">
@@ -569,6 +572,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Chip from 'primevue/chip'
 import Message from 'primevue/message'
 import FileUpload from 'primevue/fileupload'
+import FloatLabel from 'primevue/floatlabel'
 
 // TipTap 編輯器
 import TipTapEditor from '@/components/TipTapEditor.vue'
@@ -576,6 +580,7 @@ import TipTapEditor from '@/components/TipTapEditor.vue'
 // 自訂元件
 import SourceScenePicker from '@/components/SourceScenePicker.vue'
 import MemeRemoteSelect from '@/components/MemeRemoteSelect.vue'
+import SidebarDataEditor from '@/components/SidebarDataEditor.vue'
 
 // API 服務
 import memeService from '@/services/memeService'
@@ -614,6 +619,25 @@ const form = reactive({
   is_variant: false,
   variant_of: null,
   cover_image: '', // 新增主圖欄位
+  sidebar_data: {
+    short_name: '',
+    long_name: '',
+    category: '二創',
+    aliases: [],
+    popularity_level: '新興',
+    cultural_context: '當代',
+    languages: ['繁體中文'],
+    cultural_region: '台灣',
+    content_rating: '適合所有年齡',
+    copyright: '不確定',
+    evolution_stage: '原始形式',
+    commercialization: '非商業',
+    target_audience: [],
+    emotional_impact: '歡樂',
+    usage_context: [],
+    related_trends: [],
+    custom_fields: [],
+  },
 })
 
 // 表單驗證錯誤
@@ -640,6 +664,9 @@ const submitError = ref('')
 const uploadedCoverImageFile = ref(null) // 新增主圖檔案狀態
 const uploadedCoverImageUrl = ref('') // 新增主圖預覽 URL
 const coverImagePreviewError = ref(false) // 新增主圖預覽錯誤狀態
+
+// 側邊欄相關狀態
+const newAlias = ref('')
 
 // Slug 相關狀態
 const user_edited_slug = ref(false)
@@ -735,18 +762,14 @@ const getYouTubeEmbedUrl = (url) => {
 
 // 標籤相關函數
 const searchTags = async (event) => {
-  console.log('🔍 searchTags 被調用, event:', event)
   const query = event.query.toLowerCase().trim()
-  console.log('🔍 查詢關鍵字:', query)
 
   if (!query || query.length < 1) {
-    console.log('🔍 查詢關鍵字為空，清除建議')
     tagSuggestions.value = []
     return
   }
 
   try {
-    console.log('🔍 發送 API 請求到後端搜尋標籤...')
     // 發送 API 請求到後端搜尋標籤
     const { data } = await tagService.getAll({
       search: query,
@@ -754,24 +777,17 @@ const searchTags = async (event) => {
       lang: 'zh', // 預設搜尋中文標籤
     })
 
-    console.log('🔍 API 回應:', data)
-
     // 解析回應資料
     const tags = data?.tags || data || []
-    console.log('🔍 解析後的標籤數量:', tags.length)
 
     // 過濾掉已選擇的標籤
     tagSuggestions.value = tags.filter(
       (tag) =>
         !selectedTags.value.some((selected) => selected.name === tag.name),
     )
-
-    console.log('🔍 過濾後的建議數量:', tagSuggestions.value.length)
   } catch (error) {
-    console.error('🔍 搜尋標籤失敗:', error)
-    console.error('🔍 錯誤詳情:', error.response?.data || error.message)
+    console.error('搜尋標籤失敗:', error)
     // 如果 API 失敗，回退到本地搜尋
-    console.log('🔍 回退到本地搜尋')
     tagSuggestions.value = Array.isArray(allTags.value)
       ? allTags.value.filter(
           (tag) =>
@@ -779,7 +795,6 @@ const searchTags = async (event) => {
             !selectedTags.value.some((selected) => selected.name === tag.name),
         )
       : []
-    console.log('🔍 本地搜尋結果數量:', tagSuggestions.value.length)
   }
 }
 
@@ -1064,6 +1079,28 @@ const resetForm = () => {
   coverImagePreviewError.value = false // 重設主圖預覽錯誤
   submitError.value = ''
 
+  // 重設側邊欄資料
+  Object.assign(form.sidebar_data, {
+    short_name: '',
+    long_name: '',
+    category: '二創',
+    aliases: [],
+    popularity_level: '新興',
+    cultural_context: '當代',
+    languages: ['繁體中文'],
+    cultural_region: '台灣',
+    content_rating: '適合所有年齡',
+    copyright: '不確定',
+    evolution_stage: '原始形式',
+    commercialization: '非商業',
+    target_audience: [],
+    emotional_impact: '歡樂',
+    usage_context: [],
+    related_trends: [],
+    custom_fields: [],
+  })
+  newAlias.value = ''
+
   Object.keys(errors).forEach((key) => (errors[key] = ''))
 }
 
@@ -1160,21 +1197,20 @@ const handleSubmit = async () => {
     const memeData = {
       ...form,
       slug: form.slug || undefined,
-      source_id: form.has_source ? form.source_id : null,
-      scene_id: form.has_source ? form.scene_id : null,
-      variant_of: form.is_variant ? form.variant_of : null,
+      source_id: form.has_source && form.source_id ? form.source_id : null,
+      scene_id: form.has_source && form.scene_id ? form.scene_id : null,
+      variant_of: form.is_variant && form.variant_of ? form.variant_of : null,
       detail_content: detailContent.value,
       detail_images: detailImages.value,
       tags_cache: tagNames,
-      // 標記為實質性修改，讓後端更新 modified_at
-      _markAsModified: true,
+      sidebar_data: form.sidebar_data, // 添加側邊欄資料
     }
 
     // 清理空字串欄位，避免後端驗證問題
     if (memeData.image_url === '') memeData.image_url = undefined
     if (memeData.video_url === '') memeData.video_url = undefined
     if (memeData.audio_url === '') memeData.audio_url = undefined
-    if (memeData.cover_image === '') memeData.cover_image = undefined
+    // 保留 cover_image 空字串，因為它是有效的欄位值
 
     // 過濾空的來源資料
     if (memeData.sources && Array.isArray(memeData.sources)) {

@@ -427,6 +427,9 @@
               </small>
             </div>
 
+            <!-- 側邊欄資訊 -->
+            <SidebarDataEditor v-model="form.sidebar_data" />
+
             <!-- 其他選項 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- NSFW 選項 -->
@@ -589,6 +592,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Chip from 'primevue/chip'
 import Message from 'primevue/message'
 import FileUpload from 'primevue/fileupload'
+import FloatLabel from 'primevue/floatlabel'
 
 // TipTap 編輯器
 import TipTapEditor from '@/components/TipTapEditor.vue'
@@ -596,6 +600,7 @@ import TipTapEditor from '@/components/TipTapEditor.vue'
 // 自訂元件
 import SourceScenePicker from '@/components/SourceScenePicker.vue'
 import MemeRemoteSelect from '@/components/MemeRemoteSelect.vue'
+import SidebarDataEditor from '@/components/SidebarDataEditor.vue'
 
 // API 服務
 import memeService from '@/services/memeService'
@@ -628,6 +633,25 @@ const form = reactive({
   scene_id: null,
   is_variant: false,
   variant_of: null,
+  sidebar_data: {
+    short_name: '',
+    long_name: '',
+    category: '二創',
+    aliases: [],
+    popularity_level: '新興',
+    cultural_context: '當代',
+    languages: ['繁體中文'],
+    cultural_region: '台灣',
+    content_rating: '適合所有年齡',
+    copyright: '不確定',
+    evolution_stage: '原始形式',
+    commercialization: '非商業',
+    target_audience: [],
+    emotional_impact: '歡樂',
+    usage_context: [],
+    related_trends: [],
+    additional_notes: '',
+  },
 })
 
 // 表單驗證錯誤
@@ -761,6 +785,31 @@ onMounted(async () => {
 
     // 設置詳細介紹圖片
     detailImages.value = meme.detail_images || []
+
+    // 設置側邊欄資料 - 創建新對象避免響應式問題
+    const defaultSidebarData = {
+      short_name: '',
+      long_name: '',
+      category: '二創',
+      aliases: [],
+      popularity_level: '新興',
+      cultural_context: '當代',
+      languages: ['繁體中文'],
+      cultural_region: '台灣',
+      content_rating: '適合所有年齡',
+      copyright: '不確定',
+      evolution_stage: '原始形式',
+      commercialization: '非商業',
+      target_audience: [],
+      emotional_impact: '歡樂',
+      usage_context: [],
+      related_trends: [],
+      custom_fields: [],
+    }
+
+    form.sidebar_data = meme.sidebar_data
+      ? { ...meme.sidebar_data }
+      : { ...defaultSidebarData }
 
     // 設置標籤
     selectedTags.value = []
@@ -1099,6 +1148,26 @@ const resetForm = () => {
     scene_id: null,
     is_variant: false,
     variant_of: null,
+    sidebar_data: {
+      short_name: '',
+      long_name: '',
+      category: '二創',
+      aliases: [],
+      first_appearance_date: '',
+      first_source: '其他',
+      origin_url: '',
+      languages: ['繁體中文'],
+      cultural_region: '台灣',
+      content_rating: '適合所有年齡',
+      copyright: '不確定',
+      evolution_stage: '原始形式',
+      commercialization: '非商業',
+      target_audience: [],
+      emotional_impact: '歡樂',
+      usage_context: [],
+      related_trends: [],
+      custom_fields: [],
+    },
   })
 
   uploadedImageUrl.value = ''
@@ -1239,6 +1308,7 @@ const handleSubmit = async () => {
       detail_content: detailContent.value,
       detail_images: detailImages.value,
       tags_cache: tagNames,
+      sidebar_data: form.sidebar_data, // 添加側邊欄資料
       // 標記為實質性修改，讓後端更新 modified_at
       _markAsModified: true,
     }

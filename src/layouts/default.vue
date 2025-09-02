@@ -688,8 +688,6 @@ const handleImageError = (event) => {
 
 // 處理隱私同意事件
 const handleConsentGiven = (consent) => {
-  console.log('用戶同意隱私政策:', consent)
-
   // 根據同意設定調整網站行為
   if (consent.analytics) {
     // 啟用分析追蹤

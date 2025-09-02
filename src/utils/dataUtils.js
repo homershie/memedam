@@ -39,3 +39,16 @@ export function getMemeId(meme) {
   }
   return id
 }
+
+/**
+ * 計算 memeSlug（統一處理，優先返回slug，fallback到id）
+ */
+export function getMemeSlug(meme) {
+  // 優先使用slug（如果存在且有效）
+  if (meme.slug && typeof meme.slug === 'string' && meme.slug.trim()) {
+    return meme.slug.trim()
+  }
+
+  // fallback到id
+  return getMemeId(meme)
+}

@@ -173,6 +173,4 @@ router.afterEach((to) => {
   }
 })
 
-console.log(routes)
-
 export default router

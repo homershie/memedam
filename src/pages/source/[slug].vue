@@ -1658,7 +1658,7 @@ const loadMemes = async () => {
 
 const navigateToMeme = (meme) => {
   const memeId = meme.slug || meme._id
-  router.push(`/memes/detail/${memeId}`)
+  router.push(`/memes/detail/${meme.slug || memeId}`)
 }
 
 // 顯示編輯來源對話框
