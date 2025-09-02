@@ -662,7 +662,8 @@ const typeOptions = [
 onMounted(async () => {
   try {
     const { data } = await tagService.getAll()
-    allTags.value = Array.isArray(data) ? data : []
+    // 正確解析後端 API 回應格式：{ tags: [...], pagination: {...} }
+    allTags.value = data?.tags && Array.isArray(data.tags) ? data.tags : []
   } catch (error) {
     console.error('載入標籤失敗:', error)
     allTags.value = [] // 確保是陣列
@@ -733,15 +734,53 @@ const getYouTubeEmbedUrl = (url) => {
 }
 
 // 標籤相關函數
-const searchTags = (event) => {
-  const query = event.query.toLowerCase()
-  tagSuggestions.value = Array.isArray(allTags.value)
-    ? allTags.value.filter(
-        (tag) =>
-          tag.name.toLowerCase().includes(query) &&
-          !selectedTags.value.some((selected) => selected.name === tag.name),
-      )
-    : []
+const searchTags = async (event) => {
+  console.log('🔍 searchTags 被調用, event:', event)
+  const query = event.query.toLowerCase().trim()
+  console.log('🔍 查詢關鍵字:', query)
+
+  if (!query || query.length < 1) {
+    console.log('🔍 查詢關鍵字為空，清除建議')
+    tagSuggestions.value = []
+    return
+  }
+
+  try {
+    console.log('🔍 發送 API 請求到後端搜尋標籤...')
+    // 發送 API 請求到後端搜尋標籤
+    const { data } = await tagService.getAll({
+      search: query,
+      limit: 20,
+      lang: 'zh', // 預設搜尋中文標籤
+    })
+
+    console.log('🔍 API 回應:', data)
+
+    // 解析回應資料
+    const tags = data?.tags || data || []
+    console.log('🔍 解析後的標籤數量:', tags.length)
+
+    // 過濾掉已選擇的標籤
+    tagSuggestions.value = tags.filter(
+      (tag) =>
+        !selectedTags.value.some((selected) => selected.name === tag.name),
+    )
+
+    console.log('🔍 過濾後的建議數量:', tagSuggestions.value.length)
+  } catch (error) {
+    console.error('🔍 搜尋標籤失敗:', error)
+    console.error('🔍 錯誤詳情:', error.response?.data || error.message)
+    // 如果 API 失敗，回退到本地搜尋
+    console.log('🔍 回退到本地搜尋')
+    tagSuggestions.value = Array.isArray(allTags.value)
+      ? allTags.value.filter(
+          (tag) =>
+            tag.name.toLowerCase().includes(query) &&
+            !selectedTags.value.some((selected) => selected.name === tag.name),
+        )
+      : []
+    console.log('🔍 本地搜尋結果數量:', tagSuggestions.value.length)
+  }
 }
 
 const addTag = () => {

@@ -679,7 +679,9 @@ onMounted(async () => {
     // 載入標籤數據
     try {
       const { data: tagData } = await tagService.getAll()
-      allTags.value = Array.isArray(tagData) ? tagData : []
+      // 正確解析後端 API 回應格式：{ tags: [...], pagination: {...} }
+      allTags.value =
+        tagData?.tags && Array.isArray(tagData.tags) ? tagData.tags : []
     } catch (tagError) {
       console.error('載入標籤失敗:', tagError)
       allTags.value = []
@@ -895,15 +897,41 @@ const getYouTubeEmbedUrl = (url) => {
 }
 
 // 標籤相關函數
-const searchTags = (event) => {
-  const query = event.query.toLowerCase()
-  tagSuggestions.value = Array.isArray(allTags.value)
-    ? allTags.value.filter(
-        (tag) =>
-          tag.name.toLowerCase().includes(query) &&
-          !selectedTags.value.some((selected) => selected.name === tag.name),
-      )
-    : []
+const searchTags = async (event) => {
+  const query = event.query.toLowerCase().trim()
+
+  if (!query || query.length < 1) {
+    tagSuggestions.value = []
+    return
+  }
+
+  try {
+    // 發送 API 請求到後端搜尋標籤
+    const { data } = await tagService.getAll({
+      search: query,
+      limit: 20,
+      lang: 'zh', // 預設搜尋中文標籤
+    })
+
+    // 解析回應資料
+    const tags = data.tags || data || []
+
+    // 過濾掉已選擇的標籤
+    tagSuggestions.value = tags.filter(
+      (tag) =>
+        !selectedTags.value.some((selected) => selected.name === tag.name),
+    )
+  } catch (error) {
+    console.error('搜尋標籤失敗:', error)
+    // 如果 API 失敗，回退到本地搜尋
+    tagSuggestions.value = Array.isArray(allTags.value)
+      ? allTags.value.filter(
+          (tag) =>
+            tag.name.toLowerCase().includes(query) &&
+            !selectedTags.value.some((selected) => selected.name === tag.name),
+        )
+      : []
+  }
 }
 
 const addTag = () => {
