@@ -26,17 +26,24 @@
     <div v-else-if="source" class="mx-auto w-6xl px-4 py-6">
       <!-- 麵包屑導航 -->
       <Breadcrumb :home="breadcrumbHome" :model="breadcrumbItems" class="mb-6">
-        <template #item="{ item }">
+        <template #item="{ item, props }">
           <router-link
             v-if="item.url"
+            v-slot="{ href, navigate }"
             :to="item.url"
-            class="hover:text-primary-600 transition-colors"
+            custom
+          >
+            <a :href="href" v-bind="props.action" @click="navigate">
+              <span class="text-primary font-semibold">{{ item.label }}</span>
+            </a>
+          </router-link>
+          <span
+            v-else
+            v-bind="props.action"
+            class="text-surface-700 dark:text-surface-0"
           >
             {{ item.label }}
-          </router-link>
-          <span v-else class="text-surface-800 font-medium">{{
-            item.label
-          }}</span>
+          </span>
         </template>
       </Breadcrumb>
 
@@ -430,10 +437,6 @@ const breadcrumbItems = computed(() => {
   if (!source.value) return []
 
   return [
-    {
-      label: '出處',
-      url: null, // 當前頁面，不設連結
-    },
     {
       label: source.value.title,
       url: null, // 當前頁面，不設連結

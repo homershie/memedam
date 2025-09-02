@@ -24,6 +24,8 @@
 
     <!-- 主要內容 -->
     <div v-else-if="meme" class="mx-auto max-w-6xl px-4 py-6">
+      <!-- 麵包屑導航 -->
+
       <!-- 標題區域 -->
       <div class="flex items-start justify-between mb-6">
         <div class="flex-1">
@@ -46,8 +48,14 @@
             <span>
               由
               <router-link
-                v-if="meme.author && (meme.author._id || meme.author.id)"
-                :to="`/users/${meme.author._id || meme.author.id}`"
+                v-if="
+                  (meme?.author_id || meme?.author) &&
+                  (meme.author_id?._id ||
+                    meme.author_id?.id ||
+                    meme.author?._id ||
+                    meme.author?.id)
+                "
+                :to="`/users/${meme.author_id?._id || meme.author_id?.id || meme.author?._id || meme.author?.id}`"
                 class="text-primary-500 hover:text-primary-700 font-medium transition-colors"
               >
                 {{ authorName }}
@@ -95,7 +103,40 @@
           />
         </div>
       </div>
-      <Divider class="my-6" />
+
+      <Divider class="my-4" />
+
+      <Breadcrumb
+        :home="breadcrumbHome"
+        :model="breadcrumbItems"
+        class="p-2 bg-transparent"
+      >
+        <template #item="{ item, props }">
+          <router-link
+            v-if="item.route"
+            v-slot="{ href, navigate }"
+            :to="item.route"
+            custom
+          >
+            <a
+              :href="href"
+              v-bind="props.action"
+              @click="navigate"
+              class="p-0! text-surface-800 dark:text-surface-100 hover:text-primary-500"
+            >
+              <span :class="[item.icon]" />
+              <span class="hover:underline">{{ item.label }}</span>
+            </a>
+          </router-link>
+          <span
+            v-else
+            v-bind="props.action"
+            class="text-surface-800 dark:text-surface-100"
+          >
+            {{ item.label }}
+          </span>
+        </template>
+      </Breadcrumb>
 
       <!-- 出處資訊卡 -->
       <SourceCard
@@ -103,6 +144,7 @@
         :source="source"
         :scene="scene"
         :from-source="fromSource"
+        class="mb-8"
       />
       <!-- 廣告 -->
       <!-- <div v-if="!isVipUser" class="flex justify-center items-center my-8">
@@ -216,19 +258,30 @@
             </div>
 
             <!-- 引用來源（文章參考來源，來自 meme.sources） -->
-            <div v-if="sources && sources.length" class="mt-6">
-              <h4 class="text-lg font-bold text-surface-900 mb-2">引用來源</h4>
-              <div
-                v-for="citation in sources"
-                :key="citation._id || citation.url || citation.name"
+            <div v-if="sources && sources.length" class="my-10">
+              <blockquote
+                class="border-l-8 border-surface-200 dark:border-surface-700 pl-4"
               >
-                <a
-                  :href="citation.url"
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  >{{ citation.name || citation.url }}</a
+                <h3>引用來源</h3>
+                <p class="mb-2">
+                  標註文章參考來源、使用到的素材，讓資料來源可考證，並且尊重智慧財產權。
+                </p>
+
+                <div
+                  v-for="(citation, index) in sources"
+                  :key="citation._id || citation.url || citation.name"
+                  class="inline-block mr-2 last:mr-0"
                 >
-              </div>
+                  {{ index + 1 }}.
+                  <a
+                    :href="citation.url"
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    class="underline p-0!"
+                    >{{ citation.name || citation.url }}</a
+                  >
+                </div>
+              </blockquote>
             </div>
 
             <!-- 廣告 -->
@@ -482,6 +535,7 @@ import OverlayPanel from 'primevue/overlaypanel'
 import Dialog from 'primevue/dialog'
 import ReportDialog from '@/components/ReportDialog.vue'
 import Paginator from 'primevue/paginator'
+import Breadcrumb from 'primevue/breadcrumb'
 
 // 自定義組件
 import CommentForm from '@/components/CommentForm.vue'
@@ -523,6 +577,44 @@ const tags = ref([])
 const comments = ref([])
 const relatedMemes = ref([])
 const versions = ref([])
+
+// 麵包屑相關
+const breadcrumbHome = ref({
+  icon: 'pi pi-home',
+  route: '/memes/all',
+})
+
+const breadcrumbItems = computed(() => {
+  if (!meme.value) return []
+
+  const items = []
+
+  // 如果有來源資訊，添加來源
+  if (source.value) {
+    items.push({
+      label: source.value.title,
+      route: source.value.slug
+        ? `/source/${source.value.slug}`
+        : `/source/${source.value._id}`,
+    })
+  }
+
+  // 如果有場景資訊，添加場景
+  if (scene.value) {
+    items.push({
+      label: scene.value.title,
+      url: null, // 場景目前沒有獨立頁面
+    })
+  }
+
+  // 添加當前迷因
+  items.push({
+    label: meme.value.title,
+    url: null, // 當前頁面，不設連結
+  })
+
+  return items
+})
 
 // 互動狀態
 const isLiked = ref(false)
@@ -576,10 +668,10 @@ const checkScreenSize = () => {
 const memeId = computed(() => route.params.id)
 
 const authorName = computed(() => {
-  if (!meme.value?.author) return '匿名用戶'
-  return (
-    meme.value.author.display_name || meme.value.author.username || '匿名用戶'
-  )
+  // 檢查 author_id（後端 populate 的欄位）或 author
+  const author = meme.value?.author_id || meme.value?.author
+  if (!author) return '匿名用戶'
+  return author.display_name || author.username || '匿名用戶'
 })
 
 const shortPublishedTime = computed(() => {
@@ -632,7 +724,9 @@ const typeDisplayName = computed(() => {
 
 const canEdit = computed(() => {
   const currentUserId = getId(userStore.userId)
-  const authorId = getId(meme.value?.author?._id || meme.value?.author?.id)
+  // 檢查 author_id（後端 populate 的欄位）或 author
+  const author = meme.value?.author_id || meme.value?.author
+  const authorId = getId(author?._id || author?.id)
   const role = userStore.role
   return (
     role === 'admin' ||
