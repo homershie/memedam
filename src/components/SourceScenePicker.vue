@@ -80,7 +80,7 @@
     <!-- Scene 選擇器（只在選擇了 Source 後顯示） -->
     <div v-if="selectedSource" class="field mt-4">
       <label class="block font-semibold mb-2">
-        選擇片段 <span class="text-surface-500">（選填）</span>
+        選擇場景 <span class="text-surface-500">（選填）</span>
       </label>
 
       <div class="flex gap-2">
@@ -90,7 +90,7 @@
           @complete="searchScenes"
           @item-select="selectScene"
           optionLabel="display"
-          placeholder="搜尋片段..."
+          placeholder="搜尋場景..."
           class="flex-1"
           :delay="300"
           appendTo="body"
@@ -124,13 +124,13 @@
         <Button
           type="button"
           icon="pi pi-plus"
-          label="新增片段"
+          label="新增場景"
           @click="showCreateSceneDialog = true"
           severity="secondary"
         />
       </div>
 
-      <!-- 已選擇的片段顯示 -->
+      <!-- 已選擇的場景顯示 -->
       <div
         v-if="selectedScene"
         class="mt-2 p-3 bg-surface-100 dark:bg-surface-800 rounded"
@@ -294,11 +294,11 @@
       </template>
     </Dialog>
 
-    <!-- 新增片段對話框 -->
+    <!-- 新增場景對話框 -->
     <Dialog
       v-model:visible="showCreateSceneDialog"
       modal
-      header="新增片段"
+      header="新增場景"
       :style="{ width: '500px' }"
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
     >
@@ -306,13 +306,14 @@
         <!-- 標題 -->
         <div class="field">
           <label for="newSceneTitle" class="block font-semibold mb-2">
-            片段標題
+            場景標題 <span class="text-primary-500">*</span>
           </label>
           <InputText
             id="newSceneTitle"
             v-model="newScene.title"
-            placeholder="選填，描述這個片段..."
+            placeholder="描述這個場景..."
             class="w-full"
+            :class="{ 'p-invalid': !newScene.title }"
           />
         </div>
 
@@ -324,7 +325,7 @@
           <Textarea
             id="newSceneQuote"
             v-model="newScene.quote"
-            placeholder="這個片段的經典台詞或文字..."
+            placeholder="這個場景的經典台詞或文字..."
             rows="2"
             class="w-full"
           />
@@ -344,7 +345,7 @@
             :useGrouping="false"
           />
           <small class="text-surface-500">
-            選填，片段在影片中的開始時間（秒數）
+            選填，場景在影片中的開始時間（秒數）
           </small>
         </div>
 
@@ -471,7 +472,7 @@ const newSourceSlugError = ref('')
 const newSourceSlugChecking = ref(false)
 let newSourceSlugCheckTimer = null
 
-// 新增片段表單
+// 新增場景表單
 const newScene = ref({
   title: '',
   quote: '',
@@ -518,7 +519,7 @@ const selectSource = (event) => {
   sourceSearchText.value = source.display
   sourceError.value = ''
 
-  // 清空片段選擇
+  // 清空場景選擇
   clearScene()
 
   // 更新父組件
@@ -533,7 +534,7 @@ const clearSource = () => {
   updateValue()
 }
 
-// 搜尋片段
+// 搜尋場景
 const searchScenes = async (event) => {
   if (!selectedSource.value) {
     sceneSuggestions.value = []
@@ -555,12 +556,12 @@ const searchScenes = async (event) => {
         scene.title || scene.quote || `場景 ${formatTime(scene.start_time)}`,
     }))
   } catch (error) {
-    console.error('搜尋片段失敗:', error)
+    console.error('搜尋場景失敗:', error)
     sceneSuggestions.value = []
   }
 }
 
-// 選擇片段
+// 選擇場景
 const selectScene = (event) => {
   const scene = event.value
   selectedScene.value = scene
@@ -568,7 +569,7 @@ const selectScene = (event) => {
   updateValue()
 }
 
-// 清除片段選擇
+// 清除場景選擇
 const clearScene = () => {
   selectedScene.value = null
   sceneSearchText.value = ''
@@ -637,7 +638,7 @@ const createSource = async () => {
   }
 }
 
-// 建立新片段
+// 建立新場景
 const createScene = async () => {
   if (!selectedSource.value) {
     toast.add({
@@ -649,12 +650,22 @@ const createScene = async () => {
     return
   }
 
+  if (!newScene.value.title) {
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: '請填寫場景標題',
+      life: 3000,
+    })
+    return
+  }
+
   creatingScene.value = true
 
   try {
     const payload = {
       source_id: selectedSource.value._id,
-      title: newScene.value.title || undefined,
+      title: newScene.value.title,
       quote: newScene.value.quote || undefined,
       start_time: newScene.value.start_time || undefined,
       end_time: newScene.value.end_time || undefined,
@@ -663,7 +674,7 @@ const createScene = async () => {
 
     const { data } = await sceneService.create(payload)
 
-    // 設定為選中的片段
+    // 設定為選中的場景
     selectedScene.value = data.data
     sceneSearchText.value =
       data.data.title ||
@@ -685,17 +696,17 @@ const createScene = async () => {
     toast.add({
       severity: 'success',
       summary: '成功',
-      detail: '片段已建立',
+      detail: '場景已建立',
       life: 3000,
     })
 
     updateValue()
   } catch (error) {
-    console.error('建立片段失敗:', error)
+    console.error('建立場景失敗:', error)
     toast.add({
       severity: 'error',
       summary: '建立失敗',
-      detail: error.response?.data?.message || '建立片段時發生錯誤',
+      detail: error.response?.data?.message || '建立場景時發生錯誤',
       life: 5000,
     })
   } finally {
