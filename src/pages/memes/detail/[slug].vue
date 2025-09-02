@@ -31,12 +31,13 @@
             {{ meme.title }}
           </h1>
           <!-- 標籤 -->
-          <div class="flex items-center space-x-2">
-            <Tag
+          <div class="flex items-center space-x-2 my-4">
+            <CustomTag
               v-for="tag in tags"
               :key="tag._id || tag.id"
-              :label="tag.name"
-              class="bg-primary-50 text-primary-700 cursor-pointer hover:bg-primary-100 transition-colors"
+              :value="tag.name"
+              severity="primary"
+              class="cursor-pointer"
               @click="navigateToTag(tag)"
             />
           </div>
@@ -477,7 +478,6 @@ import { useUserStore } from '@/stores/userStore'
 // PrimeVue 組件
 import Card from 'primevue/card'
 import Button from 'primevue/button'
-import Tag from 'primevue/tag'
 import ProgressSpinner from 'primevue/progressspinner'
 import Divider from 'primevue/divider'
 import OverlayPanel from 'primevue/overlaypanel'
@@ -491,6 +491,7 @@ import CommentForm from '@/components/CommentForm.vue'
 import CommentItem from '@/components/CommentItem.vue'
 import SidebarEditor from '@/components/SidebarEditor.vue'
 import SourceCard from '@/components/SourceCard.vue'
+import CustomTag from '@/components/CustomTag.vue'
 
 // 服務
 import memeService from '@/services/memeService'
