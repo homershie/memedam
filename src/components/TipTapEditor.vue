@@ -419,22 +419,6 @@
           </div>
         </div>
 
-        <!-- 圖片註解 -->
-        <div class="flex flex-col gap-2">
-          <label
-            for="imageAnnotation"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            圖片註解
-          </label>
-          <InputText
-            id="imageAnnotation"
-            v-model="imageAnnotation"
-            placeholder="請輸入圖片註解（選填）"
-            class="w-full"
-          />
-        </div>
-
         <!-- 圖片連結模式 -->
         <div v-if="imageType === 'url'">
           <div class="flex flex-col gap-2">
@@ -454,10 +438,7 @@
           </div>
 
           <!-- 圖片連結預覽 -->
-          <div
-            v-if="imageUrl && validateImageUrl(imageUrl)"
-            class="relative inline-block"
-          >
+          <div v-if="imageUrl" class="relative inline-block">
             <img
               :src="imageUrl"
               alt="預覽圖片"
@@ -475,6 +456,22 @@
               <i class="pi pi-trash text-white text-xl" />
             </div>
           </div>
+        </div>
+
+        <!-- 圖片註解 -->
+        <div class="flex flex-col gap-2">
+          <label
+            for="imageAnnotation"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            圖片註解
+          </label>
+          <InputText
+            id="imageAnnotation"
+            v-model="imageAnnotation"
+            placeholder="請輸入圖片註解（選填）"
+            class="w-full"
+          />
         </div>
       </div>
       <template #footer>
@@ -995,17 +992,13 @@ const switchImageType = (type) => {
   }
 }
 
-const validateImageUrl = (url) => {
-  if (!url) return true
-  const imageUrlPattern = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i
-  return imageUrlPattern.test(url)
-}
-
 const canConfirmImage = () => {
   if (imageType.value === 'upload') {
     return selectedImage.value !== null
   } else {
-    return imageUrl.value.trim() !== '' && validateImageUrl(imageUrl.value)
+    // 在 URL 模式下，只要輸入了 URL 就允許確認
+    // 讓使用者可以嘗試插入任何 URL，如果無效會在顯示時處理
+    return imageUrl.value.trim() !== ''
   }
 }
 

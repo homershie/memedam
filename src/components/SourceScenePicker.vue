@@ -733,14 +733,45 @@ const sourceTypeOptions = [
 
 // 授權選項（對應後端 enum）
 const licenseTypeOptions = [
-  { label: '著作權', value: 'copyright' },
-  { label: 'CC BY', value: 'cc-by' },
-  { label: 'CC BY-SA', value: 'cc-by-sa' },
-  { label: 'CC BY-NC', value: 'cc-by-nc' },
-  { label: 'CC BY-NC-SA', value: 'cc-by-nc-sa' },
-  { label: 'CC0', value: 'cc0' },
-  { label: 'Public Domain', value: 'public-domain' },
-  { label: '其他', value: 'other' },
+  // 版權相關
+  { label: '版權所有', value: 'copyright' },
+  { label: '版權所有 (All Rights Reserved)', value: 'all-rights-reserved' },
+
+  // 創用CC授權
+  { label: 'CC BY (姓名標示)', value: 'cc-by' },
+  { label: 'CC BY-SA (姓名標示-相同方式分享)', value: 'cc-by-sa' },
+  { label: 'CC BY-NC (姓名標示-非商業性)', value: 'cc-by-nc' },
+  {
+    label: 'CC BY-NC-SA (姓名標示-非商業性-相同方式分享)',
+    value: 'cc-by-nc-sa',
+  },
+  { label: 'CC BY-ND (姓名標示-禁止改作)', value: 'cc-by-nd' },
+  { label: 'CC BY-NC-ND (姓名標示-非商業性-禁止改作)', value: 'cc-by-nc-nd' },
+  { label: 'CC0 (公眾領域貢獻宣告)', value: 'cc0' },
+
+  // 公有領域
+  { label: '公有領域', value: 'public-domain' },
+  { label: '公有領域貢獻', value: 'public-domain-dedication' },
+
+  // 合理使用
+  { label: '合理使用', value: 'fair-use' },
+  { label: '公平使用', value: 'fair-dealing' },
+
+  // 其他常見授權
+  { label: 'MIT授權', value: 'mit' },
+  { label: 'Apache授權', value: 'apache' },
+  { label: 'GPL授權', value: 'gpl' },
+  { label: 'GPL v2', value: 'gpl-v2' },
+  { label: 'GPL v3', value: 'gpl-v3' },
+  { label: 'LGPL授權', value: 'lgpl' },
+  { label: 'BSD授權', value: 'bsd' },
+  { label: 'Mozilla公共授權', value: 'mozilla' },
+  { label: '創用CC授權', value: 'creative-commons' },
+
+  // 未知或自定義
+  { label: '其他授權', value: 'other' },
+  { label: '未知授權', value: 'unknown' },
+  { label: '自定義授權', value: 'custom' },
 ]
 
 // 國家選項（英文）
