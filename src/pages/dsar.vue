@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full mx-auto py-10 space-y-12 overflow-y-auto">
+  <div class="w-full mx-auto px-6 py-10 space-y-12 overflow-y-auto">
     <!-- 頁面標題 -->
     <div class="mb-8 max-w-4xl mx-auto">
       <h2 class="text-4xl font-bold mb-4">資料主體存取請求</h2>
@@ -209,8 +209,8 @@ const lastUpdated = ref('2025年9月')
 
 <route lang="yaml">
 meta:
-  title: '資料主體存取請求 - 迷因典'
-  description: '依 GDPR 等隱私法提交資料存取、下載、刪除或更正請求的流程與說明。'
+  title: '資料主體存取請求 (DSAR) - GDPR 隱私權'
+  description: '依 GDPR 等隱私法提交個人資料存取、下載、刪除或更正請求的完整流程說明。包含申請方式、處理時限與聯絡資訊。'
   login: false
   admin: false
 </route>

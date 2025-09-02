@@ -236,27 +236,37 @@
                 <AdSidebar />
               </div>
               <Divider /> -->
-              <div class="my-4">
-                <div class="mb-2">© 2025 迷因典 MemeDam</div>
-
-                <div class="text-xs">
-                  <router-link
-                    to="/terms"
-                    class="text-sm hover:underline p-0! mr-2"
-                    >條款 Terms of Service</router-link
+              <div class="my-4 space-y-1">
+                <div class="text-xs flex gap-2">
+                  <router-link to="/terms" class="text-sm hover:underline p-0!"
+                    >條款</router-link
                   ><router-link
                     to="/privacy"
-                    class="text-sm hover:underline p-0! mr-2"
-                    >隱私權 Privacy Policy</router-link
-                  ><a href="/dmca" class="text-sm hover:underline p-0! mr-2"
-                    >DMCA</a
-                  ><a href="/dsar" class="text-sm hover:underline p-0! mr-2"
-                    >資料請求 DSAR</a
+                    class="text-sm hover:underline p-0!"
+                    >隱私權</router-link
+                  ><a href="/dmca" class="text-sm hover:underline p-0!">DMCA</a
+                  ><a href="/dsar" class="text-sm hover:underline p-0!"
+                    >資料請求</a
                   >
+                </div>
+                <div class="text-xs">
+                  <router-link to="/terms" class="text-sm hover:underline p-0!"
+                    >Terms of Service</router-link
+                  >
+                  · <a href="/dmca" class="text-sm hover:underline p-0!">DMCA</a
+                  ><br /><router-link
+                    to="/privacy"
+                    class="text-sm hover:underline p-0!"
+                    >Privacy Policy</router-link
+                  >
+                  ·
+                  <a href="/dsar" class="text-sm hover:underline p-0!">DSAR</a>
                 </div>
                 <div class="text-sm dark:text-surface-300">
                   內容僅供娛樂，勿作真實資訊。
                 </div>
+
+                <div class="mt-4">© 2025 迷因典 MemeDam</div>
               </div>
             </template>
           </Menu>
@@ -428,27 +438,46 @@
                     <AdSidebar />
                   </div>
                   <Divider /> -->
-                  <div class="mb-10">
-                    <div class="mb-2">© 2025 迷因典 MemeDam</div>
-
-                    <div class="text-xs">
+                  <div class="mt-4 mb-10 space-y-1">
+                    <div class="text-xs flex gap-2">
                       <router-link
                         to="/terms"
-                        class="text-sm hover:underline p-0! mr-2"
+                        class="text-sm hover:underline p-0!"
                         >條款</router-link
                       ><router-link
                         to="/privacy"
-                        class="text-sm hover:underline p-0! mr-2"
+                        class="text-sm hover:underline p-0!"
                         >隱私權</router-link
-                      ><a href="/dmca" class="text-sm hover:underline p-0! mr-2"
+                      ><a href="/dmca" class="text-sm hover:underline p-0!"
                         >DMCA</a
-                      ><a href="/dsar" class="text-sm hover:underline p-0! mr-2"
+                      ><a href="/dsar" class="text-sm hover:underline p-0!"
                         >資料請求</a
+                      >
+                    </div>
+                    <div class="text-xs">
+                      <router-link
+                        to="/terms"
+                        class="text-sm hover:underline p-0!"
+                        >Terms of Service</router-link
+                      >
+                      ·
+                      <a href="/dmca" class="text-sm hover:underline p-0!"
+                        >DMCA</a
+                      ><br /><router-link
+                        to="/privacy"
+                        class="text-sm hover:underline p-0!"
+                        >Privacy Policy</router-link
+                      >
+                      ·
+                      <a href="/dsar" class="text-sm hover:underline p-0!"
+                        >DSAR</a
                       >
                     </div>
                     <div class="text-sm dark:text-surface-300">
                       內容僅供娛樂，勿作真實資訊。
                     </div>
+
+                    <div class="mt-4">© 2025 迷因典 MemeDam</div>
                   </div>
                 </template>
               </Menu>

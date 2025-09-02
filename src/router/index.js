@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import routes from 'virtual:generated-pages'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { useUserStore } from '@/stores/userStore'
-import { setPageMeta, cleanUrlParams, CANONICAL_ORIGIN } from '@/utils/seoUtils'
+import { setPageMeta, cleanUrlParams } from '@/utils/seoUtils'
 import {
   validateSponsorTransaction,
   logSponsorPageAccess,
@@ -116,8 +116,9 @@ router.afterEach((to) => {
     const rawQuery = to.query || {}
     const cleaned = cleanUrlParams(rawQuery)
 
-    // 強制使用 www 主域作為 canonical
-    const url = new URL(CANONICAL_ORIGIN + to.path)
+    // 使用當前網域作為 canonical，避免強制重新導向
+    const currentOrigin = window.location.origin
+    const url = new URL(currentOrigin + to.path)
     const searchParams = new URLSearchParams()
     Object.keys(cleaned).forEach((key) => {
       const value = cleaned[key]
@@ -153,7 +154,7 @@ router.afterEach((to) => {
 
     const robotsMeta = [...noindexPaths].some((p) => to.path.startsWith(p))
       ? 'noindex,follow'
-      : undefined
+      : 'index,follow' // 明確設定允許索引
 
     setPageMeta({
       title: to.meta?.title || baseTitle,
@@ -164,10 +165,10 @@ router.afterEach((to) => {
         title: pageTitle,
         description: to.meta?.description,
         url: canonical,
-        image: `${CANONICAL_ORIGIN}/favicon/apple-touch-icon.png`,
+        image: `${currentOrigin}/favicon/apple-touch-icon.png`,
       },
     })
-  } catch (e) {
+  } catch {
     // 靜默處理 SEO 設定錯誤，避免影響導航
   }
 })

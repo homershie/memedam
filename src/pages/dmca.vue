@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full mx-auto py-10 space-y-12 overflow-y-auto">
+  <div class="w-full mx-auto px-6 py-10 space-y-12 overflow-y-auto">
     <!-- 頁面標題 -->
     <div class="mb-8 max-w-4xl mx-auto">
       <h2 class="text-4xl font-bold mb-4">DMCA 下架程序</h2>

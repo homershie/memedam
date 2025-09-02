@@ -118,7 +118,10 @@ function addCanonicalTag(url) {
  * @returns {string} canonical URL
  */
 export function generateCanonicalUrl(basePath, params = {}, page = 1) {
-  const url = new URL(CANONICAL_ORIGIN + basePath)
+  // 使用當前網域而不是強制使用 www 主域，避免重新導向循環
+  const currentOrigin =
+    typeof window !== 'undefined' ? window.location.origin : CANONICAL_ORIGIN
+  const url = new URL(currentOrigin + basePath)
 
   // 只保留重要的查詢參數
   const importantParams = ['search', 'tags', 'type', 'status']

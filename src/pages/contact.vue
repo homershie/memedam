@@ -449,8 +449,8 @@ export default {
 
 <route lang="yaml">
 meta:
-  title: '聯絡迷因長'
-  description: '有任何合作、授權、錯誤回報或建議，歡迎透過聯絡表單與迷因長取得聯繫。'
+  title: '聯絡迷因長 - 合作、授權、錯誤回報'
+  description: '有任何合作提案、授權申請、錯誤回報或功能建議，歡迎透過聯絡表單與迷因長取得聯繫。我們會盡快回覆您的訊息。'
   login: ''
   admin: false
 </route>
