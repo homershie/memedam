@@ -1430,8 +1430,6 @@ const handleSubmit = async () => {
             life: 8000,
           })
         }
-      } else {
-        console.log('ℹ️ 標籤沒有變化，無需更新關聯')
       }
     } catch (error) {
       console.error('標籤關聯處理失敗:', error)
