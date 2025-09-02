@@ -683,6 +683,12 @@ const showCreateSceneDialog = ref(false)
 const creatingSource = ref(false)
 const creatingScene = ref(false)
 
+// 防止無限循環的狀態
+const isLoadingSource = ref(false)
+const isLoadingScene = ref(false)
+const lastLoadedSourceId = ref(null)
+const lastLoadedSceneId = ref(null)
+
 // 新增來源表單
 const newSource = ref({
   type: 'video',
@@ -1007,6 +1013,7 @@ const selectSource = (event) => {
   selectedSource.value = source
   sourceSearchText.value = source.display
   sourceError.value = ''
+  lastLoadedSourceId.value = source._id
 
   // 清空場景選擇
   clearScene()
@@ -1019,6 +1026,7 @@ const selectSource = (event) => {
 const clearSource = () => {
   selectedSource.value = null
   sourceSearchText.value = ''
+  lastLoadedSourceId.value = null
   clearScene()
   updateValue()
 }
@@ -1055,6 +1063,7 @@ const selectScene = (event) => {
   const scene = event.value
   selectedScene.value = scene
   sceneSearchText.value = scene.display
+  lastLoadedSceneId.value = scene._id
   updateValue()
 }
 
@@ -1062,6 +1071,7 @@ const selectScene = (event) => {
 const clearScene = () => {
   selectedScene.value = null
   sceneSearchText.value = ''
+  lastLoadedSceneId.value = null
   updateValue()
 }
 
@@ -1121,6 +1131,7 @@ const createSource = async () => {
     // 設定為選中的來源
     selectedSource.value = data.data
     sourceSearchText.value = `${data.data.title}${data.data.year ? ` (${data.data.year})` : ''}`
+    lastLoadedSourceId.value = data.data._id
 
     // 關閉對話框
     showCreateSourceDialog.value = false
@@ -1206,6 +1217,7 @@ const createScene = async () => {
       data.data.title ||
       data.data.quote ||
       `場景 ${formatTime(data.data.start_time)}`
+    lastLoadedSceneId.value = data.data._id
 
     // 關閉對話框
     showCreateSceneDialog.value = false
@@ -1387,65 +1399,92 @@ const updateValue = () => {
   })
 }
 
-// 監聽 props 變化
+// 監聽 props 變化 - 添加防護機制防止無限循環
 watch(
   () => props.modelValue,
   async (newVal) => {
-    if (newVal && newVal.source_id) {
+    // 防止無限循環：檢查是否正在載入中
+    if (isLoadingSource.value || isLoadingScene.value) {
+      return
+    }
+
+    // 檢查是否有實際變化
+    const currentSourceId = selectedSource.value?._id || null
+    const currentSceneId = selectedScene.value?._id || null
+    const newSourceId = newVal?.source_id || null
+    const newSceneId = newVal?.scene_id || null
+
+    // 如果沒有變化，不進行API調用
+    if (currentSourceId === newSourceId && currentSceneId === newSceneId) {
+      return
+    }
+
+    if (newVal && newSourceId) {
       // 如果有 source_id，載入來源資料
-      try {
-        // 使用認證的 API 調用
-        const response = await fetch(`/api/sources/${newVal.source_id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        })
-        const result = await response.json()
-        // 處理不同的資料結構
-        const source =
-          result.data?.source || result.source || result.data || result
+      if (lastLoadedSourceId.value !== newSourceId) {
+        isLoadingSource.value = true
+        try {
+          // 使用認證的 API 調用
+          const response = await fetch(`/api/sources/${newSourceId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          })
+          const result = await response.json()
+          // 處理不同的資料結構
+          const source =
+            result.data?.source || result.source || result.data || result
 
-        if (source) {
-          selectedSource.value = source
-          sourceSearchText.value = `${source.title}${source.year ? ` (${source.year})` : ''}`
+          if (source) {
+            selectedSource.value = source
+            sourceSearchText.value = `${source.title}${source.year ? ` (${source.year})` : ''}`
+            lastLoadedSourceId.value = newSourceId
 
-          // 如果有 scene_id，也載入場景資料
-          if (newVal.scene_id) {
-            try {
-              // 使用認證的 API 調用
-              const sceneResponse = await fetch(
-                `/api/scenes/${newVal.scene_id}`,
-                {
+            // 如果有 scene_id，也載入場景資料
+            if (newSceneId && lastLoadedSceneId.value !== newSceneId) {
+              isLoadingScene.value = true
+              try {
+                // 使用認證的 API 調用
+                const sceneResponse = await fetch(`/api/scenes/${newSceneId}`, {
                   headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                   },
-                },
-              )
-              const sceneResult = await sceneResponse.json()
-              // 處理不同的資料結構
-              const scene =
-                sceneResult.data?.scene ||
-                sceneResult.scene ||
-                sceneResult.data ||
-                sceneResult
+                })
+                const sceneResult = await sceneResponse.json()
+                // 處理不同的資料結構
+                const scene =
+                  sceneResult.data?.scene ||
+                  sceneResult.scene ||
+                  sceneResult.data ||
+                  sceneResult
 
-              if (scene) {
-                selectedScene.value = scene
-                sceneSearchText.value =
-                  scene.title ||
-                  scene.quote ||
-                  `場景 ${formatTime(scene.start_time)}`
+                if (scene) {
+                  selectedScene.value = scene
+                  sceneSearchText.value =
+                    scene.title ||
+                    scene.quote ||
+                    `場景 ${formatTime(scene.start_time)}`
+                  lastLoadedSceneId.value = newSceneId
+                }
+              } catch (sceneError) {
+                console.warn('載入場景資料失敗:', sceneError)
+                lastLoadedSceneId.value = null
+              } finally {
+                isLoadingScene.value = false
               }
-            } catch (sceneError) {
-              console.warn('載入場景資料失敗:', sceneError)
             }
           }
+        } catch (sourceError) {
+          console.warn('載入來源資料失敗:', sourceError)
+          lastLoadedSourceId.value = null
+        } finally {
+          isLoadingSource.value = false
         }
-      } catch (sourceError) {
-        console.warn('載入來源資料失敗:', sourceError)
       }
     } else {
       clearSource()
+      lastLoadedSourceId.value = null
+      lastLoadedSceneId.value = null
     }
   },
   { immediate: true },
