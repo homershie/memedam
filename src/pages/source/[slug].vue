@@ -356,7 +356,7 @@
                     class="aspect-square bg-surface-100 rounded-t-lg overflow-hidden"
                   >
                     <img
-                      v-if="meme.image_url"
+                      v-if="meme.image_url && meme.image_url.trim()"
                       :src="meme.image_url"
                       :alt="meme.title"
                       class="w-full h-full object-cover"

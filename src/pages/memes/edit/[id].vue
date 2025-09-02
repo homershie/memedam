@@ -258,7 +258,7 @@
                 </div>
 
                 <!-- 圖片預覽 -->
-                <div v-if="form.image_url || uploadedImageUrl" class="mt-3">
+                <div v-if="(form.image_url && form.image_url.trim()) || uploadedImageUrl" class="mt-3">
                   <label class="block text-sm font-medium mb-2">預覽</label>
                   <div
                     class="border rounded-lg p-2 bg-surface-50 dark:bg-surface-800"

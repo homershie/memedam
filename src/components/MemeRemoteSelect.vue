@@ -24,7 +24,10 @@
             <!-- 縮圖 -->
             <div class="meme-thumbnail flex-shrink-0">
               <img
-                v-if="slotProps.option.image_url"
+                v-if="
+                  slotProps.option.image_url &&
+                  slotProps.option.image_url.trim()
+                "
                 :src="slotProps.option.image_url"
                 :alt="slotProps.option.title"
                 class="w-16 h-16 object-cover rounded"
@@ -80,7 +83,7 @@
           <!-- 縮圖 -->
           <div class="flex-shrink-0">
             <img
-              v-if="selectedMeme.image_url"
+              v-if="selectedMeme.image_url && selectedMeme.image_url.trim()"
               :src="selectedMeme.image_url"
               :alt="selectedMeme.title"
               class="w-20 h-20 object-cover rounded"

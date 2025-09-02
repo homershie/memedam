@@ -634,7 +634,7 @@ function onFilterChange() {
         <Column header="預覽" style="min-width: 8rem">
           <template #body="{ data }">
             <img
-              v-if="data.image_url"
+              v-if="data.image_url && data.image_url.trim()"
               :src="data.image_url"
               :alt="data.title"
               class="rounded"

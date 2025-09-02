@@ -162,7 +162,7 @@
                     class="w-full bg-surface-100 rounded border overflow-hidden"
                   >
                     <img
-                      v-if="meme.image_url"
+                      v-if="meme.image_url && meme.image_url.trim()"
                       :src="meme.image_url"
                       :alt="meme.title"
                       class="w-full h-full object-cover"
@@ -202,35 +202,14 @@
                       shortPublishedTime
                     }}</span>
                   </div>
-                  <div class="flex justify-between">
-                    <span class="text-surface-600 dark:text-surface-400 flex-1"
-                      >瀏覽次數</span
-                    >
-                    <span class="font-medium text-right flex-1">{{
-                      viewCount
-                    }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-surface-600 dark:text-surface-400 flex-1"
-                      >按讚</span
-                    >
-                    <span class="font-medium text-right flex-1">{{
-                      likesCount
-                    }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-surface-600 dark:text-surface-400 flex-1"
-                      >評論</span
-                    >
-                    <span class="font-medium text-right flex-1">{{
-                      commentsCount
-                    }}</span>
-                  </div>
 
                   <!-- 側邊欄額外資訊 -->
-                  <div v-if="meme?.sidebar_data" class="space-y-3">
+                  <div
+                    v-if="meme && (meme.sidebar_data || meme.sidebar_template)"
+                    class="space-y-3"
+                  >
                     <div
-                      v-if="meme.sidebar_data.category"
+                      v-if="meme.sidebar_data?.category"
                       class="flex justify-between"
                     >
                       <span
@@ -242,7 +221,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.short_name"
+                      v-if="meme.sidebar_data?.short_name"
                       class="flex justify-between"
                     >
                       <span
@@ -254,7 +233,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.long_name"
+                      v-if="meme.sidebar_data?.long_name"
                       class="flex justify-between"
                     >
                       <span
@@ -267,7 +246,7 @@
                     </div>
                     <div
                       v-if="
-                        meme.sidebar_data.aliases &&
+                        meme.sidebar_data?.aliases &&
                         meme.sidebar_data.aliases.length > 0
                       "
                       class="flex justify-between"
@@ -281,7 +260,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.popularity_level"
+                      v-if="meme.sidebar_data?.popularity_level"
                       class="flex justify-between"
                     >
                       <span
@@ -293,7 +272,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.cultural_context"
+                      v-if="meme.sidebar_data?.cultural_context"
                       class="flex justify-between"
                     >
                       <span
@@ -306,7 +285,7 @@
                     </div>
                     <div
                       v-if="
-                        meme.sidebar_data.languages &&
+                        meme.sidebar_data?.languages &&
                         meme.sidebar_data.languages.length > 0
                       "
                       class="flex justify-between"
@@ -320,7 +299,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.cultural_region"
+                      v-if="meme.sidebar_data?.cultural_region"
                       class="flex justify-between"
                     >
                       <span
@@ -332,7 +311,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.evolution_stage"
+                      v-if="meme.sidebar_data?.evolution_stage"
                       class="flex justify-between"
                     >
                       <span
@@ -344,7 +323,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.commercialization"
+                      v-if="meme.sidebar_data?.commercialization"
                       class="flex justify-between"
                     >
                       <span
@@ -357,7 +336,7 @@
                     </div>
                     <div
                       v-if="
-                        meme.sidebar_data.target_audience &&
+                        meme.sidebar_data?.target_audience &&
                         meme.sidebar_data.target_audience.length > 0
                       "
                       class="flex justify-between"
@@ -371,7 +350,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.emotional_impact"
+                      v-if="meme.sidebar_data?.emotional_impact"
                       class="flex justify-between"
                     >
                       <span
@@ -384,7 +363,7 @@
                     </div>
                     <div
                       v-if="
-                        meme.sidebar_data.usage_context &&
+                        meme.sidebar_data?.usage_context &&
                         meme.sidebar_data.usage_context.length > 0
                       "
                       class="flex justify-between"
@@ -399,7 +378,7 @@
                     </div>
                     <div
                       v-if="
-                        meme.sidebar_data.related_trends &&
+                        meme.sidebar_data?.related_trends &&
                         meme.sidebar_data.related_trends.length > 0
                       "
                       class="flex justify-between"
@@ -413,7 +392,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.content_rating"
+                      v-if="meme.sidebar_data?.content_rating"
                       class="flex justify-between"
                     >
                       <span
@@ -425,7 +404,7 @@
                       }}</span>
                     </div>
                     <div
-                      v-if="meme.sidebar_data.copyright"
+                      v-if="meme.sidebar_data?.copyright"
                       class="flex justify-between"
                     >
                       <span
@@ -439,7 +418,7 @@
                     <!-- 自訂欄位 -->
                     <div
                       v-if="
-                        meme.sidebar_data.custom_fields &&
+                        meme.sidebar_data?.custom_fields &&
                         meme.sidebar_data.custom_fields.length > 0
                       "
                     >
@@ -555,7 +534,7 @@
                   class="w-full h-auto aspect-square bg-surface-100 rounded overflow-hidden"
                 >
                   <img
-                    v-if="relatedMeme.image_url"
+                    v-if="relatedMeme.image_url && relatedMeme.image_url.trim()"
                     :src="relatedMeme.image_url"
                     :alt="relatedMeme.title"
                     class="w-full h-full object-cover"

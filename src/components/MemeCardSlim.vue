@@ -16,7 +16,10 @@
       <div class="h-60 flex items-center justify-center overflow-hidden">
         <!-- 根據類型顯示不同內容 -->
         <div
-          v-if="meme.cover_image || (meme.type === 'image' && meme.image_url)"
+          v-if="
+            meme.cover_image ||
+            (meme.type === 'image' && meme.image_url && meme.image_url.trim())
+          "
           class="w-full h-full overflow-hidden rounded-t-lg"
         >
           <Image
