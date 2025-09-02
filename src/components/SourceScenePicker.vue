@@ -824,8 +824,61 @@ const updateValue = () => {
 // 監聽 props 變化
 watch(
   () => props.modelValue,
-  (newVal) => {
-    if (!newVal) {
+  async (newVal) => {
+    if (newVal && newVal.source_id) {
+      // 如果有 source_id，載入來源資料
+      try {
+        // 使用認證的 API 調用
+        const response = await fetch(`/api/sources/${newVal.source_id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        })
+        const result = await response.json()
+        // 處理不同的資料結構
+        const source =
+          result.data?.source || result.source || result.data || result
+
+        if (source) {
+          selectedSource.value = source
+          sourceSearchText.value = `${source.title}${source.year ? ` (${source.year})` : ''}`
+
+          // 如果有 scene_id，也載入場景資料
+          if (newVal.scene_id) {
+            try {
+              // 使用認證的 API 調用
+              const sceneResponse = await fetch(
+                `/api/scenes/${newVal.scene_id}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                  },
+                },
+              )
+              const sceneResult = await sceneResponse.json()
+              // 處理不同的資料結構
+              const scene =
+                sceneResult.data?.scene ||
+                sceneResult.scene ||
+                sceneResult.data ||
+                sceneResult
+
+              if (scene) {
+                selectedScene.value = scene
+                sceneSearchText.value =
+                  scene.title ||
+                  scene.quote ||
+                  `場景 ${formatTime(scene.start_time)}`
+              }
+            } catch (sceneError) {
+              console.warn('載入場景資料失敗:', sceneError)
+            }
+          }
+        }
+      } catch (sourceError) {
+        console.warn('載入來源資料失敗:', sourceError)
+      }
+    } else {
       clearSource()
     }
   },

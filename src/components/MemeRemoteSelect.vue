@@ -10,6 +10,7 @@
         :suggestions="suggestions"
         @complete="searchMemes"
         @item-select="selectMeme"
+        optionLabel="title"
         placeholder="搜尋迷因標題..."
         class="w-full"
         :minLength="2"
@@ -192,7 +193,6 @@ const searchMemes = async (event) => {
     } else if (data && Array.isArray(data)) {
       suggestions.value = data
     } else {
-      console.warn('搜尋結果格式不正確:', data)
       suggestions.value = []
     }
   } catch (err) {
@@ -246,9 +246,19 @@ watch(
     if (newVal && !selectedMeme.value) {
       // 如果有值但還沒載入，嘗試載入迷因資料
       try {
-        const { data } = await memeService.get(newVal)
-        selectedMeme.value = data.data
-        searchText.value = data.data.title
+        // 使用認證的 API 調用
+        const response = await fetch(`/api/memes/${newVal}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        })
+        const result = await response.json()
+        // 處理不同的資料結構
+        const meme = result.data?.meme || result.meme || result.data || result
+        if (meme) {
+          selectedMeme.value = meme
+          searchText.value = meme.title
+        }
       } catch (err) {
         console.error('載入迷因失敗:', err)
         error.value = '載入迷因資料失敗'

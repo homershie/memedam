@@ -636,7 +636,6 @@ const fetchUserProfile = async () => {
     try {
       const response = await userService.getMe()
       userProfile.value = response.data.user
-      console.log('獲取到的使用者資料:', userProfile.value)
     } catch (error) {
       console.error('獲取使用者資料失敗:', error)
     }

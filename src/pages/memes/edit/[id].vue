@@ -710,10 +710,12 @@ onMounted(async () => {
     form.nsfw = meme.nsfw || false
     form.language = meme.language || 'zh'
     form.cover_image = meme.cover_image || '' // 設置主圖
-    form.has_source = meme.has_source || false
+    // 根據 source_id 是否存在來判斷 has_source
+    form.has_source = !!meme.source_id
     form.source_id = meme.source_id || null
     form.scene_id = meme.scene_id || null
-    form.is_variant = meme.is_variant || false
+    // 根據 variant_of 是否存在來判斷 is_variant
+    form.is_variant = !!meme.variant_of
     form.variant_of = meme.variant_of || null
 
     // 設置 sourceSceneData
@@ -785,12 +787,6 @@ onMounted(async () => {
     uploadedCoverImageFile.value = null
     uploadedCoverImageUrl.value = ''
     coverImagePreviewError.value = false
-
-    // 重設 sourceSceneData
-    sourceSceneData.value = {
-      source_id: null,
-      scene_id: null,
-    }
   } catch (error) {
     // 根據錯誤類型提供更詳細的錯誤信息
     if (error.response?.status === 404) {
