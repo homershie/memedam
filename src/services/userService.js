@@ -159,6 +159,17 @@ export default {
     })
   },
 
+  // 上傳頭像
+  uploadAvatar(file) {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    return apiService.httpAuth.post('/api/upload/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
   // 完成社群註冊
   completeSocialRegistration(data) {
     return apiService.http.post('/api/users/complete-social-registration', data)
