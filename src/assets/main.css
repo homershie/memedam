@@ -358,6 +358,19 @@ a {
   }
 }
 
+/* 全域修復Avatar圖片變形問題 */
+.p-avatar-circle {
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+
+.p-avatar .p-avatar-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: inherit;
+}
+
 /* TipTap 編輯器現在使用 Tailwind CSS Typography (prose) 類別 */
 /* 所有樣式由 @tailwindcss/typography 插件自動處理 */
 

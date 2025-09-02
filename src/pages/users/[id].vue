@@ -615,6 +615,9 @@ const handleCoverImageChange = async (event) => {
       // 更新用戶資料中的封面圖片
       userProfile.value.cover_image = response.data.url
 
+      // 重新載入用戶資料以確保顯示最新的封面圖片
+      await loadUserProfile()
+
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -675,6 +678,9 @@ const handleAvatarChange = async (event) => {
       // 更新用戶資料中的頭像
       userProfile.value.avatarUrl = response.data.url
       userProfile.value.avatar = response.data.url
+
+      // 重新載入用戶資料以確保顯示最新的頭像
+      await loadUserProfile()
 
       toast.add({
         severity: 'success',

@@ -2606,6 +2606,9 @@ const updateProfile = async () => {
       URL.revokeObjectURL(userProfile.avatar)
     }
 
+    // 重新載入用戶資料以確保顯示最新的頭像
+    await loadUserProfile()
+
     toast.add({
       severity: 'success',
       summary: '成功',
