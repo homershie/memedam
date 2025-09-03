@@ -600,7 +600,7 @@ const showMenu = (event) => {
 }
 
 const onEdit = () => {
-  window.location.href = `/memes/edit/${getMemeSlug(meme)}`
+  router.push(`/memes/edit/${getMemeSlug(meme)}`)
 }
 
 const navigateToDetail = () => {

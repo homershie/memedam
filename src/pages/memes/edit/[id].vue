@@ -258,7 +258,13 @@
                 </div>
 
                 <!-- 圖片預覽 -->
-                <div v-if="(form.image_url && form.image_url.trim()) || uploadedImageUrl" class="mt-3">
+                <div
+                  v-if="
+                    (form.image_url && form.image_url.trim()) ||
+                    uploadedImageUrl
+                  "
+                  class="mt-3"
+                >
                   <label class="block text-sm font-medium mb-2">預覽</label>
                   <div
                     class="border rounded-lg p-2 bg-surface-50 dark:bg-surface-800"
@@ -608,6 +614,9 @@ import tagService from '@/services/tagService'
 import memeTagService from '@/services/memeTagService'
 import apiService from '@/services/apiService' // 新增 apiService
 
+// 工具函數
+import { getMemeSlug } from '@/utils/dataUtils'
+
 defineOptions({ name: 'EditMemePage' })
 
 const toast = useToast()
@@ -615,6 +624,9 @@ const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const memeId = route.params.id
+
+// 當前編輯的迷因數據
+const currentMeme = ref(null)
 
 // 表單資料
 const form = reactive({
@@ -711,11 +723,20 @@ onMounted(async () => {
       allTags.value = []
     }
 
-    // 載入迷因數據 - 使用認證的 API 調用
-    const { data } = await apiService.httpAuth.get(`/api/memes/${memeId}`)
+    // 載入迷因數據 - 使用 bundle API，支持 slug 和 ID 查詢
+    const { data } = await apiService.httpAuth.get(
+      `/api/memes/${memeId}/bundle`,
+      {
+        params: { include: 'scene,source' },
+      },
+    )
 
-    // 更靈活的數據解析 - 處理嵌套結構
-    const meme = data.data?.meme || data.meme || data.data || data || {}
+    // 更靈活的數據解析 - 處理 bundle API 的數據結構
+    const bundleData = data.data || data || {}
+    const meme = bundleData.meme || {}
+
+    // 存儲當前編輯的迷因數據
+    currentMeme.value = meme
 
     // 檢查迷因數據是否有效
     if (!meme) {
@@ -1331,7 +1352,9 @@ const handleSubmit = async () => {
       )
     }
 
-    await memeService.update(memeId, memeData)
+    // 使用真正的數據庫 ID 進行更新，而不是 slug
+    const realMemeId = currentMeme.value?._id || memeId
+    await memeService.update(realMemeId, memeData)
 
     // 現在有了 memeId，上傳詳細介紹中的圖片
     if (pendingDetailImages.value.length > 0) {
@@ -1343,7 +1366,7 @@ const handleSubmit = async () => {
           formData.append('image', file)
 
           // 使用 URL 查詢參數來傳遞這些值，因為 multer 可能無法正確解析 FormData 中的文字欄位
-          const uploadUrl = `/api/upload/image?isDetailImage=true&memeId=${memeId}`
+          const uploadUrl = `/api/upload/image?isDetailImage=true&memeId=${realMemeId}`
 
           const res = await fetch(uploadUrl, {
             method: 'POST',
@@ -1375,7 +1398,7 @@ const handleSubmit = async () => {
       // 如果有新的圖片上傳成功，更新迷因的 detail_images
       if (uploadedUrls.length > 0) {
         try {
-          await memeService.update(memeId, {
+          await memeService.update(realMemeId, {
             detail_images: detailImages.value,
             _markAsModified: true,
           })
@@ -1401,7 +1424,7 @@ const handleSubmit = async () => {
       let currentMemeTagRecords = []
 
       try {
-        const response = await memeTagService.getTagsByMemeId(memeId)
+        const response = await memeTagService.getTagsByMemeId(realMemeId)
 
         // 解析響應數據
         const responseData = response.data || response || []
@@ -1409,14 +1432,14 @@ const handleSubmit = async () => {
         // 修復：正確解析 response.data.tags
         if (responseData.tags && Array.isArray(responseData.tags)) {
           currentMemeTagRecords = responseData.tags.map((tag) => ({
-            _id: `${memeId}_${tag._id}`, // 臨時 ID，用於識別
-            meme_id: memeId,
+            _id: `${realMemeId}_${tag._id}`, // 臨時 ID，用於識別
+            meme_id: realMemeId,
             tag_id: tag._id,
           }))
         } else if (Array.isArray(responseData)) {
           currentMemeTagRecords = responseData.map((tag) => ({
-            _id: `${memeId}_${tag._id}`, // 臨時 ID，用於識別
-            meme_id: memeId,
+            _id: `${realMemeId}_${tag._id}`, // 臨時 ID，用於識別
+            meme_id: realMemeId,
             tag_id: tag._id,
           }))
         }
@@ -1436,7 +1459,7 @@ const handleSubmit = async () => {
 
           if (allMemeTagsResponse.length > 0) {
             currentMemeTagRecords = allMemeTagsResponse.filter(
-              (record) => record.meme_id === memeId,
+              (record) => record.meme_id === realMemeId,
             )
           }
         } catch (fallbackError) {
@@ -1462,7 +1485,7 @@ const handleSubmit = async () => {
       if (toRemove.length > 0 || toAdd.length > 0) {
         try {
           // 先清空所有現有關聯
-          await memeTagService.removeAllTagsByMeme(memeId)
+          await memeTagService.removeAllTagsByMeme(realMemeId)
 
           // 重建需要保留的關聯
           const allTargetTagIds = newTagIds // 這已經是我們想要保留的標籤
@@ -1471,7 +1494,7 @@ const handleSubmit = async () => {
 
           for (const tagId of allTargetTagIds) {
             try {
-              const relationData = { meme_id: memeId, tag_id: tagId }
+              const relationData = { meme_id: realMemeId, tag_id: tagId }
               await memeTagService.create(relationData)
             } catch (error) {
               console.error(`重建關聯失敗 (tagId: ${tagId}):`, error)
@@ -1525,7 +1548,8 @@ const handleSubmit = async () => {
     detailImages.value = []
     pendingDetailImages.value = []
 
-    router.push('/memes/all')
+    // 編輯成功後跳轉到詳情頁面，讓用戶查看編輯結果
+    router.push(`/memes/detail/${getMemeSlug(currentMeme.value)}`)
   } catch (error) {
     console.error('更新迷因失敗:', error)
     submitError.value =
