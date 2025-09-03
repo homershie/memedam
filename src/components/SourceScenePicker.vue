@@ -42,6 +42,7 @@
           icon="pi pi-plus"
           label="新增來源"
           @click="showCreateSourceDialog = true"
+          v-if="userStore.isLoggedIn"
         />
       </div>
 
@@ -127,6 +128,7 @@
           label="新增場景"
           @click="showCreateSceneDialog = true"
           severity="secondary"
+          v-if="userStore.isLoggedIn"
         />
       </div>
 

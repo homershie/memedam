@@ -1148,6 +1148,11 @@ const canEditSource = computed(() => {
   return source.value.created_by === userStore.userId
 })
 
+// 檢查是否可以建立新來源
+// const canCreateSource = computed(() => {
+//   return userStore.isLoggedIn
+// })
+
 // 檢查是否可以編輯場景
 const canEditScene = (scene) => {
   if (!userStore.isLoggedIn || !scene) return false
@@ -1158,6 +1163,11 @@ const canEditScene = (scene) => {
   // 場景創建者可以編輯
   return scene.created_by === userStore.userId
 }
+
+// 檢查是否可以建立新場景
+// const canCreateScene = computed(() => {
+//   return userStore.isLoggedIn
+// })
 
 // 來源類型選項（需與後端 enum 對應）
 const sourceTypeOptions = [
