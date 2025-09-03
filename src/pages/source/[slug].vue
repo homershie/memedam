@@ -145,7 +145,7 @@
                 <div
                   v-for="creator in source.creators"
                   :key="creator._id || creator.name"
-                  class="flex items-center space-x-3 p-2 bg-surface-50 rounded-lg"
+                  class="flex items-center space-x-3 p-2 bg-surface-50 rounded-lg dark:bg-surface-800"
                 >
                   <div
                     class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center dark:bg-primary-900"
