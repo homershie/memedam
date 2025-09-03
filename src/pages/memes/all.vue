@@ -230,68 +230,63 @@ const loadMemes = async (reset = true) => {
 
     const newMemes = response.data.memes || response.data || []
 
-    // 為每個迷因載入作者資訊（推薦模式下已經載入過，跳過）
-    let memesWithAuthors
-    if (!searchQuery.value.trim()) {
-      memesWithAuthors = newMemes
-    } else {
-      memesWithAuthors = await Promise.all(
-        newMemes.map(async (meme) => {
-          try {
-            if (meme.author_id) {
-              // 檢查是否已經是完整的用戶物件
-              if (typeof meme.author_id === 'object' && meme.author_id._id) {
-                // 如果 author_id 已經是完整的用戶物件，直接使用
-                meme.author = {
-                  _id: meme.author_id._id,
-                  username: meme.author_id.username || 'unknown',
-                  display_name: meme.author_id.display_name || '未知用戶',
-                  avatar:
-                    meme.author_id.avatar || meme.author_id.avatarUrl || null,
-                }
-              } else {
-                // 處理不同格式的作者 ID
-                let authorId = null
+    // 統一處理作者資訊載入（無論搜尋模式還是推薦模式）
+    const memesWithAuthors = await Promise.all(
+      newMemes.map(async (meme) => {
+        try {
+          if (meme.author_id) {
+            // 檢查是否已經是完整的用戶物件
+            if (typeof meme.author_id === 'object' && meme.author_id._id) {
+              // 如果 author_id 已經是完整的用戶物件，直接使用
+              meme.author = {
+                _id: meme.author_id._id,
+                username: meme.author_id.username || 'unknown',
+                display_name: meme.author_id.display_name || '未知用戶',
+                avatar:
+                  meme.author_id.avatar || meme.author_id.avatarUrl || null,
+              }
+            } else {
+              // 處理不同格式的作者 ID
+              let authorId = null
 
-                if (typeof meme.author_id === 'string') {
-                  authorId = meme.author_id
-                } else if (typeof meme.author_id === 'object') {
-                  if (meme.author_id.$oid) {
-                    authorId = meme.author_id.$oid
-                  } else if (meme.author_id.toString) {
-                    authorId = meme.author_id.toString()
-                  } else {
-                    authorId = meme.author_id
-                  }
+              if (typeof meme.author_id === 'string') {
+                authorId = meme.author_id
+              } else if (typeof meme.author_id === 'object') {
+                if (meme.author_id.$oid) {
+                  authorId = meme.author_id.$oid
+                } else if (meme.author_id.toString) {
+                  authorId = meme.author_id.toString()
                 } else {
                   authorId = meme.author_id
                 }
+              } else {
+                authorId = meme.author_id
+              }
 
-                const authorResponse = await userService.get(authorId)
-                meme.author = authorResponse.data.user
-              }
-            } else {
-              // 沒有作者 ID，設定預設值
-              meme.author = {
-                display_name: '匿名用戶',
-                username: 'anonymous',
-                avatar: null,
-              }
+              const authorResponse = await userService.get(authorId)
+              meme.author = authorResponse.data.user
             }
-            return meme
-          } catch (error) {
-            console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
-            // 如果載入作者失敗，設定預設值
+          } else {
+            // 沒有作者 ID，設定預設值
             meme.author = {
-              display_name: '未知用戶',
-              username: 'unknown',
+              display_name: '匿名用戶',
+              username: 'anonymous',
               avatar: null,
             }
-            return meme
           }
-        }),
-      )
-    }
+          return meme
+        } catch (error) {
+          console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
+          // 如果載入作者失敗，設定預設值
+          meme.author = {
+            display_name: '未知用戶',
+            username: 'unknown',
+            avatar: null,
+          }
+          return meme
+        }
+      }),
+    )
 
     if (reset) {
       memes.value = memesWithAuthors
