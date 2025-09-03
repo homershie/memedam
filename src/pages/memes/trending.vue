@@ -114,7 +114,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { setMemeListSEO } from '@/utils/seoUtils'
+// SEO 設定由路由守衛處理
 import MemeCard from '@/components/MemeCard.vue'
 import MemeCardSkeleton from '@/components/MemeCardSkeleton.vue'
 import Button from 'primevue/button'
@@ -363,8 +363,8 @@ const loadMemes = async (reset = true) => {
         : currentPage.value
     }
 
-    // 更新 SEO 設定
-    updateSEOSettings()
+    // 注意：移除自動 SEO 更新，避免與路由守衛衝突
+    // updateSEOSettings() // 由路由守衛處理
 
     // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)
@@ -474,24 +474,7 @@ const loadTagCategories = async () => {
   }
 }
 
-// 更新 SEO 設定
-const updateSEOSettings = () => {
-  // 準備 SEO 參數
-  const seoParams = {
-    title: '近期話題',
-    basePath: '/memes/trending',
-    searchQuery: '',
-    selectedTags: selectedTags.value,
-    currentPage: currentPage.value,
-    totalPages: totalPages.value,
-    totalCount: totalCount.value,
-  }
-
-  // 設定 SEO
-  setMemeListSEO(seoParams)
-
-  // 注意：話題頁面不自動更新瀏覽器 URL，避免重定向循環
-}
+// SEO 設定由路由守衛處理，不需要手動設定
 
 // 初始化
 onMounted(async () => {

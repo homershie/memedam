@@ -120,7 +120,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { setMemeListSEO, cleanUrlParams } from '@/utils/seoUtils'
+import { cleanUrlParams } from '@/utils/seoUtils'
 import MemeCard from '@/components/MemeCard.vue'
 import MemeCardSkeleton from '@/components/MemeCardSkeleton.vue'
 import SearchBox from '@/components/SearchBox.vue'
@@ -328,11 +328,8 @@ const loadMemes = async (reset = true) => {
         : currentPage.value
     }
 
-    // 只在初始載入時更新 SEO 設定，避免在無限滾動時更新 URL
-    if (reset) {
-      updateSEOSettings()
-      // 注意：不再自動更新瀏覽器 URL，避免重定向循環
-    }
+    // 注意：移除自動 SEO 更新，避免與路由守衛衝突
+    // updateSEOSettings() // 由路由守衛處理
 
     // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)
@@ -683,24 +680,7 @@ const loadTopTags = async () => {
   }
 }
 
-// 更新 SEO 設定
-const updateSEOSettings = () => {
-  // 準備 SEO 參數
-  const seoParams = {
-    title: '所有迷因',
-    basePath: '/memes/all',
-    searchQuery: searchQuery.value,
-    selectedTags: selectedTags.value,
-    currentPage: currentPage.value,
-    totalPages: totalPages.value,
-    totalCount: totalCount.value,
-  }
-
-  // 設定 SEO
-  setMemeListSEO(seoParams)
-
-  // 注意：不再自動更新瀏覽器 URL，避免重定向循環
-}
+// SEO 設定由路由守衛處理，不需要手動設定
 
 // 更新瀏覽器 URL
 const updateBrowserUrl = (shouldUpdate = false) => {

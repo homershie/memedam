@@ -138,7 +138,7 @@
           <!-- 創作者 -->
           <Card v-if="source.creators && source.creators.length > 0">
             <template #title>
-              <h2 class="text-xl font-bold text-surface-900">創作者</h2>
+              <h2 class="mb-4">創作者</h2>
             </template>
             <template #content>
               <div class="space-y-2">
@@ -148,15 +148,20 @@
                   class="flex items-center space-x-3 p-2 bg-surface-50 rounded-lg"
                 >
                   <div
-                    class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center"
+                    class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center dark:bg-primary-900"
                   >
                     <i class="pi pi-user text-primary-600"></i>
                   </div>
                   <div>
-                    <div class="font-medium text-surface-800">
+                    <h6
+                      class="font-medium text-surface-800 dark:text-surface-100"
+                    >
                       {{ creator.name }}
-                    </div>
-                    <div v-if="creator.role" class="text-sm text-surface-600">
+                    </h6>
+                    <div
+                      v-if="creator.role"
+                      class="text-sm text-surface-600 dark:text-surface-400"
+                    >
                       {{ creator.role }}
                     </div>
                   </div>
@@ -356,8 +361,11 @@
                     class="aspect-square bg-surface-100 rounded-t-lg overflow-hidden"
                   >
                     <img
-                      v-if="meme.image_url && meme.image_url.trim()"
-                      :src="meme.image_url"
+                      v-if="
+                        meme.cover_image ||
+                        (meme.image_url && meme.image_url.trim())
+                      "
+                      :src="meme.cover_image || meme.image_url"
                       :alt="meme.title"
                       class="w-full h-full object-cover"
                     />
