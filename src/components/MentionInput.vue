@@ -9,7 +9,7 @@
     <!-- 輸入層：透明文字，實際輸入 -->
     <div
       ref="inputContainer"
-      class="mention-input-layer bg-white w-full min-h-20 p-3 border border-gray-300 rounded-lg text-base leading-6 resize-vertical outline-none transition-all duration-200 dark:bg-gray-800 dark:border-gray-700"
+      class="mention-input-layer bg-white w-full min-h-20 p-3 border border-gray-300 rounded-lg text-base leading-6 resize-vertical outline-none transition-all duration-200 dark:text-surface-100! dark:bg-gray-800 dark:border-gray-700"
       :class="{ focused: isFocused }"
       @click="focusInput"
       @keydown="handleKeydown"
@@ -513,12 +513,16 @@ defineExpose({
 .mention-input-layer {
   background: transparent;
   color: transparent;
-  caret-color: #222;
+  caret-color: #ffffff;
   position: relative;
   z-index: 2;
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+.dark .mention-input-layer {
+  caret-color: #ffffff;
 }
 
 .mention-tag {
