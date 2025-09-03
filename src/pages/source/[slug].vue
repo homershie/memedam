@@ -445,9 +445,10 @@
                 <h6>
                   {{ link.label || link.title || '連結' }}
                 </h6>
-                <small class="text-surface-600 dark:text-surface-400">{{
-                  link.url
-                }}</small>
+                <small
+                  class="text-surface-600 dark:text-surface-400 truncate block max-w-full"
+                  >{{ link.url }}</small
+                >
               </div>
             </a>
           </div>
