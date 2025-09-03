@@ -348,11 +348,11 @@
               <hr />
               <h4 class="my-4">此場景相關迷因：</h4>
               <div
-                v-if="memes.length > 0"
+                v-if="scene.memes && scene.memes.length > 0"
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               >
                 <div
-                  v-for="meme in memes"
+                  v-for="meme in scene.memes"
                   :key="meme._id"
                   class="bg-white rounded-lg shadow-sm border hover:bg-surface-100 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors cursor-pointer"
                   @click="navigateToMeme(meme)"
@@ -362,10 +362,14 @@
                   >
                     <img
                       v-if="
-                        meme.cover_image ||
+                        (meme.cover_image && meme.cover_image.trim()) ||
                         (meme.image_url && meme.image_url.trim())
                       "
-                      :src="meme.cover_image || meme.image_url"
+                      :src="
+                        meme.cover_image && meme.cover_image.trim()
+                          ? meme.cover_image
+                          : meme.image_url
+                      "
                       :alt="meme.title"
                       class="w-full h-full object-cover"
                     />
@@ -1452,11 +1456,13 @@ const scenesWithMemes = computed(() => {
   // 創建scene_id到迷因的映射
   const memesBySceneId = new Map()
   memes.value.forEach((meme) => {
-    if (meme.scene_id) {
-      if (!memesBySceneId.has(meme.scene_id)) {
-        memesBySceneId.set(meme.scene_id, [])
+    // 檢查 meme.scene_id 是否為有效的 ObjectId 或對象
+    const sceneId = meme.scene_id?._id || meme.scene_id
+    if (sceneId) {
+      if (!memesBySceneId.has(sceneId)) {
+        memesBySceneId.set(sceneId, [])
       }
-      memesBySceneId.get(meme.scene_id).push(meme)
+      memesBySceneId.get(sceneId).push(meme)
     }
   })
 
