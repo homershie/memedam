@@ -463,7 +463,8 @@ const loadTagCategories = async () => {
 
 // 更新 SEO 設定
 const updateSEOSettings = () => {
-  setMemeListSEO({
+  // 準備 SEO 參數
+  const seoParams = {
     title: '熱門迷因',
     basePath: '/memes/hot',
     searchQuery: '',
@@ -471,7 +472,12 @@ const updateSEOSettings = () => {
     currentPage: currentPage.value,
     totalPages: totalPages.value,
     totalCount: totalCount.value,
-  })
+  }
+
+  // 設定 SEO
+  setMemeListSEO(seoParams)
+
+  // 注意：熱門頁面不自動更新瀏覽器 URL，避免重定向循環
 }
 
 // 初始化

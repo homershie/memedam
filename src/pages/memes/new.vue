@@ -114,6 +114,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { setMemeListSEO } from '@/utils/seoUtils'
 import MemeCard from '@/components/MemeCard.vue'
 import MemeCardSkeleton from '@/components/MemeCardSkeleton.vue'
 import Button from 'primevue/button'
@@ -142,6 +143,8 @@ const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(5)
+const totalCount = ref(0)
+const totalPages = ref(1)
 
 // 篩選和排序
 const selectedTags = ref([])
@@ -345,6 +348,23 @@ const loadMemes = async (reset = true) => {
       memesWithAuthors.length > 0 &&
       (memesWithAuthors.length >= pageSize.value || backendHasMore)
 
+    // 更新總數和頁數資訊
+    if (response.data?.pagination) {
+      totalCount.value = response.data.pagination.total || 0
+      totalPages.value = response.data.pagination.totalPages || 1
+    } else if (response.data?.total) {
+      totalCount.value = response.data.total
+      totalPages.value = Math.ceil(totalCount.value / pageSize.value)
+    } else {
+      totalCount.value = memes.value.length
+      totalPages.value = hasMore.value
+        ? currentPage.value + 1
+        : currentPage.value
+    }
+
+    // 更新 SEO 設定
+    updateSEOSettings()
+
     // 更新無限滾動狀態
     updateLoadingState(false, hasMore.value)
   } catch (error) {
@@ -451,6 +471,25 @@ const loadTagCategories = async () => {
       { _id: 'audio', name: '音訊', count: 0 },
     ]
   }
+}
+
+// 更新 SEO 設定
+const updateSEOSettings = () => {
+  // 準備 SEO 參數
+  const seoParams = {
+    title: '最新迷因',
+    basePath: '/memes/new',
+    searchQuery: '',
+    selectedTags: selectedTags.value,
+    currentPage: currentPage.value,
+    totalPages: totalPages.value,
+    totalCount: totalCount.value,
+  }
+
+  // 設定 SEO
+  setMemeListSEO(seoParams)
+
+  // 注意：最新頁面不自動更新瀏覽器 URL，避免重定向循環
 }
 
 // 初始化

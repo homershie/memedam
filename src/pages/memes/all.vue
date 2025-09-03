@@ -331,6 +331,7 @@ const loadMemes = async (reset = true) => {
     // 只在初始載入時更新 SEO 設定，避免在無限滾動時更新 URL
     if (reset) {
       updateSEOSettings()
+      // 注意：不再自動更新瀏覽器 URL，避免重定向循環
     }
 
     // 更新無限滾動狀態
@@ -541,7 +542,9 @@ const handleSearch = (searchTerm) => {
       query: newQuery,
     })
   }
-  // 不需要手動呼叫 loadMemes，watch 會處理
+
+  // 手動呼叫 loadMemes，因為我們需要立即重新載入資料
+  loadMemes(true)
 }
 
 // 載入可用標籤
@@ -575,6 +578,9 @@ const addTag = (tag) => {
   if (!isTagSelected(tag)) {
     selectedTags.value.push(tag)
     loadMemes(true) // 明確指定重置
+
+    // 更新 URL 以反映標籤篩選
+    updateBrowserUrl(true)
   }
 }
 
@@ -582,12 +588,18 @@ const addTag = (tag) => {
 const removeTag = (tag) => {
   selectedTags.value = selectedTags.value.filter((t) => t._id !== tag._id)
   loadMemes(true) // 明確指定重置
+
+  // 更新 URL 以反映標籤篩選
+  updateBrowserUrl(true)
 }
 
 // 清除所有篩選
 const clearFilters = () => {
   selectedTags.value = []
   loadMemes(true) // 明確指定重置
+
+  // 更新 URL 以反映清除篩選
+  updateBrowserUrl(true)
 }
 
 // 顯示評論
@@ -643,6 +655,13 @@ watch(
         return
       }
 
+      // 重要防護：避免循環觸發，只在用戶操作時更新
+      // 如果這是由程式自動觸發的（而非用戶手動輸入），則跳過
+      const isUserAction = !loading.value && !isSearching.value
+      if (!isUserAction && oldQuery && newQuery.search === oldQuery.search) {
+        return
+      }
+
       searchQuery.value = newQuery.search || ''
       if (searchBoxRef.value) {
         searchBoxRef.value.setQuery(searchQuery.value)
@@ -680,8 +699,7 @@ const updateSEOSettings = () => {
   // 設定 SEO
   setMemeListSEO(seoParams)
 
-  // 更新瀏覽器 URL（只在初始載入或搜尋/篩選變化時）
-  updateBrowserUrl(true)
+  // 注意：不再自動更新瀏覽器 URL，避免重定向循環
 }
 
 // 更新瀏覽器 URL
