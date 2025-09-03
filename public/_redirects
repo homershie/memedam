@@ -7,15 +7,15 @@ http://www.memedam.com/* https://www.memedam.com/:splat 301!
 https://memedam.com/* https://www.memedam.com/:splat 301!
 
 # 舊的分頁 URL 重新導向到新格式
-/memes/all?page=1 /memes/all 301
-/memes/hot?page=1 /memes/hot 301
-/memes/new?page=1 /memes/new 301
-/memes/trending?page=1 /memes/trending 301
+# /memes/all?page=1 /memes/all 301
+# /memes/hot?page=1 /memes/hot 301
+# /memes/new?page=1 /memes/new 301
+# /memes/trending?page=1 /memes/trending 301
 
-# 移除重複的查詢參數
-/memes/all?search=&* /memes/all 301
-/memes/all?tags=&* /memes/all 301
-/memes/all?page=0* /memes/all 301
+# 移除可能導致循環的重定向規則
+# /memes/all?search=&* /memes/all 301
+# /memes/all?tags=&* /memes/all 301
+# /memes/all?page=0* /memes/all 301
 
 # API 路由處理
 /api/* https://api.memedam.com/:splat 200

@@ -448,7 +448,7 @@
         <!-- 主要內容區域 -->
         <div class="space-y-6">
           <!-- 標題和內容展示區 -->
-          <div id="content">
+          <div id="content" class="min-h-[780px]">
             <!-- 內容描述 - 使用 detail_content 欄位 -->
             <div v-if="meme.detail_content" class="tiptap-content">
               <div v-html="renderTipTapContent(meme.detail_content)"></div>
