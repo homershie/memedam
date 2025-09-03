@@ -431,22 +431,24 @@
           <h2 class="mb-4">外部連結</h2>
         </template>
         <template #content>
-          <div class="space-y-2">
+          <div class="space-y-2 w-full">
             <a
               v-for="link in source.links"
               :key="link.url"
               :href="link.url"
               target="_blank"
               rel="noopener noreferrer"
-              class="flex items-center p-3! bg-surface-50 hover:bg-surface-100 dark:bg-surface-800 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              class="flex items-center p-3! bg-surface-50 hover:bg-surface-100 dark:bg-surface-800 dark:hover:bg-surface-700 rounded-lg transition-colors min-w-0"
             >
-              <i class="pi pi-external-link m-4 text-primary-600"></i>
-              <div class="ml-4">
-                <h6>
+              <i
+                class="pi pi-external-link m-4 text-primary-600 flex-shrink-0"
+              ></i>
+              <div class="ml-4 min-w-0 flex-1">
+                <h6 class="truncate">
                   {{ link.label || link.title || '連結' }}
                 </h6>
                 <small
-                  class="text-surface-600 dark:text-surface-400 truncate block max-w-full"
+                  class="text-surface-600 dark:text-surface-400 truncate block"
                   >{{ link.url }}</small
                 >
               </div>
