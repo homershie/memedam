@@ -162,8 +162,11 @@
                     class="w-full bg-surface-100 rounded border overflow-hidden"
                   >
                     <img
-                      v-if="meme.image_url && meme.image_url.trim()"
-                      :src="meme.image_url"
+                      v-if="
+                        meme.cover_image ||
+                        (meme.image_url && meme.image_url.trim())
+                      "
+                      :src="meme.cover_image || meme.image_url"
                       :alt="meme.title"
                       class="w-full h-full object-cover"
                     />
@@ -534,8 +537,11 @@
                   class="w-full h-auto aspect-square bg-surface-100 rounded overflow-hidden"
                 >
                   <img
-                    v-if="relatedMeme.image_url && relatedMeme.image_url.trim()"
-                    :src="relatedMeme.image_url"
+                    v-if="
+                      relatedMeme.cover_image ||
+                      (relatedMeme.image_url && relatedMeme.image_url.trim())
+                    "
+                    :src="relatedMeme.cover_image || relatedMeme.image_url"
                     :alt="relatedMeme.title"
                     class="w-full h-full object-cover"
                   />
