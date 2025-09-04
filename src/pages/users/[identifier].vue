@@ -118,7 +118,7 @@
           >
             <div class="flex flex-col items-center justify-center">
               <span class="text-sm text-surface-500 dark:text-surface-400"
-                >關注數</span
+                >追蹤中</span
               >
               <span class="text-2xl font-bold">{{
                 userStats.following_count || 0
@@ -377,7 +377,7 @@
                     {{ userStats.following_count || 0 }}
                   </div>
                   <div class="text-sm text-surface-600 dark:text-surface-400">
-                    關注數
+                    追蹤中
                   </div>
                 </div>
                 <div class="text-center">
