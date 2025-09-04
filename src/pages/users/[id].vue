@@ -774,9 +774,21 @@ const loadUserMemes = async (reset = false) => {
     }
 
     if (response.data) {
-      const allMemes = Array.isArray(response.data)
-        ? response.data
-        : response.data.memes || response.data.data || []
+      // 处理不同格式的响应数据
+      let allMemes = []
+      if (Array.isArray(response.data)) {
+        allMemes = response.data
+      } else if (response.data.memes && Array.isArray(response.data.memes)) {
+        allMemes = response.data.memes
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        allMemes = response.data.data
+      } else if (response.data.meme) {
+        // 如果返回单个迷因，包装成数组
+        allMemes = [response.data.meme]
+      } else {
+        console.warn('Unexpected response format:', response.data)
+        allMemes = []
+      }
 
       // 在用戶頁面中，所有迷因都屬於同一個用戶，直接使用當前用戶資訊
       const memesWithAuthors = allMemes.map((meme) => {
@@ -899,10 +911,18 @@ const loadUserCollections = async (reset = false) => {
     }
 
     // 獲取用戶的收藏記錄
-    const collectionsResponse = await collectionService.getAll()
-    const userCollections = collectionsResponse.data.filter(
-      (collection) => collection.user_id === userId.value,
-    )
+    const collectionsResponse = await collectionService.getAll(userId.value)
+
+    let userCollections = []
+    if (Array.isArray(collectionsResponse.data)) {
+      userCollections = collectionsResponse.data
+    } else {
+      console.warn(
+        'Unexpected collections response format:',
+        collectionsResponse.data,
+      )
+      userCollections = []
+    }
 
     // 分頁處理收藏記錄
     const pageSize = 6
@@ -915,7 +935,37 @@ const loadUserCollections = async (reset = false) => {
         pagedCollections.map(async (collection) => {
           try {
             const memeResponse = await memeService.get(collection.meme_id)
-            const meme = memeResponse.data
+            // 檢查API響應格式
+            if (!memeResponse.data) {
+              console.error('找不到迷因響應數據:', collection.meme_id)
+              return null
+            }
+
+            // 根據API響應格式調整數據提取
+            let memeData
+            if (
+              memeResponse.data &&
+              memeResponse.data.data &&
+              memeResponse.data.data.meme
+            ) {
+              // 後端返回格式: {success: true, data: {meme: {...}}, error: null}
+              memeData = memeResponse.data.data.meme
+            } else if (memeResponse.data && memeResponse.data.meme) {
+              // 後端返回格式: {meme: {...}}
+              memeData = memeResponse.data.meme
+            } else if (memeResponse.data) {
+              // 直接返回迷因數據
+              memeData = memeResponse.data
+            } else {
+              console.error(
+                '找不到收藏迷因數據:',
+                collection.meme_id,
+                memeResponse.data,
+              )
+              return null
+            }
+
+            const meme = { ...memeData }
 
             // 載入作者資訊（使用快取機制）
             if (meme.author_id) {
@@ -996,10 +1046,15 @@ const loadUserLikedMemes = async (reset = false) => {
     }
 
     // 獲取用戶的按讚記錄
-    const likesResponse = await likeService.getAll()
-    const userLikes = likesResponse.data.filter(
-      (like) => like.user_id === userId.value,
-    )
+    const likesResponse = await likeService.getAll(userId.value)
+
+    let userLikes = []
+    if (Array.isArray(likesResponse.data)) {
+      userLikes = likesResponse.data
+    } else {
+      console.warn('Unexpected likes response format:', likesResponse.data)
+      userLikes = []
+    }
 
     // 分頁處理按讚記錄
     const pageSize = 6
@@ -1012,7 +1067,37 @@ const loadUserLikedMemes = async (reset = false) => {
         pagedLikes.map(async (like) => {
           try {
             const memeResponse = await memeService.get(like.meme_id)
-            const meme = memeResponse.data
+            // 檢查API響應格式
+            if (!memeResponse.data) {
+              console.error('找不到按讚迷因響應數據:', like.meme_id)
+              return null
+            }
+
+            // 根據API響應格式調整數據提取
+            let memeData
+            if (
+              memeResponse.data &&
+              memeResponse.data.data &&
+              memeResponse.data.data.meme
+            ) {
+              // 後端返回格式: {success: true, data: {meme: {...}}, error: null}
+              memeData = memeResponse.data.data.meme
+            } else if (memeResponse.data && memeResponse.data.meme) {
+              // 後端返回格式: {meme: {...}}
+              memeData = memeResponse.data.meme
+            } else if (memeResponse.data) {
+              // 直接返回迷因數據
+              memeData = memeResponse.data
+            } else {
+              console.error(
+                '找不到按讚迷因數據:',
+                like.meme_id,
+                memeResponse.data,
+              )
+              return null
+            }
+
+            const meme = { ...memeData }
 
             // 載入作者資訊（使用快取機制）
             if (meme.author_id) {

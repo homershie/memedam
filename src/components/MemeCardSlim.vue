@@ -29,7 +29,9 @@
           />
         </div>
         <div
-          v-else-if="meme.type === 'video' && meme.video_url"
+          v-else-if="
+            meme.type === 'video' && meme.video_url && meme.video_url.trim()
+          "
           class="w-full h-full"
         >
           <!-- 外部影片平台 -->
@@ -262,8 +264,10 @@ const props = defineProps({
   },
 })
 
-const { meme } = props
+// 調試資訊 - 檢查接收到的數據格式
+// 可以在這裡添加更多調試資訊
 
+const meme = props.meme
 const emit = defineEmits(['tag-click', 'show-comments', 'deleted'])
 
 // 檢舉相關
@@ -286,15 +290,15 @@ const commentsCount = ref(
   props.meme.comment_count || props.meme.comments_count || 0,
 )
 
-const memeId = computed(() => getMemeId(props.meme))
-const publishedTime = computed(() => formatPublishedTime(props.meme))
+const memeId = computed(() => getMemeId(meme))
+const publishedTime = computed(() => formatPublishedTime(meme))
 
 const userStore = useUserStore()
 const menuRef = ref(null)
 
 const canDelete = computed(() => {
   const currentUserId = getId(userStore.userId)
-  const authorId = getId(props.meme.author?._id || props.meme.author?.id)
+  const authorId = getId(meme.author?._id || meme.author?.id)
   const role = userStore.role
   return (
     role === 'admin' ||
@@ -305,7 +309,7 @@ const canDelete = computed(() => {
 // 載入標籤
 const loadTags = async () => {
   try {
-    let id = props.meme.id || props.meme._id
+    let id = meme.id || meme._id
     if (typeof id === 'object' && id.$oid) {
       id = id.$oid
     }
@@ -343,10 +347,9 @@ const loadUserInteractionStatus = async () => {
 
     // 檢查當前用戶是否已按讚
     try {
-      const likeResponse = await likeService.getAll()
+      const likeResponse = await likeService.getAll(userStore.userId)
       const userLikes = likeResponse.data.filter(
-        (like) =>
-          like.meme_id === memeId.value && like.user_id === userStore.userId,
+        (like) => like.meme_id === memeId.value,
       )
       isLiked.value = userLikes.length > 0
     } catch (error) {
@@ -355,11 +358,9 @@ const loadUserInteractionStatus = async () => {
 
     // 檢查當前用戶是否已按噓
     try {
-      const dislikeResponse = await dislikeService.getAll()
+      const dislikeResponse = await dislikeService.getAll(userStore.userId)
       const userDislikes = dislikeResponse.data.filter(
-        (dislike) =>
-          dislike.meme_id === memeId.value &&
-          dislike.user_id === userStore.userId,
+        (dislike) => dislike.meme_id === memeId.value,
       )
       isDisliked.value = userDislikes.length > 0
     } catch (error) {

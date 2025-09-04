@@ -7,8 +7,12 @@ export default {
   remove(data) {
     return apiService.httpAuth.delete('/api/likes', { data })
   },
-  getAll() {
-    return apiService.http.get('/api/likes')
+  getAll(userId = null, params = {}) {
+    const queryParams = { ...params }
+    if (userId) {
+      queryParams.user_id = userId
+    }
+    return apiService.http.get('/api/likes', { params: queryParams })
   },
   toggle(data) {
     return apiService.httpAuth.post('/api/likes/toggle', data)

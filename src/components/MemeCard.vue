@@ -416,10 +416,9 @@ const loadUserInteractionStatus = async () => {
 
     // 檢查當前用戶是否已按讚
     try {
-      const likeResponse = await likeService.getAll()
+      const likeResponse = await likeService.getAll(userStore.userId)
       const userLikes = likeResponse.data.filter(
-        (like) =>
-          like.meme_id === memeId.value && like.user_id === userStore.userId,
+        (like) => like.meme_id === memeId.value,
       )
       isLiked.value = userLikes.length > 0
     } catch (error) {
@@ -428,11 +427,9 @@ const loadUserInteractionStatus = async () => {
 
     // 檢查當前用戶是否已按噓
     try {
-      const dislikeResponse = await dislikeService.getAll()
+      const dislikeResponse = await dislikeService.getAll(userStore.userId)
       const userDislikes = dislikeResponse.data.filter(
-        (dislike) =>
-          dislike.meme_id === memeId.value &&
-          dislike.user_id === userStore.userId,
+        (dislike) => dislike.meme_id === memeId.value,
       )
       isDisliked.value = userDislikes.length > 0
     } catch (error) {
