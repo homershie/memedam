@@ -48,7 +48,7 @@
           <!-- 用戶頭像 -->
           <div class="relative group">
             <Avatar
-              :image="userProfile?.avatarUrl"
+              :image="avatarDisplayUrl"
               shape="circle"
               size="xlarge"
               class="border-3 border-surface-200 w-28 h-28"
@@ -572,6 +572,33 @@ const isCurrentUser = computed(() => {
 const filteredMemes = computed(() => {
   // 直接返回 memes，因為搜尋和排序現在由後端處理
   return memes.value
+})
+
+// 頭像顯示 URL（處理預覽和正式頭像）
+const avatarDisplayUrl = computed(() => {
+  // 如果是 blob URL（預覽），直接使用
+  if (
+    userProfile.value?.avatar &&
+    userProfile.value.avatar.startsWith('blob:')
+  ) {
+    return userProfile.value.avatar
+  }
+
+  // 如果有正式頭像，使用正式頭像
+  if (
+    userProfile.value?.avatar &&
+    typeof userProfile.value.avatar === 'string' &&
+    userProfile.value.avatar.trim().length > 0
+  ) {
+    return userProfile.value.avatar
+  }
+
+  // 如果沒有頭像，使用預設頭像
+  const seed =
+    userProfile.value?.username && userProfile.value.username.trim().length > 0
+      ? encodeURIComponent(userProfile.value.username)
+      : 'default'
+  return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${seed}`
 })
 
 // 載入用戶資料

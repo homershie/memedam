@@ -527,7 +527,7 @@
                   <div class="flex items-center space-x-4">
                     <div class="relative group">
                       <Avatar
-                        :image="userProfile.avatarUrl || userProfile.avatar"
+                        :image="avatarDisplayUrl"
                         shape="circle"
                         size="xlarge"
                         class="border-2 border-gray-200 dark:border-gray-600"
@@ -536,11 +536,9 @@
                       <div
                         v-if="
                           userProfile.avatar &&
-                          !userProfile.avatar.includes('dicebear.com') &&
-                          !userProfile.avatar.includes('api.dicebear.com') &&
                           !userProfile.avatar.startsWith('blob:')
                         "
-                        class="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        class="absolute w-16 h-16 inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       >
                         <Button
                           icon="pi pi-trash"
@@ -564,7 +562,7 @@
                       <!-- 如果有暫存檔案，顯示預覽提示 -->
                       <div
                         v-if="tempAvatarFile"
-                        class="absolute -top-1 -right-1 bg-warning-500 text-white text-xs px-1 py-0.5 rounded-full"
+                        class="absolute -top-1 -right-1 bg-primary-500 text-white text-xs px-1 py-0.5 rounded-full"
                       >
                         預覽
                       </div>
@@ -1751,6 +1749,30 @@ const themeMode = computed({
   },
 })
 
+// 頭像顯示 URL（處理預覽和正式頭像）
+const avatarDisplayUrl = computed(() => {
+  // 如果是 blob URL（預覽），直接使用
+  if (userProfile.avatar && userProfile.avatar.startsWith('blob:')) {
+    return userProfile.avatar
+  }
+
+  // 如果有正式頭像，使用正式頭像
+  if (
+    userProfile.avatar &&
+    typeof userProfile.avatar === 'string' &&
+    userProfile.avatar.trim().length > 0
+  ) {
+    return userProfile.avatar
+  }
+
+  // 如果沒有頭像，使用預設頭像
+  const seed =
+    userProfile.username && userProfile.username.trim().length > 0
+      ? encodeURIComponent(userProfile.username)
+      : 'default'
+  return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${seed}`
+})
+
 const preferencesForm = reactive({
   loading: false,
 })
@@ -1911,7 +1933,7 @@ const loadUserProfile = async () => {
       emailVerified: userData.email_verified || userData.emailVerified || false,
       displayName: userData.display_name || userData.displayName || '',
       // 使用自定義頭像
-      avatar: userData.avatar || userData.avatarUrl || null,
+      avatar: userData.avatar || null,
       // 封面圖片
       cover_image: userData.cover_image || null,
       gender: userData.gender || '',
@@ -2579,11 +2601,18 @@ const updateProfile = async () => {
         tempAvatarFile.value,
       )
 
-      // 將頭像 URL 加入更新資料
-      updateData.avatar = uploadResponse.data.url
+      if (uploadResponse.data.success) {
+        // 將頭像 URL 加入更新資料
+        updateData.avatar = uploadResponse.data.url
 
-      // 清除暫存檔案
-      tempAvatarFile.value = null
+        // 立即更新本地頭像顯示，避免重新載入資料
+        userProfile.avatar = uploadResponse.data.url
+
+        // 清除暫存檔案
+        tempAvatarFile.value = null
+      } else {
+        throw new Error('頭像上傳失敗')
+      }
     }
 
     // 如果有封面圖片變更，加入更新資料
@@ -2591,23 +2620,29 @@ const updateProfile = async () => {
       updateData.cover_image = userProfile.cover_image
     }
 
-    // 呼叫 API 更新個人資料
+    // 呼叫 API 更新個人資料（不包含頭像，因為頭像已經在上傳時處理了）
     const response = await userService.updateMe(updateData)
 
-    // 更新頭像顯示
-    if (response.data.user && response.data.user.avatar) {
-      userProfile.avatar = response.data.user.avatar
-    } else if (response.data.user && response.data.user.avatarUrl) {
-      userProfile.avatar = response.data.user.avatarUrl
+    // 更新其他欄位（除了頭像，因為頭像已經在上傳時更新了）
+    if (response.data.user) {
+      userProfile.displayName =
+        response.data.user.display_name ||
+        response.data.user.displayName ||
+        userProfile.displayName
+      userProfile.gender = response.data.user.gender || userProfile.gender
+      userProfile.birthday = response.data.user.birthday
+        ? new Date(response.data.user.birthday)
+        : userProfile.birthday
+      userProfile.bio = response.data.user.bio || userProfile.bio
+      if (response.data.user.cover_image !== undefined) {
+        userProfile.cover_image = response.data.user.cover_image
+      }
     }
 
     // 清理預覽 URL（如果有的話）
     if (userProfile.avatar && userProfile.avatar.startsWith('blob:')) {
       URL.revokeObjectURL(userProfile.avatar)
     }
-
-    // 重新載入用戶資料以確保顯示最新的頭像
-    await loadUserProfile()
 
     toast.add({
       severity: 'success',
@@ -2998,10 +3033,9 @@ const removeAvatar = async () => {
     // 清除暫存檔案
     tempAvatarFile.value = null
 
-    // 立即呼叫 API 以預設頭像更新兩個欄位
+    // 立即呼叫 API 以預設頭像更新 avatar 欄位（avatarUrl 是虛擬欄位）
     await userService.updateMe({
       avatar: null,
-      avatarUrl: null,
     })
 
     // 更新頭像顯示
