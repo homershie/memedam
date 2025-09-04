@@ -714,26 +714,71 @@ onMounted(async () => {
 
     // 載入標籤數據
     try {
-      const { data: tagData } = await tagService.getAll()
+      const tagResponse = await tagService.getAll()
+      const tagData = tagResponse.data
+      console.log('標籤數據載入成功:', tagData)
+
       // 正確解析後端 API 回應格式：{ tags: [...], pagination: {...} }
       allTags.value =
         tagData?.tags && Array.isArray(tagData.tags) ? tagData.tags : []
     } catch (tagError) {
       console.error('載入標籤失敗:', tagError)
-      allTags.value = []
+
+      // 檢查是否是網路或伺服器錯誤
+      if (tagError.code === 'NETWORK_ERROR' || !tagError.response) {
+        console.warn('標籤載入網路錯誤，使用空標籤列表')
+        allTags.value = []
+      } else if (tagError.response?.status >= 500) {
+        console.warn('標籤載入伺服器錯誤，使用空標籤列表')
+        allTags.value = []
+      } else {
+        // 其他錯誤也使用空列表，但記錄錯誤
+        console.error(
+          '標籤載入其他錯誤:',
+          tagError.response?.data || tagError.message,
+        )
+        allTags.value = []
+      }
     }
 
     // 載入迷因數據 - 使用 bundle API，支持 slug 和 ID 查詢
-    const { data } = await apiService.httpAuth.get(
-      `/api/memes/${memeId}/bundle`,
-      {
-        params: { include: 'scene,source' },
-      },
-    )
+    let responseData
+    try {
+      const response = await apiService.httpAuth.get(
+        `/api/memes/${memeId}/bundle`,
+        {
+          params: { include: 'scene,source' },
+        },
+      )
+      responseData = response.data
+      console.log('迷因 bundle 數據載入成功:', responseData)
+    } catch (apiError) {
+      console.error('迷因 bundle API 調用失敗:', apiError)
+
+      // 檢查是否是網路或伺服器錯誤
+      if (apiError.code === 'NETWORK_ERROR' || !apiError.response) {
+        throw new Error('網路連線失敗，請檢查網路連線後重試')
+      }
+
+      // 根據HTTP狀態碼提供更具體的錯誤信息
+      if (apiError.response?.status === 404) {
+        throw new Error('迷因不存在或已被刪除')
+      } else if (apiError.response?.status === 403) {
+        throw new Error('您沒有權限編輯此迷因')
+      } else if (apiError.response?.status === 401) {
+        throw new Error('認證失敗，請重新登入')
+      } else {
+        const errorMessage =
+          apiError.response?.data?.message || apiError.message
+        throw new Error(`載入迷因失敗: ${errorMessage}`)
+      }
+    }
 
     // 更靈活的數據解析 - 處理 bundle API 的數據結構
-    const bundleData = data.data || data || {}
+    const bundleData = responseData.data || responseData || {}
     const meme = bundleData.meme || {}
+
+    console.log('解析後的迷因數據:', meme)
 
     // 存儲當前編輯的迷因數據
     currentMeme.value = meme
@@ -977,11 +1022,21 @@ const searchTags = async (event) => {
 
   try {
     // 發送 API 請求到後端搜尋標籤
-    const { data } = await tagService.getAll({
+    const response = await tagService.getAll({
       search: query,
       limit: 20,
       lang: 'zh', // 預設搜尋中文標籤
     })
+
+    // 檢查響應數據
+    if (!response || !response.data) {
+      console.warn('標籤搜尋API返回空響應')
+      tagSuggestions.value = []
+      return
+    }
+
+    const data = response.data
+    console.log('標籤搜尋結果:', data)
 
     // 解析回應資料
     const tags = data.tags || data || []
@@ -993,14 +1048,24 @@ const searchTags = async (event) => {
     )
   } catch (error) {
     console.error('搜尋標籤失敗:', error)
-    // 如果 API 失敗，回退到本地搜尋
-    tagSuggestions.value = Array.isArray(allTags.value)
-      ? allTags.value.filter(
-          (tag) =>
-            tag.name.toLowerCase().includes(query) &&
-            !selectedTags.value.some((selected) => selected.name === tag.name),
-        )
-      : []
+
+    // 檢查是否是網路錯誤，如果是就回退到本地搜尋
+    if (error.code === 'NETWORK_ERROR' || !error.response) {
+      console.warn('網路錯誤，回退到本地標籤搜尋')
+      tagSuggestions.value = Array.isArray(allTags.value)
+        ? allTags.value.filter(
+            (tag) =>
+              tag.name.toLowerCase().includes(query) &&
+              !selectedTags.value.some(
+                (selected) => selected.name === tag.name,
+              ),
+          )
+        : []
+    } else {
+      // 其他API錯誤，清空建議列表
+      console.error('標籤搜尋API錯誤:', error.response?.data || error.message)
+      tagSuggestions.value = []
+    }
   }
 }
 
@@ -1234,15 +1299,59 @@ const handleSubmit = async () => {
         body: formData,
         // 不要加 headers: Content-Type
       })
-      const data = await res.json()
+
+      // 檢查響應狀態
+      if (!res.ok) {
+        console.error('主圖上傳請求失敗:', {
+          status: res.status,
+          statusText: res.statusText,
+          headers: Object.fromEntries(res.headers.entries()),
+        })
+
+        if (res.status === 413) {
+          throw new Error('檔案過大。請選擇小於 10MB 的圖片檔案')
+        } else if (res.status === 415) {
+          throw new Error('檔案格式不支援。只支援 JPG, PNG, GIF, WebP 格式')
+        } else if (res.status === 401) {
+          throw new Error('認證失敗，請重新登入')
+        } else if (res.status >= 500) {
+          throw new Error('伺服器錯誤，請稍後再試')
+        } else {
+          throw new Error(`上傳失敗 (${res.status}): ${res.statusText}`)
+        }
+      }
+
+      let data
+      try {
+        const responseText = await res.text()
+        console.log('主圖上傳原始響應:', responseText)
+
+        if (!responseText || responseText.trim() === '') {
+          throw new Error('伺服器返回空響應')
+        }
+
+        data = JSON.parse(responseText)
+        console.log('主圖上傳解析後的資料:', data)
+      } catch (parseError) {
+        console.error('JSON 解析失敗:', parseError)
+        console.error('原始響應內容:', await res.clone().text())
+        throw new Error(`伺服器響應格式錯誤: ${parseError.message}`)
+      }
+
       if (
         data.success &&
         data.url &&
         data.url.startsWith('https://res.cloudinary.com/')
       ) {
         form.cover_image = data.url
+        console.log('主圖上傳成功:', data.url)
       } else {
-        throw new Error(data.message || '主圖上傳失敗')
+        console.error('上傳回應無效:', data)
+        const errorMessage =
+          data.message ||
+          data.error ||
+          '主圖上傳失敗，伺服器未返回有效的圖片連結'
+        throw new Error(errorMessage)
       }
     }
 
@@ -1259,15 +1368,59 @@ const handleSubmit = async () => {
         body: formData,
         // 不要加 headers: Content-Type
       })
-      const data = await res.json()
+
+      // 檢查響應狀態
+      if (!res.ok) {
+        console.error('圖片上傳請求失敗:', {
+          status: res.status,
+          statusText: res.statusText,
+          headers: Object.fromEntries(res.headers.entries()),
+        })
+
+        if (res.status === 413) {
+          throw new Error('檔案過大。請選擇小於 10MB 的圖片檔案')
+        } else if (res.status === 415) {
+          throw new Error('檔案格式不支援。只支援 JPG, PNG, GIF, WebP 格式')
+        } else if (res.status === 401) {
+          throw new Error('認證失敗，請重新登入')
+        } else if (res.status >= 500) {
+          throw new Error('伺服器錯誤，請稍後再試')
+        } else {
+          throw new Error(`上傳失敗 (${res.status}): ${res.statusText}`)
+        }
+      }
+
+      let data
+      try {
+        const responseText = await res.text()
+        console.log('圖片上傳原始響應:', responseText)
+
+        if (!responseText || responseText.trim() === '') {
+          throw new Error('伺服器返回空響應')
+        }
+
+        data = JSON.parse(responseText)
+        console.log('圖片上傳解析後的資料:', data)
+      } catch (parseError) {
+        console.error('JSON 解析失敗:', parseError)
+        console.error('原始響應內容:', await res.clone().text())
+        throw new Error(`伺服器響應格式錯誤: ${parseError.message}`)
+      }
+
       if (
         data.success &&
         data.url &&
         data.url.startsWith('https://res.cloudinary.com/')
       ) {
         form.image_url = data.url
+        console.log('圖片上傳成功:', data.url)
       } else {
-        throw new Error(data.message || '圖片上傳失敗')
+        console.error('上傳回應無效:', data)
+        const errorMessage =
+          data.message ||
+          data.error ||
+          '圖片上傳失敗，伺服器未返回有效的圖片連結'
+        throw new Error(errorMessage)
       }
     }
 
@@ -1301,14 +1454,42 @@ const handleSubmit = async () => {
     // 建立新標籤
     for (const newTag of newTags) {
       try {
-        const { data } = await tagService.create({ name: newTag.name })
-        createdTags.push(data)
+        console.log(`開始建立新標籤: ${newTag.name}`)
+        const response = await tagService.create({ name: newTag.name })
+
+        if (!response || !response.data) {
+          console.error(`建立標籤 "${newTag.name}" 返回空響應`)
+          continue
+        }
+
+        const createdTag = response.data
+        console.log(`標籤 "${newTag.name}" 建立成功:`, createdTag)
+
+        createdTags.push(createdTag)
+
         // 更新本地標籤清單
         if (Array.isArray(allTags.value)) {
-          allTags.value.push(data)
+          allTags.value.push(createdTag)
         }
       } catch (error) {
         console.error(`建立標籤 "${newTag.name}" 失敗:`, error)
+
+        // 檢查是否是重複標籤錯誤
+        if (error.response?.status === 409) {
+          console.warn(`標籤 "${newTag.name}" 已存在，跳過建立`)
+        } else if (error.response?.status === 400) {
+          console.error(
+            `標籤 "${newTag.name}" 格式無效:`,
+            error.response.data?.message,
+          )
+        } else {
+          console.error(
+            `建立標籤 "${newTag.name}" 其他錯誤:`,
+            error.response?.data || error.message,
+          )
+        }
+
+        // 標籤建立失敗，但不阻止整體保存流程
       }
     }
 
@@ -1354,7 +1535,32 @@ const handleSubmit = async () => {
 
     // 使用真正的數據庫 ID 進行更新，而不是 slug
     const realMemeId = currentMeme.value?._id || memeId
-    await memeService.update(realMemeId, memeData)
+    console.log('準備更新迷因:', { memeId: realMemeId, memeData })
+
+    try {
+      const updateResponse = await memeService.update(realMemeId, memeData)
+      console.log('迷因更新成功:', updateResponse.data || updateResponse)
+    } catch (updateError) {
+      console.error('迷因更新失敗:', updateError)
+
+      // 檢查是否是驗證錯誤
+      if (updateError.response?.status === 400) {
+        const validationErrors =
+          updateError.response.data?.errors ||
+          updateError.response.data?.message
+        throw new Error(`資料驗證失敗: ${validationErrors}`)
+      } else if (updateError.response?.status === 403) {
+        throw new Error('您沒有權限更新此迷因')
+      } else if (updateError.response?.status === 404) {
+        throw new Error('迷因不存在或已被刪除')
+      } else if (updateError.response?.status === 409) {
+        throw new Error('資料衝突，可能是 slug 重複或其他唯一性約束')
+      } else {
+        const errorMessage =
+          updateError.response?.data?.message || updateError.message
+        throw new Error(`更新失敗: ${errorMessage}`)
+      }
+    }
 
     // 現在有了 memeId，上傳詳細介紹中的圖片
     if (pendingDetailImages.value.length > 0) {
@@ -1376,7 +1582,44 @@ const handleSubmit = async () => {
             body: formData,
           })
 
-          const data = await res.json()
+          // 檢查響應狀態
+          if (!res.ok) {
+            console.error('詳細介紹圖片上傳請求失敗:', {
+              status: res.status,
+              statusText: res.statusText,
+              headers: Object.fromEntries(res.headers.entries()),
+            })
+
+            if (res.status === 413) {
+              console.error('詳細介紹圖片檔案過大')
+            } else if (res.status === 415) {
+              console.error('詳細介紹圖片格式不支援')
+            } else {
+              console.error(
+                `詳細介紹圖片上傳失敗 (${res.status}): ${res.statusText}`,
+              )
+            }
+            continue // 跳過這個檔案，繼續處理下一個
+          }
+
+          let data
+          try {
+            const responseText = await res.text()
+            console.log('詳細介紹圖片上傳原始響應:', responseText)
+
+            if (!responseText || responseText.trim() === '') {
+              console.error('詳細介紹圖片上傳：伺服器返回空響應')
+              continue
+            }
+
+            data = JSON.parse(responseText)
+            console.log('詳細介紹圖片上傳解析後的資料:', data)
+          } catch (parseError) {
+            console.error('詳細介紹圖片 JSON 解析失敗:', parseError)
+            console.error('原始響應內容:', await res.clone().text())
+            continue // 跳過這個檔案，繼續處理下一個
+          }
+
           if (
             data.success &&
             data.url &&
@@ -1387,8 +1630,12 @@ const handleSubmit = async () => {
               detailImages.value.push(data.url)
             }
             uploadedUrls.push(data.url)
+            console.log('詳細介紹圖片上傳成功:', data.url)
           } else {
-            console.error('詳細介紹圖片上傳失敗:', data.message || '未知錯誤')
+            console.error(
+              '詳細介紹圖片上傳回應無效:',
+              data.message || '未知錯誤',
+            )
           }
         } catch (error) {
           console.error('詳細介紹圖片上傳失敗:', error)
@@ -1398,12 +1645,28 @@ const handleSubmit = async () => {
       // 如果有新的圖片上傳成功，更新迷因的 detail_images
       if (uploadedUrls.length > 0) {
         try {
-          await memeService.update(realMemeId, {
+          console.log('更新迷因詳細介紹圖片:', detailImages.value)
+          const detailUpdateResponse = await memeService.update(realMemeId, {
             detail_images: detailImages.value,
             _markAsModified: true,
           })
+          console.log(
+            '詳細介紹圖片更新成功:',
+            detailUpdateResponse.data || detailUpdateResponse,
+          )
         } catch (error) {
           console.error('更新迷因詳細介紹圖片失敗:', error)
+
+          // 這個錯誤不應該阻止整體成功，因為主要內容已經更新
+          // 只記錄錯誤，但不拋出異常
+          if (error.response?.status === 400) {
+            console.warn('詳細介紹圖片更新驗證失敗，但主要內容已更新')
+          } else {
+            console.warn(
+              '詳細介紹圖片更新失敗，但主要內容已更新:',
+              error.response?.data?.message || error.message,
+            )
+          }
         }
       }
     }
