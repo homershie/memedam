@@ -1627,7 +1627,7 @@ const handleSubmit = async () => {
     pendingDetailImages.value = []
 
     // 跳轉到所有迷因頁面
-    router.push('/memes/all')
+    router.push('/memes/new')
   } catch (error) {
     console.error('投稿失敗:', error)
     submitError.value =
