@@ -250,7 +250,7 @@ watch(
       // 如果有值但還沒載入，嘗試載入迷因資料
       try {
         // 使用認證的 API 調用
-        const response = await fetch(`/api/memes/${newVal}`, {
+        const response = await fetch(`${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/memes/${newVal}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },

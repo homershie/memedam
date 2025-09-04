@@ -53,6 +53,11 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
+      define: {
+        __VITE_API_URL__: JSON.stringify(
+          env.VITE_API_URL || 'https://api.memedam.com',
+        ),
+      },
     },
     optimizeDeps: {
       include: ['vue', 'vue-router', 'pinia', 'primevue', 'chart.js'],

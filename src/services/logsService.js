@@ -198,7 +198,7 @@ class LogsService {
    */
   getStreamBaseURL() {
     // 使用與 apiService 相同的環境變數
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://api.memedam.com'
 
     // 如果是相對路徑，轉換為絕對路徑
     if (apiUrl.startsWith('/')) {

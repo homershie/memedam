@@ -2,20 +2,29 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/userStore'
 import userService from './userService'
 
+// 獲取 API 基礎 URL
+const getApiBaseUrl = () => {
+  // 生產環境使用定義的常量，開發環境使用環境變數
+  if (import.meta.env.PROD && window.__VITE_API_URL__) {
+    return window.__VITE_API_URL__
+  }
+  return import.meta.env.VITE_API_URL || 'http://api.memedam.com'
+}
+
+// 獲取完整的 API URL
+export const getApiUrl = (endpoint) => {
+  const baseUrl = getApiBaseUrl()
+  return `${baseUrl}${endpoint}`
+}
+
 // axios.create 建立一個有自己預設設定的 axios
-// baseURL = http://localhost:4000
-// api.post('/user')
-// api.post('/user/login')
-// baseURL = x
-// axios.post('http://localhost:4000/user')
-// axios.post('http://localhost:4000/user/login')
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
 })
 
 const httpAuth = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
 })
 

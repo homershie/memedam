@@ -153,7 +153,7 @@ const loadData = async () => {
             // 獲取檢舉者資訊
             try {
               const reporterResponse = await fetch(
-                `/api/users/${report.reporter_id}`,
+                `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/users/${report.reporter_id}`,
               )
               console.log(
                 '檢舉者 API 回應:',
@@ -178,7 +178,7 @@ const loadData = async () => {
             switch (report.target_type) {
               case 'meme': {
                 const memeResponse = await fetch(
-                  `/api/memes/${report.target_id}`,
+                  `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/memes/${report.target_id}`,
                 )
                 console.log(
                   '迷因 API 回應:',
@@ -201,7 +201,7 @@ const loadData = async () => {
               }
               case 'comment': {
                 const commentResponse = await fetch(
-                  `/api/comments/${report.target_id}`,
+                  `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/comments/${report.target_id}`,
                 )
                 if (commentResponse.ok) {
                   const commentData = await commentResponse.json()
@@ -218,7 +218,7 @@ const loadData = async () => {
               }
               case 'user': {
                 const userResponse = await fetch(
-                  `/api/users/${report.target_id}`,
+                  `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/users/${report.target_id}`,
                 )
                 if (userResponse.ok) {
                   const userData = await userResponse.json()

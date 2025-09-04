@@ -56,7 +56,7 @@ export const checkOAuthConfig = () => {
 
 // 生成正確的重定向 URI 列表
 export const getRequiredRedirectUris = () => {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://api.memedam.com'
   const frontendUrl = window.location.origin
 
   return [
@@ -270,7 +270,7 @@ export const testOAuthConfig = async () => {
 
 // Google OAuth 配置檢查清單
 export const getGoogleOAuthChecklist = () => {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://api.memedam.com'
   const frontendUrl = window.location.origin
   const isLocalhost = window.location.hostname === 'localhost'
 

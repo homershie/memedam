@@ -1312,7 +1312,7 @@ const checkNewSourceSlugAvailable = async () => {
 
   try {
     const response = await fetch(
-      `/api/sources/slug-available?slug=${encodeURIComponent(newSource.value.slug)}`,
+      `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/sources/slug-available?slug=${encodeURIComponent(newSource.value.slug)}`,
     )
     const data = await response.json()
 
@@ -1427,7 +1427,7 @@ watch(
         isLoadingSource.value = true
         try {
           // 使用認證的 API 調用
-          const response = await fetch(`/api/sources/${newSourceId}`, {
+          const response = await fetch(`${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/sources/${newSourceId}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
@@ -1447,7 +1447,7 @@ watch(
               isLoadingScene.value = true
               try {
                 // 使用認證的 API 調用
-                const sceneResponse = await fetch(`/api/scenes/${newSceneId}`, {
+                const sceneResponse = await fetch(`${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/scenes/${newSceneId}`, {
                   headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                   },

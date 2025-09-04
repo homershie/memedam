@@ -612,7 +612,7 @@ import SidebarDataEditor from '@/components/SidebarDataEditor.vue'
 import memeService from '@/services/memeService'
 import tagService from '@/services/tagService'
 import memeTagService from '@/services/memeTagService'
-import apiService from '@/services/apiService' // 新增 apiService
+import apiService, { getApiUrl } from '@/services/apiService' // 新增 apiService
 
 // 工具函數
 import { getMemeSlug } from '@/utils/dataUtils'
@@ -1291,7 +1291,7 @@ const handleSubmit = async () => {
       const formData = new FormData()
       formData.append('image', uploadedCoverImageFile.value) // key 必須是 'image'
 
-      const res = await fetch('/api/upload/image', {
+      const res = await fetch(getApiUrl('/api/upload/image'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1360,7 +1360,7 @@ const handleSubmit = async () => {
       const formData = new FormData()
       formData.append('image', uploadedImageFile.value) // key 必須是 'image'
 
-      const res = await fetch('/api/upload/image', {
+      const res = await fetch(getApiUrl('/api/upload/image'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1572,7 +1572,7 @@ const handleSubmit = async () => {
           formData.append('image', file)
 
           // 使用 URL 查詢參數來傳遞這些值，因為 multer 可能無法正確解析 FormData 中的文字欄位
-          const uploadUrl = `/api/upload/image?isDetailImage=true&memeId=${realMemeId}`
+          const uploadUrl = `${getApiUrl('/api/upload/image')}?isDetailImage=true&memeId=${realMemeId}`
 
           const res = await fetch(uploadUrl, {
             method: 'POST',

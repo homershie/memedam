@@ -3,6 +3,8 @@
  * 用於驗證贊助交易的真實性和有效性
  */
 
+import { getApiUrl } from '@/services/apiService'
+
 // 贊助驗證狀態
 const SPONSOR_VALIDATION_STATUS = {
   VALID: 'valid',
@@ -27,7 +29,9 @@ export const validateSponsorTransaction = async (transactionId) => {
 
   try {
     // 呼叫 API 驗證交易
-    const response = await fetch(`/api/sponsors/transaction/${transactionId}`)
+    const response = await fetch(
+      getApiUrl(`/api/sponsors/transaction/${transactionId}`),
+    )
 
     if (!response.ok) {
       return {
@@ -129,7 +133,7 @@ export const logSponsorPageAccess = async (
 
   try {
     // 發送到後端記錄
-    await fetch('/api/sponsors/log-access', {
+    await fetch(getApiUrl('/api/sponsors/log-access'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

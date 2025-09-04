@@ -272,7 +272,7 @@ const startBinding = async () => {
       }
 
       // 構建完整的 URL
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://api.memedam.com'
       const fullAuthUrl = authUrl.startsWith('http')
         ? authUrl
         : `${baseUrl}${authUrl}`

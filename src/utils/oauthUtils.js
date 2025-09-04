@@ -168,12 +168,10 @@ const handleOAuthSuccess = async (token, userStore, toast, _router) => {
     localStorage.setItem('temp_oauth_token', token)
 
     // 使用 token 獲取用戶資訊
-    let baseUrl = import.meta.env.VITE_API_URL
-
-    // 如果環境變數為空或未定義，使用當前域名（開發環境使用 Vite 代理）
-    if (!baseUrl || baseUrl.trim() === '') {
-      baseUrl = window.location.origin
-    }
+    const baseUrl =
+      window.__VITE_API_URL__ ||
+      import.meta.env.VITE_API_URL ||
+      'https://api.memedam.com'
 
     const response = await fetch(`${baseUrl}/api/users/me`, {
       headers: {

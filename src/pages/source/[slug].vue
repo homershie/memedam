@@ -1889,7 +1889,7 @@ const checkEditSourceSlugAvailable = async () => {
 
   try {
     const response = await fetch(
-      `/api/sources/slug-available?slug=${encodeURIComponent(editSource.value.slug)}&exclude_id=${source.value._id}`,
+      `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/sources/slug-available?slug=${encodeURIComponent(editSource.value.slug)}&exclude_id=${source.value._id}`,
     )
     const data = await response.json()
 

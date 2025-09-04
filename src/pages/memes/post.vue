@@ -622,6 +622,7 @@ import SidebarDataEditor from '@/components/SidebarDataEditor.vue'
 import memeService from '@/services/memeService'
 import tagService from '@/services/tagService'
 import memeTagService from '@/services/memeTagService'
+import { getApiUrl } from '@/services/apiService'
 
 // 工具函數
 import {
@@ -1155,7 +1156,7 @@ const checkSlugAvailable = async () => {
 
   try {
     const response = await fetch(
-      `/api/memes/slug-available?slug=${encodeURIComponent(form.slug)}`,
+      `${getApiUrl('/api/memes/slug-available')}?slug=${encodeURIComponent(form.slug)}`,
     )
     const data = await response.json()
 
@@ -1359,7 +1360,7 @@ const handleSubmit = async () => {
 
         const uploadStartTime = Date.now()
 
-        const res = await fetch('/api/upload/image', {
+        const res = await fetch(getApiUrl('/api/upload/image'), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1539,7 +1540,7 @@ const handleSubmit = async () => {
           formData.append('image', file)
 
           // 使用 URL 查詢參數來傳遞這些值，因為 multer 可能無法正確解析 FormData 中的文字欄位
-          const uploadUrl = `/api/upload/image?isDetailImage=true&memeId=${meme._id}`
+          const uploadUrl = `${getApiUrl('/api/upload/image')}?isDetailImage=true&memeId=${meme._id}`
 
           const res = await fetch(uploadUrl, {
             method: 'POST',
