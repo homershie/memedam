@@ -32,6 +32,21 @@
         />
       </div>
 
+      <!-- 移除按鈕 - 只有當前用戶且有封面圖片時才能看到 -->
+      <div
+        v-if="isCurrentUser && userProfile?.cover_image"
+        class="absolute top-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+      >
+        <Button
+          icon="pi pi-trash"
+          severity="danger"
+          size="small"
+          class="w-10 h-10 rounded-full shadow-lg"
+          @click="removeCoverImage"
+          aria-label="移除封面圖片"
+        />
+      </div>
+
       <!-- 尺寸提示 - 只有當前用戶才能看到 -->
       <div
         v-if="isCurrentUser"
@@ -1578,6 +1593,42 @@ const formatDateOnly = (date) => {
     })
   } catch {
     return '未設定'
+  }
+}
+
+// 移除封面圖片
+const removeCoverImage = async () => {
+  try {
+    // 立即呼叫 API 移除封面圖片
+    await userService.updateMe({
+      cover_image: null,
+    })
+
+    // 更新封面圖片顯示
+    userProfile.value.cover_image = null
+
+    // 觸發自定義事件，讓其他組件知道封面圖片已移除
+    window.dispatchEvent(
+      new CustomEvent('user-cover-updated', {
+        detail: { coverImageUrl: null },
+      }),
+    )
+
+    toast.add({
+      severity: 'success',
+      summary: '成功',
+      detail: '封面圖片已移除',
+      life: 3000,
+    })
+  } catch (error) {
+    console.error('封面圖片移除失敗:', error)
+    const errorMessage = error.response?.data?.message || '封面圖片移除失敗'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
   }
 }
 
