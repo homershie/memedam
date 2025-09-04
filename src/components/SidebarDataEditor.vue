@@ -40,7 +40,7 @@
         <!-- 別名 -->
         <div>
           <label class="block text-sm font-medium mb-2">別名（AKA/別稱）</label>
-          <div class="flex gap-2">
+          <div class="flex flex-col md:flex-row gap-2">
             <InputText
               v-model="newAlias"
               placeholder="輸入別名..."
@@ -198,7 +198,7 @@
         <!-- 相關趨勢 -->
         <label for="related_trends">相關趨勢/主題標籤</label>
         <div>
-          <div class="flex gap-2">
+          <div class="flex flex-col md:flex-row gap-2">
             <InputText
               v-model="newTrend"
               placeholder="輸入相關趨勢..."
@@ -231,7 +231,7 @@
         <!-- 自訂欄位 -->
         <div>
           <label class="block text-sm font-medium mb-2">自訂欄位</label>
-          <div class="flex gap-2 mb-3">
+          <div class="flex flex-col md:flex-row gap-2 mb-3">
             <InputText
               v-model="newFieldName"
               placeholder="欄位名稱..."

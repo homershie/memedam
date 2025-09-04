@@ -1,6 +1,6 @@
 <template>
   <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
-    <div class="w-5xl mx-auto overflow-hidden">
+    <div class="max-w-5xl mx-auto overflow-hidden">
       <div class="text-center py-6">
         <h1 class="text-3xl font-bold text-surface-800">投稿迷因</h1>
         <p class="mt-2">分享你的創意，讓大家一起歡樂！</p>
@@ -117,6 +117,29 @@
                     @select="onCoverImageSelect"
                     @clear="onCoverImageClear"
                   />
+                  <!-- 檔案資訊顯示 -->
+                  <div
+                    v-if="uploadedCoverImageFile"
+                    class="mt-2 p-2 bg-surface-100 dark:bg-surface-800 rounded text-sm"
+                  >
+                    <div class="flex items-center gap-2">
+                      <i class="pi pi-file text-primary-500"></i>
+                      <span class="font-medium">{{
+                        uploadedCoverImageFile.name
+                      }}</span>
+                    </div>
+                    <div class="text-surface-600 mt-1">
+                      大小:
+                      {{
+                        (uploadedCoverImageFile.size / 1024 / 1024).toFixed(2)
+                      }}
+                      MB | 格式:
+                      {{
+                        uploadedCoverImageFile.type.split('/')[1].toUpperCase()
+                      }}
+                    </div>
+                  </div>
+
                   <small class="text-surface-500 mt-1 block">
                     支援 JPG, PNG, GIF, WebP (最大 10MB)
                   </small>
@@ -133,6 +156,8 @@
                     type="url"
                     class="w-full"
                     :class="{ 'p-invalid': errors.coverImage }"
+                    @input="onCoverImageUrlInput"
+                    @blur="validateCoverImageUrlInput"
                   />
                   <small class="text-surface-500 mt-1 block">
                     支援常見圖片網站：Imgur、Reddit、Discord 等
@@ -171,8 +196,19 @@
               severity="error"
               size="small"
               variant="simple"
+              :closable="true"
+              @close="errors.coverImage = ''"
             >
-              {{ errors.coverImage }}
+              <div class="space-y-1">
+                <div class="font-medium">主圖驗證錯誤：</div>
+                <div
+                  v-for="error in errors.coverImage.split('；')"
+                  :key="error"
+                  class="text-sm"
+                >
+                  • {{ error }}
+                </div>
+              </div>
             </Message>
           </div>
 
@@ -721,28 +757,201 @@ const onImageError = () => {
   // 圖片預覽錯誤處理
 }
 
+// 主圖檔案驗證
+const validateCoverImageFile = (file) => {
+  const errors = []
+
+  // 檢查檔案類型
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ]
+  if (!allowedTypes.includes(file.type)) {
+    errors.push('檔案格式不支援。只支援 JPG, PNG, GIF, WebP 格式')
+  }
+
+  // 檢查檔案大小 (10MB = 10 * 1024 * 1024 bytes)
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    errors.push(
+      `檔案過大 (${(file.size / 1024 / 1024).toFixed(2)}MB)。最大限制為 10MB`,
+    )
+  }
+
+  // 檢查檔案大小是否為 0
+  if (file.size === 0) {
+    errors.push('檔案似乎是空的，請檢查檔案是否損壞')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  }
+}
+
+// 主圖 URL 驗證
+const validateCoverImageUrl = (url) => {
+  if (!url || url.trim() === '') {
+    return { isValid: true, errors: [] } // 空值是允許的
+  }
+
+  const errors = []
+
+  try {
+    const urlObj = new URL(url)
+
+    // 檢查協議
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      errors.push('只支援 HTTP 或 HTTPS 連結')
+    }
+
+    // 檢查常見圖片網站域名
+    const allowedDomains = [
+      'imgur.com',
+      'i.imgur.com',
+      'reddit.com',
+      'redd.it',
+      'discord.com',
+      'discordapp.com',
+      'cdn.discordapp.com',
+      'twitter.com',
+      'pbs.twimg.com',
+      'x.com',
+      'instagram.com',
+      'scontent.cdninstagram.com',
+      'facebook.com',
+      'fbcdn.net',
+      'cloudinary.com',
+      'res.cloudinary.com',
+    ]
+
+    const hostname = urlObj.hostname.toLowerCase()
+    const isAllowedDomain = allowedDomains.some(
+      (domain) => hostname === domain || hostname.endsWith('.' + domain),
+    )
+
+    if (!isAllowedDomain) {
+      errors.push('請使用支援的圖片網站連結（Imgur、Reddit、Discord 等）')
+    }
+
+    // 檢查 URL 長度
+    if (url.length > 2000) {
+      errors.push('連結過長，請使用較短的連結')
+    }
+  } catch (error) {
+    console.error('URL 驗證錯誤:', error)
+    errors.push('連結格式無效，請輸入有效的網址')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  }
+}
+
 // 主圖上傳處理
 const onCoverImageSelect = (event) => {
   const file = event.files[0]
-  if (file) {
+  if (!file) return
+
+  // 驗證檔案
+  const validation = validateCoverImageFile(file)
+  if (!validation.isValid) {
+    errors.coverImage = validation.errors.join('；')
+    uploadedCoverImageFile.value = null
+    uploadedCoverImageUrl.value = ''
+    coverImagePreviewError.value = false
+
+    toast.add({
+      severity: 'error',
+      summary: '檔案驗證失敗',
+      detail: validation.errors[0],
+      life: 5000,
+    })
+    return
+  }
+
+  // 清除之前的錯誤
+  errors.coverImage = ''
+  coverImagePreviewError.value = false
+
+  try {
     uploadedCoverImageFile.value = file
+
     // 本地預覽
     const reader = new FileReader()
     reader.onload = (e) => {
       uploadedCoverImageUrl.value = e.target.result
-      form.cover_image = ''
+      form.cover_image = '' // 清除連結，因為已選擇檔案
+    }
+    reader.onerror = (error) => {
+      console.error('檔案讀取錯誤:', error)
+      errors.coverImage = '檔案讀取失敗，請重試'
+      uploadedCoverImageFile.value = null
+      uploadedCoverImageUrl.value = ''
+
+      toast.add({
+        severity: 'error',
+        summary: '檔案讀取失敗',
+        detail: '無法預覽圖片，請檢查檔案是否損壞',
+        life: 5000,
+      })
     }
     reader.readAsDataURL(file)
-    // 不上傳，僅預覽
+  } catch (error) {
+    console.error('檔案處理錯誤:', error)
+    errors.coverImage = '檔案處理時發生錯誤'
+    uploadedCoverImageFile.value = null
+    uploadedCoverImageUrl.value = ''
   }
 }
 
 const onCoverImageClear = () => {
   uploadedCoverImageUrl.value = ''
+  uploadedCoverImageFile.value = null
+  coverImagePreviewError.value = false
+  errors.coverImage = ''
 }
 
 const onCoverImageError = () => {
   coverImagePreviewError.value = true
+  errors.coverImage = '圖片載入失敗，請檢查檔案或連結是否正確'
+}
+
+// 主圖 URL 輸入處理
+const onCoverImageUrlInput = () => {
+  // 清除檔案，因為用戶選擇使用連結
+  if (uploadedCoverImageFile.value) {
+    uploadedCoverImageFile.value = null
+    uploadedCoverImageUrl.value = ''
+  }
+
+  // 清除之前的錯誤
+  errors.coverImage = ''
+  coverImagePreviewError.value = false
+}
+
+// 主圖 URL 驗證處理
+const validateCoverImageUrlInput = () => {
+  const url = form.cover_image?.trim()
+  if (!url) return
+
+  const validation = validateCoverImageUrl(url)
+  if (!validation.isValid) {
+    errors.coverImage = validation.errors.join('；')
+
+    toast.add({
+      severity: 'warn',
+      summary: '連結格式警告',
+      detail: validation.errors[0],
+      life: 4000,
+    })
+  } else {
+    errors.coverImage = ''
+  }
 }
 
 // YouTube 支援 (影片和音訊都可以用)
@@ -1028,6 +1237,24 @@ const validateForm = () => {
     }
   }
 
+  // 驗證主圖
+  if (uploadedCoverImageFile.value) {
+    // 如果有選擇檔案，檢查檔案是否有效
+    const fileValidation = validateCoverImageFile(uploadedCoverImageFile.value)
+    if (!fileValidation.isValid) {
+      errors.coverImage = fileValidation.errors.join('；')
+      isValid = false
+    }
+  } else if (form.cover_image && form.cover_image.trim()) {
+    // 如果有輸入連結，驗證連結格式
+    const urlValidation = validateCoverImageUrl(form.cover_image.trim())
+    if (!urlValidation.isValid) {
+      errors.coverImage = urlValidation.errors.join('；')
+      isValid = false
+    }
+  }
+  // 如果都沒有提供，允許通過（因為是選填）
+
   return isValid
 }
 
@@ -1120,26 +1347,96 @@ const handleSubmit = async () => {
 
     // 送出時才上傳主圖片
     if (uploadedCoverImageFile.value) {
-      const formData = new FormData()
-      formData.append('image', uploadedCoverImageFile.value) // key 必須是 'image'
+      try {
+        console.log('開始上傳主圖檔案...', {
+          fileName: uploadedCoverImageFile.value.name,
+          fileSize: uploadedCoverImageFile.value.size,
+          fileType: uploadedCoverImageFile.value.type,
+        })
 
-      const res = await fetch('/api/upload/image', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-        // 不要加 headers: Content-Type
-      })
-      const data = await res.json()
-      if (
-        data.success &&
-        data.url &&
-        data.url.startsWith('https://res.cloudinary.com/')
-      ) {
-        form.cover_image = data.url
-      } else {
-        throw new Error(data.message || '主圖上傳失敗')
+        const formData = new FormData()
+        formData.append('image', uploadedCoverImageFile.value) // key 必須是 'image'
+
+        const uploadStartTime = Date.now()
+
+        const res = await fetch('/api/upload/image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+          // 不要加 headers: Content-Type，讓瀏覽器自動設定
+        })
+
+        const uploadEndTime = Date.now()
+        console.log(
+          `主圖上傳請求完成，耗時: ${uploadEndTime - uploadStartTime}ms`,
+        )
+
+        if (!res.ok) {
+          console.error('上傳請求失敗:', {
+            status: res.status,
+            statusText: res.statusText,
+            headers: Object.fromEntries(res.headers.entries()),
+          })
+
+          if (res.status === 413) {
+            throw new Error('檔案過大。請選擇小於 10MB 的圖片檔案')
+          } else if (res.status === 415) {
+            throw new Error('檔案格式不支援。只支援 JPG, PNG, GIF, WebP 格式')
+          } else if (res.status === 401) {
+            throw new Error('認證失敗，請重新登入')
+          } else if (res.status >= 500) {
+            throw new Error('伺服器錯誤，請稍後再試')
+          } else {
+            throw new Error(`上傳失敗 (${res.status}): ${res.statusText}`)
+          }
+        }
+
+        let data
+        try {
+          data = await res.json()
+          console.log('上傳回應資料:', data)
+        } catch (parseError) {
+          console.error('解析上傳回應失敗:', parseError)
+          throw new Error('伺服器回應格式錯誤，請聯繫管理員')
+        }
+
+        if (
+          data.success &&
+          data.url &&
+          data.url.startsWith('https://res.cloudinary.com/')
+        ) {
+          form.cover_image = data.url
+          console.log('主圖上傳成功:', data.url)
+
+          toast.add({
+            severity: 'success',
+            summary: '主圖上傳成功',
+            detail: '圖片已成功上傳到雲端',
+            life: 3000,
+          })
+        } else {
+          console.error('上傳回應無效:', data)
+          const errorMessage =
+            data.message ||
+            data.error ||
+            '主圖上傳失敗，伺服器未返回有效的圖片連結'
+          throw new Error(errorMessage)
+        }
+      } catch (uploadError) {
+        console.error('主圖上傳過程中發生錯誤:', uploadError)
+
+        // 如果是網路錯誤
+        if (
+          uploadError.name === 'TypeError' &&
+          uploadError.message.includes('fetch')
+        ) {
+          throw new Error('網路連線失敗，請檢查網路連線後重試')
+        }
+
+        // 如果是其他錯誤，直接拋出
+        throw uploadError
       }
     }
 
