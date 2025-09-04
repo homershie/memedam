@@ -2612,6 +2612,13 @@ const updateProfile = async () => {
         // 立即更新本地頭像顯示，避免重新載入資料
         userProfile.avatar = uploadResponse.data.url
 
+        // 觸發自定義事件，讓其他組件知道頭像已更新
+        window.dispatchEvent(
+          new CustomEvent('user-avatar-updated', {
+            detail: { avatarUrl: uploadResponse.data.url },
+          }),
+        )
+
         // 清除暫存檔案
         tempAvatarFile.value = null
       } else {
@@ -3044,6 +3051,13 @@ const removeAvatar = async () => {
 
     // 更新頭像顯示
     userProfile.avatar = null
+
+    // 觸發自定義事件，讓其他組件知道頭像已移除
+    window.dispatchEvent(
+      new CustomEvent('user-avatar-updated', {
+        detail: { avatarUrl: null },
+      }),
+    )
   } catch (error) {
     console.error('頭像移除失敗:', error)
     const errorMessage =
@@ -3145,6 +3159,13 @@ const handleCoverImageChange = async (event) => {
       // 更新用戶資料中的封面圖片
       userProfile.cover_image = response.data.url
 
+      // 觸發自定義事件，讓其他組件知道封面圖片已更新
+      window.dispatchEvent(
+        new CustomEvent('user-cover-updated', {
+          detail: { coverImageUrl: response.data.url },
+        }),
+      )
+
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -3178,6 +3199,13 @@ const removeCoverImage = async () => {
 
     // 更新封面圖片顯示
     userProfile.cover_image = null
+
+    // 觸發自定義事件，讓其他組件知道封面圖片已移除
+    window.dispatchEvent(
+      new CustomEvent('user-cover-updated', {
+        detail: { coverImageUrl: null },
+      }),
+    )
 
     toast.add({
       severity: 'success',
