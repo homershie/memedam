@@ -237,7 +237,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 防止 iOS Safari 的橡皮筋效果干擾 pull-to-refresh */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* 確保觸摸事件正常工作 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 #app {
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
   max-width: 100%;
   margin: 0 auto;
   font-weight: normal;
