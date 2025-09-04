@@ -162,13 +162,13 @@
             </div>
           </div>
 
-          <!-- 成為付費會員按鈕 -->
-          <Button
+          <!-- 成為付費會員按鈕(暫時不開放) -->
+          <!-- <Button
             v-if="!isVipUser"
             label="成為頂級會員"
             class="text-white rounded-lg hidden lg:inline-flex"
             @click="$router.push('/premium')"
-          />
+          /> -->
         </div>
       </template>
     </Menubar>
@@ -589,9 +589,9 @@ const menuList = [
 ]
 
 // VIP 用戶判定
-const isVipUser = computed(() => {
-  return user.role === 'vip'
-})
+// const isVipUser = computed(() => {
+//   return user.role === 'vip'
+// })
 
 const filteredMenuList = computed(() => {
   const filtered = menuList.filter((item) => {
