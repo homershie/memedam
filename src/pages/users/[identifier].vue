@@ -565,8 +565,29 @@ const username = computed(() => userIdentifier.value?.value || null)
 
 // 判斷是否為當前用戶
 const isCurrentUser = computed(() => {
-  // 使用 Pinia store 中的用戶 ID
-  return userStore.userId === userId.value
+  // 比較用戶 ID 或用戶名
+  const currentUserId = userStore.userId
+  const currentUsername = userStore.username
+  const pageUserId = userProfile.value?._id
+  const pageUsername = userProfile.value?.username
+  const pageIdentifier = userIdentifier.value?.value
+
+  // 如果用戶已登入，檢查是否為當前用戶
+  if (currentUserId && currentUsername) {
+    // 比較用戶 ID
+    if (currentUserId === pageUserId) {
+      return true
+    }
+    // 比較用戶名
+    if (
+      currentUsername === pageUsername ||
+      currentUsername === pageIdentifier
+    ) {
+      return true
+    }
+  }
+
+  return false
 })
 
 const filteredMemes = computed(() => {
