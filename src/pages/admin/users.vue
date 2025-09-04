@@ -44,6 +44,7 @@ const roles = ref([
   { label: '首席迷因長', value: 'admin' },
   { label: '一般用戶', value: 'user' },
   { label: '營銷經理', value: 'manager' },
+  { label: '尊榮用戶', value: 'vip' },
 ])
 
 const loadUsers = async () => {
