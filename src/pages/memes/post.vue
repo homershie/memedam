@@ -1349,16 +1349,8 @@ const handleSubmit = async () => {
     // 送出時才上傳主圖片
     if (uploadedCoverImageFile.value) {
       try {
-        console.log('開始上傳主圖檔案...', {
-          fileName: uploadedCoverImageFile.value.name,
-          fileSize: uploadedCoverImageFile.value.size,
-          fileType: uploadedCoverImageFile.value.type,
-        })
-
         const formData = new FormData()
         formData.append('image', uploadedCoverImageFile.value) // key 必須是 'image'
-
-        const uploadStartTime = Date.now()
 
         const res = await fetch(getApiUrl('/api/upload/image'), {
           method: 'POST',
@@ -1368,11 +1360,6 @@ const handleSubmit = async () => {
           body: formData,
           // 不要加 headers: Content-Type，讓瀏覽器自動設定
         })
-
-        const uploadEndTime = Date.now()
-        console.log(
-          `主圖上傳請求完成，耗時: ${uploadEndTime - uploadStartTime}ms`,
-        )
 
         if (!res.ok) {
           console.error('上傳請求失敗:', {
@@ -1397,7 +1384,6 @@ const handleSubmit = async () => {
         let data
         try {
           data = await res.json()
-          console.log('上傳回應資料:', data)
         } catch (parseError) {
           console.error('解析上傳回應失敗:', parseError)
           throw new Error('伺服器回應格式錯誤，請聯繫管理員')
@@ -1409,7 +1395,6 @@ const handleSubmit = async () => {
           data.url.startsWith('https://res.cloudinary.com/')
         ) {
           form.cover_image = data.url
-          console.log('主圖上傳成功:', data.url)
 
           toast.add({
             severity: 'success',

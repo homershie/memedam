@@ -734,7 +734,7 @@ onMounted(async () => {
       } else {
         // 其他錯誤也使用空列表，但記錄錯誤
         console.error(
-          '標籤載入其他錯誤:',
+          '標籤載入失敗:',
           tagError.response?.data || tagError.message,
         )
         allTags.value = []
@@ -751,7 +751,6 @@ onMounted(async () => {
         },
       )
       responseData = response.data
-      console.log('迷因 bundle 數據載入成功:', responseData)
     } catch (apiError) {
       console.error('迷因 bundle API 調用失敗:', apiError)
 
@@ -777,8 +776,6 @@ onMounted(async () => {
     // 更靈活的數據解析 - 處理 bundle API 的數據結構
     const bundleData = responseData.data || responseData || {}
     const meme = bundleData.meme || {}
-
-    console.log('解析後的迷因數據:', meme)
 
     // 存儲當前編輯的迷因數據
     currentMeme.value = meme
@@ -1036,7 +1033,6 @@ const searchTags = async (event) => {
     }
 
     const data = response.data
-    console.log('標籤搜尋結果:', data)
 
     // 解析回應資料
     const tags = data.tags || data || []
@@ -1324,14 +1320,12 @@ const handleSubmit = async () => {
       let data
       try {
         const responseText = await res.text()
-        console.log('主圖上傳原始響應:', responseText)
 
         if (!responseText || responseText.trim() === '') {
           throw new Error('伺服器返回空響應')
         }
 
         data = JSON.parse(responseText)
-        console.log('主圖上傳解析後的資料:', data)
       } catch (parseError) {
         console.error('JSON 解析失敗:', parseError)
         console.error('原始響應內容:', await res.clone().text())
@@ -1344,7 +1338,6 @@ const handleSubmit = async () => {
         data.url.startsWith('https://res.cloudinary.com/')
       ) {
         form.cover_image = data.url
-        console.log('主圖上傳成功:', data.url)
       } else {
         console.error('上傳回應無效:', data)
         const errorMessage =
@@ -1463,7 +1456,6 @@ const handleSubmit = async () => {
         }
 
         const createdTag = response.data
-        console.log(`標籤 "${newTag.name}" 建立成功:`, createdTag)
 
         createdTags.push(createdTag)
 
@@ -1535,11 +1527,9 @@ const handleSubmit = async () => {
 
     // 使用真正的數據庫 ID 進行更新，而不是 slug
     const realMemeId = currentMeme.value?._id || memeId
-    console.log('準備更新迷因:', { memeId: realMemeId, memeData })
 
     try {
-      const updateResponse = await memeService.update(realMemeId, memeData)
-      console.log('迷因更新成功:', updateResponse.data || updateResponse)
+      await memeService.update(realMemeId, memeData)
     } catch (updateError) {
       console.error('迷因更新失敗:', updateError)
 
@@ -1605,7 +1595,6 @@ const handleSubmit = async () => {
           let data
           try {
             const responseText = await res.text()
-            console.log('詳細介紹圖片上傳原始響應:', responseText)
 
             if (!responseText || responseText.trim() === '') {
               console.error('詳細介紹圖片上傳：伺服器返回空響應')
@@ -1613,7 +1602,6 @@ const handleSubmit = async () => {
             }
 
             data = JSON.parse(responseText)
-            console.log('詳細介紹圖片上傳解析後的資料:', data)
           } catch (parseError) {
             console.error('詳細介紹圖片 JSON 解析失敗:', parseError)
             console.error('原始響應內容:', await res.clone().text())
@@ -1630,7 +1618,6 @@ const handleSubmit = async () => {
               detailImages.value.push(data.url)
             }
             uploadedUrls.push(data.url)
-            console.log('詳細介紹圖片上傳成功:', data.url)
           } else {
             console.error(
               '詳細介紹圖片上傳回應無效:',
@@ -1645,15 +1632,10 @@ const handleSubmit = async () => {
       // 如果有新的圖片上傳成功，更新迷因的 detail_images
       if (uploadedUrls.length > 0) {
         try {
-          console.log('更新迷因詳細介紹圖片:', detailImages.value)
-          const detailUpdateResponse = await memeService.update(realMemeId, {
+          await memeService.update(realMemeId, {
             detail_images: detailImages.value,
             _markAsModified: true,
           })
-          console.log(
-            '詳細介紹圖片更新成功:',
-            detailUpdateResponse.data || detailUpdateResponse,
-          )
         } catch (error) {
           console.error('更新迷因詳細介紹圖片失敗:', error)
 
