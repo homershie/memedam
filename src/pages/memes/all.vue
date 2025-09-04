@@ -633,6 +633,8 @@ onMounted(async () => {
     }
   }
 
+  // 後端會自動清除快取，所以這裡不需要額外的處理
+
   // 載入資料
   await Promise.all([loadMemes(), loadAvailableTags()])
   loadTopTags()

@@ -1793,7 +1793,7 @@ const handleSubmit = async () => {
     detailImages.value = []
     pendingDetailImages.value = []
 
-    // 編輯成功後跳轉到詳情頁面，讓用戶查看編輯結果
+    // 編輯成功後跳轉到詳情頁面
     router.push(`/memes/detail/${getMemeSlug(currentMeme.value)}`)
   } catch (error) {
     console.error('更新迷因失敗:', error)
