@@ -42,6 +42,25 @@
         </div>
       </div>
     </div>
+    <div v-else class="absolute top-4 right-8">
+      <Button
+        label="上傳封面圖片"
+        icon="pi pi-upload"
+        severity="secondary"
+        size="small"
+        class="w-36"
+        :loading="isUploadingCoverImage"
+        @click="$refs.coverImageInput.click()"
+        aria-label="上傳封面圖片"
+      />
+      <input
+        ref="coverImageInput"
+        type="file"
+        accept="image/*"
+        class="hidden"
+        @change="handleCoverImageChange"
+      />
+    </div>
 
     <!-- 內容區域 -->
     <div
@@ -649,8 +668,6 @@ const loadUserProfile = async () => {
 
     const { value } = ident
 
-    console.log('載入用戶資料:', value)
-
     // 使用通用函數獲取用戶資料，添加時間戳來避免快取
     const response = await userService.getUserByIdentifier(value, {
       timestamp: Date.now(),
@@ -659,7 +676,6 @@ const loadUserProfile = async () => {
     if (response.data) {
       // 處理可能的資料結構差異，參考 all.vue 中的做法
       userProfile.value = response.data.user || response.data
-      console.log('成功載入用戶資料:', userProfile.value.username)
 
       // 如果當前用戶已登入且不是當前用戶頁面，檢查追隨狀態
       if (!isCurrentUser.value && userStore.isLoggedIn) {
@@ -929,8 +945,6 @@ const loadUserStats = async () => {
     userStats.value = {
       ...userStatsData,
     }
-
-    console.log('成功載入用戶統計:', userStats.value)
   } catch (error) {
     console.error('載入用戶統計失敗:', error)
 
