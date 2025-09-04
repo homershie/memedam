@@ -214,21 +214,29 @@ const loadMemes = async (reset = true) => {
     } else {
       isSearching.value = false // 標記不是搜尋模式
       if (selectedTags.value.length > 0) {
-        // 只有標籤篩選，使用混合推薦
+        // 只有標籤篩選，使用無限捲動推薦API
         const tagNames = selectedTags.value.map((tag) => tag.name)
         // 將陣列轉換為逗號分隔的字串
         const tagsString = tagNames.join(',')
-        response = await loadRecommendations('recommendation_mixed', {
-          ...params,
-          tags: tagsString,
-        })
+        response = await recommendationService.getInfiniteScrollRecommendations(
+          {
+            ...params,
+            tags: tagsString,
+          },
+        )
       } else {
-        // 沒有篩選條件，使用混合推薦
-        response = await loadRecommendations('recommendation_mixed', params)
+        // 沒有篩選條件，使用無限捲動推薦API
+        response =
+          await recommendationService.getInfiniteScrollRecommendations(params)
       }
     }
 
-    const newMemes = response.data.memes || response.data || []
+    const newMemes =
+      response.data.recommendations ||
+      response.data.data?.recommendations ||
+      response.data.data ||
+      response.data ||
+      []
 
     // 統一處理作者資訊載入（無論搜尋模式還是推薦模式）
     const memesWithAuthors = await Promise.all(
@@ -296,17 +304,19 @@ const loadMemes = async (reset = true) => {
 
     // 檢查是否還有更多資料
     let backendHasMore = false
-    if (!searchQuery.value.trim()) {
+    if (searchQuery.value.trim()) {
+      // 搜尋模式：傳統分頁邏輯
+      backendHasMore = newMemes.length === pageSize.value
+    } else {
       // 推薦模式：使用後端返回的分頁資訊
-      if (response.data && response.data.pagination) {
+      if (response.data?.pagination) {
         backendHasMore = response.data.pagination.hasMore
+      } else if (response.data?.data?.pagination) {
+        backendHasMore = response.data.data.pagination.hasMore
       } else {
         // 如果沒有分頁資訊，使用傳統邏輯
         backendHasMore = newMemes.length >= pageSize.value
       }
-    } else {
-      // 搜尋模式：傳統分頁邏輯
-      backendHasMore = newMemes.length === pageSize.value
     }
 
     // 智能 hasMore 邏輯：如果後端返回了數據，且數據量等於頁面大小，或者後端明確表示還有更多數據
@@ -315,17 +325,29 @@ const loadMemes = async (reset = true) => {
       (newMemes.length === pageSize.value || backendHasMore)
 
     // 更新總數和頁數資訊
-    if (response.data?.pagination) {
-      totalCount.value = response.data.pagination.total || 0
-      totalPages.value = response.data.pagination.totalPages || 1
-    } else if (response.data?.total) {
-      totalCount.value = response.data.total
-      totalPages.value = Math.ceil(totalCount.value / pageSize.value)
-    } else {
+    if (searchQuery.value.trim()) {
+      // 搜尋模式：使用傳統邏輯
       totalCount.value = memes.value.length
       totalPages.value = hasMore.value
         ? currentPage.value + 1
         : currentPage.value
+    } else {
+      // 推薦模式：使用後端返回的分頁資訊
+      if (response.data?.pagination) {
+        totalCount.value = response.data.pagination.total || 0
+        totalPages.value = response.data.pagination.totalPages || 1
+      } else if (response.data?.data?.pagination) {
+        totalCount.value = response.data.data.pagination.total || 0
+        totalPages.value = response.data.data.pagination.totalPages || 1
+      } else if (response.data?.total) {
+        totalCount.value = response.data.total
+        totalPages.value = Math.ceil(totalCount.value / pageSize.value)
+      } else {
+        totalCount.value = memes.value.length
+        totalPages.value = hasMore.value
+          ? currentPage.value + 1
+          : currentPage.value
+      }
     }
 
     // 注意：移除自動 SEO 更新，避免與路由守衛衝突
@@ -346,145 +368,6 @@ const loadMemes = async (reset = true) => {
     updateLoadingState(false, false)
   } finally {
     loading.value = false
-  }
-}
-
-// 新增：載入推薦內容
-const loadRecommendations = async (recommendationType, params) => {
-  try {
-    const recommendationParams = {
-      limit: pageSize.value,
-      // 推薦 API 支援分頁，保留 page 參數
-      page: currentPage.value,
-      // 清除舊的快取數據
-      clear_cache: true,
-    }
-
-    // 移除 exclude_ids 邏輯，讓後端自己處理分頁
-    // 後端會根據 page 參數正確計算分頁，不需要前端排除
-
-    // 如果有標籤篩選，加入標籤參數
-    if (params.tags) {
-      // 確保標籤參數是字串格式
-      recommendationParams.tags = Array.isArray(params.tags)
-        ? params.tags.join(',')
-        : params.tags
-    }
-
-    const response =
-      await recommendationService.getInfiniteScrollRecommendations(
-        recommendationParams,
-      )
-
-    // 處理不同的回應格式
-    let recommendations = []
-    if (response.data) {
-      if (Array.isArray(response.data)) {
-        recommendations = response.data
-      } else if (response.data.memes) {
-        recommendations = response.data.memes
-      } else if (response.data.recommendations) {
-        recommendations = response.data.recommendations
-      } else if (response.data.data) {
-        // 處理巢狀 data 結構
-        const nestedData = response.data.data
-        if (Array.isArray(nestedData)) {
-          recommendations = nestedData
-        } else if (nestedData.memes) {
-          recommendations = nestedData.memes
-        } else if (nestedData.recommendations) {
-          recommendations = nestedData.recommendations
-        } else {
-          recommendations = [nestedData]
-        }
-      } else {
-        recommendations = [response.data]
-      }
-    }
-
-    // 為每個迷因載入作者資訊
-    const memesWithAuthors = await Promise.all(
-      recommendations.map(async (meme) => {
-        try {
-          if (meme.author_id) {
-            // 檢查是否已經是完整的用戶物件
-            if (typeof meme.author_id === 'object' && meme.author_id._id) {
-              // 如果 author_id 已經是完整的用戶物件，直接使用
-              meme.author = {
-                _id: meme.author_id._id,
-                username: meme.author_id.username || 'unknown',
-                display_name: meme.author_id.display_name || '未知用戶',
-                avatar:
-                  meme.author_id.avatar || meme.author_id.avatarUrl || null,
-              }
-            } else {
-              // 處理不同格式的作者 ID
-              let authorId = null
-
-              if (typeof meme.author_id === 'string') {
-                authorId = meme.author_id
-              } else if (typeof meme.author_id === 'object') {
-                if (meme.author_id.$oid) {
-                  authorId = meme.author_id.$oid
-                } else if (meme.author_id.toString) {
-                  authorId = meme.author_id.toString()
-                } else {
-                  authorId = meme.author_id
-                }
-              } else {
-                authorId = meme.author_id
-              }
-
-              const authorResponse = await userService.get(authorId)
-              meme.author = authorResponse.data.user
-            }
-          } else {
-            // 沒有作者 ID，設定預設值
-            meme.author = {
-              display_name: '匿名用戶',
-              username: 'anonymous',
-              avatar: null,
-            }
-          }
-          return meme
-        } catch (error) {
-          console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
-          // 如果載入作者失敗，設定預設值
-          meme.author = {
-            display_name: '未知用戶',
-            username: 'unknown',
-            avatar: null,
-          }
-          return meme
-        }
-      }),
-    )
-
-    // 如果沒有資料，回退到一般 API
-    if (memesWithAuthors.length === 0) {
-      // 使用一般 API 載入資料
-      const fallbackParams = { ...params }
-      delete fallbackParams.sort // 移除排序參數，使用預設排序
-      return await memeService.getAll(fallbackParams)
-    }
-
-    // 確保回應格式一致
-    return {
-      data: {
-        memes: memesWithAuthors,
-        total:
-          response.data?.total ||
-          response.data?.count ||
-          memesWithAuthors.length,
-      },
-    }
-  } catch (error) {
-    console.error('載入推薦失敗:', error)
-    // 如果推薦失敗，回退到一般 API
-    // 使用一般 API 載入資料
-    const fallbackParams = { ...params }
-    delete fallbackParams.sort // 移除排序參數，使用預設排序
-    return await memeService.getAll(fallbackParams)
   }
 }
 
