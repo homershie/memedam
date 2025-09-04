@@ -42,37 +42,48 @@ export default {
     const isShortAlphanumeric =
       /^[a-zA-Z0-9_]{1,30}$/.test(identifier) && identifier.length <= 30
 
-    const _isLikelyId =
+    const isLikelyId =
       isMongoId ||
       (isShortAlphanumeric && /\d/.test(identifier) && identifier.length > 10)
     const isLikelyUsername = isShortAlphanumeric && identifier.length <= 20
 
     try {
-      if (isLikelyUsername) {
-        // 優先嘗試 username API
-        return await this.getByUsername(identifier)
-      } else {
-        // 優先嘗試 ID API
-        return await this.get(identifier)
-      }
-    } catch (primaryError) {
-      console.warn(
-        `主要 API 調用失敗 (${isLikelyUsername ? 'username' : 'ID'})，嘗試備用 API:`,
-        primaryError.message,
-      )
+      let userId = identifier
 
-      try {
-        if (isLikelyUsername) {
-          // 如果 username API 失敗，嘗試 ID API
-          return await this.get(identifier)
+      // 如果是 username，先通過 username API 獲取用戶 ID，然後使用 ID API
+      if (isLikelyUsername) {
+        const usernameResponse = await this.getByUsername(identifier)
+        if (usernameResponse.data && usernameResponse.data.user) {
+          userId = usernameResponse.data.user._id
+          console.log(`將 username "${identifier}" 轉換為 ID:`, userId)
         } else {
-          // 如果 ID API 失敗，嘗試 username API
-          return await this.getByUsername(identifier)
+          throw new Error(`無法從 username "${identifier}" 獲取用戶 ID`)
         }
-      } catch (fallbackError) {
-        console.error('備用 API 調用也失敗:', fallbackError.message)
-        throw new Error(`無法根據標識符 "${identifier}" 獲取用戶資料`)
       }
+
+      // 始終使用 ID 調用標準的用戶 API
+      console.log(`使用 ID "${userId}" 調用用戶 API`)
+      return await this.get(userId)
+    } catch (error) {
+      console.error('getUserByIdentifier 失敗:', error)
+
+      // 如果是 404 錯誤，直接拋出
+      if (error.response?.status === 404) {
+        throw error
+      }
+
+      // 嘗試備用邏輯：如果 ID API 失敗，嘗試直接使用 username API
+      if (isLikelyId) {
+        console.warn(`ID API 失敗，嘗試使用 username API:`, identifier)
+        try {
+          return await this.getByUsername(identifier)
+        } catch (usernameError) {
+          console.error('username API 備用調用也失敗:', usernameError)
+        }
+      }
+
+      // 拋出原始錯誤
+      throw error
     }
   },
   // 根據 username 獲取用戶統計資料
@@ -250,37 +261,51 @@ export default {
     const isShortAlphanumeric =
       /^[a-zA-Z0-9_]{1,30}$/.test(identifier) && identifier.length <= 30
 
-    const _isLikelyId =
+    const isLikelyId =
       isMongoId ||
       (isShortAlphanumeric && /\d/.test(identifier) && identifier.length > 10)
     const isLikelyUsername = isShortAlphanumeric && identifier.length <= 20
 
     try {
-      if (isLikelyUsername) {
-        // 優先嘗試 username 統計 API
-        return await this.getStatsByUsername(identifier)
-      } else {
-        // 優先嘗試 ID 統計 API
-        return await this.getStats(identifier)
-      }
-    } catch (primaryError) {
-      console.warn(
-        `主要統計 API 調用失敗 (${isLikelyUsername ? 'username' : 'ID'})，嘗試備用 API:`,
-        primaryError.message,
-      )
+      let userId = identifier
 
-      try {
-        if (isLikelyUsername) {
-          // 如果 username 統計 API 失敗，嘗試 ID 統計 API
-          return await this.getStats(identifier)
+      // 如果是 username，先通過 username API 獲取用戶 ID，然後使用 ID API
+      if (isLikelyUsername) {
+        const usernameResponse = await this.getByUsername(identifier)
+        if (usernameResponse.data && usernameResponse.data.user) {
+          userId = usernameResponse.data.user._id
+          console.log(`將 username "${identifier}" 轉換為 ID 用於統計:`, userId)
         } else {
-          // 如果 ID 統計 API 失敗，嘗試 username 統計 API
-          return await this.getStatsByUsername(identifier)
+          throw new Error(`無法從 username "${identifier}" 獲取用戶 ID`)
         }
-      } catch (fallbackError) {
-        console.error('備用統計 API 調用也失敗:', fallbackError.message)
-        throw new Error(`無法根據標識符 "${identifier}" 獲取用戶統計`)
       }
+
+      // 始終使用 ID 調用標準的統計 API
+      console.log(`使用 ID "${userId}" 調用統計 API`)
+      return await this.getStats(userId)
+    } catch (error) {
+      console.error('getStatsByIdentifier 失敗:', error)
+
+      // 如果是 404 錯誤，直接拋出
+      if (error.response?.status === 404) {
+        throw error
+      }
+
+      // 嘗試備用邏輯：如果 ID API 失敗，嘗試直接使用 username 統計 API
+      if (isLikelyId) {
+        console.warn(
+          `ID 統計 API 失敗，嘗試使用 username 統計 API:`,
+          identifier,
+        )
+        try {
+          return await this.getStatsByUsername(identifier)
+        } catch (usernameError) {
+          console.error('username 統計 API 備用調用也失敗:', usernameError)
+        }
+      }
+
+      // 拋出原始錯誤
+      throw error
     }
   },
 

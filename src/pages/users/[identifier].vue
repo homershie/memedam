@@ -48,7 +48,7 @@
           <!-- 用戶頭像 -->
           <div class="relative group">
             <Avatar
-              :image="userProfile?.avatarUrl || userProfile?.avatar"
+              :image="userProfile?.avatarUrl"
               shape="circle"
               size="xlarge"
               class="border-3 border-surface-200 w-28 h-28"
@@ -432,7 +432,6 @@ import userService from '@/services/userService'
 import memeService from '@/services/memeService'
 import collectionService from '@/services/collectionService'
 import likeService from '@/services/likeService'
-import followService from '@/services/followService'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 import { useUserStore } from '@/stores/userStore'
 
@@ -481,7 +480,7 @@ const loadUserInfo = async (authorId) => {
       _id: userProfile.value._id || userId.value,
       username: userProfile.value.username || username.value || 'unknown',
       display_name: userProfile.value.display_name || '未知用戶',
-      avatar: userProfile.value.avatarUrl || userProfile.value.avatar || null,
+      avatar: userProfile.value.avatarUrl || null,
     }
     userCache.value.set(authorId, userInfo)
     return userInfo
@@ -595,12 +594,29 @@ const loadUserProfile = async () => {
     }
   } catch (error) {
     console.error('載入用戶資料失敗:', error)
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: '無法載入用戶資料',
-      life: 3000,
-    })
+    const errorMessage = error.response?.data?.message || '無法載入用戶資料'
+
+    // 檢查是否是用戶不存在的錯誤
+    if (error.response?.status === 404) {
+      toast.add({
+        severity: 'warn',
+        summary: '用戶不存在',
+        detail: `找不到用戶 "${identifier.value}"`,
+        life: 5000,
+      })
+
+      // 3秒後重定向到首頁
+      setTimeout(() => {
+        router.push('/')
+      }, 3000)
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: errorMessage,
+        life: 3000,
+      })
+    }
 
     // 設定預設值以防止頁面崩潰
     userProfile.value = {
@@ -709,8 +725,7 @@ const handleAvatarChange = async (event) => {
     const response = await userService.uploadAvatar(file)
 
     if (response.data.success) {
-      // 更新用戶資料中的頭像
-      userProfile.value.avatarUrl = response.data.url
+      // 更新用戶資料中的頭像（只更新 avatar 欄位，avatarUrl 是虛擬欄位會自動更新）
       userProfile.value.avatar = response.data.url
 
       // 重新載入用戶資料以確保顯示最新的頭像
@@ -747,24 +762,30 @@ const loadUserStats = async () => {
 
     const { value } = ident
 
-    // 獲取追隨相關統計資訊
-    const followStatsResponse = await followService.getStats(value)
-    const followStats = followStatsResponse.data?.data || {}
-
-    // 使用通用函數獲取用戶統計
+    // 使用通用函數獲取用戶統計（包含追隨統計）
     const userStatsResponse = await userService.getStatsByIdentifier(value)
     const userStatsData = userStatsResponse.data?.data || {}
 
-    // 合併統計資訊
+    // 設置統計資訊
     userStats.value = {
       ...userStatsData,
-      follower_count: followStats.follower_count || 0,
-      following_count: followStats.following_count || 0,
     }
 
     console.log('成功載入用戶統計:', userStats.value)
   } catch (error) {
     console.error('載入用戶統計失敗:', error)
+
+    // 如果是用戶不存在的錯誤，不顯示錯誤訊息（因為用戶頁面已經處理了）
+    if (error.response?.status !== 404) {
+      const errorMessage = error.response?.data?.message || '無法載入用戶統計'
+      toast.add({
+        severity: 'warn',
+        summary: '載入統計失敗',
+        detail: errorMessage,
+        life: 3000,
+      })
+    }
+
     // 設定預設值
     userStats.value = {
       follower_count: 0,
@@ -844,8 +865,7 @@ const loadUserMemes = async (reset = false) => {
           _id: userProfile.value?._id || userId.value,
           username: userProfile.value?.username || username.value || 'unknown',
           display_name: userProfile.value?.display_name || '未知用戶',
-          avatar:
-            userProfile.value?.avatarUrl || userProfile.value?.avatar || null,
+          avatar: userProfile.value?.avatarUrl || null,
         }
         return meme
       })
@@ -958,9 +978,9 @@ const loadUserCollections = async (reset = false) => {
     }
 
     // 獲取用戶的收藏記錄
-    const ident = userIdentifier.value
-    if (!ident) return
-    const collectionsResponse = await collectionService.getAll(ident.value)
+    const userId = userProfile.value?._id || userId.value
+    if (!userId) return
+    const collectionsResponse = await collectionService.getAll(userId)
 
     let userCollections = []
     if (Array.isArray(collectionsResponse.data)) {
@@ -1095,9 +1115,9 @@ const loadUserLikedMemes = async (reset = false) => {
     }
 
     // 獲取用戶的按讚記錄
-    const ident = userIdentifier.value
-    if (!ident) return
-    const likesResponse = await likeService.getAll(ident.value)
+    const userId = userProfile.value?._id || userId.value
+    if (!userId) return
+    const likesResponse = await likeService.getAll(userId)
 
     let userLikes = []
     if (Array.isArray(likesResponse.data)) {
