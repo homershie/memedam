@@ -415,16 +415,16 @@ const onReplySubmitted = (reply) => {
 }
 
 // 確認刪除
-const confirmDelete = (event) => {
+const confirmDelete = () => {
   menuRef.value.hide()
 
   confirm.require({
-    target: event?.currentTarget || undefined,
     message: '確定要刪除這則留言嗎？',
     icon: 'pi pi-exclamation-triangle',
     acceptLabel: '刪除',
     rejectLabel: '取消',
     acceptClass: 'p-button-danger',
+    closable: false,
     accept: () => {
       emit('delete', props.comment._id || props.comment.id)
     },

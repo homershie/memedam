@@ -3,7 +3,6 @@
     class="w-full relative cursor-pointer hover:shadow-lg transition-shadow"
     @click="navigateToDetail"
   >
-    <ConfirmPopup />
     <template #header>
       <Button
         style="position: absolute; top: 10px; right: 10px; z-index: 10"
@@ -232,7 +231,6 @@ import Tag from 'primevue/tag'
 import Image from 'primevue/image'
 import OverlayPanel from 'primevue/overlaypanel'
 import Divider from 'primevue/divider'
-import ConfirmPopup from 'primevue/confirmpopup'
 import TextMemeCard from './TextMemeCard.vue'
 import CommentsDialog from './CommentsDialog.vue'
 import ReportDialog from './ReportDialog.vue'
@@ -608,14 +606,14 @@ const navigateToDetail = () => {
   router.push(`/memes/detail/${getMemeSlug(meme)}`)
 }
 
-const showDeleteConfirm = (event) => {
+const showDeleteConfirm = () => {
   confirm.require({
-    target: event?.currentTarget || undefined,
     message: '確定要刪除這則迷因嗎？',
     icon: 'pi pi-exclamation-triangle',
     acceptLabel: '刪除',
     rejectLabel: '取消',
     acceptClass: 'p-button-contrast',
+    closable: false,
     accept: async () => {
       try {
         await memeService.remove(memeId.value)

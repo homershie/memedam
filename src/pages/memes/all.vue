@@ -1,6 +1,5 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <ConfirmPopup />
   <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
     <!-- 頁面標題 -->
     <div class="mb-6 text-center">

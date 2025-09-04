@@ -1,7 +1,7 @@
 <template>
   <Toast position="bottom-right" />
   <RouterView />
-  <ConfirmDialog />
+  <ConfirmDialog :closable="false" />
 </template>
 
 <script setup>

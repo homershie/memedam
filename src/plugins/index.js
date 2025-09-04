@@ -34,12 +34,10 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import ProgressSpinner from 'primevue/progressspinner'
 import Paginator from 'primevue/paginator'
-import ConfirmPopup from 'primevue/confirmpopup'
 import OverlayPanel from 'primevue/overlaypanel'
 import Divider from 'primevue/divider'
 import Avatar from 'primevue/avatar'
 import Image from 'primevue/image'
-import ConfirmDialog from 'primevue/confirmdialog'
 import Skeleton from 'primevue/skeleton'
 
 export function registerPlugins(app) {
@@ -67,12 +65,10 @@ export function registerPlugins(app) {
     .component('InputIcon', InputIcon)
     .component('ProgressSpinner', ProgressSpinner)
     .component('Paginator', Paginator)
-    .component('ConfirmPopup', ConfirmPopup)
     .component('OverlayPanel', OverlayPanel)
     .component('Divider', Divider)
     .component('Avatar', Avatar)
     .component('Image', Image)
-    .component('ConfirmDialog', ConfirmDialog)
     .component('Skeleton', Skeleton)
 
   // 全域提供 composables
