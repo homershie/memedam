@@ -30,6 +30,51 @@ export default {
       `/api/users/profile/${encodeURIComponent(username)}`,
     )
   },
+
+  // 通用函數：根據標識符（ID 或 username）獲取用戶資料
+  async getUserByIdentifier(identifier) {
+    if (!identifier) {
+      throw new Error('標識符不能為空')
+    }
+
+    // 簡單的 ID 檢測邏輯
+    const isMongoId = /^[a-f\d]{24}$/i.test(identifier)
+    const isShortAlphanumeric =
+      /^[a-zA-Z0-9_]{1,30}$/.test(identifier) && identifier.length <= 30
+
+    const _isLikelyId =
+      isMongoId ||
+      (isShortAlphanumeric && /\d/.test(identifier) && identifier.length > 10)
+    const isLikelyUsername = isShortAlphanumeric && identifier.length <= 20
+
+    try {
+      if (isLikelyUsername) {
+        // 優先嘗試 username API
+        return await this.getByUsername(identifier)
+      } else {
+        // 優先嘗試 ID API
+        return await this.get(identifier)
+      }
+    } catch (primaryError) {
+      console.warn(
+        `主要 API 調用失敗 (${isLikelyUsername ? 'username' : 'ID'})，嘗試備用 API:`,
+        primaryError.message,
+      )
+
+      try {
+        if (isLikelyUsername) {
+          // 如果 username API 失敗，嘗試 ID API
+          return await this.get(identifier)
+        } else {
+          // 如果 ID API 失敗，嘗試 username API
+          return await this.getByUsername(identifier)
+        }
+      } catch (fallbackError) {
+        console.error('備用 API 調用也失敗:', fallbackError.message)
+        throw new Error(`無法根據標識符 "${identifier}" 獲取用戶資料`)
+      }
+    }
+  },
   // 根據 username 獲取用戶統計資料
   getStatsByUsername(username) {
     return apiService.http.get(
@@ -192,6 +237,51 @@ export default {
   // 新增：取得用戶統計
   getStats(userId) {
     return apiService.http.get(`/api/users/${userId}/stats`)
+  },
+
+  // 通用函數：根據標識符（ID 或 username）獲取用戶統計
+  async getStatsByIdentifier(identifier) {
+    if (!identifier) {
+      throw new Error('標識符不能為空')
+    }
+
+    // 簡單的 ID 檢測邏輯
+    const isMongoId = /^[a-f\d]{24}$/i.test(identifier)
+    const isShortAlphanumeric =
+      /^[a-zA-Z0-9_]{1,30}$/.test(identifier) && identifier.length <= 30
+
+    const _isLikelyId =
+      isMongoId ||
+      (isShortAlphanumeric && /\d/.test(identifier) && identifier.length > 10)
+    const isLikelyUsername = isShortAlphanumeric && identifier.length <= 20
+
+    try {
+      if (isLikelyUsername) {
+        // 優先嘗試 username 統計 API
+        return await this.getStatsByUsername(identifier)
+      } else {
+        // 優先嘗試 ID 統計 API
+        return await this.getStats(identifier)
+      }
+    } catch (primaryError) {
+      console.warn(
+        `主要統計 API 調用失敗 (${isLikelyUsername ? 'username' : 'ID'})，嘗試備用 API:`,
+        primaryError.message,
+      )
+
+      try {
+        if (isLikelyUsername) {
+          // 如果 username 統計 API 失敗，嘗試 ID 統計 API
+          return await this.getStats(identifier)
+        } else {
+          // 如果 ID 統計 API 失敗，嘗試 username 統計 API
+          return await this.getStatsByUsername(identifier)
+        }
+      } catch (fallbackError) {
+        console.error('備用統計 API 調用也失敗:', fallbackError.message)
+        throw new Error(`無法根據標識符 "${identifier}" 獲取用戶統計`)
+      }
+    }
   },
 
   // 新增：取得所有用戶統計

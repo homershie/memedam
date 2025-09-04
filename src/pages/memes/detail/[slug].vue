@@ -52,12 +52,14 @@
               <router-link
                 v-if="
                   (meme?.author_id || meme?.author) &&
-                  (meme.author_id?._id ||
+                  (meme.author_id?.username ||
+                    meme.author?.username ||
+                    meme.author_id?._id ||
                     meme.author_id?.id ||
                     meme.author?._id ||
                     meme.author?.id)
                 "
-                :to="`/users/${meme.author_id?._id || meme.author_id?.id || meme.author?._id || meme.author?.id}`"
+                :to="`/users/${meme.author_id?.username || meme.author?.username || meme.author_id?._id || meme.author_id?.id || meme.author?._id || meme.author?.id}`"
                 class="text-primary-500 hover:text-primary-700 font-medium transition-colors"
               >
                 {{ authorName }}
@@ -1653,6 +1655,14 @@ const reportMeme = () => {
     return
   }
   showReportDialog.value = true
+}
+
+// 處理檢舉提交
+const onReportSubmitted = (reportData) => {
+  // 檢舉提交成功後的處理
+  // ReportDialog 組件已經處理了成功訊息和關閉對話框
+  // 這裡可以添加額外的處理邏輯，如果需要的話
+  console.log('檢舉已提交:', reportData)
 }
 
 // 評論功能

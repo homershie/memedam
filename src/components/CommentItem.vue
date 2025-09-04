@@ -29,8 +29,8 @@
         />
         <div>
           <router-link
-            v-if="getUserInfo(comment)._id"
-            :to="`/users/${getUserInfo(comment)._id}`"
+            v-if="getUserInfo(comment).username || getUserInfo(comment)._id"
+            :to="`/users/${getUserInfo(comment).username || getUserInfo(comment)._id}`"
             class="font-semibold text-gray-800 hover:text-primary-500 dark:text-gray-200 transition-colors cursor-pointer block"
           >
             {{

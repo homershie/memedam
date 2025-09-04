@@ -145,7 +145,7 @@
           <div
             v-if="user.isLoggedIn"
             class="cursor-pointer rounded-full inline-flex w-10 h-10 overflow-hidden hover:scale-110 transition-all duration-300"
-            @click="$router.push(`/users/${user.userId}`)"
+            @click="$router.push(`/users/${user.username || user.userId}`)"
           >
             <img
               v-if="userProfile && userProfile.avatarUrl"

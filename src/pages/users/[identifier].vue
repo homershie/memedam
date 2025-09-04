@@ -538,8 +538,31 @@ const sortOptions = computed(() => {
 })
 
 // 計算屬性
-const userId = computed(() => route.params.id)
-const username = computed(() => route.params.id) // 將路由參數視為 username
+const identifier = computed(() => route.params.identifier)
+
+// 智能檢測參數類型
+const userIdentifier = computed(() => {
+  const value = identifier.value
+  if (!value) return null
+
+  // 簡單的 ID 檢測邏輯：如果包含字母和數字組合且長度較長，可能是 ID
+  // 如果只包含字母、數字和下劃線且長度較短，可能是 username
+  const isMongoId = /^[a-f\d]{24}$/i.test(value) // MongoDB ObjectId 格式
+  const isShortAlphanumeric =
+    /^[a-zA-Z0-9_]{1,30}$/.test(value) && value.length <= 30
+
+  return {
+    value,
+    isLikelyId:
+      isMongoId ||
+      (isShortAlphanumeric && /\d/.test(value) && value.length > 10),
+    isLikelyUsername: isShortAlphanumeric && value.length <= 20,
+  }
+})
+
+// 向後兼容：提供 userId 和 username 計算屬性
+const userId = computed(() => userIdentifier.value?.value || null)
+const username = computed(() => userIdentifier.value?.value || null)
 
 // 判斷是否為當前用戶
 const isCurrentUser = computed(() => {
@@ -555,22 +578,20 @@ const filteredMemes = computed(() => {
 // 載入用戶資料
 const loadUserProfile = async () => {
   try {
-    // 嘗試使用 username API，如果失敗則回退到 ID API
-    let response
-    try {
-      response = await userService.getByUsername(username.value)
-    } catch (usernameError) {
-      console.warn(
-        '使用 username API 失敗，嘗試使用 ID API:',
-        usernameError.message,
-      )
-      // 如果 username API 失敗，嘗試將 username 視為 ID
-      response = await userService.get(userId.value)
-    }
+    const ident = userIdentifier.value
+    if (!ident) return
+
+    const { value } = ident
+
+    console.log('載入用戶資料:', value)
+
+    // 使用通用函數獲取用戶資料
+    const response = await userService.getUserByIdentifier(value)
 
     if (response.data) {
       // 處理可能的資料結構差異，參考 all.vue 中的做法
       userProfile.value = response.data.user || response.data
+      console.log('成功載入用戶資料:', userProfile.value.username)
     }
   } catch (error) {
     console.error('載入用戶資料失敗:', error)
@@ -721,25 +742,18 @@ const handleAvatarChange = async (event) => {
 // 載入用戶統計資料
 const loadUserStats = async () => {
   try {
+    const ident = userIdentifier.value
+    if (!ident) return
+
+    const { value } = ident
+
     // 獲取追隨相關統計資訊
-    const followStatsResponse = await followService.getStats(userId.value)
+    const followStatsResponse = await followService.getStats(value)
     const followStats = followStatsResponse.data?.data || {}
 
-    // 嘗試使用 username 統計 API，如果失敗則使用 ID API
-    let userStatsData = {}
-    try {
-      const userStatsResponse = await userService.getStatsByUsername(
-        username.value,
-      )
-      userStatsData = userStatsResponse.data?.data || {}
-    } catch (statsError) {
-      console.warn(
-        '使用 username 統計 API 失敗，嘗試使用 ID API:',
-        statsError.message,
-      )
-      const userStatsResponse = await userService.getStats(userId.value)
-      userStatsData = userStatsResponse.data?.data || {}
-    }
+    // 使用通用函數獲取用戶統計
+    const userStatsResponse = await userService.getStatsByIdentifier(value)
+    const userStatsData = userStatsResponse.data?.data || {}
 
     // 合併統計資訊
     userStats.value = {
@@ -747,6 +761,8 @@ const loadUserStats = async () => {
       follower_count: followStats.follower_count || 0,
       following_count: followStats.following_count || 0,
     }
+
+    console.log('成功載入用戶統計:', userStats.value)
   } catch (error) {
     console.error('載入用戶統計失敗:', error)
     // 設定預設值
@@ -771,11 +787,16 @@ const loadUserMemes = async (reset = false) => {
       hasMore.value = true
     }
 
+    const ident = userIdentifier.value
+    if (!ident) return
+
+    const { value } = ident
+
     const params = {
       page: currentPage.value,
       limit: 20, // 增加每次載入的數量，提高效率
-      author: username.value, // 使用 username 作為作者篩選參數
-      authorId: userId.value, // 保留 ID 作為備用參數
+      author: value, // 使用參數作為作者篩選參數
+      authorId: value, // 保留作為備用參數
     }
 
     let response
@@ -937,7 +958,9 @@ const loadUserCollections = async (reset = false) => {
     }
 
     // 獲取用戶的收藏記錄
-    const collectionsResponse = await collectionService.getAll(username.value)
+    const ident = userIdentifier.value
+    if (!ident) return
+    const collectionsResponse = await collectionService.getAll(ident.value)
 
     let userCollections = []
     if (Array.isArray(collectionsResponse.data)) {
@@ -1072,7 +1095,9 @@ const loadUserLikedMemes = async (reset = false) => {
     }
 
     // 獲取用戶的按讚記錄
-    const likesResponse = await likeService.getAll(username.value)
+    const ident = userIdentifier.value
+    if (!ident) return
+    const likesResponse = await likeService.getAll(ident.value)
 
     let userLikes = []
     if (Array.isArray(likesResponse.data)) {
@@ -1325,11 +1350,11 @@ const formatDateOnly = (date) => {
   }
 }
 
-// 監聽用戶ID變化
+// 監聽用戶標識符變化
 watch(
-  userId,
+  identifier,
   () => {
-    if (userId.value) {
+    if (identifier.value) {
       loadUserProfile()
       loadUserStats()
       if (activeTab.value === 'posts') {
@@ -1356,8 +1381,8 @@ watch(
 
 <route lang="yaml">
 meta:
-  title: '個人頁面'
-  description: '查看個人的頭像、簡介、貼文、收藏與互動資訊，探索創作者的迷因作品。'
+  title: '用戶頁面'
+  description: '查看用戶的頭像、簡介、貼文、收藏與互動資訊，探索創作者的迷因作品。'
   login: ''
   admin: false
 </route>

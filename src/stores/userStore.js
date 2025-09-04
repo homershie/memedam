@@ -10,6 +10,8 @@ export const useUserStore = defineStore(
     const role = ref('user')
     const token = ref('')
     const userId = ref('')
+    const username = ref('')
+    const userProfile = ref(null)
 
     const isLoggedIn = computed(() => token.value.length > 0)
     const isAdmin = computed(() => role.value === 'admin')
@@ -26,8 +28,19 @@ export const useUserStore = defineStore(
       // 處理用戶資料
       if (data.username) {
         account.value = data.username
+        username.value = data.username
       } else if (data.account) {
         account.value = data.account
+        username.value = data.account
+      }
+
+      // 保存完整的用戶資料
+      if (data.user) {
+        userProfile.value = data.user
+        username.value = data.user.username || username.value
+        if (data.user._id && !userId.value) {
+          userId.value = data.user._id
+        }
       }
 
       cartTotal.value = data.cartTotal || 0
@@ -47,6 +60,7 @@ export const useUserStore = defineStore(
       console.log('登入完成，當前狀態:', {
         isLoggedIn: token.value.length > 0,
         account: account.value,
+        username: username.value,
         userId: userId.value,
       })
     }
@@ -57,6 +71,8 @@ export const useUserStore = defineStore(
       role.value = 'user'
       token.value = ''
       userId.value = ''
+      username.value = ''
+      userProfile.value = null
     }
 
     return {
@@ -65,6 +81,8 @@ export const useUserStore = defineStore(
       role,
       token,
       userId,
+      username,
+      userProfile,
       isLoggedIn,
       isAdmin,
       isManager,
@@ -75,7 +93,7 @@ export const useUserStore = defineStore(
   {
     persist: {
       key: 'user',
-      pick: ['token', 'userId', 'role'],
+      pick: ['token', 'userId', 'role', 'username', 'userProfile'],
     },
   },
 )

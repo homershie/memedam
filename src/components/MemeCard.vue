@@ -16,8 +16,11 @@
           <div>
             <div class="flex items-center gap-2">
               <router-link
-                v-if="meme.author && (meme.author._id || meme.author.id)"
-                :to="`/users/${meme.author._id || meme.author.id}`"
+                v-if="
+                  meme.author &&
+                  (meme.author.username || meme.author._id || meme.author.id)
+                "
+                :to="`/users/${meme.author.username || meme.author._id || meme.author.id}`"
                 class="font-semibold text-gray-800 dark:text-gray-200 hover:text-primary-500 transition-colors cursor-pointer"
                 @click.stop
               >
@@ -834,6 +837,14 @@ const showReportDialog = () => {
     return
   }
   reportDialogVisible.value = true
+}
+
+// 處理檢舉提交
+const handleReportSubmitted = (reportData) => {
+  // 檢舉提交成功後的處理
+  // ReportDialog 組件已經處理了成功訊息和關閉對話框
+  // 這裡可以添加額外的處理邏輯，如果需要的話
+  console.log('檢舉已提交:', reportData)
 }
 </script>
 

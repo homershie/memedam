@@ -309,9 +309,12 @@
                   size="large"
                   :data-user-id="user._id"
                 />
-                <span class="font-bold">{{
-                  user.display_name || user.username
-                }}</span>
+                <router-link
+                  v-if="user && (user.username || user._id || user.id)"
+                  :to="`/users/${user.username || user._id || user.id}`"
+                  class="font-semibold text-gray-800 dark:text-gray-200 hover:text-primary-500 transition-colors cursor-pointer"
+                  >{{ user.display_name || user.username }}
+                </router-link>
               </div>
             </template>
             <template #footer>
