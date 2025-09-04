@@ -594,13 +594,17 @@
                         class="w-full h-48 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden"
                       >
                         <img
-                          :src="
-                            userProfile.cover_image ||
-                            'https://res.cloudinary.com/dkhexh4fp/image/upload/v1755748262/announcements/ftwo79lbkiwcp0m2ov3n.jpg'
-                          "
+                          v-if="userProfile.cover_image"
+                          :src="userProfile.cover_image"
                           alt="封面圖片"
                           class="w-full h-full object-cover"
                         />
+                        <div
+                          v-else
+                          class="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center"
+                        >
+                          <i class="pi pi-image text-gray-500 text-2xl"></i>
+                        </div>
                       </div>
                       <!-- Hover 覆蓋層 - 編輯按鈕 -->
                       <div

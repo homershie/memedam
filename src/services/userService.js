@@ -21,8 +21,13 @@ export default {
   getAll(params = {}) {
     return apiService.httpAuth.get('/api/users', { params })
   },
-  get(id) {
-    return apiService.httpAuth.get(`/api/users/${id}`)
+  get(id, options = {}) {
+    // 將選項轉換為查詢參數來避免快取
+    const params = {}
+    if (options.timestamp) {
+      params._t = options.timestamp
+    }
+    return apiService.httpAuth.get(`/api/users/${id}`, { params })
   },
   // 根據 username 獲取用戶資料
   getByUsername(username) {
@@ -32,7 +37,7 @@ export default {
   },
 
   // 通用函數：根據標識符（ID 或 username）獲取用戶資料
-  async getUserByIdentifier(identifier) {
+  async getUserByIdentifier(identifier, options = {}) {
     if (!identifier) {
       throw new Error('標識符不能為空')
     }
@@ -61,9 +66,9 @@ export default {
         }
       }
 
-      // 始終使用 ID 調用標準的用戶 API
+      // 始終使用 ID 調用標準的用戶 API，添加選項來避免快取
       console.log(`使用 ID "${userId}" 調用用戶 API`)
-      return await this.get(userId)
+      return await this.get(userId, options)
     } catch (error) {
       console.error('getUserByIdentifier 失敗:', error)
 

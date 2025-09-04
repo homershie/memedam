@@ -1,7 +1,10 @@
 <template>
   <div class="w-full mx-auto space-y-12 overflow-y-auto">
     <!-- 背景圖片 -->
-    <div class="w-full z-0 relative top-0 left-0 h-60 group">
+    <div
+      v-if="userProfile?.cover_image"
+      class="w-full z-0 relative top-0 left-0 h-60 group"
+    >
       <img
         :src="
           userProfile?.cover_image ||
@@ -41,7 +44,10 @@
     </div>
 
     <!-- 內容區域 -->
-    <div class="min-h-fit mb-30 mx-auto space-y-30 relative -top-20">
+    <div
+      class="min-h-fit mb-30 mx-auto space-y-30 relative"
+      :class="userProfile?.cover_image ? '-top-20' : 'top-20'"
+    >
       <!-- 用戶資訊頁首 -->
       <div class="mx-auto">
         <div class="flex flex-col items-center gap-8">
@@ -56,7 +62,7 @@
             <!-- 編輯按鈕 - 只有當前用戶才能看到 -->
             <div
               v-if="isCurrentUser"
-              class="absolute cursor-pointer inset-0 bg-black/70 to-transparent opacity-0 transition-all duration-300 ease-out group-hover:opacity-100 rounded-full"
+              class="absolute h-[112px] w-[112px] cursor-pointer inset-0 bg-black/70 to-transparent opacity-0 transition-all duration-300 ease-out group-hover:opacity-100 rounded-full"
               @click="$refs.avatarInput.click()"
               aria-label="編輯頭像"
             >
@@ -130,6 +136,18 @@
             <p class="text-surface-700 max-w-2xl">
               {{ userProfile.bio }}
             </p>
+          </div>
+
+          <!-- 追蹤按鈕 -->
+          <div>
+            <Button
+              :label="userProfile?.is_following ? '已追蹤' : '追蹤'"
+              :severity="userProfile?.is_following ? 'secondary' : 'primary'"
+              :disabled="isCurrentUser"
+              size="small"
+              class="w-36"
+              @click="handleFollow"
+            />
           </div>
         </div>
       </div>
@@ -416,7 +434,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { debounce } from 'lodash'
@@ -432,6 +450,7 @@ import userService from '@/services/userService'
 import memeService from '@/services/memeService'
 import collectionService from '@/services/collectionService'
 import likeService from '@/services/likeService'
+import followService from '@/services/followService'
 import { useInfiniteScrollWrapper } from '@/composables/useInfiniteScroll'
 import { useUserStore } from '@/stores/userStore'
 
@@ -632,13 +651,35 @@ const loadUserProfile = async () => {
 
     console.log('載入用戶資料:', value)
 
-    // 使用通用函數獲取用戶資料
-    const response = await userService.getUserByIdentifier(value)
+    // 使用通用函數獲取用戶資料，添加時間戳來避免快取
+    const response = await userService.getUserByIdentifier(value, {
+      timestamp: Date.now(),
+    })
 
     if (response.data) {
       // 處理可能的資料結構差異，參考 all.vue 中的做法
       userProfile.value = response.data.user || response.data
       console.log('成功載入用戶資料:', userProfile.value.username)
+
+      // 如果當前用戶已登入且不是當前用戶頁面，檢查追隨狀態
+      if (!isCurrentUser.value && userStore.isLoggedIn) {
+        try {
+          const followStatusResponse = await followService.getFollowStatus(
+            userProfile.value._id,
+          )
+          if (followStatusResponse.data.success) {
+            userProfile.value.is_following =
+              followStatusResponse.data.data.is_following
+          }
+        } catch (error) {
+          console.warn('檢查追隨狀態失敗:', error)
+          // 設定預設值
+          userProfile.value.is_following = false
+        }
+      } else {
+        // 如果是當前用戶，無法追隨自己
+        userProfile.value.is_following = false
+      }
     }
   } catch (error) {
     console.error('載入用戶資料失敗:', error)
@@ -710,11 +751,25 @@ const handleCoverImageChange = async (event) => {
     const response = await userService.uploadCoverImage(file)
 
     if (response.data.success) {
-      // 更新用戶資料中的封面圖片
+      // 更新用戶資料中的封面圖片（直接使用新的封面圖片 URL）
       userProfile.value.cover_image = response.data.url
 
-      // 重新載入用戶資料以確保顯示最新的封面圖片
-      await loadUserProfile()
+      // 添加一個小的延遲後重新載入資料，確保資料庫更新已完成並避免快取問題
+      setTimeout(async () => {
+        try {
+          await loadUserProfile()
+
+          // 觸發自定義事件，讓其他組件知道封面圖片已更新
+          window.dispatchEvent(
+            new CustomEvent('user-cover-updated', {
+              detail: { coverImageUrl: response.data.url },
+            }),
+          )
+        } catch (error) {
+          console.warn('重新載入用戶資料失敗:', error)
+          // 不影響主要功能，只是資料同步
+        }
+      }, 1000) // 1秒後重新載入
 
       toast.add({
         severity: 'success',
@@ -773,11 +828,25 @@ const handleAvatarChange = async (event) => {
     const response = await userService.uploadAvatar(file)
 
     if (response.data.success) {
-      // 更新用戶資料中的頭像（只更新 avatar 欄位，avatarUrl 是虛擬欄位會自動更新）
+      // 更新用戶資料中的頭像（直接使用新的頭像 URL）
       userProfile.value.avatar = response.data.url
 
-      // 重新載入用戶資料以確保顯示最新的頭像
-      await loadUserProfile()
+      // 添加一個小的延遲後重新載入資料，確保資料庫更新已完成並避免快取問題
+      setTimeout(async () => {
+        try {
+          await loadUserProfile()
+
+          // 觸發自定義事件，讓其他組件知道頭像已更新
+          window.dispatchEvent(
+            new CustomEvent('user-avatar-updated', {
+              detail: { avatarUrl: response.data.url },
+            }),
+          )
+        } catch (error) {
+          console.warn('重新載入用戶資料失敗:', error)
+          // 不影響主要功能，只是資料同步
+        }
+      }, 1000) // 1秒後重新載入
 
       toast.add({
         severity: 'success',
@@ -799,6 +868,48 @@ const handleAvatarChange = async (event) => {
     isUploadingAvatar.value = false
     // 清空 input 值，允許重複上傳相同檔案
     event.target.value = ''
+  }
+}
+
+// 處理追隨按鈕點擊
+const handleFollow = async () => {
+  try {
+    const response = await followService.toggleFollow(userProfile.value._id)
+
+    if (response.data.success) {
+      // 更新追隨狀態
+      userProfile.value.is_following = response.data.action === 'followed'
+
+      // 更新統計數據
+      if (response.data.action === 'followed') {
+        userStats.value.follower_count =
+          (userStats.value.follower_count || 0) + 1
+      } else {
+        userStats.value.follower_count = Math.max(
+          0,
+          (userStats.value.follower_count || 0) - 1,
+        )
+      }
+
+      // 顯示成功訊息
+      const actionText =
+        response.data.action === 'followed' ? '追隨' : '取消追隨'
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: `${actionText}用戶成功`,
+        life: 3000,
+      })
+    }
+  } catch (error) {
+    console.error('追隨操作失敗:', error)
+    const errorMessage = error.response?.data?.message || '追隨操作失敗'
+    toast.add({
+      severity: 'error',
+      summary: '錯誤',
+      detail: errorMessage,
+      life: 3000,
+    })
   }
 }
 
@@ -1009,11 +1120,49 @@ onMounted(() => {
 const loadInitialData = async () => {
   try {
     await Promise.all([loadUserProfile(), loadUserStats(), loadUserMemes(true)])
+
+    // 設置用戶資料更新事件監聽器
+    setupUserUpdateListeners()
   } catch (error) {
     console.error('載入初始數據失敗:', error)
   } finally {
     loading.value = false
   }
+}
+
+// 設置用戶資料更新事件監聽器
+const setupUserUpdateListeners = () => {
+  // 監聽頭像更新事件
+  const handleAvatarUpdate = (event) => {
+    const { avatarUrl } = event.detail
+    console.log('用戶頁面收到頭像更新事件:', avatarUrl)
+
+    // 更新用戶資料中的頭像
+    if (userProfile.value) {
+      userProfile.value.avatar = avatarUrl
+      userProfile.value.avatarUrl = avatarUrl
+    }
+  }
+
+  // 監聽封面圖片更新事件
+  const handleCoverUpdate = (event) => {
+    const { coverImageUrl } = event.detail
+    console.log('用戶頁面收到封面圖片更新事件:', coverImageUrl)
+
+    // 更新用戶資料中的封面圖片
+    if (userProfile.value) {
+      userProfile.value.cover_image = coverImageUrl
+    }
+  }
+
+  window.addEventListener('user-avatar-updated', handleAvatarUpdate)
+  window.addEventListener('user-cover-updated', handleCoverUpdate)
+
+  // 在組件卸載時移除事件監聽器
+  onUnmounted(() => {
+    window.removeEventListener('user-avatar-updated', handleAvatarUpdate)
+    window.removeEventListener('user-cover-updated', handleCoverUpdate)
+  })
 }
 
 // 載入用戶收藏的迷因

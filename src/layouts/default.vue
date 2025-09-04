@@ -672,6 +672,50 @@ onMounted(() => {
     }
   })
   themeObserver.observe(document.documentElement, { attributes: true })
+
+  // 監聽頭像更新事件
+  const handleAvatarUpdate = (event) => {
+    const { avatarUrl } = event.detail
+    console.log('收到頭像更新事件:', avatarUrl)
+
+    // 更新用戶資料中的頭像
+    if (userProfile.value) {
+      userProfile.value.avatar = avatarUrl
+      // 強制重新計算 avatarUrl 虛擬字段
+      userProfile.value.avatarUrl = avatarUrl
+    }
+
+    // 更新用戶 store 中的用戶資料（如果存在）
+    if (user.userProfile) {
+      user.userProfile.avatar = avatarUrl
+      user.userProfile.avatarUrl = avatarUrl
+    }
+  }
+
+  // 監聽封面圖片更新事件
+  const handleCoverUpdate = (event) => {
+    const { coverImageUrl } = event.detail
+    console.log('收到封面圖片更新事件:', coverImageUrl)
+
+    // 更新用戶資料中的封面圖片
+    if (userProfile.value) {
+      userProfile.value.cover_image = coverImageUrl
+    }
+
+    // 更新用戶 store 中的用戶資料（如果存在）
+    if (user.userProfile) {
+      user.userProfile.cover_image = coverImageUrl
+    }
+  }
+
+  window.addEventListener('user-avatar-updated', handleAvatarUpdate)
+  window.addEventListener('user-cover-updated', handleCoverUpdate)
+
+  // 在組件卸載時移除事件監聽器
+  onUnmounted(() => {
+    window.removeEventListener('user-avatar-updated', handleAvatarUpdate)
+    window.removeEventListener('user-cover-updated', handleCoverUpdate)
+  })
 })
 
 // 組件卸載時清理監聽器
