@@ -479,7 +479,7 @@ const loadUserInfo = async (authorId) => {
   if (authorId === userId.value && userProfile.value) {
     const userInfo = {
       _id: userProfile.value._id || userId.value,
-      username: userProfile.value.username || 'unknown',
+      username: userProfile.value.username || username.value || 'unknown',
       display_name: userProfile.value.display_name || '未知用戶',
       avatar: userProfile.value.avatarUrl || userProfile.value.avatar || null,
     }
@@ -539,6 +539,7 @@ const sortOptions = computed(() => {
 
 // 計算屬性
 const userId = computed(() => route.params.id)
+const username = computed(() => route.params.id) // 將路由參數視為 username
 
 // 判斷是否為當前用戶
 const isCurrentUser = computed(() => {
@@ -554,7 +555,19 @@ const filteredMemes = computed(() => {
 // 載入用戶資料
 const loadUserProfile = async () => {
   try {
-    const response = await userService.get(userId.value)
+    // 嘗試使用 username API，如果失敗則回退到 ID API
+    let response
+    try {
+      response = await userService.getByUsername(username.value)
+    } catch (usernameError) {
+      console.warn(
+        '使用 username API 失敗，嘗試使用 ID API:',
+        usernameError.message,
+      )
+      // 如果 username API 失敗，嘗試將 username 視為 ID
+      response = await userService.get(userId.value)
+    }
+
     if (response.data) {
       // 處理可能的資料結構差異，參考 all.vue 中的做法
       userProfile.value = response.data.user || response.data
@@ -712,9 +725,21 @@ const loadUserStats = async () => {
     const followStatsResponse = await followService.getStats(userId.value)
     const followStats = followStatsResponse.data?.data || {}
 
-    // 獲取用戶相關統計資訊
-    const userStatsResponse = await userService.getStats(userId.value)
-    const userStatsData = userStatsResponse.data?.data || {}
+    // 嘗試使用 username 統計 API，如果失敗則使用 ID API
+    let userStatsData = {}
+    try {
+      const userStatsResponse = await userService.getStatsByUsername(
+        username.value,
+      )
+      userStatsData = userStatsResponse.data?.data || {}
+    } catch (statsError) {
+      console.warn(
+        '使用 username 統計 API 失敗，嘗試使用 ID API:',
+        statsError.message,
+      )
+      const userStatsResponse = await userService.getStats(userId.value)
+      userStatsData = userStatsResponse.data?.data || {}
+    }
 
     // 合併統計資訊
     userStats.value = {
@@ -749,7 +774,8 @@ const loadUserMemes = async (reset = false) => {
     const params = {
       page: currentPage.value,
       limit: 20, // 增加每次載入的數量，提高效率
-      author: userId.value, // 直接按作者篩選，避免前端篩選
+      author: username.value, // 使用 username 作為作者篩選參數
+      authorId: userId.value, // 保留 ID 作為備用參數
     }
 
     let response
@@ -795,7 +821,7 @@ const loadUserMemes = async (reset = false) => {
         // 使用當前頁面的用戶資訊作為作者資訊
         meme.author = {
           _id: userProfile.value?._id || userId.value,
-          username: userProfile.value?.username || 'unknown',
+          username: userProfile.value?.username || username.value || 'unknown',
           display_name: userProfile.value?.display_name || '未知用戶',
           avatar:
             userProfile.value?.avatarUrl || userProfile.value?.avatar || null,
@@ -911,7 +937,7 @@ const loadUserCollections = async (reset = false) => {
     }
 
     // 獲取用戶的收藏記錄
-    const collectionsResponse = await collectionService.getAll(userId.value)
+    const collectionsResponse = await collectionService.getAll(username.value)
 
     let userCollections = []
     if (Array.isArray(collectionsResponse.data)) {
@@ -1046,7 +1072,7 @@ const loadUserLikedMemes = async (reset = false) => {
     }
 
     // 獲取用戶的按讚記錄
-    const likesResponse = await likeService.getAll(userId.value)
+    const likesResponse = await likeService.getAll(username.value)
 
     let userLikes = []
     if (Array.isArray(likesResponse.data)) {

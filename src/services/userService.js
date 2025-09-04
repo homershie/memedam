@@ -24,6 +24,18 @@ export default {
   get(id) {
     return apiService.httpAuth.get(`/api/users/${id}`)
   },
+  // 根據 username 獲取用戶資料
+  getByUsername(username) {
+    return apiService.httpAuth.get(
+      `/api/users/profile/${encodeURIComponent(username)}`,
+    )
+  },
+  // 根據 username 獲取用戶統計資料
+  getStatsByUsername(username) {
+    return apiService.http.get(
+      `/api/users/profile/${encodeURIComponent(username)}/stats`,
+    )
+  },
   update(id, data) {
     return apiService.httpAuth.put(`/api/users/${id}`, data)
   },
