@@ -239,14 +239,22 @@ const loadMemes = async (reset = true) => {
         newMemes = [newMemes]
       }
     } else {
-      // 推薦模式：推薦 API 返回的是 data.recommendations 或嵌套結構
+      // 推薦模式：推薦 API 可能回傳多種結構
       newMemes =
         response.data.recommendations ||
+        response.data.memes ||
         response.data.data?.recommendations ||
+        response.data.data?.memes ||
         response.data.data ||
         response.data ||
         []
     }
+
+    // 確保 newMemes 為陣列並解包巢狀的 meme 物件
+    if (!Array.isArray(newMemes)) {
+      newMemes = [newMemes]
+    }
+    newMemes = newMemes.map((item) => (item.meme ? item.meme : item))
 
     // 確保統計欄位存在，如果缺失則設為預設值
     newMemes.forEach((meme) => {
