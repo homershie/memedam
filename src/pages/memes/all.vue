@@ -230,12 +230,47 @@ const loadMemes = async (reset = true) => {
       }
     }
 
-    const newMemes =
-      response.data.recommendations ||
-      response.data.data?.recommendations ||
-      response.data.data ||
-      response.data ||
-      []
+    // 根據不同 API 類型提取數據
+    let newMemes = []
+    if (searchQuery.value.trim()) {
+      // 搜尋模式：搜尋 API 返回的是 data.data 或 data
+      newMemes = response.data.data || response.data || []
+      if (!Array.isArray(newMemes)) {
+        newMemes = [newMemes]
+      }
+    } else {
+      // 推薦模式：推薦 API 返回的是 data.recommendations 或嵌套結構
+      newMemes =
+        response.data.recommendations ||
+        response.data.data?.recommendations ||
+        response.data.data ||
+        response.data ||
+        []
+    }
+
+    // 確保統計欄位存在，如果缺失則設為預設值
+    newMemes.forEach((meme) => {
+      if (meme.like_count === undefined && meme.likes_count !== undefined) {
+        meme.like_count = meme.likes_count
+      }
+      if (
+        meme.dislike_count === undefined &&
+        meme.dislikes_count !== undefined
+      ) {
+        meme.dislike_count = meme.dislikes_count
+      }
+      if (
+        meme.comment_count === undefined &&
+        meme.comments_count !== undefined
+      ) {
+        meme.comment_count = meme.comments_count
+      }
+
+      // 設定預設值
+      meme.like_count = meme.like_count || 0
+      meme.dislike_count = meme.dislike_count || 0
+      meme.comment_count = meme.comment_count || 0
+    })
 
     // 統一處理作者資訊載入（無論搜尋模式還是推薦模式）
     const memesWithAuthors = await Promise.all(

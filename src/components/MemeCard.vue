@@ -451,6 +451,14 @@ const loadUserInteractionStatus = async () => {
           memeData = memeResponse.data.data
         }
 
+        // 檢查是否為 { success: true, data: { meme: ... } } 結構
+        if (
+          memeResponse.data.meme &&
+          typeof memeResponse.data.meme === 'object'
+        ) {
+          memeData = memeResponse.data.meme
+        }
+
         // 修正欄位名稱以匹配後端模型
         const newLikesCount = memeData.like_count || memeData.likes_count || 0
         const newDislikesCount =
