@@ -909,114 +909,9 @@
                         @change="handleThemeChange"
                       />
                     </div>
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                      >
-                        語言設定
-                      </label>
-                      <Dropdown
-                        v-model="userPreferences.language"
-                        :options="languageOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="選擇語言"
-                        class="w-full"
-                        @change="handleLanguageChange"
-                      />
-                    </div>
                   </div>
                 </div>
-
-                <!-- 個人化設定 -->
-                <div class="space-y-4 mt-10">
-                  <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                    個人化設定
-                  </h3>
-                  <div class="space-y-3">
-                    <div
-                      v-for="setting in personalizationSettings"
-                      :key="setting.key"
-                      class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg"
-                    >
-                      <div>
-                        <p class="font-medium text-gray-900 dark:text-white">
-                          {{ setting.label }}
-                        </p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                          {{ setting.description }}
-                        </p>
-                      </div>
-                      <InputSwitch
-                        v-model="userPreferences.personalization[setting.key]"
-                        @change="handlePersonalizationChange"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 搜尋偏好 -->
-                <div class="space-y-4 mt-10">
-                  <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                    搜尋偏好
-                  </h3>
-                  <div class="space-y-3">
-                    <div
-                      v-for="setting in searchSettings"
-                      :key="setting.key"
-                      class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg"
-                    >
-                      <div>
-                        <p class="font-medium text-gray-900 dark:text-white">
-                          {{ setting.label }}
-                        </p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                          {{ setting.description }}
-                        </p>
-                      </div>
-                      <InputSwitch
-                        v-if="setting.type === 'boolean'"
-                        v-model="userPreferences.searchPreferences[setting.key]"
-                        @change="handleSearchPreferencesChange"
-                      />
-                      <Dropdown
-                        v-else-if="setting.type === 'dropdown'"
-                        v-model="userPreferences.searchPreferences[setting.key]"
-                        :options="setting.options"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="選擇選項"
-                        class="w-32"
-                        @change="handleSearchPreferencesChange"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 功能 Cookie 狀態提示 -->
-                <div
-                  v-if="!functionalCookiesEnabled"
-                  class="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700 rounded-lg p-4"
-                >
-                  <div class="flex items-start space-x-2">
-                    <i
-                      class="pi pi-exclamation-triangle text-warning-500 mt-0.5"
-                    ></i>
-                    <div>
-                      <p
-                        class="text-sm font-medium text-warning-800 dark:text-warning-200"
-                      >
-                        功能 Cookie 已停用
-                      </p>
-                      <p
-                        class="text-sm text-warning-700 dark:text-warning-300 mt-1"
-                      >
-                        您的偏好設定將無法儲存到伺服器，僅在本次瀏覽期間有效。
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
+                <!--
                 <div class="flex justify-end space-x-2">
                   <Button
                     label="清除設定"
@@ -1033,7 +928,7 @@
                     :loading="preferencesForm.loading"
                     class="btn-primary"
                   />
-                </div>
+                </div> -->
               </div>
             </div>
           </TabPanel>
@@ -1721,29 +1616,7 @@ const themeStore = useThemeStore()
 const userPreferences = reactive({
   theme: 'auto',
   language: 'zh-TW',
-  personalization: {
-    autoPlay: true,
-    showNSFW: false,
-    compactMode: false,
-    infiniteScroll: true,
-    notificationPreferences: {
-      email: true,
-      push: true,
-      mentions: true,
-      likes: true,
-      comments: true,
-    },
-  },
-  searchPreferences: {
-    searchHistory: true,
-    searchSuggestions: true,
-    defaultSort: 'hot',
-    defaultFilter: 'all',
-  },
 })
-
-// 功能 Cookie 狀態
-const functionalCookiesEnabled = ref(true)
 
 // 使用 computed 來確保與 themeStore 的同步
 const themeMode = computed({
@@ -1777,9 +1650,9 @@ const avatarDisplayUrl = computed(() => {
   return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${seed}`
 })
 
-const preferencesForm = reactive({
-  loading: false,
-})
+// const preferencesForm = reactive({
+//   loading: false,
+// })
 
 // 處理主題變化（同步到全域 store）
 const handleThemeChange = (newTheme) => {
@@ -2054,27 +1927,9 @@ const loadUserPreferences = async () => {
       if (preferences.language) {
         userPreferences.language = preferences.language
       }
-      if (preferences.personalization) {
-        Object.assign(
-          userPreferences.personalization,
-          preferences.personalization,
-        )
-      }
-      if (preferences.searchPreferences) {
-        Object.assign(
-          userPreferences.searchPreferences,
-          preferences.searchPreferences,
-        )
-      }
-
-      // 更新功能 Cookie 狀態
-      functionalCookiesEnabled.value =
-        response.data.functionalCookiesEnabled !== false
     }
   } catch (error) {
     console.error('載入偏好設定失敗:', error)
-    // 如果無法載入偏好設定，使用預設值
-    functionalCookiesEnabled.value = false
   }
 }
 
@@ -2200,73 +2055,6 @@ const genderOptions = ref([
   { label: '男性', value: 'male' },
   { label: '女性', value: 'female' },
   { label: '其他', value: 'other' },
-])
-
-const languageOptions = ref([
-  { label: '繁體中文', value: 'zh-TW' },
-  { label: 'English', value: 'en-US' },
-  { label: '日本語', value: 'ja-JP' },
-])
-
-const personalizationSettings = ref([
-  {
-    key: 'autoPlay',
-    label: '自動播放',
-    description: '自動播放影片和 GIF 動畫',
-  },
-  {
-    key: 'showNSFW',
-    label: '顯示 NSFW 內容',
-    description: '顯示可能不適合工作場所的內容',
-  },
-  {
-    key: 'compactMode',
-    label: '緊湊模式',
-    description: '使用更緊湊的版面配置',
-  },
-  {
-    key: 'infiniteScroll',
-    label: '無限滾動',
-    description: '自動載入更多內容',
-  },
-])
-
-const searchSettings = ref([
-  {
-    key: 'searchHistory',
-    label: '搜尋歷史',
-    description: '儲存您的搜尋記錄',
-    type: 'boolean',
-  },
-  {
-    key: 'searchSuggestions',
-    label: '搜尋建議',
-    description: '顯示搜尋建議和自動完成',
-    type: 'boolean',
-  },
-  {
-    key: 'defaultSort',
-    label: '預設排序',
-    description: '搜尋結果的預設排序方式',
-    type: 'dropdown',
-    options: [
-      { label: '熱門', value: 'hot' },
-      { label: '最新', value: 'new' },
-      { label: '最多讚', value: 'top' },
-      { label: '上升中', value: 'rising' },
-    ],
-  },
-  {
-    key: 'defaultFilter',
-    label: '預設篩選',
-    description: '搜尋結果的預設篩選條件',
-    type: 'dropdown',
-    options: [
-      { label: '全部', value: 'all' },
-      { label: '安全內容', value: 'sfw' },
-      { label: '成人內容', value: 'nsfw' },
-    ],
-  },
 ])
 
 const interactionNotifications = ref([
@@ -2710,125 +2498,75 @@ const saveNotificationSettings = async () => {
   }
 }
 
-// 處理語言變化
-const handleLanguageChange = () => {
-  // 語言變化會在下一次儲存時同步到後端
-  console.log('語言設定已變更:', userPreferences.language)
-}
-
-// 處理個人化設定變化
-const handlePersonalizationChange = () => {
-  // 個人化設定變化會在下一次儲存時同步到後端
-  console.log('個人化設定已變更:', userPreferences.personalization)
-}
-
-// 處理搜尋偏好變化
-const handleSearchPreferencesChange = () => {
-  // 搜尋偏好變化會在下一次儲存時同步到後端
-  console.log('搜尋偏好已變更:', userPreferences.searchPreferences)
-}
-
 // 儲存所有偏好設定
-const saveAllPreferences = async () => {
-  preferencesForm.loading = true
+// const saveAllPreferences = async () => {
+//   preferencesForm.loading = true
 
-  try {
-    // 檢查功能 Cookie 狀態
-    if (!functionalCookiesEnabled.value) {
-      toast.add({
-        severity: 'warning',
-        summary: '功能限制',
-        detail: '功能 Cookie 已停用，偏好設定無法儲存到伺服器',
-        life: 3000,
-      })
-      return
-    }
+//   try {
+//     // 儲存主題和語言設定
+//     await preferencesService.updateAllPreferences({
+//       theme: userPreferences.theme,
+//       language: userPreferences.language,
+//     })
 
-    // 並行儲存所有偏好設定
-    await preferencesService.updateAllPreferences({
-      theme: userPreferences.theme,
-      language: userPreferences.language,
-      personalization: userPreferences.personalization,
-      searchPreferences: userPreferences.searchPreferences,
-    })
+//     toast.add({
+//       severity: 'success',
+//       summary: '成功',
+//       detail: '偏好設定已儲存',
+//       life: 3000,
+//     })
+//   } catch (error) {
+//     console.error('偏好設定儲存失敗:', error)
+//     const errorMessage =
+//       error.response?.data?.message ||
+//       error.response?.data?.error ||
+//       '儲存失敗，請稍後再試'
+//     toast.add({
+//       severity: 'error',
+//       summary: '錯誤',
+//       detail: errorMessage,
+//       life: 3000,
+//     })
+//   } finally {
+//     preferencesForm.loading = false
+//   }
+// }
 
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '偏好設定已儲存',
-      life: 3000,
-    })
-  } catch (error) {
-    console.error('偏好設定儲存失敗:', error)
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      '儲存失敗，請稍後再試'
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: errorMessage,
-      life: 3000,
-    })
-  } finally {
-    preferencesForm.loading = false
-  }
-}
+// // 清除所有偏好設定
+// const clearAllPreferences = async () => {
+//   preferencesForm.loading = true
 
-// 清除所有偏好設定
-const clearAllPreferences = async () => {
-  preferencesForm.loading = true
+//   try {
+//     await preferencesService.clearPreferences()
 
-  try {
-    await preferencesService.clearPreferences()
+//     // 重置為預設值
+//     Object.assign(userPreferences, {
+//       theme: 'auto',
+//       language: 'zh-TW',
+//     })
 
-    // 重置為預設值
-    Object.assign(userPreferences, {
-      theme: 'auto',
-      language: 'zh-TW',
-      personalization: {
-        autoPlay: true,
-        showNSFW: false,
-        compactMode: false,
-        infiniteScroll: true,
-        notificationPreferences: {
-          email: true,
-          push: true,
-          mentions: true,
-          likes: true,
-          comments: true,
-        },
-      },
-      searchPreferences: {
-        searchHistory: true,
-        searchSuggestions: true,
-        defaultSort: 'hot',
-        defaultFilter: 'all',
-      },
-    })
-
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '偏好設定已清除',
-      life: 3000,
-    })
-  } catch (error) {
-    console.error('清除偏好設定失敗:', error)
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      '清除失敗，請稍後再試'
-    toast.add({
-      severity: 'error',
-      summary: '錯誤',
-      detail: errorMessage,
-      life: 3000,
-    })
-  } finally {
-    preferencesForm.loading = false
-  }
-}
+//     toast.add({
+//       severity: 'success',
+//       summary: '成功',
+//       detail: '偏好設定已清除',
+//       life: 3000,
+//     })
+//   } catch (error) {
+//     console.error('清除偏好設定失敗:', error)
+//     const errorMessage =
+//       error.response?.data?.message ||
+//       error.response?.data?.error ||
+//       '清除失敗，請稍後再試'
+//     toast.add({
+//       severity: 'error',
+//       summary: '錯誤',
+//       detail: errorMessage,
+//       life: 3000,
+//     })
+//   } finally {
+//     preferencesForm.loading = false
+//   }
+// }
 
 const toggleSocialAccount = async (account) => {
   if (account.connected) {
