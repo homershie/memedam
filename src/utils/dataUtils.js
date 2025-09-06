@@ -33,11 +33,9 @@ export function formatPublishedTime(timeData) {
  * 計算 memeId（統一處理）
  */
 export function getMemeId(meme) {
-  let id = meme.id || meme._id
-  if (typeof id === 'object' && id.$oid) {
-    id = id.$oid
-  }
-  return id
+  // 優先使用 MongoDB 原生 _id 以避免使用到推薦系統中的臨時 id
+  // 使用 getId 來統一處理不同格式的 ObjectId
+  return getId(meme._id || meme.id)
 }
 
 /**
