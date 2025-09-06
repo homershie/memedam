@@ -166,9 +166,16 @@
                     <img
                       v-if="
                         meme.cover_image ||
-                        (meme.image_url && meme.image_url.trim())
+                        (meme.image_url && meme.image_url.trim()) ||
+                        (meme.video_url && meme.video_url.trim()) ||
+                        (meme.audio_url && meme.audio_url.trim())
                       "
-                      :src="meme.cover_image || meme.image_url"
+                      :src="
+                        meme.cover_image ||
+                        meme.image_url ||
+                        meme.video_url ||
+                        meme.audio_url
+                      "
                       :alt="meme.title"
                       class="w-full h-full object-cover"
                     />
@@ -541,9 +548,16 @@
                   <img
                     v-if="
                       relatedMeme.cover_image ||
-                      (relatedMeme.image_url && relatedMeme.image_url.trim())
+                      (relatedMeme.image_url && relatedMeme.image_url.trim()) ||
+                      (relatedMeme.video_url && relatedMeme.video_url.trim()) ||
+                      (relatedMeme.audio_url && relatedMeme.audio_url.trim())
                     "
-                    :src="relatedMeme.cover_image || relatedMeme.image_url"
+                    :src="
+                      relatedMeme.cover_image ||
+                      relatedMeme.image_url ||
+                      relatedMeme.video_url ||
+                      relatedMeme.audio_url
+                    "
                     :alt="relatedMeme.title"
                     class="w-full h-full object-cover"
                   />

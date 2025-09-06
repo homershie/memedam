@@ -274,154 +274,227 @@
       <!-- 場景及相關迷因 -->
       <Card class="p-4 mb-8">
         <template #title>
-          <h2 v-if="scenesWithMemes.length > 0" class="mb-4">場景及相關迷因</h2>
+          <h2
+            v-if="scenesWithMemes.length > 0 || memesWithoutScenes.length > 0"
+            class="mb-4"
+          >
+            {{ scenesWithMemes.length > 0 ? '場景及相關迷因' : '相關迷因' }}
+          </h2>
         </template>
         <template #content>
-          <Panel
-            toggleable
-            collapsed
-            v-for="scene in scenesWithMemes"
-            :key="scene._id"
-          >
-            <template #header>
-              <!-- 場景 -->
+          <!-- 顯示有場景的迷因 -->
+          <template v-if="scenesWithMemes.length > 0">
+            <Panel
+              toggleable
+              collapsed
+              v-for="scene in scenesWithMemes"
+              :key="scene._id"
+            >
+              <template #header>
+                <!-- 場景 -->
 
-              <div class="flex items-start space-x-4 p-4">
-                <div class="flex-shrink-0">
-                  <div
-                    v-if="scene.images && scene.images.length > 0"
-                    class="w-16 h-16 bg-surface-100 rounded-lg overflow-hidden"
-                  >
-                    <img
-                      :src="scene.images[0]"
-                      :alt="scene.title"
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div
-                    v-else
-                    class="w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center"
-                  >
-                    <i class="pi pi-play text-primary-600"></i>
-                  </div>
-                </div>
-                <div class="flex-1">
-                  <h4 class="mb-1 font-medium">
-                    {{ scene.title }}
-                  </h4>
-                  <div
-                    v-if="scene.quote"
-                    class="text-sm text-surface-600 dark:text-surface-400 mb-2 italic"
-                  >
-                    "{{ scene.quote }}"
-                  </div>
-                  <div
-                    class="flex items-center space-x-4 text-sm text-surface-500"
-                  >
-                    <span v-if="scene.start_time">
-                      開始：{{ formatTime(scene.start_time) }}
-                    </span>
-                    <span v-if="scene.end_time">
-                      結束：{{ formatTime(scene.end_time) }}
-                    </span>
-                    <span v-if="scene.duration">
-                      時長：{{ formatTime(scene.duration) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <template #icons>
-              <Button
-                v-if="canEditScene(scene)"
-                icon="pi pi-pencil"
-                severity="secondary"
-                rounded
-                text
-                @click="showEditSceneDialogFn(scene)"
-              />
-            </template>
-
-            <!-- 迷因 -->
-            <div>
-              <hr />
-              <h4 class="my-4">此場景相關迷因：</h4>
-              <div
-                v-if="scene.memes && scene.memes.length > 0"
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-              >
-                <div
-                  v-for="meme in scene.memes"
-                  :key="meme._id"
-                  class="bg-white rounded-lg shadow-sm border hover:bg-surface-100 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors cursor-pointer"
-                  @click="navigateToMeme(meme)"
-                >
-                  <div
-                    class="aspect-square bg-surface-100 rounded-t-lg overflow-hidden"
-                  >
-                    <img
-                      v-if="
-                        (meme.cover_image && meme.cover_image.trim()) ||
-                        (meme.image_url && meme.image_url.trim())
-                      "
-                      :src="
-                        meme.cover_image && meme.cover_image.trim()
-                          ? meme.cover_image
-                          : meme.image_url
-                      "
-                      :alt="meme.title"
-                      class="w-full h-full object-cover"
-                    />
+                <div class="flex items-start space-x-4 p-4">
+                  <div class="flex-shrink-0">
+                    <div
+                      v-if="scene.images && scene.images.length > 0"
+                      class="w-16 h-16 bg-surface-100 rounded-lg overflow-hidden"
+                    >
+                      <img
+                        :src="scene.images[0]"
+                        :alt="scene.title"
+                        class="w-full h-full object-cover"
+                      />
+                    </div>
                     <div
                       v-else
-                      class="w-full h-full flex items-center justify-center text-surface-400"
+                      class="w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center"
                     >
-                      <i class="pi pi-image text-2xl"></i>
+                      <i class="pi pi-play text-primary-600"></i>
                     </div>
                   </div>
-                  <div class="p-3">
-                    <h4 class="mb-1 line-clamp-2">
-                      {{ meme.title }}
+                  <div class="flex-1">
+                    <h4 class="mb-1 font-medium">
+                      {{ scene.title }}
                     </h4>
                     <div
-                      class="flex items-center justify-between text-sm text-surface-500 dark:text-surface-300"
+                      v-if="scene.quote"
+                      class="text-sm text-surface-600 dark:text-surface-400 mb-2 italic"
                     >
-                      <div class="flex items-center space-x-2">
-                        <span>{{ getMemeAuthorName(meme) }}</span> ·
-                        <span>
-                          {{ formatPublishedTime(meme) }}
-                        </span>
-                      </div>
-                      <span class="flex items-center">
-                        <i class="pi pi-thumbs-up mr-1"></i>
-                        {{ meme.like_count || 0 }}
+                      "{{ scene.quote }}"
+                    </div>
+                    <div
+                      class="flex items-center space-x-4 text-sm text-surface-500"
+                    >
+                      <span v-if="scene.start_time">
+                        開始：{{ formatTime(scene.start_time) }}
+                      </span>
+                      <span v-if="scene.end_time">
+                        結束：{{ formatTime(scene.end_time) }}
+                      </span>
+                      <span v-if="scene.duration">
+                        時長：{{ formatTime(scene.duration) }}
                       </span>
                     </div>
                   </div>
                 </div>
+              </template>
+
+              <template #icons>
+                <Button
+                  v-if="canEditScene(scene)"
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  rounded
+                  text
+                  @click="showEditSceneDialogFn(scene)"
+                />
+              </template>
+
+              <!-- 迷因 -->
+              <div>
+                <hr />
+                <h4 class="my-4">此場景相關迷因：</h4>
+                <div
+                  v-if="scene.memes && scene.memes.length > 0"
+                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                >
+                  <div
+                    v-for="meme in scene.memes"
+                    :key="meme._id"
+                    class="bg-white rounded-lg shadow-sm border hover:bg-surface-100 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors cursor-pointer"
+                    @click="navigateToMeme(meme)"
+                  >
+                    <div
+                      class="aspect-square bg-surface-100 rounded-t-lg overflow-hidden"
+                    >
+                      <img
+                        v-if="
+                          (meme.cover_image && meme.cover_image.trim()) ||
+                          (meme.image_url && meme.image_url.trim())
+                        "
+                        :src="
+                          meme.cover_image && meme.cover_image.trim()
+                            ? meme.cover_image
+                            : meme.image_url
+                        "
+                        :alt="meme.title"
+                        class="w-full h-full object-cover"
+                      />
+                      <div
+                        v-else
+                        class="w-full h-full flex items-center justify-center text-surface-400"
+                      >
+                        <i class="pi pi-image text-2xl"></i>
+                      </div>
+                    </div>
+                    <div class="p-3">
+                      <h4 class="mb-1 line-clamp-2">
+                        {{ meme.title }}
+                      </h4>
+                      <div
+                        class="flex items-center justify-between text-sm text-surface-500 dark:text-surface-300"
+                      >
+                        <div class="flex items-center space-x-2">
+                          <span>{{ getMemeAuthorName(meme) }}</span> ·
+                          <span>
+                            {{ formatPublishedTime(meme) }}
+                          </span>
+                        </div>
+                        <span class="flex items-center">
+                          <i class="pi pi-thumbs-up mr-1"></i>
+                          {{ meme.like_count || 0 }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-center py-8 text-surface-500">
+                  <i class="pi pi-image text-4xl mb-2"></i>
+                  <p>暫無相關迷因</p>
+                </div>
               </div>
-              <div v-else class="text-center py-8 text-surface-500">
-                <i class="pi pi-image text-4xl mb-2"></i>
-                <p>暫無相關迷因</p>
+            </Panel>
+          </template>
+
+          <!-- 顯示沒有設定場景的迷因 -->
+          <div v-if="memesWithoutScenes.length > 0">
+            <hr v-if="scenesWithMemes.length > 0" class="my-6" />
+            <h4 class="my-4">其他相關迷因：</h4>
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            >
+              <div
+                v-for="meme in memesWithoutScenes"
+                :key="meme._id"
+                class="bg-white rounded-lg shadow-sm border hover:bg-surface-100 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors cursor-pointer"
+                @click="navigateToMeme(meme)"
+              >
+                <div
+                  class="aspect-square bg-surface-100 rounded-t-lg overflow-hidden"
+                >
+                  <img
+                    v-if="
+                      (meme.cover_image && meme.cover_image.trim()) ||
+                      (meme.image_url && meme.image_url.trim())
+                    "
+                    :src="
+                      meme.cover_image && meme.cover_image.trim()
+                        ? meme.cover_image
+                        : meme.image_url
+                    "
+                    :alt="meme.title"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center text-surface-400"
+                  >
+                    <i class="pi pi-image text-2xl"></i>
+                  </div>
+                </div>
+                <div class="p-3">
+                  <h4 class="mb-1 line-clamp-2">
+                    {{ meme.title }}
+                  </h4>
+                  <div
+                    class="flex items-center justify-between text-sm text-surface-500 dark:text-surface-300"
+                  >
+                    <div class="flex items-center space-x-2">
+                      <span>{{ getMemeAuthorName(meme) }}</span> ·
+                      <span>
+                        {{ formatPublishedTime(meme) }}
+                      </span>
+                    </div>
+                    <span class="flex items-center">
+                      <i class="pi pi-thumbs-up mr-1"></i>
+                      {{ meme.like_count || 0 }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            <template #footer>
-              <!-- 分頁 -->
-              <div
-                v-if="totalMemes > pageSize"
-                class="flex justify-center mt-6"
-              >
-                <Paginator
-                  :rows="pageSize"
-                  :total-records="totalMemes"
-                  :first="(currentPage - 1) * pageSize"
-                  @page="onPageChange"
-                />
-              </div>
-            </template>
-          </Panel>
+          <!-- 沒有任何迷因時的提示 -->
+          <div
+            v-if="
+              scenesWithMemes.length === 0 && memesWithoutScenes.length === 0
+            "
+            class="text-center py-8 text-surface-500"
+          >
+            <i class="pi pi-image text-4xl mb-2"></i>
+            <p>暫無相關迷因</p>
+          </div>
+
+          <!-- 分頁 -->
+          <div v-if="totalMemes > pageSize" class="flex justify-center mt-6">
+            <Paginator
+              :rows="pageSize"
+              :total-records="totalMemes"
+              :first="(currentPage - 1) * pageSize"
+              @page="onPageChange"
+            />
+          </div>
         </template>
       </Card>
 
@@ -1453,7 +1526,7 @@ const countryOptions = [
 // 將迷因根據scene_id分組到對應場景
 const scenesWithMemes = computed(() => {
   if (!scenes.value.length || !memes.value.length) {
-    return scenes.value.map((scene) => ({ ...scene, memes: [] }))
+    return []
   }
 
   // 創建scene_id到迷因的映射
@@ -1469,11 +1542,23 @@ const scenesWithMemes = computed(() => {
     }
   })
 
-  // 將迷因分配到對應的場景
-  return scenes.value.map((scene) => ({
-    ...scene,
-    memes: memesBySceneId.get(scene._id) || [],
-  }))
+  // 只返回有迷因的場景
+  return scenes.value
+    .map((scene) => ({
+      ...scene,
+      memes: memesBySceneId.get(scene._id) || [],
+    }))
+    .filter((scene) => scene.memes.length > 0)
+})
+
+// 獲取沒有設定場景的迷因
+const memesWithoutScenes = computed(() => {
+  if (!memes.value.length) return []
+
+  return memes.value.filter((meme) => {
+    const sceneId = meme.scene_id?._id || meme.scene_id
+    return !sceneId
+  })
 })
 
 // 方法
