@@ -545,7 +545,9 @@ const removeAllNotifications = async () => {
 
   deletingAll.value = true
   try {
-    const response = await notificationService.removeBatch()
+    const response = await notificationService.removeBatch({
+      unreadOnly: false,
+    })
 
     if (response.data.success) {
       // 清空列表與狀態
