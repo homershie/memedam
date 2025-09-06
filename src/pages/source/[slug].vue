@@ -96,10 +96,11 @@
             :key="index"
             class="aspect-video bg-surface-100 rounded-lg overflow-hidden"
           >
-            <img
+            <Image
               :src="thumbnail"
               :alt="`${source.title} 縮圖 ${index + 1}`"
               class="w-full h-full object-cover"
+              preview
             />
           </div>
         </div>
