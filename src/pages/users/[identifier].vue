@@ -57,7 +57,7 @@
         </div>
       </div>
     </div>
-    <div v-else class="absolute top-4 right-8">
+    <div v-else-if="isCurrentUser" class="absolute top-4 right-8">
       <Button
         label="上傳封面圖片"
         icon="pi pi-upload"
@@ -197,7 +197,8 @@
             <Tabs
               :value="activeTab"
               @update:value="activeTab = $event"
-              class="order-2 xl:order-1"
+              class="w-full sm:w-fit order-2 xl:order-1"
+              scrollable
             >
               <TabList class="border-b-0">
                 <Tab
@@ -215,7 +216,7 @@
             <!-- 搜索和排序 -->
             <div
               v-if="activeTab !== 'about'"
-              class="flex items-center gap-4 order-1 xl:order-2"
+              class="w-full md:w-fit flex flex-col sm:flex-row justify-center items-center gap-4 order-1 xl:order-2"
             >
               <FloatLabel variant="on">
                 <IconField>
@@ -223,7 +224,8 @@
                   <InputText
                     id="on_label"
                     v-model="searchQuery"
-                    class="pl-10 pr-4 py-2 w-64"
+                    fluid
+                    class="md:pl-10 md:pr-4 py-2 w-64"
                   />
                   <InputIcon
                     v-if="searchQuery"
@@ -239,7 +241,7 @@
                 optionLabel="label"
                 optionValue="value"
                 placeholder="排序"
-                class="w-36"
+                class="w-64 sm:w-36"
               />
             </div>
           </div>
@@ -626,16 +628,23 @@ const isCurrentUser = computed(() => {
   const pageIdentifier = userIdentifier.value?.value
 
   // 如果用戶已登入，檢查是否為當前用戶
-  if (currentUserId && currentUsername) {
-    // 比較用戶 ID
+  if (currentUserId && pageUserId) {
+    // 優先比較用戶 ID，這是最可靠的比較方式
     if (currentUserId === pageUserId) {
       return true
     }
-    // 比較用戶名
-    if (
-      currentUsername === pageUsername ||
-      currentUsername === pageIdentifier
-    ) {
+  }
+
+  // 如果用戶 ID 比較失敗，再比較用戶名
+  if (currentUsername && pageUsername) {
+    if (currentUsername === pageUsername) {
+      return true
+    }
+  }
+
+  // 如果用戶名比較失敗，檢查頁面標識符是否匹配當前用戶名
+  if (currentUsername && pageIdentifier) {
+    if (currentUsername === pageIdentifier) {
       return true
     }
   }
@@ -692,8 +701,14 @@ const loadUserProfile = async () => {
       // 處理可能的資料結構差異，參考 all.vue 中的做法
       userProfile.value = response.data.user || response.data
 
+      // 檢查是否為當前用戶（直接比較，避免依賴計算屬性）
+      const currentUserId = userStore.userId
+      const pageUserId = userProfile.value._id
+      const isPageCurrentUser =
+        currentUserId && pageUserId && currentUserId === pageUserId
+
       // 如果當前用戶已登入且不是當前用戶頁面，檢查追隨狀態
-      if (!isCurrentUser.value && userStore.isLoggedIn) {
+      if (!isPageCurrentUser && userStore.isLoggedIn) {
         try {
           const followStatusResponse = await followService.getFollowStatus(
             userProfile.value._id,

@@ -313,12 +313,22 @@ const completeSocialRegistration = async (username) => {
     })
 
     // 登入用戶
-    user.login({
-      ...data.user,
+    const loginData = {
       token: data.token,
       userId: data.userId || data.user?._id,
-      role: data.role, // 確保 role 資訊正確傳遞
-    })
+      role: data.role || 'user',
+    }
+
+    // 如果有完整的用戶對象，使用它
+    if (data.user && typeof data.user === 'object') {
+      loginData.user = data.user
+      // 確保 username 正確設置
+      if (data.user.username) {
+        loginData.username = data.user.username
+      }
+    }
+
+    user.login(loginData)
 
     needsUsernameSelection.value = false
     isSuccess.value = true
@@ -413,12 +423,27 @@ const processOAuthCallback = async () => {
   } else {
     // 用戶已存在，直接完成登入
     try {
-      user.login({
-        ...userData,
+      // 確保用戶數據結構正確
+      const loginData = {
         token: token,
-        userId: userData?.id || userData?._id,
-        role: userData?.role, // 確保 role 資訊正確傳遞
-      })
+        userId: userData?._id || userData?.id,
+        role: userData?.role || 'user',
+      }
+
+      // 如果 userData 是完整的用戶對象，使用它
+      if (userData && typeof userData === 'object') {
+        loginData.user = userData
+        // 確保 username 正確設置
+        if (userData.username) {
+          loginData.username = userData.username
+        }
+        // 如果沒有 username 但有 account，使用 account
+        else if (userData.account) {
+          loginData.username = userData.account
+        }
+      }
+
+      user.login(loginData)
 
       isSuccess.value = true
       successMessage.value = '登入成功'
