@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full mx-auto space-y-12 overflow-y-auto">
+  <div class="w-full mx-auto space-y-12 overflow-y-auto relative">
     <!-- 背景圖片 -->
     <div
       v-if="userProfile?.cover_image"
@@ -57,7 +57,7 @@
         </div>
       </div>
     </div>
-    <div v-else-if="isCurrentUser" class="absolute top-4 right-8">
+    <div v-else-if="isCurrentUser" class="relative inline-block top-4 left-4">
       <Button
         label="上傳封面圖片"
         icon="pi pi-upload"
