@@ -5,7 +5,7 @@
         <h1 class="text-3xl font-bold text-surface-800">投稿迷因</h1>
         <p class="mt-2">分享你的創意，讓大家一起歡樂！</p>
       </div>
-      <div class="p-6">
+      <div>
         <form @submit.prevent="handleSubmit" novalidate class="space-y-6">
           <!-- 迷因標題 -->
           <div class="field">

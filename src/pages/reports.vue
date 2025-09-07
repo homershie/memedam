@@ -1,13 +1,13 @@
 <template>
   <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
     <!-- 頁面標題 -->
-    <div class="w-5xl mx-auto mb-6">
+    <div class="max-w-5xl mx-auto mb-6">
       <h1 class="text-3xl font-bold mb-2">檢舉紀錄</h1>
       <p class="text-gray-600 dark:text-gray-400">查看您的檢舉歷史和處理狀態</p>
     </div>
 
     <!-- 統計卡片 -->
-    <div class="w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <Card class="text-center">
         <template #content>
           <div v-if="loading" class="flex justify-center">
@@ -50,7 +50,7 @@
     </div>
 
     <!-- 篩選器 -->
-    <Card class="w-5xl mx-auto">
+    <Card class="max-w-5xl mx-auto">
       <template #content>
         <div class="flex flex-wrap gap-4 items-center">
           <div class="flex items-center gap-2">
@@ -88,7 +88,7 @@
     </Card>
 
     <!-- 檢舉列表 -->
-    <Card class="w-5xl mx-auto">
+    <Card class="max-w-5xl mx-auto">
       <template #content>
         <!-- 載入中狀態 -->
         <div v-if="loading" class="flex justify-center py-8">
@@ -102,7 +102,9 @@
             :key="report._id"
             class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            <div class="flex justify-between items-start mb-3">
+            <div
+              class="flex justify-between flex-col md:flex-row items-start mb-3 gap-2"
+            >
               <div class="flex items-center gap-3">
                 <Tag
                   :value="getReasonLabel(report.reason)"

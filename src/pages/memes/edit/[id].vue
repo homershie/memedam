@@ -38,7 +38,7 @@
           <h1 class="text-3xl font-bold text-surface-800">編輯迷因</h1>
           <p class="mt-2">修改你的迷因內容</p>
         </div>
-        <div class="p-6">
+        <div>
           <form @submit.prevent="handleSubmit" novalidate class="space-y-6">
             <!-- 迷因標題 -->
             <div class="field">

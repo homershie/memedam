@@ -2,12 +2,12 @@
 <template>
   <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
     <!-- 頁面標題 -->
-    <div class="w-5xl mx-auto mb-6 text-start">
+    <div class="max-w-5xl mx-auto mb-6 text-start">
       <h1 class="text-3xl font-bold text-gray-800">最新迷因</h1>
       <p class="text-gray-600 mt-2">基於時間排序的最新內容推薦</p>
     </div>
 
-    <div class="w-5xl mx-auto flex justify-between flex-wrap">
+    <div class="max-w-5xl mx-auto flex justify-between flex-wrap">
       <!-- 迷因類型標籤 -->
       <div class="flex flex-wrap gap-2 mb-6 justify-start items-center">
         <CustomTag

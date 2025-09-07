@@ -2,7 +2,7 @@
   <div class="w-full mx-auto p-4 space-y-12 overflow-y-auto">
     <!-- 使用 PrimeVue Tabs 的設定區塊 -->
     <div class="rounded-lg max-w-5xl mx-auto">
-      <Tabs v-model:value="activeTabIndex" class="w-full">
+      <Tabs v-model:value="activeTabIndex" class="w-full" scrollable>
         <TabList>
           <Tab
             v-for="(section, index) in sections"
