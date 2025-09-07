@@ -57,6 +57,11 @@ export default {
     return apiService.httpAuth.get('/api/recommendations/mixed', { params })
   },
 
+  // 取得精選迷因
+  getFeaturedMemes(params = {}) {
+    return apiService.http.get('/api/recommendations/featured', { params })
+  },
+
   // 取得無限滾動推薦（專門為前端無限滾動設計）
   getInfiniteScrollRecommendations(params = {}) {
     return apiService.httpAuth.get('/api/recommendations/infinite-scroll', {

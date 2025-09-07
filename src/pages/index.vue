@@ -827,89 +827,52 @@ const followUser = async (userId, index) => {
   }
 }
 
-// 載入精選迷因（以推薦排序，僅顯示 is_featured 為 true 的項目）
+// 載入精選迷因（直接從後端獲取精選迷因）
 const loadFeaturedMemes = async () => {
   try {
     loading.value = true
 
-    const response =
-      await recommendationService.getInfiniteScrollRecommendations({
-        // 拉大清單再前端篩選，確保能取到足夠的精選
-        limit: 50,
-        page: 1,
-        clear_cache: true,
-      })
+    const response = await recommendationService.getFeaturedMemes({
+      limit: 3,
+      page: 1,
+    })
 
-    // 處理不同的回應格式
-    let recommendations = []
-    if (response.data) {
-      if (Array.isArray(response.data)) {
-        recommendations = response.data
-      } else if (response.data.memes) {
-        recommendations = response.data.memes
-      } else if (response.data.recommendations) {
-        recommendations = response.data.recommendations
-      } else if (response.data.data) {
-        const nestedData = response.data.data
-        if (Array.isArray(nestedData)) {
-          recommendations = nestedData
-        } else if (nestedData.memes) {
-          recommendations = nestedData.memes
-        } else if (nestedData.recommendations) {
-          recommendations = nestedData.recommendations
-        } else {
-          recommendations = [nestedData]
-        }
-      } else {
-        recommendations = [response.data]
+    // 處理回應格式
+    let memes = []
+    if (response.data && response.data.success && response.data.data) {
+      if (Array.isArray(response.data.data.memes)) {
+        memes = response.data.data.memes
+      } else if (Array.isArray(response.data.data)) {
+        memes = response.data.data
       }
     }
 
-    // 僅保留 is_featured 為 true 的迷因，並依推薦順序取前 3 筆
-    const featuredOnly = recommendations.filter((m) =>
-      Boolean(m && m.is_featured),
-    )
-    const topFeatured = featuredOnly.slice(0, 3)
-
-    // 為每個迷因載入作者資訊
-    const memesWithAuthors = await Promise.all(
-      topFeatured.map(async (meme) => {
-        try {
-          if (meme.author_id) {
-            let authorId = meme.author_id
-            if (typeof authorId === 'object') {
-              if (authorId.$oid) {
-                authorId = authorId.$oid
-              } else if (authorId._id) {
-                authorId = authorId._id
-              } else {
-                throw new Error('無法解析作者ID')
-              }
-            }
-            if (!authorId || typeof authorId !== 'string') {
-              throw new Error('無效的作者ID')
-            }
-            const authorResponse = await userService.get(authorId)
-            meme.author = authorResponse.data.user
-          } else {
-            meme.author = {
-              display_name: '匿名用戶',
-              username: 'anonymous',
-              avatar: null,
-            }
-          }
-          return meme
-        } catch (error) {
-          console.warn(`載入作者 ${meme.author_id} 失敗:`, error.message)
-          meme.author = {
-            display_name: '未知用戶',
-            username: 'unknown',
-            avatar: null,
-          }
-          return meme
+    // 為每個迷因處理作者資訊（後端已經 populate 了）
+    const memesWithAuthors = memes.map((meme) => {
+      // 如果後端已經提供了作者資訊，直接使用
+      if (
+        meme.author_id &&
+        typeof meme.author_id === 'object' &&
+        meme.author_id.display_name
+      ) {
+        meme.author = {
+          display_name: meme.author_id.display_name,
+          username: meme.author_id.username,
+          avatar: meme.author_id.avatar,
         }
-      }),
-    )
+        delete meme.author_id
+      } else if (meme.author) {
+        // 已經有作者資訊，保持不變
+      } else {
+        // 沒有作者資訊，設置預設值
+        meme.author = {
+          display_name: '未知用戶',
+          username: 'unknown',
+          avatar: null,
+        }
+      }
+      return meme
+    })
 
     featuredMemes.value = memesWithAuthors
   } catch (error) {
