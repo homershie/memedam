@@ -26,8 +26,29 @@ Disallow: /*?page=1$
 Disallow: /*?search=$
 Disallow: /*?tags=$
 
-# 站點地圖位置（固定 www 主域）
+# 站點地圖位置（動態生成）
 Sitemap: https://www.memedam.com/sitemap.xml
 
-# 抓取延遲（毫秒）
+# 抓取延遲（毫秒）- 對友好爬蟲降低延遲
 Crawl-delay: 1
+
+# 允許主要搜尋引擎完全訪問
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# 允許社交媒體爬蟲訪問以獲取Open Graph數據
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# 允許搜尋引擎圖片爬蟲
+User-agent: Googlebot-Image
+Allow: /
