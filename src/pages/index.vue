@@ -701,10 +701,8 @@ const loadActiveUsers = async () => {
       // 初始化每個用戶的追蹤狀態
       activeUsers.value.forEach((user, index) => {
         activeUsers.value[index].followLoading = false
-        // 只有在用戶未登入時才將 isFollowing 設為 false
-        if (!userStore.isLoggedIn) {
-          activeUsers.value[index].isFollowing = false
-        }
+        // 總是初始化 isFollowing 為 false，這樣如果 API 調用失敗，UI 也會顯示正確狀態
+        activeUsers.value[index].isFollowing = false
       })
 
       // 如果用戶已登入，檢查每個用戶的追蹤狀態
@@ -733,7 +731,8 @@ const loadActiveUsers = async () => {
               }
             } catch (error) {
               console.warn(`檢查用戶 ${user._id} 追蹤狀態失敗:`, error)
-              // 錯誤時不改變 isFollowing 狀態，保持原有狀態
+              // 錯誤時將 isFollowing 設為 false，確保 UI 顯示正確狀態
+              activeUsers.value[index].isFollowing = false
             }
           }),
         )
@@ -758,6 +757,19 @@ const loadActiveUsers = async () => {
 // 追蹤用戶
 const followUser = async (userId, index) => {
   try {
+    // 檢查是否已登入
+    if (!userStore.isLoggedIn) {
+      toast.add({
+        severity: 'info',
+        summary: '需要登入',
+        detail: '請先登入後再進行追蹤操作',
+        life: 3000,
+      })
+      // 跳轉到登入頁面
+      router.push('/login')
+      return
+    }
+
     // 檢查是否追蹤自己
     if (userId === userStore.userId) {
       toast.add({

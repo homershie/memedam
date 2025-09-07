@@ -920,6 +920,19 @@ const handleAvatarChange = async (event) => {
 // 處理追隨按鈕點擊
 const handleFollow = async () => {
   try {
+    // 檢查是否已登入
+    if (!userStore.isLoggedIn) {
+      toast.add({
+        severity: 'info',
+        summary: '需要登入',
+        detail: '請先登入後再進行追蹤操作',
+        life: 3000,
+      })
+      // 跳轉到登入頁面
+      router.push('/login')
+      return
+    }
+
     const response = await followService.toggleFollow(userProfile.value._id)
 
     if (response.data.success) {
