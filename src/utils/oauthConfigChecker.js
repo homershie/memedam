@@ -14,8 +14,6 @@ export const checkOAuthConfig = () => {
     searchParams: window.location.search,
   }
 
-  console.log('OAuth 配置檢查結果:', config)
-
   // 檢查常見問題
   const issues = []
 
@@ -249,11 +247,6 @@ export const testOAuthConfig = async () => {
   const config = checkOAuthConfig()
   const redirectCheck = checkCurrentUrlInRedirectUris()
   const guide = generateOAuthConfigGuide()
-
-  console.log('=== OAuth 配置測試結果 ===')
-  console.log('配置檢查:', config)
-  console.log('重定向 URI 檢查:', redirectCheck)
-  console.log('配置指南:', guide)
 
   return {
     config,

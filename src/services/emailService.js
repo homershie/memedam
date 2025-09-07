@@ -32,13 +32,6 @@ class EmailService {
   // 檢查 reCAPTCHA 設定
   checkRecaptchaConfig() {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
-    console.log('🔍 環境檢查:', {
-      siteKey: siteKey || '未設定',
-      DEV: import.meta.env.DEV,
-      MODE: import.meta.env.MODE,
-      NODE_ENV: import.meta.env.NODE_ENV,
-    })
-
     if (
       !siteKey ||
       siteKey === 'your_site_key_here' ||
@@ -89,7 +82,6 @@ class EmailService {
   // 執行 reCAPTCHA 驗證
   async executeRecaptcha(action = 'submit_contact') {
     try {
-      console.log('🔄 開始執行 reCAPTCHA 驗證...')
       const grecaptcha = await this.loadRecaptchaScript()
 
       return new Promise((resolve, reject) => {

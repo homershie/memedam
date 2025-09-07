@@ -18,26 +18,14 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
-  console.log('路由守衛檢查:', {
-    to: to.path,
-    from: from.path,
-    isLoggedIn: userStore.isLoggedIn,
-    token: userStore.token ? userStore.token.substring(0, 20) + '...' : '無',
-    requiresLogin: to.meta?.login === true,
-    requiresAdmin: to.meta?.admin === true,
-    isAdmin: userStore.isAdmin,
-  })
-
   // 檢查是否需要登入
   if (to.meta?.login === true && !userStore.isLoggedIn) {
-    console.log('需要登入但未登入，重定向到登入頁面')
     next('/login')
     return
   }
 
   // 檢查是否需要管理員權限
   if (to.meta?.admin === true && !userStore.isAdmin) {
-    console.log('需要管理員權限但沒有權限，重定向到首頁')
     next('/')
     return
   }
@@ -50,7 +38,6 @@ router.beforeEach(async (to, from, next) => {
     logSponsorPageAccess('success', transactionId)
 
     if (!transactionId) {
-      console.log('贊助成功頁面缺少交易ID，重定向到贊助頁面')
       next('/donate')
       return
     }
@@ -61,28 +48,23 @@ router.beforeEach(async (to, from, next) => {
 
       switch (validation.status) {
         case SPONSOR_VALIDATION_STATUS.VALID:
-          console.log('贊助成功頁面驗證通過')
           break
 
         case SPONSOR_VALIDATION_STATUS.PENDING:
-          console.log('贊助尚未完成，重定向到錯誤頁面')
           next(
             `/sponsor/error?message=${encodeURIComponent(validation.message)}`,
           )
           return
 
         case SPONSOR_VALIDATION_STATUS.INVALID:
-          console.log('交易驗證失敗，重定向到贊助頁面')
           next('/donate')
           return
 
         case SPONSOR_VALIDATION_STATUS.ERROR:
-          console.log('驗證過程中發生錯誤，重定向到贊助頁面')
           next('/donate')
           return
 
         default:
-          console.log('未知驗證狀態，重定向到贊助頁面')
           next('/donate')
           return
       }
@@ -97,11 +79,9 @@ router.beforeEach(async (to, from, next) => {
   if (to.path === '/sponsor/error') {
     const message = to.query.message
     logSponsorPageAccess('error', null, message)
-    console.log('訪問贊助錯誤頁面')
   }
 
   // 其他情況正常通過
-  console.log('路由守衛通過')
   next()
 })
 

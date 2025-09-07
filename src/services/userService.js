@@ -60,14 +60,12 @@ export default {
         const usernameResponse = await this.getByUsername(identifier)
         if (usernameResponse.data && usernameResponse.data.user) {
           userId = usernameResponse.data.user._id
-          console.log(`將 username "${identifier}" 轉換為 ID:`, userId)
         } else {
           throw new Error(`無法從 username "${identifier}" 獲取用戶 ID`)
         }
       }
 
       // 始終使用 ID 調用標準的用戶 API，添加選項來避免快取
-      console.log(`使用 ID "${userId}" 調用用戶 API`)
       return await this.get(userId, options)
     } catch (error) {
       console.error('getUserByIdentifier 失敗:', error)
@@ -279,14 +277,12 @@ export default {
         const usernameResponse = await this.getByUsername(identifier)
         if (usernameResponse.data && usernameResponse.data.user) {
           userId = usernameResponse.data.user._id
-          console.log(`將 username "${identifier}" 轉換為 ID 用於統計:`, userId)
         } else {
           throw new Error(`無法從 username "${identifier}" 獲取用戶 ID`)
         }
       }
 
       // 始終使用 ID 調用標準的統計 API
-      console.log(`使用 ID "${userId}" 調用統計 API`)
       return await this.getStats(userId)
     } catch (error) {
       console.error('getStatsByIdentifier 失敗:', error)

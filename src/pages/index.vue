@@ -939,12 +939,6 @@ const onTagClick = (tag) => {
   handleTagClick(tag)
 }
 
-// 顯示評論
-const onShowComments = (meme) => {
-  // 這裡可以打開評論對話框，但首頁通常不需要
-  console.log('顯示評論:', meme)
-}
-
 // 獲取每日迷因
 const getDailyMeme = async () => {
   if (dailyMemeButtonDisabled.value) {
@@ -1182,7 +1176,6 @@ watch(
   async (newIsLoggedIn, oldIsLoggedIn) => {
     // 當用戶從未登入變為已登入時，重新載入活躍用戶的追蹤狀態
     if (newIsLoggedIn && !oldIsLoggedIn && activeUsers.value.length > 0) {
-      console.log('用戶登入狀態改變，重新載入追蹤狀態')
       await loadActiveUsers()
     }
   },

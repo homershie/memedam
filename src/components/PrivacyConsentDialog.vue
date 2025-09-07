@@ -182,8 +182,7 @@ const hasConsented = async () => {
     }
 
     return false
-  } catch (error) {
-    console.log('檢查同意狀態失敗，使用本地資料:', error.message)
+  } catch {
     // 檢查失敗時，使用本地資料
     return localStorage.getItem('privacy-consent') !== null
   }

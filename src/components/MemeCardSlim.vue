@@ -643,14 +643,6 @@ const showReportDialog = () => {
   }
   reportDialogVisible.value = true
 }
-
-// 處理檢舉提交
-const handleReportSubmitted = (reportData) => {
-  // 檢舉提交成功後的處理
-  // ReportDialog 組件已經處理了成功訊息和關閉對話框
-  // 這裡可以添加額外的處理邏輯，如果需要的話
-  console.log('檢舉已提交:', reportData)
-}
 </script>
 
 <style scoped>

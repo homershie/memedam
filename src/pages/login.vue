@@ -450,9 +450,7 @@ const onSubmit = async () => {
 
       // 註冊成功後同步隱私權同意設定
       try {
-        console.log('註冊成功，開始同步隱私權同意設定...')
         await privacyConsentService.syncConsentData()
-        console.log('隱私權同意設定同步完成')
       } catch (error) {
         console.warn('隱私權同意設定同步失敗，但不影響註冊流程:', error)
         // 同步失敗不影響註冊流程，只記錄警告
@@ -490,8 +488,6 @@ const onSubmit = async () => {
       }
 
       const { data } = await userService.login(loginData)
-
-      console.log('登入API回傳:', data)
       user.login({
         ...data.user,
         token: data.token,
@@ -501,9 +497,7 @@ const onSubmit = async () => {
 
       // 登入成功後同步隱私權同意設定
       try {
-        console.log('開始同步隱私權同意設定...')
         await privacyConsentService.syncConsentData()
-        console.log('隱私權同意設定同步完成')
       } catch (error) {
         console.warn('隱私權同意設定同步失敗，但不影響登入流程:', error)
         // 同步失敗不影響登入流程，只記錄警告
@@ -538,8 +532,6 @@ const handleSocialLogin = async (provider) => {
   socialLoginLoading.value = true
 
   try {
-    console.log(`開始 ${provider} 社群登入`)
-
     // 直接跳轉到後端 OAuth 路由，不使用彈窗
     const baseUrl = import.meta.env.VITE_API_URL || ''
     const oauthUrl = `${baseUrl}/api/users/auth/${provider}`
@@ -563,9 +555,6 @@ const handleSocialLogin = async (provider) => {
 
 // 頁面載入時的初始化
 onMounted(() => {
-  // 頁面載入時可以進行一些初始化操作
-  console.log('登入頁面已載入')
-
   // 改善密碼管理工具的相容性
   setupPasswordManagerCompatibility()
 })

@@ -121,7 +121,6 @@ class LogsService {
       )
       if (userStore.token) {
         params.append('token', userStore.token)
-        console.log('已添加 token 到串流 URL')
       } else {
         console.warn('用戶 token 不存在')
       }
@@ -138,30 +137,18 @@ class LogsService {
       withCredentials: true,
     })
 
-    // 添加連線狀態監聽
-    eventSource.onopen = () => {
-      console.log('日誌串流連線已建立:', streamURL)
-    }
-
-    eventSource.onclose = () => {
-      console.log('日誌串流連線已關閉')
-    }
-
     // 設置事件監聽器
     eventSource.onmessage = (event) => {
       try {
-        console.log('收到日誌串流資料:', event.data)
         const logData = JSON.parse(event.data)
 
         // 檢查是否是連接成功訊息
         if (logData.type === 'connection') {
-          console.log('串流連接成功:', logData.message)
           return
         }
 
         // 檢查是否是心跳訊息
         if (logData.type === 'heartbeat') {
-          console.log('收到心跳訊息:', logData.timestamp)
           return
         }
 

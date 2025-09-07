@@ -113,7 +113,6 @@ const loadData = async () => {
     }
 
     const response = await reportService.getAll(params)
-    console.log('管理員檢舉 API 回應:', response)
 
     // 處理後端API響應格式
     if (response.data?.data?.reports) {
@@ -155,14 +154,9 @@ const loadData = async () => {
               const reporterResponse = await fetch(
                 `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/users/${report.reporter_id}`,
               )
-              console.log(
-                '檢舉者 API 回應:',
-                reporterResponse.status,
-                report.reporter_id,
-              )
               if (reporterResponse.ok) {
                 const reporterData = await reporterResponse.json()
-                console.log('檢舉者數據:', reporterData)
+
                 if (reporterData.success && reporterData.user) {
                   reporterInfo = {
                     username: reporterData.user.username || '未知用戶',
@@ -180,14 +174,10 @@ const loadData = async () => {
                 const memeResponse = await fetch(
                   `${window.__VITE_API_URL__ || 'https://api.memedam.com'}/api/memes/${report.target_id}`,
                 )
-                console.log(
-                  '迷因 API 回應:',
-                  memeResponse.status,
-                  report.target_id,
-                )
+
                 if (memeResponse.ok) {
                   const memeData = await memeResponse.json()
-                  console.log('迷因數據:', memeData)
+
                   // 檢查是否直接返回迷因數據或包在 data 欄位中
                   const meme = memeData.data || memeData
                   if (meme && meme.title) {

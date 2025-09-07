@@ -111,12 +111,6 @@ watch(content, (newContent) => {
   }
 })
 
-// 處理@提及選擇
-const handleMentionSelected = (user) => {
-  console.log('提及用戶:', user)
-  // 可以在這裡添加額外的邏輯，比如顯示提及的用戶列表
-}
-
 // 處理取消
 const handleCancel = () => {
   content.value = ''
@@ -178,8 +172,6 @@ const handleSubmit = async () => {
     if (props.parentId) {
       commentData.parent_id = props.parentId
     }
-
-    console.log('提交留言資料:', commentData)
 
     const response = await commentService.create(commentData)
 
@@ -247,9 +239,3 @@ defineExpose({
   },
 })
 </script>
-
-<style scoped>
-.comment-form {
-  /* 可以添加特定的樣式 */
-}
-</style>

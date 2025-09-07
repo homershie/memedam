@@ -676,7 +676,6 @@ onMounted(() => {
   // 監聽頭像更新事件
   const handleAvatarUpdate = (event) => {
     const { avatarUrl } = event.detail
-    console.log('收到頭像更新事件:', avatarUrl)
 
     // 更新用戶資料中的頭像
     if (userProfile.value) {
@@ -695,7 +694,6 @@ onMounted(() => {
   // 監聽封面圖片更新事件
   const handleCoverUpdate = (event) => {
     const { coverImageUrl } = event.detail
-    console.log('收到封面圖片更新事件:', coverImageUrl)
 
     // 更新用戶資料中的封面圖片
     if (userProfile.value) {
@@ -728,22 +726,6 @@ const handleImageError = (event) => {
   console.error('頭像圖片載入失敗:', event.target.src)
   // 可以設定一個預設圖片或隱藏圖片元素
   event.target.style.display = 'none'
-}
-
-// 處理隱私同意事件
-const handleConsentGiven = (consent) => {
-  // 根據同意設定調整網站行為
-  if (consent.analytics) {
-    // 啟用分析追蹤
-    console.log('啟用分析追蹤')
-  }
-
-  if (consent.functional) {
-    // 啟用功能 Cookie
-    console.log('啟用功能 Cookie')
-  }
-
-  // 可以根據需要添加更多邏輯
 }
 </script>
 

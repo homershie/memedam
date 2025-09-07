@@ -356,11 +356,7 @@ const validateForm = () => {
 
 // 提交表單
 const submitForm = async () => {
-  console.log('🚀 開始提交聯絡表單...')
-  console.log('📝 表單數據:', form)
-
   if (!validateForm()) {
-    console.log('❌ 表單驗證失敗')
     toast.add({
       severity: 'error',
       summary: '表單驗證失敗',
@@ -370,7 +366,6 @@ const submitForm = async () => {
     return
   }
 
-  console.log('✅ 表單驗證通過')
   submitting.value = true
 
   try {
@@ -382,8 +377,6 @@ const submitForm = async () => {
       userType: form.userType,
       message: form.message.trim(),
     })
-
-    console.log('✅ 後端回應:', response)
 
     if (response.data.success) {
       toast.add({

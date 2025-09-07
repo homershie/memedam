@@ -244,17 +244,13 @@ const startBinding = async () => {
     // 調用認證端點獲取授權 URL
     const response = await userService.initBindAuth(props.provider)
 
-    // 調試信息
-    console.log('OAuth 綁定響應:', response.data)
-    console.log('授權 URL:', response.data?.authUrl)
-
     if (response.data && response.data.authUrl) {
       // 檢查授權 URL 是否正確
       const authUrl = response.data.authUrl
 
       // 如果是後端初始化端點，直接使用
       if (authUrl.startsWith('/api/')) {
-        console.log('使用後端初始化端點:', authUrl)
+        // 使用後端初始化端點
       }
       // 如果是直接的 Google OAuth URL，也允許使用
       else if (
@@ -262,11 +258,10 @@ const startBinding = async () => {
         authUrl.includes('google.com/oauth') ||
         authUrl.includes('googleapis.com')
       ) {
-        console.log('使用直接的 Google OAuth URL:', authUrl)
+        // 使用直接的 Google OAuth URL
       }
       // 其他格式的 URL
       else {
-        console.warn('警告：授權 URL 格式不預期:', authUrl)
         error.value = '後端返回的授權 URL 格式不正確，請聯繫管理員'
         return
       }
@@ -277,8 +272,6 @@ const startBinding = async () => {
         ? authUrl
         : `${baseUrl}${authUrl}`
 
-      console.log('開啟授權視窗:', fullAuthUrl)
-
       // 添加認證 token 到 URL（優先從 Pinia store 獲取）
       const userStore = useUserStore()
       const token =
@@ -288,14 +281,6 @@ const startBinding = async () => {
       const finalUrl = token
         ? `${fullAuthUrl}${fullAuthUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`
         : fullAuthUrl
-
-      console.log('最終授權 URL:', finalUrl)
-      console.log('Token 來源:', {
-        fromStore: !!userStore.token,
-        fromLocalStorage: !!localStorage.getItem('token'),
-        fromSessionStorage: !!sessionStorage.getItem('token'),
-        tokenLength: token ? token.length : 0,
-      })
 
       // 使用 window.open 開啟授權視窗
       authWindow.value = window.open(
@@ -466,17 +451,10 @@ const startBinding = async () => {
         life: 8000,
       })
     } else {
-      console.error('後端響應中沒有 authUrl:', response.data)
       throw new Error('初始化綁定流程失敗：未獲取到授權 URL')
     }
   } catch (err) {
-    console.error('初始化社群綁定失敗:', err)
-    console.error('錯誤詳情:', {
-      message: err.message,
-      response: err.response?.data,
-      status: err.response?.status,
-      url: err.config?.url,
-    })
+    console.error('初始化社群綁定失敗:', err.message)
 
     const status = err.response?.status
     const raw =

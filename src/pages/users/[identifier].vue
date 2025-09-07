@@ -1164,7 +1164,6 @@ const setupUserUpdateListeners = () => {
   // 監聽頭像更新事件
   const handleAvatarUpdate = (event) => {
     const { avatarUrl } = event.detail
-    console.log('用戶頁面收到頭像更新事件:', avatarUrl)
 
     // 更新用戶資料中的頭像
     if (userProfile.value) {
@@ -1176,7 +1175,6 @@ const setupUserUpdateListeners = () => {
   // 監聽封面圖片更新事件
   const handleCoverUpdate = (event) => {
     const { coverImageUrl } = event.detail
-    console.log('用戶頁面收到封面圖片更新事件:', coverImageUrl)
 
     // 更新用戶資料中的封面圖片
     if (userProfile.value) {

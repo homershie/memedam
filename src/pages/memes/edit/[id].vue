@@ -716,7 +716,6 @@ onMounted(async () => {
     try {
       const tagResponse = await tagService.getAll()
       const tagData = tagResponse.data
-      console.log('標籤數據載入成功:', tagData)
 
       // 正確解析後端 API 回應格式：{ tags: [...], pagination: {...} }
       allTags.value =
@@ -1298,12 +1297,6 @@ const handleSubmit = async () => {
 
       // 檢查響應狀態
       if (!res.ok) {
-        console.error('主圖上傳請求失敗:', {
-          status: res.status,
-          statusText: res.statusText,
-          headers: Object.fromEntries(res.headers.entries()),
-        })
-
         if (res.status === 413) {
           throw new Error('檔案過大。請選擇小於 10MB 的圖片檔案')
         } else if (res.status === 415) {
@@ -1327,8 +1320,6 @@ const handleSubmit = async () => {
 
         data = JSON.parse(responseText)
       } catch (parseError) {
-        console.error('JSON 解析失敗:', parseError)
-        console.error('原始響應內容:', await res.clone().text())
         throw new Error(`伺服器響應格式錯誤: ${parseError.message}`)
       }
 
@@ -1339,7 +1330,6 @@ const handleSubmit = async () => {
       ) {
         form.cover_image = data.url
       } else {
-        console.error('上傳回應無效:', data)
         const errorMessage =
           data.message ||
           data.error ||
@@ -1364,12 +1354,6 @@ const handleSubmit = async () => {
 
       // 檢查響應狀態
       if (!res.ok) {
-        console.error('圖片上傳請求失敗:', {
-          status: res.status,
-          statusText: res.statusText,
-          headers: Object.fromEntries(res.headers.entries()),
-        })
-
         if (res.status === 413) {
           throw new Error('檔案過大。請選擇小於 10MB 的圖片檔案')
         } else if (res.status === 415) {
@@ -1386,17 +1370,13 @@ const handleSubmit = async () => {
       let data
       try {
         const responseText = await res.text()
-        console.log('圖片上傳原始響應:', responseText)
 
         if (!responseText || responseText.trim() === '') {
           throw new Error('伺服器返回空響應')
         }
 
         data = JSON.parse(responseText)
-        console.log('圖片上傳解析後的資料:', data)
       } catch (parseError) {
-        console.error('JSON 解析失敗:', parseError)
-        console.error('原始響應內容:', await res.clone().text())
         throw new Error(`伺服器響應格式錯誤: ${parseError.message}`)
       }
 
@@ -1406,9 +1386,7 @@ const handleSubmit = async () => {
         data.url.startsWith('https://res.cloudinary.com/')
       ) {
         form.image_url = data.url
-        console.log('圖片上傳成功:', data.url)
       } else {
-        console.error('上傳回應無效:', data)
         const errorMessage =
           data.message ||
           data.error ||
@@ -1447,11 +1425,9 @@ const handleSubmit = async () => {
     // 建立新標籤
     for (const newTag of newTags) {
       try {
-        console.log(`開始建立新標籤: ${newTag.name}`)
         const response = await tagService.create({ name: newTag.name })
 
         if (!response || !response.data) {
-          console.error(`建立標籤 "${newTag.name}" 返回空響應`)
           continue
         }
 
@@ -1574,20 +1550,12 @@ const handleSubmit = async () => {
 
           // 檢查響應狀態
           if (!res.ok) {
-            console.error('詳細介紹圖片上傳請求失敗:', {
-              status: res.status,
-              statusText: res.statusText,
-              headers: Object.fromEntries(res.headers.entries()),
-            })
-
             if (res.status === 413) {
-              console.error('詳細介紹圖片檔案過大')
+              // 檔案過大
             } else if (res.status === 415) {
-              console.error('詳細介紹圖片格式不支援')
+              // 格式不支援
             } else {
-              console.error(
-                `詳細介紹圖片上傳失敗 (${res.status}): ${res.statusText}`,
-              )
+              // 其他上傳失敗
             }
             continue // 跳過這個檔案，繼續處理下一個
           }
@@ -1597,14 +1565,11 @@ const handleSubmit = async () => {
             const responseText = await res.text()
 
             if (!responseText || responseText.trim() === '') {
-              console.error('詳細介紹圖片上傳：伺服器返回空響應')
               continue
             }
 
             data = JSON.parse(responseText)
-          } catch (parseError) {
-            console.error('詳細介紹圖片 JSON 解析失敗:', parseError)
-            console.error('原始響應內容:', await res.clone().text())
+          } catch {
             continue // 跳過這個檔案，繼續處理下一個
           }
 
@@ -1619,13 +1584,10 @@ const handleSubmit = async () => {
             }
             uploadedUrls.push(data.url)
           } else {
-            console.error(
-              '詳細介紹圖片上傳回應無效:',
-              data.message || '未知錯誤',
-            )
+            // 上傳回應無效
           }
-        } catch (error) {
-          console.error('詳細介紹圖片上傳失敗:', error)
+        } catch {
+          // 上傳失敗
         }
       }
 
@@ -1636,19 +1598,9 @@ const handleSubmit = async () => {
             detail_images: detailImages.value,
             _markAsModified: true,
           })
-        } catch (error) {
-          console.error('更新迷因詳細介紹圖片失敗:', error)
-
+        } catch {
           // 這個錯誤不應該阻止整體成功，因為主要內容已經更新
           // 只記錄錯誤，但不拋出異常
-          if (error.response?.status === 400) {
-            console.warn('詳細介紹圖片更新驗證失敗，但主要內容已更新')
-          } else {
-            console.warn(
-              '詳細介紹圖片更新失敗，但主要內容已更新:',
-              error.response?.data?.message || error.message,
-            )
-          }
         }
       }
     }

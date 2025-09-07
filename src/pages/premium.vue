@@ -381,9 +381,7 @@ const { updateSEO } = useSEO()
 const toast = useToast()
 
 const scrollToPricePlans = () => {
-  console.log('Button clicked!')
   const element = document.getElementById('price-plans')
-  console.log('Element found:', element)
   if (element) {
     element.scrollIntoView({ behavior: 'smooth' })
   }

@@ -13,10 +13,6 @@ export const handleOAuthLogin = async (
   usePopup = true,
 ) => {
   try {
-    console.log(
-      `開始 ${provider} OAuth 登入流程（${usePopup ? '彈窗' : '重定向'}方式）`,
-    )
-
     // 構建 OAuth URL
     let baseUrl = import.meta.env.VITE_API_URL
 
@@ -26,7 +22,6 @@ export const handleOAuthLogin = async (
     }
 
     const oauthUrl = `${baseUrl}/api/users/auth/${provider}`
-    console.log(`OAuth URL: ${oauthUrl}`)
 
     if (usePopup) {
       return handlePopupOAuth(oauthUrl, provider, router, toast)
@@ -52,8 +47,6 @@ export const handleOAuthLogin = async (
  */
 const handlePopupOAuth = (oauthUrl, provider, _router, _toast) => {
   return new Promise((resolve, reject) => {
-    console.log('開始彈窗 OAuth 流程')
-
     // 彈窗設定
     const popup = window.open(
       oauthUrl,
@@ -69,8 +62,6 @@ const handlePopupOAuth = (oauthUrl, provider, _router, _toast) => {
 
     // 監聽消息
     const messageHandler = (event) => {
-      console.log('收到OAuth回調消息:', event.data)
-
       // 驗證消息來源（生產環境中應該更嚴格）
       if (event.origin !== window.location.origin && event.origin !== '*') {
         console.warn('收到來自未知來源的消息:', event.origin)
@@ -81,13 +72,11 @@ const handlePopupOAuth = (oauthUrl, provider, _router, _toast) => {
 
       switch (type) {
         case 'oauth_success':
-          console.log('OAuth登入成功')
           cleanup()
           resolve({ success: true, data, needsUsername: false })
           break
 
         case 'oauth_needs_username':
-          console.log('OAuth成功，但需要選擇username')
           cleanup()
           resolve({ success: true, data, needsUsername: true })
           break
@@ -99,14 +88,12 @@ const handlePopupOAuth = (oauthUrl, provider, _router, _toast) => {
           break
 
         default:
-          console.log('未知的消息類型:', type)
       }
     }
 
     // 定時檢查彈窗是否被關閉
     const checkClosed = setInterval(() => {
       if (popup.closed) {
-        console.log('用戶關閉了OAuth彈窗')
         cleanup()
         reject(new Error('用戶取消了授權'))
       }
@@ -144,10 +131,8 @@ const handleRedirectOAuth = (oauthUrl, router) => {
   const returnPath = currentPath === '/login' ? '/' : currentPath
 
   localStorage.setItem('oauth_return_path', returnPath)
-  console.log(`當前頁面: ${currentPath}, 登入後將跳轉到: ${returnPath}`)
 
   // 直接重定向到 OAuth URL
-  console.log('開始重定向到 OAuth 提供者...')
   window.location.href = oauthUrl
 
   return Promise.resolve()
@@ -162,8 +147,6 @@ const handleRedirectOAuth = (oauthUrl, router) => {
  */
 const handleOAuthSuccess = async (token, userStore, toast, _router) => {
   try {
-    console.log('開始處理 OAuth 成功，token:', token.substring(0, 20) + '...')
-
     // 暫時儲存 token
     localStorage.setItem('temp_oauth_token', token)
 
@@ -184,8 +167,6 @@ const handleOAuthSuccess = async (token, userStore, toast, _router) => {
     }
 
     const userData = await response.json()
-
-    console.log('獲取用戶資訊成功:', userData.user?.username)
 
     // 登入用戶
     userStore.login({
@@ -217,8 +198,6 @@ const handleOAuthSuccess = async (token, userStore, toast, _router) => {
       detail: '歡迎回來！',
       life: 3000,
     })
-
-    console.log('用戶登入處理完成，登入狀態:', userStore.isLoggedIn)
   } catch (error) {
     console.error('handleOAuthSuccess 錯誤:', error)
     localStorage.removeItem('temp_oauth_token')
@@ -237,15 +216,6 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
   const token = route.query.token
   const error = route.query.error
   const needsUsername = route.query.needsUsername === 'true'
-
-  console.log(
-    '處理 OAuth 回調，token:',
-    token ? token.substring(0, 20) + '...' : '無',
-    'error:',
-    error,
-    'needsUsername:',
-    needsUsername,
-  )
 
   if (error) {
     toast.add({
@@ -289,22 +259,17 @@ export const handleOAuthCallback = async (route, router, userStore, toast) => {
 
       // 獲取保存的返回路徑
       const returnPath = localStorage.getItem('oauth_return_path') || '/'
-      const provider = localStorage.getItem('oauth_provider')
 
       // 清除保存的狀態
       localStorage.removeItem('oauth_return_path')
       localStorage.removeItem('oauth_provider')
-
-      console.log(`${provider} OAuth 登入成功，跳轉到:`, returnPath)
 
       // 確保用戶狀態已完全同步後再跳轉
       if (userStore.isLoggedIn) {
         // 清除 URL 參數並跳轉到目標頁面
         router
           .replace({ path: returnPath, query: {} })
-          .then(() => {
-            console.log('OAuth 回調處理完成，跳轉成功')
-          })
+          .then(() => {})
           .catch((routerError) => {
             console.error('路由跳轉失敗:', routerError)
             // 如果跳轉失敗，回到首頁
@@ -391,8 +356,6 @@ export const optimizeOAuthResourceLoading = () => {
     urlParams.get('success') !== null
 
   if (hasOAuthParams) {
-    console.log('檢測到 OAuth 流程，優化資源載入')
-
     // 延遲載入非關鍵資源
     setTimeout(() => {
       // 延遲載入 webmanifest

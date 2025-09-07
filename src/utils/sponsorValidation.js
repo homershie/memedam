@@ -129,8 +129,6 @@ export const logSponsorPageAccess = async (
     referrer: document.referrer,
   }
 
-  console.log('贊助頁面訪問記錄:', logData)
-
   try {
     // 發送到後端記錄
     await fetch(getApiUrl('/api/sponsors/log-access'), {

@@ -4,25 +4,13 @@ class FeedbackService {
   // 提交意見
   async submitFeedback(feedbackData) {
     try {
-      console.log('📤 feedbackService: 開始發送請求到後端...')
-      console.log('📦 feedbackService: 請求數據:', feedbackData)
-      console.log('🌐 feedbackService: 請求 URL:', 'api/feedback/submit')
-
       const response = await apiService.httpAuth.post(
         'api/feedback/submit',
         feedbackData,
       )
 
-      console.log('✅ feedbackService: 後端回應成功:', response.data)
       return response.data
     } catch (error) {
-      console.error('❌ feedbackService: 請求失敗:', error)
-      console.error('❌ feedbackService: 錯誤詳情:', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        config: error.config,
-      })
       throw this.handleError(error)
     }
   }
@@ -55,12 +43,6 @@ class FeedbackService {
   // 檢查 reCAPTCHA 設定
   checkRecaptchaConfig() {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
-    console.log('🔍 環境檢查:', {
-      siteKey: siteKey || '未設定',
-      DEV: import.meta.env.DEV,
-      MODE: import.meta.env.MODE,
-      NODE_ENV: import.meta.env.NODE_ENV,
-    })
 
     if (
       !siteKey ||
@@ -112,7 +94,6 @@ class FeedbackService {
   // 執行 reCAPTCHA 驗證
   async executeRecaptcha(action = 'submit_feedback') {
     try {
-      console.log('🔄 開始執行 reCAPTCHA 驗證...')
       const grecaptcha = await this.loadRecaptchaScript()
 
       return new Promise((resolve, reject) => {

@@ -289,8 +289,7 @@ const handleResize = useDebounceFn(() => {
 }, 150)
 
 // 監聽主題變化
-watch(isDarkTheme, (newTheme) => {
-  console.log('Theme changed to:', newTheme ? 'dark' : 'light')
+watch(isDarkTheme, () => {
   // 主題變化時重新初始化粒子
   if (particleProps.value && canvasRef.value) {
     const particlePropsLength = props.particleCount * PARTICLE_PROP_COUNT

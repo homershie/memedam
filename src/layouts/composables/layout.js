@@ -84,12 +84,7 @@ export function useLayout() {
 
   const toggleMenu = () => {
     // 簡化邏輯：直接切換手機版選單狀態
-    console.log(
-      'toggleMenu called, current state:',
-      staticMenuMobileActive.value,
-    )
     staticMenuMobileActive.value = !staticMenuMobileActive.value
-    console.log('toggleMenu new state:', staticMenuMobileActive.value)
   }
 
   const isSidebarActive = computed(

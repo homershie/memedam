@@ -320,15 +320,10 @@ onMounted(() => {
 
 // 提交表單
 const submitFeedback = async () => {
-  console.log('🚀 開始提交 feedback 表單...')
-  console.log('📝 表單數據:', form)
-
   if (!validateForm()) {
-    console.log('❌ 表單驗證失敗')
     return
   }
 
-  console.log('✅ 表單驗證通過')
   isSubmitting.value = true
   errors.general = ''
 
@@ -336,15 +331,8 @@ const submitFeedback = async () => {
     // 執行 reCAPTCHA 驗證
     let recaptchaToken
     try {
-      console.log('🔄 開始 reCAPTCHA 驗證...')
       recaptchaToken = await feedbackService.executeRecaptcha()
-      console.log(
-        '✅ reCAPTCHA 驗證完成，token:',
-        recaptchaToken ? '已取得' : '無',
-      )
     } catch (recaptchaError) {
-      console.error('❌ reCAPTCHA 錯誤:', recaptchaError)
-
       // 根據錯誤類型提供不同的錯誤訊息
       if (recaptchaError.message.includes('設定未完成')) {
         errors.general = '系統設定問題，請聯絡管理員'
@@ -357,15 +345,12 @@ const submitFeedback = async () => {
     }
 
     // 提交表單
-    console.log('📤 開始提交到後端...')
     const requestData = {
       ...form,
       recaptchaToken,
     }
-    console.log('📦 請求數據:', requestData)
 
     const _response = await feedbackService.submitFeedback(requestData)
-    console.log('✅ 後端回應:', _response)
 
     // 顯示成功 toast
     toast.add({
