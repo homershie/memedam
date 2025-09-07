@@ -688,6 +688,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useUserStore } from '@/stores/userStore'
 
+// SEO 相關
+import { useSEO } from '@/composables/useSEO'
+import { setStructuredData } from '@/utils/seoUtils'
+
 // PrimeVue 組件
 import Card from 'primevue/card'
 import Button from 'primevue/button'
@@ -729,6 +733,12 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const userStore = useUserStore()
+
+// SEO 設置
+const { updateSEO } = useSEO({
+  title: '迷因詳情',
+  description: '閱讀迷因的標題、內容、標籤與互動統計，查看相關迷因並參與討論。',
+})
 
 // 響應式數據
 const loading = ref(true)
@@ -1711,10 +1721,76 @@ watch(
   },
 )
 
-// 頁面標題
+// 動態 SEO 更新
 watch(meme, (newMeme) => {
   if (newMeme) {
-    document.title = `${newMeme.title} | 迷因典 MemeDam`
+    // 生成動態 Meta 標籤
+    const metaTitle = `${newMeme.title} | 迷因典 MemeDam`
+    const metaDescription = newMeme.content
+      ? `${newMeme.content.substring(0, 160)}...`
+      : `查看迷因「${newMeme.title}」的詳細內容、標籤與互動統計`
+    const metaImage = newMeme.cover_image || newMeme.image_url
+    const canonicalUrl = `${window.location.origin}/memes/detail/${getMemeSlug(newMeme)}`
+
+    // 更新 SEO Meta 標籤
+    updateSEO({
+      title: newMeme.title,
+      description: metaDescription,
+      canonical: canonicalUrl,
+      openGraph: {
+        title: metaTitle,
+        description: metaDescription,
+        image: metaImage,
+        url: canonicalUrl,
+        type: 'article',
+        site_name: '迷因典 MemeDam',
+      },
+    })
+
+    // 添加結構化數據
+    // 處理時間格式
+    const formatDate = (dateValue) => {
+      if (!dateValue) return new Date().toISOString()
+      if (typeof dateValue === 'object' && dateValue.$date) {
+        return new Date(dateValue.$date).toISOString()
+      }
+      return new Date(dateValue).toISOString()
+    }
+
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: newMeme.title,
+      description: metaDescription,
+      image: metaImage,
+      datePublished: formatDate(newMeme.created_at || newMeme.createdAt),
+      dateModified: formatDate(
+        newMeme.updated_at ||
+          newMeme.updatedAt ||
+          newMeme.created_at ||
+          newMeme.createdAt,
+      ),
+      url: canonicalUrl,
+      author: {
+        '@type': 'Person',
+        name:
+          newMeme.author_id?.display_name ||
+          newMeme.author_id?.username ||
+          newMeme.author?.display_name ||
+          newMeme.author?.username ||
+          '匿名用戶',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: '迷因典 MemeDam',
+        logo: {
+          '@type': 'ImageObject',
+          url: `${window.location.origin}/favicon/apple-touch-icon.png`,
+        },
+      },
+    }
+
+    setStructuredData(structuredData)
   }
 })
 
@@ -1764,6 +1840,41 @@ onMounted(() => {
   // 監聽頁面離開事件
   window.addEventListener('beforeunload', recordPageLeave)
   window.addEventListener('pagehide', recordPageLeave)
+
+  // SEO 測試函數 (開發環境)
+  if (import.meta.env.DEV) {
+    window.testSEO = () => {
+      console.log('=== SEO Meta 標籤測試 ===')
+      const metaTags = {
+        title: document.title,
+        description: document.querySelector('meta[name="description"]')
+          ?.content,
+        canonical: document.querySelector('link[rel="canonical"]')?.href,
+        ogTitle: document.querySelector('meta[property="og:title"]')?.content,
+        ogDescription: document.querySelector('meta[property="og:description"]')
+          ?.content,
+        ogImage: document.querySelector('meta[property="og:image"]')?.content,
+        ogUrl: document.querySelector('meta[property="og:url"]')?.content,
+        ogType: document.querySelector('meta[property="og:type"]')?.content,
+        ogSiteName: document.querySelector('meta[property="og:site_name"]')
+          ?.content,
+        twitterCard: document.querySelector('meta[name="twitter:card"]')
+          ?.content,
+        twitterTitle: document.querySelector('meta[name="twitter:title"]')
+          ?.content,
+        twitterDescription: document.querySelector(
+          'meta[name="twitter:description"]',
+        )?.content,
+        twitterImage: document.querySelector('meta[name="twitter:image"]')
+          ?.content,
+        structuredData: document.querySelector(
+          'script[type="application/ld+json"]',
+        )?.textContent,
+      }
+      console.table(metaTags)
+      return metaTags
+    }
+  }
 })
 
 // 清理事件監聽器
@@ -1779,14 +1890,6 @@ onUnmounted(() => {
   window.removeEventListener('pagehide', recordPageLeave)
 })
 </script>
-
-<route lang="yaml">
-meta:
-  title: '迷因詳情'
-  description: '閱讀迷因的標題、內容、標籤與互動統計，查看相關迷因並參與討論。'
-  login: ''
-  admin: false
-</route>
 
 <style scoped>
 /* 樣式保持與原本的 [id].vue 相同 */
