@@ -43,9 +43,9 @@
   - 數據格式化工具
   - 狀態和趨勢分析
 
-#### **2. SEO 儀表板 (`seo.vue`)**
+#### **2. SEO 儀表板 (`seo-dashboard.vue`)**
 
-- **位置**: `frontend/pages/admin/seo.vue`
+- **位置**: `frontend/pages/admin/seo-dashboard.vue`
 - **功能**:
   - 即時指標展示
   - 警報管理

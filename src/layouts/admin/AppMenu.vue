@@ -164,7 +164,7 @@ const model = computed(() => {
         {
           label: 'SEO 監控',
           icon: 'pi pi-fw pi-search',
-          to: '/admin/seo',
+          to: '/admin/seo-dashboard',
           badge: null,
           customIcon: IconSEO,
         },

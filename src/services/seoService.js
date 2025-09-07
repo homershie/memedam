@@ -107,7 +107,7 @@ class SEOService {
           params: filters,
         },
       )
-      return response.data
+      return response.data.data
     } catch (error) {
       console.error('取得 SEO 建議失敗:', error)
       throw error
@@ -133,7 +133,7 @@ class SEOService {
   async getSEODashboard() {
     try {
       const response = await apiService.httpAuth.get('/api/seo/dashboard')
-      return response.data
+      return response.data.data
     } catch (error) {
       console.error('取得 SEO 儀表板數據失敗:', error)
       throw error
@@ -189,7 +189,7 @@ class SEOService {
    * 格式化指標值
    */
   formatMetric(value, type = 'number', decimals = 1) {
-    if (value === null || value === undefined) return 'N/A'
+    if (value === null || value === undefined) return '資料收集中'
 
     switch (type) {
       case 'percentage':
