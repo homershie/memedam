@@ -15,6 +15,7 @@ import {
   IconWrench,
   IconFileText,
   IconSupport,
+  IconSEO,
 } from '@/components/icons'
 
 // 使用 admin store
@@ -160,6 +161,13 @@ const model = computed(() => {
     {
       label: '系統管理',
       items: [
+        {
+          label: 'SEO 監控',
+          icon: 'pi pi-fw pi-search',
+          to: '/admin/seo',
+          badge: null,
+          customIcon: IconSEO,
+        },
         {
           label: '維護工具',
           icon: 'pi pi-fw pi-wrench',
