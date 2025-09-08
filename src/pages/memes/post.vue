@@ -1395,6 +1395,10 @@ const handleSubmit = async () => {
           data.url.startsWith('https://res.cloudinary.com/')
         ) {
           form.cover_image = data.url
+          // 同時設置 image_url，因為後端驗證需要這個欄位
+          if (form.type === 'image') {
+            form.image_url = data.url
+          }
 
           toast.add({
             severity: 'success',
