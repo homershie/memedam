@@ -85,7 +85,14 @@
 
             <!-- 內容 -->
             <div class="prose prose-lg max-w-none">
-              <div v-html="formatContent(announcement.content)"></div>
+              <div
+                v-html="
+                  formatContent(
+                    announcement.content,
+                    announcement.content_format,
+                  )
+                "
+              ></div>
             </div>
 
             <!-- 標籤 -->
@@ -152,7 +159,13 @@
             <template #content>
               <h4 class="font-semibold mb-2">{{ related.title }}</h4>
               <p class="text-sm text-gray-600 line-clamp-2">
-                {{ truncateAnnouncementContent(related.content, 100) }}
+                {{
+                  truncateAnnouncementContent(
+                    related.content,
+                    100,
+                    related.content_format,
+                  )
+                }}
               </p>
             </template>
           </Card>
@@ -250,7 +263,11 @@ const shareAnnouncement = async () => {
     try {
       await navigator.share({
         title: announcement.value.title,
-        text: truncateAnnouncementContent(announcement.value.content, 200),
+        text: truncateAnnouncementContent(
+          announcement.value.content,
+          200,
+          announcement.value.content_format,
+        ),
         url: window.location.href,
       })
     } catch (err) {
@@ -284,14 +301,28 @@ const formatDate = (date) => {
   return new Date(date).toLocaleString('zh-TW')
 }
 
-const truncateAnnouncementContent = (content, maxLength) => {
-  return truncateContent(content, null, maxLength)
+const truncateAnnouncementContent = (content, maxLength, format = null) => {
+  // 如果沒有提供 format，使用預設邏輯判斷格式
+  let actualFormat = format
+  if (!actualFormat) {
+    actualFormat =
+      typeof content === 'object' && content !== null ? 'json' : 'plain'
+  }
+
+  return truncateContent(content, actualFormat, maxLength)
 }
 
-const formatContent = (content, format = 'plain') => {
+const formatContent = (content, format = null) => {
   if (!content) return ''
 
-  if (format === 'json' && typeof content === 'object') {
+  // 如果沒有提供 format，使用預設邏輯判斷格式
+  let actualFormat = format
+  if (!actualFormat) {
+    actualFormat =
+      typeof content === 'object' && content !== null ? 'json' : 'plain'
+  }
+
+  if (actualFormat === 'json' && typeof content === 'object') {
     return renderContentToHtml(content, 'json')
   }
 
