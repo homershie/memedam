@@ -60,6 +60,42 @@ export const extractTextFromJson = (content) => {
 export const renderContentToHtml = (content, format = 'plain') => {
   if (!content) return ''
 
+  // 如果是字串，可能是舊的 markdown 格式，使用原本的處理方式
+  if (typeof content === 'string') {
+    return content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 粗體
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // 斜體
+      .replace(
+        /`(.*?)`/g,
+        '<code class="bg-surface-100 px-1 rounded">$1</code>',
+      ) // 行內代碼
+      .replace(
+        /^### (.*$)/gim,
+        '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>',
+      ) // 三級標題
+      .replace(
+        /^## (.*$)/gim,
+        '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>',
+      ) // 二級標題
+      .replace(
+        /^# (.*$)/gim,
+        '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>',
+      ) // 一級標題
+      .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>') // 無序列表
+      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4">$1</li>') // 有序列表
+      .replace(/\n\n/g, '</p><p class="mt-4">') // 段落
+      .replace(/^(.+)$/gm, '<p class="leading-relaxed">$1</p>') // 一般文字
+  }
+
+  // 如果是 TipTap JSON 格式
+  if (
+    typeof content === 'object' &&
+    content.type === 'doc' &&
+    content.content
+  ) {
+    return renderTipTapNodes(content.content)
+  }
+
   if (format === 'json' && typeof content === 'object') {
     return renderJsonToHtml(content)
   }
@@ -80,7 +116,7 @@ const renderJsonToHtml = (jsonContent) => {
     return jsonContent.content
       .map((node) => {
         switch (node.type) {
-          case 'paragraph':
+          case 'paragraph': {
             const text = node.content
               ? node.content
                   .map((child) => {
@@ -122,8 +158,9 @@ const renderJsonToHtml = (jsonContent) => {
                   .join('')
               : ''
             return `<p>${text}</p>`
+          }
 
-          case 'heading':
+          case 'heading': {
             const level = node.attrs?.level || 1
             const headingText = node.content
               ? node.content
@@ -152,8 +189,9 @@ const renderJsonToHtml = (jsonContent) => {
                   .join('')
               : ''
             return `<h${level}>${headingText}</h${level}>`
+          }
 
-          case 'bulletList':
+          case 'bulletList': {
             const bulletItems = node.content
               ? node.content
                   .map((item) => {
@@ -197,8 +235,9 @@ const renderJsonToHtml = (jsonContent) => {
                   .join('')
               : ''
             return `<ul>${bulletItems}</ul>`
+          }
 
-          case 'orderedList':
+          case 'orderedList': {
             const orderedItems = node.content
               ? node.content
                   .map((item) => {
@@ -242,8 +281,9 @@ const renderJsonToHtml = (jsonContent) => {
                   .join('')
               : ''
             return `<ol>${orderedItems}</ol>`
+          }
 
-          case 'blockquote':
+          case 'blockquote': {
             const quoteText = node.content
               ? node.content
                   .map((child) => {
@@ -280,6 +320,7 @@ const renderJsonToHtml = (jsonContent) => {
                   .join('')
               : ''
             return `<blockquote class="border-l-4 border-primary-500 pl-4 italic">${quoteText}</blockquote>`
+          }
 
           case 'horizontalRule':
             return '<hr class="my-4 border-t border-surface-300 dark:border-surface-600">'
@@ -287,38 +328,39 @@ const renderJsonToHtml = (jsonContent) => {
           case 'hardBreak':
             return '<br />'
 
-          case 'text':
-            let text = node.text || ''
+          case 'text': {
+            let nodeText = node.text || ''
 
             // 處理標記
             if (node.marks) {
               node.marks.forEach((mark) => {
                 switch (mark.type) {
                   case 'bold':
-                    text = `<strong>${text}</strong>`
+                    nodeText = `<strong>${nodeText}</strong>`
                     break
                   case 'italic':
-                    text = `<em>${text}</em>`
+                    nodeText = `<em>${nodeText}</em>`
                     break
                   case 'underline':
-                    text = `<u>${text}</u>`
+                    nodeText = `<u>${nodeText}</u>`
                     break
                   case 'strike':
-                    text = `<del>${text}</del>`
+                    nodeText = `<del>${nodeText}</del>`
                     break
                   case 'code':
-                    text = `<code class="bg-surface-100 text-surface-800 p-1 rounded-md dark:bg-surface-900 dark:text-surface-300 font-mono">${text}</code>`
+                    nodeText = `<code class="bg-surface-100 text-surface-800 p-1 rounded-md dark:bg-surface-900 dark:text-surface-300 font-mono">${nodeText}</code>`
                     break
                   case 'link': {
                     const { href, target, rel } = mark.attrs || {}
-                    text = `<a href="${href}" target="${target || '_blank'}" rel="${rel || 'noopener noreferrer'}" class="decoration-0 cursor-pointer font-medium text-surface-800 transition-all p-1 dark:text-surface-300 hover:text-primary-500 underline">${text}</a>`
+                    nodeText = `<a href="${href}" target="${target || '_blank'}" rel="${rel || 'noopener noreferrer'}" class="decoration-0 cursor-pointer font-medium text-surface-800 transition-all p-1 dark:text-surface-300 hover:text-primary-500 underline">${nodeText}</a>`
                     break
                   }
                 }
               })
             }
 
-            return text
+            return nodeText
+          }
 
           default:
             return ''
@@ -328,6 +370,258 @@ const renderJsonToHtml = (jsonContent) => {
   }
 
   return JSON.stringify(jsonContent)
+}
+
+/**
+ * 遞歸渲染 TipTap 節點（參考 [slug].vue 的實現）
+ * @param {Array} nodes - TipTap 節點陣列
+ * @returns {string} HTML字串
+ */
+const renderTipTapNodes = (nodes) => {
+  if (!Array.isArray(nodes)) return ''
+
+  return nodes
+    .map((node) => {
+      switch (node.type) {
+        case 'paragraph':
+          return `<p>${renderTipTapMarks(node.content)}</p>`
+
+        case 'heading': {
+          const level = node.attrs?.level || 1
+          return `<h${level}>${renderTipTapMarks(node.content)}</h${level}>`
+        }
+
+        case 'image': {
+          const {
+            src,
+            alt,
+            annotation,
+            size = 'm',
+            orientation = 'landscape',
+          } = node.attrs || {}
+
+          // 根據尺寸和方向設定樣式
+          const getSizeStyles = (size, orientation) => {
+            const landscapeMap = {
+              s: { width: '320px', maxWidth: '320px' },
+              m: { width: '640px', maxWidth: '640px' },
+              l: { width: '960px', maxWidth: '960px' },
+              full: { width: '100%', maxWidth: '100%' },
+            }
+            const portraitMap = {
+              s: { width: '240px', maxWidth: '240px' },
+              m: { width: '480px', maxWidth: '480px' },
+              l: { width: '720px', maxWidth: '720px' },
+              full: { width: '100%', maxWidth: '100%' },
+            }
+            const sizeMap =
+              orientation === 'portrait' ? portraitMap : landscapeMap
+            return sizeMap[size] || sizeMap.m
+          }
+
+          const sizeStyles = getSizeStyles(size, orientation)
+          const imageStyle =
+            size === 'full'
+              ? 'width: 100%; max-width: 100%; height: auto; display: block;'
+              : `width: 100%; max-width: ${sizeStyles.maxWidth}; height: auto; display: block;`
+
+          let imageHtml = `<div class="custom-image-wrapper" style="width: 100%; max-width: ${sizeStyles.maxWidth};"><img src="${src}" alt="${alt || ''}" class="custom-image" style="${imageStyle}" />`
+          if (annotation) {
+            imageHtml += `<p class="image-annotation">${annotation}</p>`
+          }
+          imageHtml += `</div>`
+          return imageHtml
+        }
+
+        case 'videoEmbed': {
+          const {
+            src: videoSrc,
+            size = 'm',
+            orientation = 'landscape',
+            annotation,
+          } = node.attrs || {}
+
+          if (videoSrc && isExternalVideoUrl(videoSrc)) {
+            // 根據尺寸和方向設定樣式
+            const getSizeStyles = (size, orientation) => {
+              const landscapeMap = {
+                s: { width: '100%', maxWidth: '480px' },
+                m: { width: '100%', maxWidth: '640px' },
+                l: { width: '100%', maxWidth: '960px' },
+                full: { width: '100%', maxWidth: 'none' },
+              }
+              const portraitMap = {
+                s: { width: '100%', maxWidth: '360px' },
+                m: { width: '100%', maxWidth: '450px' },
+                l: { width: '100%', maxWidth: '540px' },
+                full: { width: '100%', maxWidth: 'none' },
+              }
+              const sizeMap =
+                orientation === 'portrait' ? portraitMap : landscapeMap
+              return sizeMap[size] || sizeMap.m
+            }
+
+            const sizeStyles = getSizeStyles(size, orientation)
+            const aspectRatio = orientation === 'portrait' ? '9/16' : '16/9'
+
+            let videoHtml = `<div class="video-embed-wrapper" style="width: 100%; max-width: ${sizeStyles.maxWidth};">
+            <div class="video-embed-container">
+            <iframe src="${getEmbedUrl(videoSrc)}"
+                    class="video-embed-iframe"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    style="aspect-ratio: ${aspectRatio};">
+            </iframe>
+          </div>`
+
+            if (annotation) {
+              videoHtml += `<p class="video-annotation">${annotation}</p>`
+            }
+
+            videoHtml += `</div>`
+            return videoHtml
+          }
+          return ''
+        }
+
+        case 'bulletList':
+          return `<ul>${renderTipTapNodes(node.content)}</ul>`
+
+        case 'orderedList':
+          return `<ol>${renderTipTapNodes(node.content)}</ol>`
+
+        case 'listItem':
+          return `<li>${renderTipTapMarks(node.content)}</li>`
+
+        case 'blockquote':
+          return `<blockquote class="border-l-4 border-primary-500 pl-4 italic">${renderTipTapMarks(node.content)}</blockquote>`
+
+        case 'codeBlock':
+          return `<pre><code>${node.content?.[0]?.text || ''}</code></pre>`
+
+        case 'horizontalRule':
+          return '<hr class="my-4 border-t border-surface-300 dark:border-surface-600">'
+
+        default:
+          return ''
+      }
+    })
+    .join('')
+}
+
+/**
+ * 渲染 TipTap 標記（參考 [slug].vue 的實現）
+ * @param {Array} content - 內容陣列
+ * @returns {string} HTML字串
+ */
+const renderTipTapMarks = (content) => {
+  if (!Array.isArray(content)) return ''
+
+  return content
+    .map((item) => {
+      if (item.type === 'text') {
+        let text = item.text || ''
+
+        // 處理標記
+        if (item.marks) {
+          item.marks.forEach((mark) => {
+            switch (mark.type) {
+              case 'bold':
+                text = `<strong>${text}</strong>`
+                break
+              case 'italic':
+                text = `<em>${text}</em>`
+                break
+              case 'underline':
+                text = `<u>${text}</u>`
+                break
+              case 'strike':
+                text = `<del>${text}</del>`
+                break
+              case 'code':
+                text = `<code class="bg-surface-100 text-surface-800 p-1 rounded-md dark:bg-surface-900 dark:text-surface-300 font-mono">${text}</code>`
+                break
+              case 'link': {
+                const { href, target, rel } = mark.attrs || {}
+                text = `<a href="${href}" target="${target || '_blank'}" rel="${rel || 'noopener noreferrer'}" class="decoration-0 cursor-pointer font-medium text-surface-800 transition-all p-1 dark:text-surface-300 hover:text-primary-500 underline">${text}</a>`
+                break
+              }
+            }
+          })
+        }
+
+        return text
+      }
+
+      if (item.type === 'hardBreak') {
+        return '<br />'
+      }
+
+      return ''
+    })
+    .join('')
+}
+
+/**
+ * 檢查是否為外部影片 URL
+ * @param {string} url - 影片URL
+ * @returns {boolean} 是否為支援的影片平台
+ */
+const isExternalVideoUrl = (url) => {
+  if (!url) return false
+  const videoPatterns = [
+    /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
+    /^https?:\/\/youtu\.be\/[\w-]+/,
+    /^https?:\/\/(www\.)?vimeo\.com\/\d+/,
+    /^https?:\/\/(www\.)?twitch\.tv\/[\w/]+/,
+    /^https?:\/\/(www\.)?dailymotion\.com\/video\/[\w]+/,
+    /^https?:\/\/(www\.)?bilibili\.com\/video\/[\w]+/,
+  ]
+  return videoPatterns.some((pattern) => pattern.test(url))
+}
+
+/**
+ * 獲取影片嵌入 URL
+ * @param {string} url - 原始影片URL
+ * @returns {string} 嵌入URL
+ */
+const getEmbedUrl = (url) => {
+  if (!url) return ''
+
+  // YouTube
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    const videoId = url.includes('youtu.be')
+      ? url.split('/').pop()
+      : url.split('v=')[1]?.split('&')[0]
+    return `https://www.youtube.com/embed/${videoId}`
+  }
+
+  // Vimeo
+  if (url.includes('vimeo.com')) {
+    const videoId = url.split('/').pop()
+    return `https://player.vimeo.com/video/${videoId}`
+  }
+
+  // Twitch
+  if (url.includes('twitch.tv')) {
+    const channel = url.split('/').pop()
+    return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}`
+  }
+
+  // Dailymotion
+  if (url.includes('dailymotion.com')) {
+    const videoId = url.split('/video/')[1]?.split('_')[0]
+    return `https://www.dailymotion.com/embed/video/${videoId}`
+  }
+
+  // Bilibili
+  if (url.includes('bilibili.com')) {
+    const videoId = url.split('/video/')[1]?.split('/')[0]
+    return `https://player.bilibili.com/player.html?bvid=${videoId}`
+  }
+
+  return url
 }
 
 /**
