@@ -67,6 +67,7 @@ import { ref } from 'vue'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
+import { extractTextFromJson, truncateContent } from '@/utils/contentUtils'
 
 // 定義 props
 defineProps({
@@ -111,15 +112,12 @@ const getCategorySeverity = (category) => {
   return severities[category] || 'secondary'
 }
 
-// 取得內容預覽（限制字數）
-const getContentPreview = (content) => {
+// 取得內容預覽（支援JSON和純文字，限制字數）
+const getContentPreview = (content, maxLength = 100) => {
   if (!content) return '無內容'
-  // 移除HTML標籤
-  const plainText = content.replace(/<[^>]*>/g, '')
-  // 限制在100字以內
-  return plainText.length > 100
-    ? plainText.substring(0, 100) + '...'
-    : plainText
+
+  // 使用共用工具函數處理內容（自動判斷格式）
+  return truncateContent(content, null, maxLength)
 }
 
 // 格式化日期

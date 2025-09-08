@@ -152,7 +152,7 @@
             <template #content>
               <h4 class="font-semibold mb-2">{{ related.title }}</h4>
               <p class="text-sm text-gray-600 line-clamp-2">
-                {{ truncateContent(related.content, 100) }}
+                {{ truncateAnnouncementContent(related.content, 100) }}
               </p>
             </template>
           </Card>
@@ -177,6 +177,11 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import announcementService from '@/services/announcementService'
+import {
+  renderContentToHtml,
+  extractTextFromJson,
+  truncateContent,
+} from '@/utils/contentUtils'
 
 // 定義組件名稱以符合 multi-word 規則
 defineOptions({
@@ -249,7 +254,7 @@ const shareAnnouncement = async () => {
     try {
       await navigator.share({
         title: announcement.value.title,
-        text: truncateContent(announcement.value.content, 200),
+        text: truncateAnnouncementContent(announcement.value.content, 200),
         url: window.location.href,
       })
     } catch (err) {
@@ -283,17 +288,19 @@ const formatDate = (date) => {
   return new Date(date).toLocaleString('zh-TW')
 }
 
-const truncateContent = (content, maxLength) => {
-  if (!content) return ''
-  return content.length > maxLength
-    ? content.substring(0, maxLength) + '...'
-    : content
+const truncateAnnouncementContent = (content, maxLength) => {
+  return truncateContent(content, null, maxLength)
 }
 
-const formatContent = (content) => {
+const formatContent = (content, format = 'plain') => {
   if (!content) return ''
-  // 將換行符轉換為 HTML 換行
-  return content.replace(/\n/g, '<br>')
+
+  if (format === 'json' && typeof content === 'object') {
+    return renderContentToHtml(content, 'json')
+  }
+
+  // 純文字格式，轉換換行符
+  return String(content).replace(/\n/g, '<br>')
 }
 
 const getTypeLabel = (type) => {

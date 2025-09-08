@@ -400,6 +400,7 @@ import memeService from '@/services/memeService'
 import AdInline from '@/components/AdInline.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import announcementService from '@/services/announcementService'
+import { truncateContent } from '@/utils/contentUtils'
 
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -649,6 +650,7 @@ const loadAnnouncements = async () => {
         title: '系統維護通知',
         content:
           '親愛的用戶們，我們將於本週末進行系統維護，屆時網站可能會暫時無法訪問。維護時間預計為 2 小時，我們會盡快完成維護工作。感謝您的理解與支持！',
+        content_format: 'plain',
         category: 'system',
         status: 'public',
         pinned: true,
@@ -662,6 +664,7 @@ const loadAnnouncements = async () => {
         title: '新功能上線',
         content:
           '我們很高興地宣布，迷因編輯器的新功能已經上線！現在您可以更方便地編輯和分享您的迷因作品。新功能包括：1. 更直觀的編輯介面 2. 更多濾鏡效果 3. 一鍵分享功能。快來試試看吧！',
+        content_format: 'plain',
         category: 'update',
         status: 'public',
         pinned: false,
@@ -675,6 +678,7 @@ const loadAnnouncements = async () => {
         title: '社群活動預告',
         content:
           '下個月我們將舉辦第一屆迷因創作大賽！參賽者將有機會獲得豐厚獎品，包括現金獎勵和平台 VIP 會員資格。比賽詳情將在近期公布，敬請期待！',
+        content_format: 'plain',
         category: 'activity',
         status: 'public',
         pinned: false,

@@ -61,6 +61,7 @@ import Tag from 'primevue/tag'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useRouter } from 'vue-router'
 import announcementService from '@/services/announcementService'
+import { truncateContent } from '@/utils/contentUtils'
 
 const router = useRouter()
 const announcements = ref([])
@@ -87,7 +88,8 @@ onMounted(async () => {
 })
 
 const viewAnnouncement = (id) => router.push(`/announcements/${id}`)
-const truncate = (t, n) => (!t ? '' : t.length > n ? t.slice(0, n) + '…' : t)
+const truncate = (content, maxLength = 120) =>
+  truncateContent(content, null, maxLength)
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString('zh-TW') : '-')
 const getTypeLabel = (type) =>
   ({
