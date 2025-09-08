@@ -263,23 +263,13 @@ async function saveAnnouncement() {
       current.image = selectedImage.value
     } else if (imageType.value === 'url' && imageUrl.value.trim()) {
       current.image = imageUrl.value.trim()
-    } else if (
-      imageType.value === 'upload' &&
-      current.image &&
-      current.image.includes('cloudinary.com')
-    ) {
-      // 保持原有的上傳圖片
-      current.image = current.image
-    } else if (
-      imageType.value === 'url' &&
-      current.image &&
-      !current.image.includes('cloudinary.com')
-    ) {
-      // 保持原有的外部圖片連結
-      current.image = current.image
     } else {
+      // 如果沒有圖片或不需要更新圖片，保持原有圖片或清除
+      // current.image 已經從 announcement.value 拷貝過來，無需重新賦值
       // 如果沒有圖片，清除圖片欄位
-      current.image = null
+      if (!current.image) {
+        current.image = null
+      }
     }
 
     if (current._id) {
@@ -619,8 +609,19 @@ function switchImageType(type) {
 // 驗證圖片 URL
 function validateImageUrl(url) {
   if (!url) return true
-  const imageUrlPattern = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i
-  return imageUrlPattern.test(url)
+  // 支援常見圖片服務的URL格式
+  const imagePatterns = [
+    // 有副檔名的圖片URL
+    /^https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|ico|avif)(\?.*)?$/i,
+    // Unsplash等服務的URL（沒有副檔名但有圖片參數）
+    /^https?:\/\/[^\s]+\/[^\s]*\?(.*&)?auto=format(&.*)?$/i,
+    // 其他圖片服務的URL（檢查常見圖片相關關鍵字）
+    /^https?:\/\/[^\s]+\/[^\s]*(format|image|photo|picture|img)[^\s]*$/i,
+    // 允許沒有副檔名的圖片URL（只要是圖片服務域名）
+    /^https?:\/\/(images\.unsplash\.com|plus\.unsplash\.com|i\.imgur\.com|cdn\.pixabay\.com|images\.pexels\.com)[^\s]*$/i,
+  ]
+
+  return imagePatterns.some((pattern) => pattern.test(url))
 }
 </script>
 
