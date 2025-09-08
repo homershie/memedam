@@ -2,11 +2,10 @@
   <Card
     v-if="announcement && announcement.title"
     class="w-full announcement-card"
-    @click="toggleExpanded"
   >
     <template #header>
       <div
-        class="h-60 flex items-center justify-center cursor-pointer overflow-hidden rounded-t-lg"
+        class="h-60 flex items-center justify-center overflow-hidden rounded-t-lg"
         :class="
           announcement.image
             ? 'bg-surface-100'
@@ -37,25 +36,15 @@
           class="ml-2 flex-shrink-0"
         />
       </div>
-      <p class="mb-3 text-surface-600" :class="expanded ? '' : 'line-clamp-3'">
-        {{
-          expanded
-            ? announcement.content || '無內容'
-            : getContentPreview(announcement.content)
-        }}
+      <p class="mb-3 text-surface-600 line-clamp-3">
+        {{ getContentPreview(announcement.content) }}
       </p>
       <div class="flex justify-between items-center text-sm text-surface-500">
         <span>{{ formatDate(announcement.createdAt) }}</span>
         <div class="flex items-center gap-2">
-          <Button
-            :icon="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-            text
-            size="small"
-            severity="success"
-            rounded
-            :pt="{ root: { class: 'p-0' } }"
-            @click.stop="toggleExpanded"
-          />
+          <Button text severity="success" @click.stop="goToDetail"
+            ><i class="ri-arrow-right-s-fill"></i>查看詳情</Button
+          >
         </div>
       </div>
     </template>
@@ -63,14 +52,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import { extractTextFromJson } from '@/utils/contentUtils'
 
+const router = useRouter()
+
 // 定義 props
-defineProps({
+const props = defineProps({
   announcement: {
     type: Object,
     required: true,
@@ -78,10 +69,11 @@ defineProps({
   },
 })
 
-const expanded = ref(false)
-
-const toggleExpanded = () => {
-  expanded.value = !expanded.value
+// 跳轉到詳情頁面
+const goToDetail = () => {
+  if (props.announcement && props.announcement._id) {
+    router.push(`/announcements/${props.announcement._id}`)
+  }
 }
 
 // 處理圖片載入錯誤
