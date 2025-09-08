@@ -400,7 +400,6 @@ import memeService from '@/services/memeService'
 import AdInline from '@/components/AdInline.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import announcementService from '@/services/announcementService'
-import { truncateContent } from '@/utils/contentUtils'
 
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -634,6 +633,7 @@ const loadAnnouncements = async () => {
       status: 'public',
       limit: 3,
       page: 1,
+      sort: '-createdAt', // 按創建時間降序排列，顯示最新公告
     })
 
     if (response.data && response.data.success) {
@@ -686,6 +686,50 @@ const loadAnnouncements = async () => {
           'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
         createdAt: new Date(Date.now() - 172800000).toISOString(), // 2天前
         updatedAt: new Date(Date.now() - 172800000).toISOString(),
+      },
+      {
+        _id: '4',
+        title: '平台更新公告',
+        content: {
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: '我們很高興宣布' },
+                { type: 'text', text: '公告系統', marks: [{ type: 'bold' }] },
+                { type: 'text', text: '已經完成升級！' },
+              ],
+            },
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: '現在支援' },
+                {
+                  type: 'text',
+                  text: '富文本編輯',
+                  marks: [{ type: 'italic' }],
+                },
+                { type: 'text', text: '功能，包括' },
+                {
+                  type: 'text',
+                  text: '連結',
+                  marks: [
+                    { type: 'link', attrs: { href: 'https://memedam.com' } },
+                  ],
+                },
+                { type: 'text', text: '和各種格式化選項。' },
+              ],
+            },
+          ],
+        },
+        content_format: 'json',
+        category: 'update',
+        status: 'public',
+        pinned: false,
+        image:
+          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop',
+        createdAt: new Date(Date.now() - 259200000).toISOString(), // 3天前
+        updatedAt: new Date(Date.now() - 259200000).toISOString(),
       },
     ]
   } finally {
