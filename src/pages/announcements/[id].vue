@@ -1,5 +1,5 @@
 <template>
-  <div class="announcement-detail">
+  <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
     <!-- 載入中狀態 -->
     <div v-if="loading" class="flex justify-center items-center min-h-screen">
       <ProgressSpinner />
@@ -13,7 +13,7 @@
       <div class="text-center">
         <i class="pi pi-exclamation-triangle text-6xl text-red-500 mb-4"></i>
         <h2 class="text-2xl font-bold mb-2">載入失敗</h2>
-        <p class="text-gray-600 mb-4">{{ error }}</p>
+        <p class="text-surface-600 mb-4">{{ error }}</p>
         <Button label="返回首頁" icon="pi pi-home" @click="$router.push('/')" />
       </div>
     </div>
@@ -23,10 +23,10 @@
       <!-- 返回按鈕 -->
       <div class="mb-6">
         <Button
-          label="返回公告列表"
+          label="返回首頁"
           icon="pi pi-arrow-left"
           text
-          @click="$router.push('/announcements')"
+          @click="$router.push('/')"
         />
       </div>
 
@@ -41,19 +41,15 @@
               :alt="announcement.title"
               class="w-full h-64 object-cover rounded-t-lg"
             />
-            <!-- 置頂標籤 -->
-            <Tag
-              v-if="announcement.pinned"
-              value="置頂"
-              severity="warning"
-              class="absolute top-4 right-4"
-            />
-            <!-- 分類標籤 -->
-            <Tag
-              :value="getCategoryLabel(announcement.category)"
-              :severity="getCategorySeverity(announcement.category)"
-              class="absolute top-4 left-4"
-            />
+            <div class="absolute top-4 left-4 space-x-2">
+              <!-- 置頂標籤 -->
+              <Tag v-if="announcement.pinned" value="置頂" severity="warn" />
+              <!-- 分類標籤 -->
+              <Tag
+                :value="getCategoryLabel(announcement.category)"
+                :severity="getCategorySeverity(announcement.category)"
+              />
+            </div>
           </div>
         </template>
 
@@ -61,17 +57,15 @@
           <div class="space-y-6">
             <!-- 標題和類型 -->
             <div class="flex justify-between items-start">
-              <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 class="text-3xl font-bold text-surface-900 dark:text-white">
                 {{ announcement.title }}
               </h1>
-              <Tag
-                :value="getTypeLabel(announcement.type)"
-                :severity="getTypeSeverity(announcement.type)"
-              />
             </div>
 
             <!-- 發布資訊 -->
-            <div class="flex items-center gap-4 text-sm text-gray-500">
+            <div
+              class="flex items-center gap-4 text-sm text-surface-500 dark:text-surface-400"
+            >
               <span>
                 <i class="pi pi-calendar mr-1"></i>
                 發布時間：{{ formatDate(announcement.createdAt) }}
@@ -93,28 +87,12 @@
                 "
               ></div>
             </div>
-
-            <!-- 標籤 -->
-            <div
-              v-if="announcement.tags && announcement.tags.length > 0"
-              class="flex flex-wrap gap-2"
-            >
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >標籤：</span
-              >
-              <Tag
-                v-for="tag in announcement.tags"
-                :key="tag"
-                :value="tag"
-                severity="info"
-              />
-            </div>
           </div>
         </template>
 
         <template #footer>
           <div class="flex justify-between items-center">
-            <div class="text-sm text-gray-500">
+            <div class="text-sm text-surface-500">
               最後更新：{{ formatDate(announcement.updatedAt) }}
             </div>
             <div class="flex gap-2">
@@ -125,10 +103,10 @@
                 @click="shareAnnouncement"
               />
               <Button
-                label="返回列表"
-                icon="pi pi-list"
+                label="返回首頁"
+                icon="pi pi-home"
                 outlined
-                @click="$router.push('/announcements')"
+                @click="$router.push('/')"
               />
             </div>
           </div>
@@ -156,7 +134,7 @@
             </template>
             <template #content>
               <h4 class="font-semibold mb-2">{{ related.title }}</h4>
-              <p class="text-sm text-gray-600 line-clamp-2">
+              <p class="text-sm text-surface-600 line-clamp-2">
                 {{
                   truncateAnnouncementContent(
                     related.content,
@@ -174,9 +152,9 @@
     <!-- 公告不存在 -->
     <div v-else class="flex flex-col items-center justify-center min-h-screen">
       <div class="text-center">
-        <i class="pi pi-file-excel text-6xl text-gray-400 mb-4"></i>
+        <i class="pi pi-file-excel text-6xl text-surface-400 mb-4"></i>
         <h2 class="text-2xl font-bold mb-2">公告不存在</h2>
-        <p class="text-gray-600 mb-4">您要查看的公告可能已被刪除或移動</p>
+        <p class="text-surface-600 mb-4">您要查看的公告可能已被刪除或移動</p>
         <Button label="返回首頁" icon="pi pi-home" @click="$router.push('/')" />
       </div>
     </div>
@@ -328,26 +306,6 @@ const formatContent = (content, format = null) => {
   return String(content).replace(/\n/g, '<br>')
 }
 
-const getTypeLabel = (type) => {
-  const typeMap = {
-    general: '一般公告',
-    maintenance: '系統維護',
-    update: '功能更新',
-    event: '活動通知',
-  }
-  return typeMap[type] || type
-}
-
-const getTypeSeverity = (type) => {
-  const severityMap = {
-    general: 'info',
-    maintenance: 'warning',
-    update: 'success',
-    event: 'primary',
-  }
-  return severityMap[type] || 'info'
-}
-
 const getCategoryLabel = (category) => {
   const categoryMap = {
     system: '系統',
@@ -370,34 +328,12 @@ const getCategorySeverity = (category) => {
 </script>
 
 <style scoped>
-.announcement-detail {
-  min-height: 100vh;
-}
-
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* 深色模式支援 */
-:deep(.dark) .prose {
-  color: #e5e7eb;
-}
-
-:deep(.dark) .prose h1,
-:deep(.dark) .prose h2,
-:deep(.dark) .prose h3,
-:deep(.dark) .prose h4,
-:deep(.dark) .prose h5,
-:deep(.dark) .prose h6 {
-  color: #f9fafb;
-}
-
-:deep(.dark) .prose p {
-  color: #d1d5db;
 }
 </style>
 
