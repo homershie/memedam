@@ -36,23 +36,22 @@
           <div class="relative">
             <img
               :src="
-                announcement.image_url ||
-                'https://picsum.photos/800/400/?random=10'
+                announcement.image || 'https://picsum.photos/800/400/?random=10'
               "
               :alt="announcement.title"
               class="w-full h-64 object-cover rounded-t-lg"
             />
             <!-- 置頂標籤 -->
             <Tag
-              v-if="announcement.is_pinned"
+              v-if="announcement.pinned"
               value="置頂"
               severity="warning"
               class="absolute top-4 right-4"
             />
-            <!-- 優先級標籤 -->
+            <!-- 分類標籤 -->
             <Tag
-              :value="getPriorityLabel(announcement.priority)"
-              :severity="getPrioritySeverity(announcement.priority)"
+              :value="getCategoryLabel(announcement.category)"
+              :severity="getCategorySeverity(announcement.category)"
               class="absolute top-4 left-4"
             />
           </div>
@@ -75,11 +74,11 @@
             <div class="flex items-center gap-4 text-sm text-gray-500">
               <span>
                 <i class="pi pi-calendar mr-1"></i>
-                發布時間：{{ formatDate(announcement.published_at) }}
+                發布時間：{{ formatDate(announcement.createdAt) }}
               </span>
               <span>
-                <i class="pi pi-eye mr-1"></i>
-                瀏覽次數：{{ announcement.view_count || 0 }}
+                <i class="pi pi-tag mr-1"></i>
+                分類：{{ getCategoryLabel(announcement.category) }}
               </span>
             </div>
 
@@ -116,7 +115,7 @@
         <template #footer>
           <div class="flex justify-between items-center">
             <div class="text-sm text-gray-500">
-              最後更新：{{ formatDate(announcement.updated_at) }}
+              最後更新：{{ formatDate(announcement.updatedAt) }}
             </div>
             <div class="flex gap-2">
               <Button
@@ -149,8 +148,7 @@
             <template #header>
               <img
                 :src="
-                  related.image_url ||
-                  'https://picsum.photos/300/200/?random=10'
+                  related.image || 'https://picsum.photos/300/200/?random=10'
                 "
                 :alt="related.title"
                 class="w-full h-32 object-cover rounded-t-lg"
@@ -222,7 +220,7 @@ const loadAnnouncement = async () => {
     error.value = null
 
     const response = await announcementService.get(announcementId.value)
-    announcement.value = response.data.announcement
+    announcement.value = response.data.data
 
     // 載入相關公告
     await loadRelatedAnnouncements()
@@ -244,9 +242,9 @@ const loadRelatedAnnouncements = async () => {
     const response = await announcementService.getAll({
       limit: 3,
       exclude: announcementId.value,
-      type: announcement.value?.type,
+      category: announcement.value?.category,
     })
-    relatedAnnouncements.value = response.data.announcements || []
+    relatedAnnouncements.value = response.data.data || []
   } catch (err) {
     console.error('載入相關公告失敗:', err)
   }
@@ -350,22 +348,24 @@ const getTypeSeverity = (type) => {
   return severityMap[type] || 'info'
 }
 
-const getPriorityLabel = (priority) => {
-  const priorityMap = {
-    normal: '一般',
-    important: '重要',
-    urgent: '緊急',
+const getCategoryLabel = (category) => {
+  const categoryMap = {
+    system: '系統',
+    activity: '活動',
+    update: '更新',
+    other: '其他',
   }
-  return priorityMap[priority] || priority
+  return categoryMap[category] || '其他'
 }
 
-const getPrioritySeverity = (priority) => {
+const getCategorySeverity = (category) => {
   const severityMap = {
-    normal: 'info',
-    important: 'warning',
-    urgent: 'danger',
+    system: 'danger',
+    activity: 'success',
+    update: 'info',
+    other: 'secondary',
   }
-  return severityMap[priority] || 'info'
+  return severityMap[category] || 'secondary'
 }
 </script>
 
