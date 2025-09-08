@@ -1511,6 +1511,16 @@ const handleSubmit = async () => {
       )
     }
 
+    // 調試：檢查即將發送的資料
+    console.log('準備發送的迷因資料:', {
+      type: memeData.type,
+      image_url: memeData.image_url,
+      cover_image: memeData.cover_image,
+      hasImageUrl: !!memeData.image_url,
+      hasCoverImage: !!memeData.cover_image,
+      uploadedCoverImageFile: !!uploadedCoverImageFile.value,
+    })
+
     const memeResponse = await memeService.create(memeData)
     const meme = memeResponse.data.data
 
