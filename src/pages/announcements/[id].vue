@@ -177,11 +177,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import announcementService from '@/services/announcementService'
-import {
-  renderContentToHtml,
-  extractTextFromJson,
-  truncateContent,
-} from '@/utils/contentUtils'
+import { renderContentToHtml, truncateContent } from '@/utils/contentUtils'
 
 // 定義組件名稱以符合 multi-word 規則
 defineOptions({

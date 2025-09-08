@@ -67,7 +67,7 @@ import { ref } from 'vue'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
-import { extractTextFromJson, truncateContent } from '@/utils/contentUtils'
+import { extractTextFromJson } from '@/utils/contentUtils'
 
 // 定義 props
 defineProps({
@@ -112,12 +112,24 @@ const getCategorySeverity = (category) => {
   return severities[category] || 'secondary'
 }
 
-// 取得內容預覽（支援JSON和純文字，限制字數）
-const getContentPreview = (content, maxLength = 100) => {
+// 取得內容預覽（支援JSON和純文字）
+const getContentPreview = (content, maxLength = 60) => {
   if (!content) return '無內容'
 
-  // 使用共用工具函數處理內容（自動判斷格式）
-  return truncateContent(content, null, maxLength)
+  let plainText = ''
+
+  // 如果是JSON格式，解析並提取純文字
+  if (typeof content === 'object' && content !== null) {
+    plainText = extractTextFromJson(content)
+  } else {
+    // 純文字格式，移除HTML標籤
+    plainText = String(content).replace(/<[^>]*>/g, '')
+  }
+
+  // 限制字數
+  return plainText.length > maxLength
+    ? plainText.substring(0, maxLength) + '...'
+    : plainText
 }
 
 // 格式化日期
@@ -161,6 +173,7 @@ const formatDate = (dateString) => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -168,6 +181,7 @@ const formatDate = (dateString) => {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
