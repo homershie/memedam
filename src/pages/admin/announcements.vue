@@ -8,6 +8,7 @@ import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, onUnmounted, ref } from 'vue'
 import announcementService from '@/services/announcementService'
+import uploadService from '@/services/uploadService'
 import FileUpload from 'primevue/fileupload'
 import RadioButton from 'primevue/radiobutton'
 import TipTapEditor from '@/components/TipTapEditor.vue'
@@ -74,6 +75,9 @@ const formCategories = [
   { label: '更新', value: 'update' },
   { label: '其他', value: 'other' },
 ]
+
+// 收集content中待上傳的圖片檔案（參考post.vue做法）
+const pendingContentImages = ref([])
 
 // 載入真實數據
 const loadData = async () => {
@@ -241,6 +245,8 @@ function openNew() {
   imageUrl.value = ''
   imageType.value = 'upload'
   submitted.value = false
+  // 清空待上傳的content圖片清單
+  pendingContentImages.value = []
   announcementDialog.value = true
 }
 
@@ -254,6 +260,8 @@ function hideDialog() {
   selectedImage.value = null
   imageUrl.value = ''
   imageType.value = 'upload'
+  // 清空待上傳的content圖片清單
+  pendingContentImages.value = []
 }
 
 async function saveAnnouncement() {
@@ -298,9 +306,11 @@ async function saveAnnouncement() {
       }
     }
 
+    let savedAnnouncement
+
     if (current._id) {
       // 更新現有公告
-      await announcementService.update(current._id, current)
+      savedAnnouncement = await announcementService.update(current._id, current)
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -310,13 +320,55 @@ async function saveAnnouncement() {
     } else {
       // 建立新公告
       // 後端會自動處理 author_id 和時間戳
-      await announcementService.create(current)
+      savedAnnouncement = await announcementService.create(current)
       toast.add({
         severity: 'success',
         summary: '成功',
         detail: '公告已建立',
         life: 3000,
       })
+    }
+
+    // 上傳content中的圖片（參考post.vue做法）
+    if (pendingContentImages.value.length > 0) {
+      const uploadedUrls = []
+
+      for (const file of pendingContentImages.value) {
+        try {
+          const result = await uploadService.uploadImage(file, {
+            folder: 'announcements/content',
+            transformation: [
+              { width: 1200, height: 800, crop: 'limit' },
+              { quality: 'auto', format: 'auto' },
+            ],
+          })
+
+          if (result && result.url) {
+            uploadedUrls.push(result.url)
+          } else {
+            console.error('Content圖片上傳失敗: 無效回應', result)
+          }
+        } catch (error) {
+          console.error('Content圖片上傳失敗:', error)
+        }
+      }
+
+      // 如果有新的圖片上傳成功，更新公告的 content_images
+      if (uploadedUrls.length > 0 && savedAnnouncement?.data?._id) {
+        try {
+          const existingImages = savedAnnouncement.data.content_images || []
+          const updatedImages = [...existingImages, ...uploadedUrls]
+
+          await announcementService.update(savedAnnouncement.data._id, {
+            content_images: updatedImages,
+          })
+        } catch (error) {
+          console.error('更新公告content_images失敗:', error)
+        }
+      }
+
+      // 清空待上傳清單
+      pendingContentImages.value = []
     }
 
     announcementDialog.value = false
@@ -368,6 +420,9 @@ function editAnnouncement(row) {
     imageType.value = 'upload'
     imageUrl.value = ''
   }
+
+  // 清空待上傳的content圖片清單（編輯時不保留之前的待上傳圖片）
+  pendingContentImages.value = []
 
   announcementDialog.value = true
 }
@@ -713,6 +768,12 @@ function setContentFormat(format) {
     announcement.value.content_format = format
   }
 }
+
+// 處理content中圖片上傳（參考post.vue做法，先收集後批量上傳）
+function handleContentImageUpload(file) {
+  // 將檔案加入待上傳清單，而不是立即上傳
+  pendingContentImages.value.push(file)
+}
 </script>
 
 <template>
@@ -977,6 +1038,7 @@ function setContentFormat(format) {
             class="border rounded-lg min-h-[200px]"
             placeholder="請輸入公告內容..."
             @update:modelValue="handleContentChange"
+            :onImageUpload="handleContentImageUpload"
           />
           <small v-if="submitted && !announcement.content" class="text-red-500">
             內容為必填項目。
