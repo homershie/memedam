@@ -267,9 +267,13 @@ function hideDialog() {
 async function saveAnnouncement() {
   submitted.value = true
   const current = { ...announcement.value }
+  let savedAnnouncement // 提前聲明變數
 
   // 確保 content_format 正確設定
   current.content_format = contentFormat.value
+
+  // 初始化變數
+  let uploadedUrlsForLater = []
 
   // 驗證內容
   if (!current?.title?.trim()) return
@@ -306,7 +310,96 @@ async function saveAnnouncement() {
       }
     }
 
-    let savedAnnouncement
+    // 先上傳content中的圖片並替換blob URL（參考post.vue做法）
+    if (pendingContentImages.value.length > 0) {
+      const uploadedUrls = []
+      const blobUrlMap = new Map() // 記錄blob URL 與上傳 URL 的對應關係
+
+      for (const item of pendingContentImages.value) {
+        try {
+          const result = await uploadService.uploadImage(item.file, {
+            folder: 'announcements/content',
+            transformation: [
+              { width: 1200, height: 800, crop: 'limit' },
+              { quality: 'auto', format: 'auto' },
+            ],
+          })
+
+          if (result && result.url) {
+            uploadedUrls.push(result.url)
+            // 記錄blob URL 與上傳 URL 的對應關係
+            if (item.blobUrl) {
+              blobUrlMap.set(item.blobUrl, result.url)
+            }
+          } else {
+            console.error('Content圖片上傳失敗: 無效回應', result)
+          }
+        } catch (error) {
+          console.error('Content圖片上傳失敗:', error)
+        }
+      }
+
+      // 替換編輯器內容中的blob URL
+      if (blobUrlMap.size > 0) {
+        let contentToUpdate = current.content
+
+        // 如果內容是 JSON 格式，需要解析後替換
+        if (contentFormat.value === 'json') {
+          try {
+            const contentObj =
+              typeof contentToUpdate === 'string'
+                ? JSON.parse(contentToUpdate)
+                : contentToUpdate
+
+            // 遞歸替換內容中的blob URL
+            const replaceBlobUrls = (obj) => {
+              if (typeof obj === 'object' && obj !== null) {
+                for (const key in obj) {
+                  if (key === 'src' && typeof obj[key] === 'string') {
+                    // 如果 src 是blob URL，用對應的上傳 URL 替換
+                    if (blobUrlMap.has(obj[key])) {
+                      obj[key] = blobUrlMap.get(obj[key])
+                    }
+                  } else if (typeof obj[key] === 'object') {
+                    replaceBlobUrls(obj[key])
+                  }
+                }
+              }
+              return obj
+            }
+
+            const updatedContent = replaceBlobUrls(contentObj)
+            current.content = updatedContent
+
+            // 更新編輯器內容和current物件
+            announcement.value.content = updatedContent
+          } catch (error) {
+            console.error('替換JSON內容中的blob URL失敗:', error)
+          }
+        } else {
+          // 如果是純文字格式，替換字串中的blob URL
+          let contentStr =
+            typeof contentToUpdate === 'string' ? contentToUpdate : ''
+
+          for (const [blobUrl, url] of blobUrlMap.entries()) {
+            // 使用簡單的字串替換，因為blob URL很長且唯一
+            contentStr = contentStr.replace(blobUrl, url)
+          }
+
+          current.content = contentStr
+          // 更新編輯器內容和current物件
+          announcement.value.content = contentStr
+        }
+      }
+
+      // 記錄上傳的URLs，稍後用於更新content_images
+      uploadedUrlsForLater = [...uploadedUrls]
+
+      // 清空待上傳清單
+      pendingContentImages.value = []
+    }
+
+    // 現在可以安全地儲存公告，因為blob URL已經被替換了
 
     if (current._id) {
       // 更新現有公告
@@ -329,107 +422,22 @@ async function saveAnnouncement() {
       })
     }
 
-    // 上傳content中的圖片（參考post.vue做法）
-    if (pendingContentImages.value.length > 0) {
-      const uploadedUrls = []
-      const placeholderMap = new Map() // 記錄佔位符 ID 與上傳 URL 的對應關係
+    // 如果有上傳的圖片，需要更新公告的content_images
+    if (
+      uploadedUrlsForLater &&
+      uploadedUrlsForLater.length > 0 &&
+      savedAnnouncement?.data?._id
+    ) {
+      try {
+        const existingImages = savedAnnouncement.data.content_images || []
+        const updatedImages = [...existingImages, ...uploadedUrlsForLater]
 
-      for (const item of pendingContentImages.value) {
-        try {
-          const result = await uploadService.uploadImage(item.file, {
-            folder: 'announcements/content',
-            transformation: [
-              { width: 1200, height: 800, crop: 'limit' },
-              { quality: 'auto', format: 'auto' },
-            ],
-          })
-
-          if (result && result.url) {
-            uploadedUrls.push(result.url)
-            // 記錄佔位符 ID 與上傳 URL 的對應關係
-            if (item.placeholderId) {
-              placeholderMap.set(item.placeholderId, result.url)
-            }
-          } else {
-            console.error('Content圖片上傳失敗: 無效回應', result)
-          }
-        } catch (error) {
-          console.error('Content圖片上傳失敗:', error)
-        }
+        await announcementService.update(savedAnnouncement.data._id, {
+          content_images: updatedImages,
+        })
+      } catch (error) {
+        console.error('更新公告content_images失敗:', error)
       }
-
-      // 替換編輯器內容中的佔位符
-      if (placeholderMap.size > 0) {
-        let contentToUpdate = current.content
-
-        // 如果內容是 JSON 格式，需要解析後替換
-        if (contentFormat.value === 'json') {
-          try {
-            const contentObj =
-              typeof contentToUpdate === 'string'
-                ? JSON.parse(contentToUpdate)
-                : contentToUpdate
-
-            // 遞歸替換內容中的佔位符
-            const replacePlaceholders = (obj) => {
-              if (typeof obj === 'object' && obj !== null) {
-                for (const key in obj) {
-                  if (key === 'src' && typeof obj[key] === 'string') {
-                    // 如果 src 是佔位符 ID，用對應的 URL 替換
-                    if (placeholderMap.has(obj[key])) {
-                      obj[key] = placeholderMap.get(obj[key])
-                    }
-                  } else if (typeof obj[key] === 'object') {
-                    replacePlaceholders(obj[key])
-                  }
-                }
-              }
-              return obj
-            }
-
-            const updatedContent = replacePlaceholders(contentObj)
-            current.content = updatedContent
-
-            // 更新編輯器內容
-            announcement.value.content = updatedContent
-          } catch (error) {
-            console.error('替換JSON內容中的佔位符失敗:', error)
-          }
-        } else {
-          // 如果是純文字格式，替換字串中的佔位符
-          let contentStr =
-            typeof contentToUpdate === 'string' ? contentToUpdate : ''
-
-          for (const [placeholderId, url] of placeholderMap.entries()) {
-            // 使用正則表達式替換所有出現的佔位符
-            const regex = new RegExp(
-              placeholderId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-              'g',
-            )
-            contentStr = contentStr.replace(regex, url)
-          }
-
-          current.content = contentStr
-          announcement.value.content = contentStr
-        }
-      }
-
-      // 如果有新的圖片上傳成功，更新公告的 content_images
-      if (uploadedUrls.length > 0 && savedAnnouncement?.data?._id) {
-        try {
-          const existingImages = savedAnnouncement.data.content_images || []
-          const updatedImages = [...existingImages, ...uploadedUrls]
-
-          await announcementService.update(savedAnnouncement.data._id, {
-            content_images: updatedImages,
-          })
-        } catch (error) {
-          console.error('更新公告content_images失敗:', error)
-        }
-      }
-
-      // 清空待上傳清單
-      pendingContentImages.value = []
     }
 
     announcementDialog.value = false
@@ -831,11 +839,11 @@ function setContentFormat(format) {
 }
 
 // 處理content中圖片上傳（參考post.vue做法，先收集後批量上傳）
-function handleContentImageUpload(file, placeholderId) {
-  // 將檔案和佔位符 ID 加入待上傳清單，而不是立即上傳
+function handleContentImageUpload(file, blobUrl) {
+  // 將檔案和對應的blob URL加入待上傳清單，而不是立即上傳
   pendingContentImages.value.push({
     file: file,
-    placeholderId: placeholderId,
+    blobUrl: blobUrl,
   })
 }
 </script>
