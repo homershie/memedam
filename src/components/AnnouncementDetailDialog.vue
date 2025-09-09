@@ -81,9 +81,9 @@
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card
             v-for="related in relatedAnnouncements"
-            :key="related.id"
+            :key="related._id"
             class="cursor-pointer hover:shadow-lg transition-shadow"
-            @click="viewAnnouncement(related.id)"
+            @click="viewAnnouncement(related._id)"
           >
             <template #header>
               <img
@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import announcementService from '@/services/announcementService'
 import { renderContentToHtml, truncateContent } from '@/utils/contentUtils'
@@ -146,6 +146,22 @@ const error = ref(null)
 
 // 從 dialogRef 中獲取傳遞的數據
 const announcementId = ref(dialogRef.value?.data?.announcementId)
+
+// 監聽 announcementId 的變化，當對話框重新打開時重新載入數據
+watch(
+  () => dialogRef.value?.data?.announcementId,
+  async (newId) => {
+    if (newId && newId !== announcementId.value) {
+      // 重置狀態
+      announcement.value = null
+      relatedAnnouncements.value = []
+      error.value = null
+
+      announcementId.value = newId
+      await loadAnnouncement()
+    }
+  },
+)
 
 // 生命週期
 onMounted(async () => {
