@@ -8,11 +8,19 @@ export default {
       const formData = new FormData()
       formData.append('image', data.image)
       formData.append('title', data.title)
-      formData.append('content', data.content)
+      // 處理內容：如果是物件（JSON格式），轉為字串
+      if (typeof data.content === 'object' && data.content !== null) {
+        formData.append('content', JSON.stringify(data.content))
+      } else {
+        formData.append('content', data.content)
+      }
       formData.append('status', data.status)
       formData.append('category', data.category)
       if (data.pinned !== undefined) {
         formData.append('pinned', data.pinned)
+      }
+      if (data.content_format) {
+        formData.append('content_format', data.content_format)
       }
       return apiService.httpAuth.post('/api/announcements', formData, {
         headers: {
@@ -50,11 +58,21 @@ export default {
       const formData = new FormData()
       formData.append('image', data.image)
       if (data.title) formData.append('title', data.title)
-      if (data.content) formData.append('content', data.content)
+      // 處理內容：如果是物件（JSON格式），轉為字串
+      if (data.content) {
+        if (typeof data.content === 'object' && data.content !== null) {
+          formData.append('content', JSON.stringify(data.content))
+        } else {
+          formData.append('content', data.content)
+        }
+      }
       if (data.status) formData.append('status', data.status)
       if (data.category) formData.append('category', data.category)
       if (data.pinned !== undefined) {
         formData.append('pinned', data.pinned)
+      }
+      if (data.content_format) {
+        formData.append('content_format', data.content_format)
       }
       return apiService.httpAuth.put(`/api/announcements/${id}`, formData, {
         headers: {

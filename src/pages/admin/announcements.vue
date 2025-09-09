@@ -8,8 +8,10 @@ import { FilterMatchMode } from '@primevue/core/api'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, onUnmounted, ref } from 'vue'
 import announcementService from '@/services/announcementService'
+import uploadService from '@/services/uploadService'
 import FileUpload from 'primevue/fileupload'
 import RadioButton from 'primevue/radiobutton'
+import TipTapEditor from '@/components/TipTapEditor.vue'
 
 const toast = useToast()
 
@@ -33,6 +35,7 @@ const submitted = ref(false)
 const selectedImage = ref(null)
 const imageUrl = ref('')
 const imageType = ref('upload') // 'upload' 或 'url'
+const contentFormat = ref('plain') // 'plain' 或 'json'
 
 // 篩選器
 const filters = ref({
@@ -72,6 +75,9 @@ const formCategories = [
   { label: '更新', value: 'update' },
   { label: '其他', value: 'other' },
 ]
+
+// 收集content中待上傳的圖片檔案（參考post.vue做法）
+const pendingContentImages = ref([])
 
 // 載入真實數據
 const loadData = async () => {
@@ -227,7 +233,10 @@ function openNew() {
     status: 'draft',
     category: 'system',
     pinned: false,
+    content_format: 'plain',
   }
+  contentFormat.value = 'plain'
+
   // 清理之前的圖片預覽 URL
   if (selectedImage.value && selectedImage.value._previewUrl) {
     URL.revokeObjectURL(selectedImage.value._previewUrl)
@@ -236,6 +245,8 @@ function openNew() {
   imageUrl.value = ''
   imageType.value = 'upload'
   submitted.value = false
+  // 清空待上傳的content圖片清單
+  pendingContentImages.value = []
   announcementDialog.value = true
 }
 
@@ -249,13 +260,40 @@ function hideDialog() {
   selectedImage.value = null
   imageUrl.value = ''
   imageType.value = 'upload'
+  // 清空待上傳的content圖片清單
+  pendingContentImages.value = []
 }
 
 async function saveAnnouncement() {
   submitted.value = true
   const current = { ...announcement.value }
+  let savedAnnouncement // 提前聲明變數
 
-  if (!current?.title?.trim() || !current?.content?.trim()) return
+  // 確保 content_format 正確設定
+  current.content_format = contentFormat.value
+
+  // 初始化變數
+  let uploadedUrlsForLater = []
+
+  // 驗證內容
+  if (!current?.title?.trim()) return
+
+  // 根據格式驗證內容
+  if (contentFormat.value === 'plain') {
+    if (!current?.content?.trim()) return
+    if (current.content.trim().length > 10000) {
+      toast.add({
+        severity: 'error',
+        summary: '錯誤',
+        detail: '純文字內容長度不能超過10000字',
+        life: 3000,
+      })
+      return
+    }
+  } else if (contentFormat.value === 'json') {
+    if (!current?.content) return
+    // JSON 格式的驗證會在後端處理
+  }
 
   try {
     // 處理圖片資料
@@ -272,9 +310,100 @@ async function saveAnnouncement() {
       }
     }
 
+    // 先上傳content中的圖片並替換blob URL（參考post.vue做法）
+    if (pendingContentImages.value.length > 0) {
+      const uploadedUrls = []
+      const blobUrlMap = new Map() // 記錄blob URL 與上傳 URL 的對應關係
+
+      for (const item of pendingContentImages.value) {
+        try {
+          const result = await uploadService.uploadImage(item.file, {
+            folder: 'announcements/content',
+            transformation: [
+              { width: 1200, height: 800, crop: 'limit' },
+              { quality: 'auto', format: 'auto' },
+            ],
+          })
+
+          if (result && result.url) {
+            uploadedUrls.push(result.url)
+            // 記錄blob URL 與上傳 URL 的對應關係
+            if (item.blobUrl) {
+              blobUrlMap.set(item.blobUrl, result.url)
+            }
+          } else {
+            console.error('Content圖片上傳失敗: 無效回應', result)
+          }
+        } catch (error) {
+          console.error('Content圖片上傳失敗:', error)
+        }
+      }
+
+      // 替換編輯器內容中的blob URL
+      if (blobUrlMap.size > 0) {
+        let contentToUpdate = current.content
+
+        // 如果內容是 JSON 格式，需要解析後替換
+        if (contentFormat.value === 'json') {
+          try {
+            const contentObj =
+              typeof contentToUpdate === 'string'
+                ? JSON.parse(contentToUpdate)
+                : contentToUpdate
+
+            // 遞歸替換內容中的blob URL
+            const replaceBlobUrls = (obj) => {
+              if (typeof obj === 'object' && obj !== null) {
+                for (const key in obj) {
+                  if (key === 'src' && typeof obj[key] === 'string') {
+                    // 如果 src 是blob URL，用對應的上傳 URL 替換
+                    if (blobUrlMap.has(obj[key])) {
+                      obj[key] = blobUrlMap.get(obj[key])
+                    }
+                  } else if (typeof obj[key] === 'object') {
+                    replaceBlobUrls(obj[key])
+                  }
+                }
+              }
+              return obj
+            }
+
+            const updatedContent = replaceBlobUrls(contentObj)
+            current.content = updatedContent
+
+            // 更新編輯器內容和current物件
+            announcement.value.content = updatedContent
+          } catch (error) {
+            console.error('替換JSON內容中的blob URL失敗:', error)
+          }
+        } else {
+          // 如果是純文字格式，替換字串中的blob URL
+          let contentStr =
+            typeof contentToUpdate === 'string' ? contentToUpdate : ''
+
+          for (const [blobUrl, url] of blobUrlMap.entries()) {
+            // 使用簡單的字串替換，因為blob URL很長且唯一
+            contentStr = contentStr.replace(blobUrl, url)
+          }
+
+          current.content = contentStr
+          // 更新編輯器內容和current物件
+          announcement.value.content = contentStr
+        }
+      }
+
+      // 記錄上傳的URLs，稍後用於更新content_images
+      uploadedUrlsForLater = [...uploadedUrls]
+
+      // 清空待上傳清單
+      pendingContentImages.value = []
+    }
+
+    // 現在可以安全地儲存公告，因為blob URL已經被替換了
+
     if (current._id) {
       // 更新現有公告
-      await announcementService.update(current._id, current)
+      savedAnnouncement = await announcementService.update(current._id, current)
       toast.add({
         severity: 'success',
         summary: '成功',
@@ -284,13 +413,31 @@ async function saveAnnouncement() {
     } else {
       // 建立新公告
       // 後端會自動處理 author_id 和時間戳
-      await announcementService.create(current)
+      savedAnnouncement = await announcementService.create(current)
       toast.add({
         severity: 'success',
         summary: '成功',
         detail: '公告已建立',
         life: 3000,
       })
+    }
+
+    // 如果有上傳的圖片，需要更新公告的content_images
+    if (
+      uploadedUrlsForLater &&
+      uploadedUrlsForLater.length > 0 &&
+      savedAnnouncement?.data?._id
+    ) {
+      try {
+        const existingImages = savedAnnouncement.data.content_images || []
+        const updatedImages = [...existingImages, ...uploadedUrlsForLater]
+
+        await announcementService.update(savedAnnouncement.data._id, {
+          content_images: updatedImages,
+        })
+      } catch (error) {
+        console.error('更新公告content_images失敗:', error)
+      }
     }
 
     announcementDialog.value = false
@@ -316,6 +463,12 @@ async function saveAnnouncement() {
 
 function editAnnouncement(row) {
   announcement.value = { ...row }
+
+  // 辨識並設定內容格式
+  const detectedFormat = detectContentFormat(row.content)
+  contentFormat.value = detectedFormat
+  announcement.value.content_format = detectedFormat
+
   // 清理之前的圖片預覽 URL
   if (selectedImage.value && selectedImage.value._previewUrl) {
     URL.revokeObjectURL(selectedImage.value._previewUrl)
@@ -336,6 +489,9 @@ function editAnnouncement(row) {
     imageType.value = 'upload'
     imageUrl.value = ''
   }
+
+  // 清空待上傳的content圖片清單（編輯時不保留之前的待上傳圖片）
+  pendingContentImages.value = []
 
   announcementDialog.value = true
 }
@@ -623,6 +779,73 @@ function validateImageUrl(url) {
 
   return imagePatterns.some((pattern) => pattern.test(url))
 }
+
+// 內容格式辨識函數
+function detectContentFormat(content) {
+  if (!content) return 'plain'
+
+  // 如果是物件且有 content 屬性，通常是 JSON 格式
+  if (typeof content === 'object' && content !== null) {
+    if (content.content && Array.isArray(content.content)) {
+      return 'json'
+    }
+    // 其他物件格式也視為 JSON
+    return 'json'
+  }
+
+  // 如果是字串，檢查是否包含 HTML 標籤或其他富文本特徵
+  if (typeof content === 'string') {
+    // 檢查是否包含常見的 HTML 標籤
+    const htmlTags =
+      /<(p|br|strong|em|u|del|code|h[1-6]|blockquote|ul|ol|li|a|img|hr)[^>]*>/i
+    if (htmlTags.test(content)) {
+      return 'json'
+    }
+
+    // 檢查是否包含 TipTap 常見的結構化特徵
+    const jsonIndicators = [
+      /"type":\s*"paragraph"/,
+      /"marks":\s*\[/,
+      /"content":\s*\[/,
+      /"attrs":\s*{/,
+    ]
+
+    if (jsonIndicators.some((pattern) => pattern.test(content))) {
+      return 'json'
+    }
+  }
+
+  return 'plain'
+}
+
+// 處理內容格式變化
+function handleContentChange(newContent) {
+  // 自動辨識內容格式
+  const detectedFormat = detectContentFormat(newContent)
+  contentFormat.value = detectedFormat
+
+  // 同步更新 announcement 物件中的 content_format 欄位
+  if (announcement.value) {
+    announcement.value.content_format = detectedFormat
+  }
+}
+
+// 設定內容格式（手動切換用）
+function setContentFormat(format) {
+  contentFormat.value = format
+  if (announcement.value) {
+    announcement.value.content_format = format
+  }
+}
+
+// 處理content中圖片上傳（參考post.vue做法，先收集後批量上傳）
+function handleContentImageUpload(file, blobUrl) {
+  // 將檔案和對應的blob URL加入待上傳清單，而不是立即上傳
+  pendingContentImages.value.push({
+    file: file,
+    blobUrl: blobUrl,
+  })
+}
 </script>
 
 <template>
@@ -856,17 +1079,51 @@ function validateImageUrl(url) {
         </div>
         <div>
           <label for="content" class="block font-bold mb-3">內容</label>
-          <Textarea
-            id="content"
+          <div class="mb-3 flex gap-4 items-center">
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="contentFormat"
+                value="plain"
+                :inputId="'content-plain'"
+                @change="setContentFormat('plain')"
+              />
+              <label :for="'content-plain'" class="text-sm">純文字</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <RadioButton
+                v-model="contentFormat"
+                value="json"
+                :inputId="'content-json'"
+                @change="setContentFormat('json')"
+              />
+              <label :for="'content-json'" class="text-sm">富文本</label>
+            </div>
+            <small class="text-gray-500"
+              >目前格式：{{
+                contentFormat === 'plain' ? '純文字' : '富文本'
+              }}</small
+            >
+          </div>
+          <TipTapEditor
             v-model="announcement.content"
-            rows="6"
-            required="true"
-            :invalid="submitted && !announcement.content"
-            fluid
+            :output-json="contentFormat === 'json'"
+            class="border rounded-lg min-h-[200px]"
+            placeholder="請輸入公告內容..."
+            @update:modelValue="handleContentChange"
+            :onImageUpload="handleContentImageUpload"
           />
-          <small v-if="submitted && !announcement.content" class="text-red-500"
-            >內容為必填項目。</small
+          <small v-if="submitted && !announcement.content" class="text-red-500">
+            內容為必填項目。
+          </small>
+          <small
+            v-else-if="contentFormat === 'json'"
+            class="text-gray-500 mt-1 block"
           >
+            支援富文本編輯：粗體、斜體、連結、清單、圖片等功能
+          </small>
+          <small v-else class="text-gray-500 mt-1 block">
+            純文字模式：支援基本的文字輸入
+          </small>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

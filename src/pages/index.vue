@@ -633,6 +633,7 @@ const loadAnnouncements = async () => {
       status: 'public',
       limit: 3,
       page: 1,
+      sort: '-createdAt', // 按創建時間降序排列，顯示最新公告
     })
 
     if (response.data && response.data.success) {
@@ -649,6 +650,7 @@ const loadAnnouncements = async () => {
         title: '系統維護通知',
         content:
           '親愛的用戶們，我們將於本週末進行系統維護，屆時網站可能會暫時無法訪問。維護時間預計為 2 小時，我們會盡快完成維護工作。感謝您的理解與支持！',
+        content_format: 'plain',
         category: 'system',
         status: 'public',
         pinned: true,
@@ -662,6 +664,7 @@ const loadAnnouncements = async () => {
         title: '新功能上線',
         content:
           '我們很高興地宣布，迷因編輯器的新功能已經上線！現在您可以更方便地編輯和分享您的迷因作品。新功能包括：1. 更直觀的編輯介面 2. 更多濾鏡效果 3. 一鍵分享功能。快來試試看吧！',
+        content_format: 'plain',
         category: 'update',
         status: 'public',
         pinned: false,
@@ -675,6 +678,7 @@ const loadAnnouncements = async () => {
         title: '社群活動預告',
         content:
           '下個月我們將舉辦第一屆迷因創作大賽！參賽者將有機會獲得豐厚獎品，包括現金獎勵和平台 VIP 會員資格。比賽詳情將在近期公布，敬請期待！',
+        content_format: 'plain',
         category: 'activity',
         status: 'public',
         pinned: false,
@@ -682,6 +686,50 @@ const loadAnnouncements = async () => {
           'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
         createdAt: new Date(Date.now() - 172800000).toISOString(), // 2天前
         updatedAt: new Date(Date.now() - 172800000).toISOString(),
+      },
+      {
+        _id: '4',
+        title: '平台更新公告',
+        content: {
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: '我們很高興宣布' },
+                { type: 'text', text: '公告系統', marks: [{ type: 'bold' }] },
+                { type: 'text', text: '已經完成升級！' },
+              ],
+            },
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: '現在支援' },
+                {
+                  type: 'text',
+                  text: '富文本編輯',
+                  marks: [{ type: 'italic' }],
+                },
+                { type: 'text', text: '功能，包括' },
+                {
+                  type: 'text',
+                  text: '連結',
+                  marks: [
+                    { type: 'link', attrs: { href: 'https://memedam.com' } },
+                  ],
+                },
+                { type: 'text', text: '和各種格式化選項。' },
+              ],
+            },
+          ],
+        },
+        content_format: 'json',
+        category: 'update',
+        status: 'public',
+        pinned: false,
+        image:
+          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop',
+        createdAt: new Date(Date.now() - 259200000).toISOString(), // 3天前
+        updatedAt: new Date(Date.now() - 259200000).toISOString(),
       },
     ]
   } finally {

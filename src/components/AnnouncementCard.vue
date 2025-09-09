@@ -2,11 +2,10 @@
   <Card
     v-if="announcement && announcement.title"
     class="w-full announcement-card"
-    @click="toggleExpanded"
   >
     <template #header>
       <div
-        class="h-60 flex items-center justify-center cursor-pointer overflow-hidden rounded-t-lg"
+        class="h-60 flex items-center justify-center overflow-hidden rounded-t-lg"
         :class="
           announcement.image
             ? 'bg-surface-100'
@@ -37,25 +36,15 @@
           class="ml-2 flex-shrink-0"
         />
       </div>
-      <p class="mb-3 text-surface-600" :class="expanded ? '' : 'line-clamp-3'">
-        {{
-          expanded
-            ? announcement.content || '無內容'
-            : getContentPreview(announcement.content)
-        }}
+      <p class="mb-3 text-surface-600 line-clamp-3">
+        {{ getContentPreview(announcement.content) }}
       </p>
       <div class="flex justify-between items-center text-sm text-surface-500">
         <span>{{ formatDate(announcement.createdAt) }}</span>
         <div class="flex items-center gap-2">
-          <Button
-            :icon="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-            text
-            size="small"
-            severity="success"
-            rounded
-            :pt="{ root: { class: 'p-0' } }"
-            @click.stop="toggleExpanded"
-          />
+          <Button text severity="success" @click.stop="goToDetail"
+            ><i class="ri-arrow-right-s-fill"></i>查看詳情</Button
+          >
         </div>
       </div>
     </template>
@@ -63,13 +52,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useDialog } from 'primevue/usedialog'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
+import { extractTextFromJson } from '@/utils/contentUtils'
+import AnnouncementDetailDialog from '@/components/AnnouncementDetailDialog.vue'
+
+const dialog = useDialog()
 
 // 定義 props
-defineProps({
+const props = defineProps({
   announcement: {
     type: Object,
     required: true,
@@ -77,10 +70,66 @@ defineProps({
   },
 })
 
-const expanded = ref(false)
+// 打開詳情對話框
+const goToDetail = () => {
+  if (props.announcement && props.announcement._id) {
+    dialog.open(AnnouncementDetailDialog, {
+      props: {
+        header: props.announcement.title || '公告詳情',
+        style: {
+          width: '90vw',
+          maxWidth: '1200px',
+        },
+        breakpoints: {
+          '960px': '85vw',
+          '640px': '95vw',
+        },
+        modal: true,
+        closable: true,
+        dismissableMask: true,
+      },
+      data: {
+        announcementId: props.announcement._id,
+      },
+      onClose: (options) => {
+        // 處理對話框關閉後的回調
+        if (options?.data?.action === 'openNewAnnouncement') {
+          // 打開新的公告詳情對話框
+          openAnnouncementDialog(options.data.announcementId)
+        }
+      },
+    })
+  }
+}
 
-const toggleExpanded = () => {
-  expanded.value = !expanded.value
+// 打開指定公告的對話框（用於相關公告點擊）
+const openAnnouncementDialog = (announcementId) => {
+  dialog.open(AnnouncementDetailDialog, {
+    props: {
+      header: '公告詳情',
+      style: {
+        width: '90vw',
+        maxWidth: '1200px',
+      },
+      breakpoints: {
+        '960px': '85vw',
+        '640px': '95vw',
+      },
+      modal: true,
+      closable: true,
+      dismissableMask: true,
+    },
+    data: {
+      announcementId: announcementId,
+    },
+    onClose: (options) => {
+      // 處理對話框關閉後的回調
+      if (options?.data?.action === 'openNewAnnouncement') {
+        // 打開新的公告詳情對話框
+        openAnnouncementDialog(options.data.announcementId)
+      }
+    },
+  })
 }
 
 // 處理圖片載入錯誤
@@ -111,14 +160,23 @@ const getCategorySeverity = (category) => {
   return severities[category] || 'secondary'
 }
 
-// 取得內容預覽（限制字數）
-const getContentPreview = (content) => {
+// 取得內容預覽（支援JSON和純文字）
+const getContentPreview = (content, maxLength = 60) => {
   if (!content) return '無內容'
-  // 移除HTML標籤
-  const plainText = content.replace(/<[^>]*>/g, '')
-  // 限制在100字以內
-  return plainText.length > 100
-    ? plainText.substring(0, 100) + '...'
+
+  let plainText = ''
+
+  // 如果是JSON格式，解析並提取純文字
+  if (typeof content === 'object' && content !== null) {
+    plainText = extractTextFromJson(content)
+  } else {
+    // 純文字格式，移除HTML標籤
+    plainText = String(content).replace(/<[^>]*>/g, '')
+  }
+
+  // 限制字數
+  return plainText.length > maxLength
+    ? plainText.substring(0, maxLength) + '...'
     : plainText
 }
 
@@ -163,6 +221,7 @@ const formatDate = (dateString) => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -170,6 +229,7 @@ const formatDate = (dateString) => {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

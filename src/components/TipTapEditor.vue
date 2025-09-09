@@ -904,12 +904,12 @@ const confirmImage = async () => {
   let imageSrc = ''
 
   if (imageType.value === 'upload' && selectedImage.value) {
-    // 使用本地預覽作為佔位符，實際上傳會在發布時處理
+    // 使用blob URL進行預覽，讓圖片可以正常顯示
     imageSrc = getImagePreviewUrl(selectedImage.value)
 
-    // 如果有提供上傳回調函數，將檔案傳遞給父組件處理
+    // 如果有提供上傳回調函數，將檔案和blob URL一起傳遞給父組件處理
     if (props.onImageUpload) {
-      props.onImageUpload(selectedImage.value)
+      props.onImageUpload(selectedImage.value, imageSrc)
     }
   } else if (imageType.value === 'url' && imageUrl.value.trim()) {
     // 使用圖片連結

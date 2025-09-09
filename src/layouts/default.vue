@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col w-full relative">
-    <DynamicDialog />
-
     <!-- 隱私同意對話框 -->
     <PrivacyConsentDialog
       ref="privacyConsentRef"
@@ -442,7 +440,6 @@ import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
 import Menubar from 'primevue/menubar'
-import DynamicDialog from 'primevue/dynamicdialog'
 import userService from '@/services/userService'
 import Menu from 'primevue/menu'
 // import Divider from 'primevue/divider'
