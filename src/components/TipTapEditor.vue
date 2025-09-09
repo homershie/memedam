@@ -902,14 +902,18 @@ const addVideo = () => {
 
 const confirmImage = async () => {
   let imageSrc = ''
+  let placeholderId = null
 
   if (imageType.value === 'upload' && selectedImage.value) {
-    // 使用本地預覽作為佔位符，實際上傳會在發布時處理
-    imageSrc = getImagePreviewUrl(selectedImage.value)
+    // 生成唯一的佔位符 ID，用於後續替換
+    placeholderId = `img_placeholder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-    // 如果有提供上傳回調函數，將檔案傳遞給父組件處理
+    // 使用佔位符 ID 作為臨時 src，在實際上傳完成後會被替換
+    imageSrc = placeholderId
+
+    // 如果有提供上傳回調函數，將檔案和佔位符 ID 一起傳遞給父組件處理
     if (props.onImageUpload) {
-      props.onImageUpload(selectedImage.value)
+      props.onImageUpload(selectedImage.value, placeholderId)
     }
   } else if (imageType.value === 'url' && imageUrl.value.trim()) {
     // 使用圖片連結
@@ -923,6 +927,7 @@ const confirmImage = async () => {
       size: selectedImageSize.value,
       orientation: selectedImageOrientation.value,
       annotation: imageAnnotation.value, // 使用使用者輸入的註解
+      placeholderId: placeholderId, // 添加佔位符 ID 以便後續替換
     }
 
     editor.value?.chain().focus().setImage(imageAttrs).run()

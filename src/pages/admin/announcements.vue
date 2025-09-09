@@ -332,10 +332,11 @@ async function saveAnnouncement() {
     // 上傳content中的圖片（參考post.vue做法）
     if (pendingContentImages.value.length > 0) {
       const uploadedUrls = []
+      const placeholderMap = new Map() // 記錄佔位符 ID 與上傳 URL 的對應關係
 
-      for (const file of pendingContentImages.value) {
+      for (const item of pendingContentImages.value) {
         try {
-          const result = await uploadService.uploadImage(file, {
+          const result = await uploadService.uploadImage(item.file, {
             folder: 'announcements/content',
             transformation: [
               { width: 1200, height: 800, crop: 'limit' },
@@ -345,11 +346,71 @@ async function saveAnnouncement() {
 
           if (result && result.url) {
             uploadedUrls.push(result.url)
+            // 記錄佔位符 ID 與上傳 URL 的對應關係
+            if (item.placeholderId) {
+              placeholderMap.set(item.placeholderId, result.url)
+            }
           } else {
             console.error('Content圖片上傳失敗: 無效回應', result)
           }
         } catch (error) {
           console.error('Content圖片上傳失敗:', error)
+        }
+      }
+
+      // 替換編輯器內容中的佔位符
+      if (placeholderMap.size > 0) {
+        let contentToUpdate = current.content
+
+        // 如果內容是 JSON 格式，需要解析後替換
+        if (contentFormat.value === 'json') {
+          try {
+            const contentObj =
+              typeof contentToUpdate === 'string'
+                ? JSON.parse(contentToUpdate)
+                : contentToUpdate
+
+            // 遞歸替換內容中的佔位符
+            const replacePlaceholders = (obj) => {
+              if (typeof obj === 'object' && obj !== null) {
+                for (const key in obj) {
+                  if (key === 'src' && typeof obj[key] === 'string') {
+                    // 如果 src 是佔位符 ID，用對應的 URL 替換
+                    if (placeholderMap.has(obj[key])) {
+                      obj[key] = placeholderMap.get(obj[key])
+                    }
+                  } else if (typeof obj[key] === 'object') {
+                    replacePlaceholders(obj[key])
+                  }
+                }
+              }
+              return obj
+            }
+
+            const updatedContent = replacePlaceholders(contentObj)
+            current.content = updatedContent
+
+            // 更新編輯器內容
+            announcement.value.content = updatedContent
+          } catch (error) {
+            console.error('替換JSON內容中的佔位符失敗:', error)
+          }
+        } else {
+          // 如果是純文字格式，替換字串中的佔位符
+          let contentStr =
+            typeof contentToUpdate === 'string' ? contentToUpdate : ''
+
+          for (const [placeholderId, url] of placeholderMap.entries()) {
+            // 使用正則表達式替換所有出現的佔位符
+            const regex = new RegExp(
+              placeholderId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+              'g',
+            )
+            contentStr = contentStr.replace(regex, url)
+          }
+
+          current.content = contentStr
+          announcement.value.content = contentStr
         }
       }
 
@@ -770,9 +831,12 @@ function setContentFormat(format) {
 }
 
 // 處理content中圖片上傳（參考post.vue做法，先收集後批量上傳）
-function handleContentImageUpload(file) {
-  // 將檔案加入待上傳清單，而不是立即上傳
-  pendingContentImages.value.push(file)
+function handleContentImageUpload(file, placeholderId) {
+  // 將檔案和佔位符 ID 加入待上傳清單，而不是立即上傳
+  pendingContentImages.value.push({
+    file: file,
+    placeholderId: placeholderId,
+  })
 }
 </script>
 

@@ -35,6 +35,19 @@ export const CustomImage = Image.extend({
           }
         },
       },
+      placeholderId: {
+        default: null,
+        parseHTML: (element) =>
+          element.getAttribute('data-placeholder-id') || null,
+        renderHTML: (attributes) => {
+          if (attributes.placeholderId) {
+            return {
+              'data-placeholder-id': attributes.placeholderId,
+            }
+          }
+          return {}
+        },
+      },
     }
   },
 
