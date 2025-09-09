@@ -2,11 +2,15 @@
   <Toast position="bottom-right" />
   <RouterView />
   <ConfirmDialog :closable="false" />
+  <DynamicDialog />
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
 import { useThemeStore } from '@/stores/themeStore'
+import DynamicDialog from 'primevue/dynamicdialog'
+import Toast from 'primevue/toast'
+import ConfirmDialog from 'primevue/confirmdialog'
 
 const themeStore = useThemeStore()
 

@@ -1,117 +1,79 @@
 <template>
-  <div class="w-full p-8 mx-auto space-y-6 overflow-y-auto">
+  <div class="w-full mx-auto space-y-6">
     <!-- 載入中狀態 -->
-    <div v-if="loading" class="flex justify-center items-center min-h-screen">
+    <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
       <ProgressSpinner />
     </div>
 
     <!-- 錯誤狀態 -->
     <div
       v-else-if="error"
-      class="flex flex-col items-center justify-center min-h-screen"
+      class="flex flex-col items-center justify-center min-h-[400px]"
     >
       <div class="text-center">
         <i class="pi pi-exclamation-triangle text-6xl text-red-500 mb-4"></i>
         <h2 class="text-2xl font-bold mb-2">載入失敗</h2>
         <p class="text-surface-600 mb-4">{{ error }}</p>
-        <Button label="返回首頁" icon="pi pi-home" @click="$router.push('/')" />
       </div>
     </div>
 
     <!-- 公告內容 -->
-    <div v-else-if="announcement" class="max-w-4xl mx-auto px-4 py-8">
-      <!-- 返回按鈕 -->
-      <div class="mb-6">
-        <Button
-          label="返回首頁"
-          icon="pi pi-arrow-left"
-          text
-          @click="$router.push('/')"
+    <div v-else-if="announcement" class="w-full max-w-4xl mx-auto px-4">
+      <!-- 公告卡片 -->
+      <div class="relative">
+        <img
+          :src="
+            announcement.image || 'https://picsum.photos/800/400/?random=10'
+          "
+          :alt="announcement.title"
+          class="w-full h-64 object-cover"
         />
+        <div class="absolute top-4 left-4 space-y-2">
+          <div class="space-x-2">
+            <!-- 置頂標籤 -->
+            <Tag v-if="announcement.pinned" value="置頂" severity="warn" />
+            <!-- 分類標籤 -->
+            <Tag
+              :value="getCategoryLabel(announcement.category)"
+              :severity="getCategorySeverity(announcement.category)"
+            />
+          </div>
+        </div>
+        <div class="absolute bottom-4 right-4">
+          <!-- 發布資訊 -->
+          <div class="flex items-center gap-2 bg-black/90 px-3 py-1 rounded-md">
+            <i class="pi pi-calendar mr-1"></i>
+            <span class="text-sm text-white">
+              {{ formatDate(announcement.createdAt) }}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <!-- 公告卡片 -->
-      <Card class="mb-6">
-        <template #header>
-          <div class="relative">
-            <img
-              :src="
-                announcement.image || 'https://picsum.photos/800/400/?random=10'
-              "
-              :alt="announcement.title"
-              class="w-full h-64 object-cover rounded-t-lg"
-            />
-            <div class="absolute top-4 left-4 space-x-2">
-              <!-- 置頂標籤 -->
-              <Tag v-if="announcement.pinned" value="置頂" severity="warn" />
-              <!-- 分類標籤 -->
-              <Tag
-                :value="getCategoryLabel(announcement.category)"
-                :severity="getCategorySeverity(announcement.category)"
-              />
-            </div>
-          </div>
-        </template>
+      <div class="space-y-6">
+        <!-- 內容 -->
+        <div class="prose prose-lg max-w-none">
+          <div
+            v-html="
+              formatContent(announcement.content, announcement.content_format)
+            "
+          ></div>
+        </div>
+      </div>
 
-        <template #content>
-          <div class="space-y-6">
-            <!-- 標題和類型 -->
-            <div class="flex justify-between items-start">
-              <h1 class="text-3xl font-bold text-surface-900 dark:text-white">
-                {{ announcement.title }}
-              </h1>
-            </div>
-
-            <!-- 發布資訊 -->
-            <div
-              class="flex items-center gap-4 text-sm text-surface-500 dark:text-surface-400"
-            >
-              <span>
-                <i class="pi pi-calendar mr-1"></i>
-                發布時間：{{ formatDate(announcement.createdAt) }}
-              </span>
-              <span>
-                <i class="pi pi-tag mr-1"></i>
-                分類：{{ getCategoryLabel(announcement.category) }}
-              </span>
-            </div>
-
-            <!-- 內容 -->
-            <div class="prose prose-lg max-w-none">
-              <div
-                v-html="
-                  formatContent(
-                    announcement.content,
-                    announcement.content_format,
-                  )
-                "
-              ></div>
-            </div>
-          </div>
-        </template>
-
-        <template #footer>
-          <div class="flex justify-between items-center">
-            <div class="text-sm text-surface-500">
-              最後更新：{{ formatDate(announcement.updatedAt) }}
-            </div>
-            <div class="flex gap-2">
-              <Button
-                label="分享"
-                icon="pi pi-share-alt"
-                outlined
-                @click="shareAnnouncement"
-              />
-              <Button
-                label="返回首頁"
-                icon="pi pi-home"
-                outlined
-                @click="$router.push('/')"
-              />
-            </div>
-          </div>
-        </template>
-      </Card>
+      <div class="flex justify-between items-center">
+        <div class="text-sm text-surface-500">
+          最後更新：{{ formatDate(announcement.updatedAt) }}
+        </div>
+        <div class="flex gap-2">
+          <Button
+            label="分享"
+            icon="pi pi-share-alt"
+            outlined
+            @click="shareAnnouncement"
+          />
+        </div>
+      </div>
 
       <!-- 相關公告 -->
       <div v-if="relatedAnnouncements.length > 0" class="mb-6">
@@ -150,32 +112,31 @@
     </div>
 
     <!-- 公告不存在 -->
-    <div v-else class="flex flex-col items-center justify-center min-h-screen">
+    <div v-else class="flex flex-col items-center justify-center min-h-[400px]">
       <div class="text-center">
         <i class="pi pi-file-excel text-6xl text-surface-400 mb-4"></i>
         <h2 class="text-2xl font-bold mb-2">公告不存在</h2>
         <p class="text-surface-600 mb-4">您要查看的公告可能已被刪除或移動</p>
-        <Button label="返回首頁" icon="pi pi-home" @click="$router.push('/')" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted, inject } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import announcementService from '@/services/announcementService'
 import { renderContentToHtml, truncateContent } from '@/utils/contentUtils'
 
 // 定義組件名稱以符合 multi-word 規則
 defineOptions({
-  name: 'AnnouncementDetailPage',
+  name: 'AnnouncementDetailDialog',
 })
 
+// 注入 dialogRef
+const dialogRef = inject('dialogRef')
+
 // 路由和響應式數據
-const route = useRoute()
-const router = useRouter()
 const toast = useToast()
 
 const announcement = ref(null)
@@ -183,8 +144,8 @@ const relatedAnnouncements = ref([])
 const loading = ref(true)
 const error = ref(null)
 
-// 計算屬性
-const announcementId = computed(() => route.params.id)
+// 從 dialogRef 中獲取傳遞的數據
+const announcementId = ref(dialogRef.value?.data?.announcementId)
 
 // 生命週期
 onMounted(async () => {
@@ -228,9 +189,13 @@ const loadRelatedAnnouncements = async () => {
   }
 }
 
-// 查看公告
+// 查看公告 - 在對話框中打開新公告
 const viewAnnouncement = (id) => {
-  router.push(`/announcements/${id}`)
+  // 關閉當前對話框並重新打開新的公告詳情
+  dialogRef.value.close({
+    action: 'openNewAnnouncement',
+    announcementId: id,
+  })
 }
 
 // 分享公告
@@ -274,7 +239,13 @@ const shareAnnouncement = async () => {
 // 工具函數
 const formatDate = (date) => {
   if (!date) return '-'
-  return new Date(date).toLocaleString('zh-TW')
+  const d = new Date(date)
+  const dateStr = d.toLocaleDateString('zh-TW')
+  const timeStr = d.toLocaleTimeString('zh-TW', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return `${dateStr} ${timeStr}`
 }
 
 const truncateAnnouncementContent = (content, maxLength, format = null) => {
@@ -336,11 +307,3 @@ const getCategorySeverity = (category) => {
   overflow: hidden;
 }
 </style>
-
-<route lang="yaml">
-meta:
-  title: '公告詳情'
-  description: '查看公告詳細內容、發布時間與相關公告，掌握平台最新訊息。'
-  login: ''
-  admin: false
-</route>

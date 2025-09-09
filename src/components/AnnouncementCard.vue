@@ -52,13 +52,14 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useDialog } from 'primevue/usedialog'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import { extractTextFromJson } from '@/utils/contentUtils'
+import AnnouncementDetailDialog from '@/components/AnnouncementDetailDialog.vue'
 
-const router = useRouter()
+const dialog = useDialog()
 
 // 定義 props
 const props = defineProps({
@@ -69,11 +70,66 @@ const props = defineProps({
   },
 })
 
-// 跳轉到詳情頁面
+// 打開詳情對話框
 const goToDetail = () => {
   if (props.announcement && props.announcement._id) {
-    router.push(`/announcements/${props.announcement._id}`)
+    dialog.open(AnnouncementDetailDialog, {
+      props: {
+        header: props.announcement.title || '公告詳情',
+        style: {
+          width: '90vw',
+          maxWidth: '1200px',
+        },
+        breakpoints: {
+          '960px': '85vw',
+          '640px': '95vw',
+        },
+        modal: true,
+        closable: true,
+        dismissableMask: true,
+      },
+      data: {
+        announcementId: props.announcement._id,
+      },
+      onClose: (options) => {
+        // 處理對話框關閉後的回調
+        if (options?.data?.action === 'openNewAnnouncement') {
+          // 打開新的公告詳情對話框
+          openAnnouncementDialog(options.data.announcementId)
+        }
+      },
+    })
   }
+}
+
+// 打開指定公告的對話框（用於相關公告點擊）
+const openAnnouncementDialog = (announcementId) => {
+  dialog.open(AnnouncementDetailDialog, {
+    props: {
+      header: '公告詳情',
+      style: {
+        width: '90vw',
+        maxWidth: '1200px',
+      },
+      breakpoints: {
+        '960px': '85vw',
+        '640px': '95vw',
+      },
+      modal: true,
+      closable: true,
+      dismissableMask: true,
+    },
+    data: {
+      announcementId: announcementId,
+    },
+    onClose: (options) => {
+      // 處理對話框關閉後的回調
+      if (options?.data?.action === 'openNewAnnouncement') {
+        // 打開新的公告詳情對話框
+        openAnnouncementDialog(options.data.announcementId)
+      }
+    },
+  })
 }
 
 // 處理圖片載入錯誤
