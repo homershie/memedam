@@ -27,7 +27,7 @@
     </template>
     <template #content>
       <div class="mb-2 flex justify-between items-start">
-        <h4 class="mb-1 text-lg font-semibold text-surface-800 line-clamp-2">
+        <h4 class="mb-1 text-lg font-semibold text-surface-800 line-clamp-1">
           {{ announcement.title || '無標題公告' }}
         </h4>
         <Tag
@@ -216,6 +216,14 @@ const formatDate = (dateString) => {
 
 .announcement-card:hover {
   transform: translateY(-2px);
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .line-clamp-2 {
