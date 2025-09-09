@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full mx-auto space-y-6">
+  <div class="w-full mx-auto py-6 space-y-6">
     <!-- 載入中狀態 -->
     <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
       <ProgressSpinner />
@@ -18,7 +18,7 @@
     </div>
 
     <!-- 公告內容 -->
-    <div v-else-if="announcement" class="w-full max-w-4xl mx-auto px-4">
+    <div v-else-if="announcement" class="w-full max-w-4xl mx-auto space-y-6">
       <!-- 公告卡片 -->
       <div class="relative">
         <img
@@ -62,7 +62,7 @@
       </div>
 
       <div class="flex justify-between items-center">
-        <div class="text-sm text-surface-500">
+        <div class="text-sm text-surface-500 dark:text-surface-400">
           最後更新：{{ formatDate(announcement.updatedAt) }}
         </div>
         <div class="flex gap-2">
@@ -273,8 +273,8 @@ const formatContent = (content, format = null) => {
     return renderContentToHtml(content, 'json')
   }
 
-  // 純文字格式，轉換換行符
-  return String(content).replace(/\n/g, '<br>')
+  // 純文字格式，使用 renderContentToHtml 來處理 markdown
+  return renderContentToHtml(content, 'plain')
 }
 
 const getCategoryLabel = (category) => {

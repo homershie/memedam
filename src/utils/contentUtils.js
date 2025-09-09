@@ -157,7 +157,7 @@ const renderJsonToHtml = (jsonContent) => {
                   })
                   .join('')
               : ''
-            return `<p>${text}</p>`
+            return `<p class="leading-relaxed mb-4">${text}</p>`
           }
 
           case 'heading': {
@@ -188,7 +188,24 @@ const renderJsonToHtml = (jsonContent) => {
                   })
                   .join('')
               : ''
-            return `<h${level}>${headingText}</h${level}>`
+
+            // 根據標題級別添加適當的 CSS 類別
+            let className = ''
+            switch (level) {
+              case 1:
+                className = 'text-2xl font-bold mt-8 mb-4'
+                break
+              case 2:
+                className = 'text-xl font-bold mt-6 mb-3'
+                break
+              case 3:
+                className = 'text-lg font-bold mt-4 mb-2'
+                break
+              default:
+                className = 'font-bold mt-4 mb-2'
+            }
+
+            return `<h${level} class="${className}">${headingText}</h${level}>`
           }
 
           case 'bulletList': {
@@ -230,11 +247,11 @@ const renderJsonToHtml = (jsonContent) => {
                           })
                           .join('')
                       : ''
-                    return `<li>${itemText}</li>`
+                    return `<li class="ml-4 mb-2">${itemText}</li>`
                   })
                   .join('')
               : ''
-            return `<ul>${bulletItems}</ul>`
+            return `<ul class="mb-4">${bulletItems}</ul>`
           }
 
           case 'orderedList': {
@@ -276,11 +293,11 @@ const renderJsonToHtml = (jsonContent) => {
                           })
                           .join('')
                       : ''
-                    return `<li>${itemText}</li>`
+                    return `<li class="ml-4 mb-2">${itemText}</li>`
                   })
                   .join('')
               : ''
-            return `<ol>${orderedItems}</ol>`
+            return `<ol class="mb-4">${orderedItems}</ol>`
           }
 
           case 'blockquote': {
@@ -384,11 +401,25 @@ const renderTipTapNodes = (nodes) => {
     .map((node) => {
       switch (node.type) {
         case 'paragraph':
-          return `<p>${renderTipTapMarks(node.content)}</p>`
+          return `<p class="leading-relaxed mb-4">${renderTipTapMarks(node.content)}</p>`
 
         case 'heading': {
           const level = node.attrs?.level || 1
-          return `<h${level}>${renderTipTapMarks(node.content)}</h${level}>`
+          let className = ''
+          switch (level) {
+            case 1:
+              className = 'text-2xl font-bold mt-8 mb-4'
+              break
+            case 2:
+              className = 'text-xl font-bold mt-6 mb-3'
+              break
+            case 3:
+              className = 'text-lg font-bold mt-4 mb-2'
+              break
+            default:
+              className = 'font-bold mt-4 mb-2'
+          }
+          return `<h${level} class="${className}">${renderTipTapMarks(node.content)}</h${level}>`
         }
 
         case 'image': {
@@ -498,7 +529,7 @@ const renderTipTapNodes = (nodes) => {
           return `<blockquote class="border-l-4 border-primary-500 pl-4 italic">${renderTipTapMarks(node.content)}</blockquote>`
 
         case 'codeBlock':
-          return `<pre><code>${node.content?.[0]?.text || ''}</code></pre>`
+          return `<pre class="bg-surface-100 dark:bg-surface-900 p-4 rounded-md overflow-x-auto mb-4"><code class="text-surface-800 dark:text-surface-300 font-mono text-sm">${node.content?.[0]?.text || ''}</code></pre>`
 
         case 'horizontalRule':
           return '<hr class="my-4 border-t border-surface-300 dark:border-surface-600">'
