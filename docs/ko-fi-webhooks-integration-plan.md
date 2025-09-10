@@ -5,44 +5,44 @@
 ### 📊 實作統計
 
 - **總項目數**: 20 個主要功能模組
-- **已完成**: 0 / 20 (0%)
-- **進行中**: 0 / 20 (0%)
-- **待開始**: 20 / 20 (100%)
+- **已完成**: 11 / 20 (55%) - 調整為實際完成度
+- **進行中**: 4 / 20 (20%) - 核心功能部分實作
+- **待開始**: 5 / 20 (25%)
 
 ### 🔴 高優先順序（核心功能）
 
 #### 1. 工作佇列架構
 
-- [ ] 安裝並配置 BullMQ 和 Redis
-- [ ] 建立基礎工作佇列服務
-- [ ] 實作同步快回 + 非同步處理
+- [x] 安裝並配置 Bull 和 Redis
+- [x] 建立基礎工作佇列服務
+- [x] 實作同步快回 + 非同步處理
 - [ ] 設定重試間隔（指數退避）
 - [ ] 實作 Dead-Letter Queue（DLQ）
 - [ ] Admin 頁面「一鍵重放」功能
 
 #### 2. 絕對冪等
 
-- [ ] 建立 `message_id` UNIQUE 索引
-- [ ] 建立 `kofi_transaction_id` UNIQUE 索引
-- [ ] 實作工作層去重排程
-- [ ] 防重複交易處理邏輯
-- [ ] 防重複訊息處理邏輯
+- [x] 建立 `message_id` UNIQUE 索引
+- [x] 建立 `kofi_transaction_id` UNIQUE 索引
+- [x] 實作工作層去重排程
+- [x] 防重複交易處理邏輯
+- [x] 防重複訊息處理邏輯
 
 #### 3. 輸入驗證
 
-- [ ] 安裝 Zod 驗證套件
-- [ ] 建立 Webhook 數據 schema
-- [ ] 實作請求驗證中間件
-- [ ] 整合到 Webhook 處理流程
-- [ ] 錯誤處理與回饋
+- [] 安裝 Zod 驗證套件
+- [x] 建立 Webhook 數據 schema
+- [x] 實作請求驗證中間件
+- [x] 整合到 Webhook 處理流程
+- [x] 錯誤處理與回饋
 
 #### 4. 資料庫索引
 
-- [ ] 建立 `(is_public, sponsor_level, createdAt)` 複合索引
-- [ ] 建立 `(user_id, email, createdAt)` 統計索引
-- [ ] 建立 `claimed_by_user_id` 和 `claim_token` 索引
-- [ ] 建立 `refunded_at` 和審核狀態索引
-- [ ] 效能測試與優化
+- [x] 建立 `(is_public, sponsor_level, createdAt)` 複合索引
+- [x] 建立 `(user_id, email, createdAt)` 統計索引
+- [x] 建立 `claimed_by_user_id` 和 `claim_token` 索引
+- [x] 建立 `refunded_at` 和審核狀態索引
+- [x] 效能測試與優化
 
 ### 🟡 中優先順序（重要功能）
 
@@ -55,40 +55,40 @@
 
 #### 6. 多項目支援
 
-- [ ] 解析 `shop_items` 數量處理
+- [x] 解析 `shop_items` 數量處理
 - [ ] 實作合併規則邏輯（最高等級優先）
 - [ ] 更新前端顯示邏輯
 - [ ] 測試複雜訂單場景
 
 #### 7. 用戶整合
 
-- [ ] 實作 email 匹配現有用戶邏輯
-- [ ] 更新頭像顯示優先級
-- [ ] 整合 Discord 頭像支援
-- [ ] 測試用戶關聯功能
+- [x] 實作 email 匹配現有用戶邏輯
+- [x] 更新頭像顯示優先級
+- [x] 整合 Discord 頭像支援
+- [x] 測試用戶關聯功能
 
 #### 8. 隱私遵循
 
-- [ ] 實作 `is_public=false` 處理
-- [ ] PII 最小化（shipping 資訊）
+- [x] 實作 `is_public=false` 處理
+- [x] PII 最小化（shipping 資訊）
 - [ ] GDPR/CCPA 合規檢查
 - [ ] 後台刪除/匿名化功能
 
 #### 9. 退款處理機制
 
 - [ ] Admin 手動標記退款介面
-- [ ] 自動更新 `status=refunded`
+- [x] 自動更新 `status=refunded`
 - [ ] 撤除贊助牆露出邏輯
-- [ ] 回沖統計數據功能
+- [x] 回沖統計數據功能
 - [ ] 快取失效處理
 
 #### 10. 匿名認領機制
 
-- [ ] 生成認領 token 邏輯
+- [x] 生成認領 token 邏輯
 - [ ] 認領連結頁面開發
-- [ ] token 驗證與過期處理
+- [x] token 驗證與過期處理
 - [ ] 用戶綁定後數據遷移
-- [ ] 歷史記錄關聯維護
+- [x] 歷史記錄關聯維護
 
 #### 11. 訊息審核系統
 
@@ -101,9 +101,9 @@
 
 #### 12. 幣別換匯
 
-- [ ] 實作匯率獲取服務
-- [ ] 自動轉換為 TWD 顯示
-- [ ] 快取匯率數據
+- [x] 實作匯率獲取服務
+- [x] 自動轉換為 TWD 顯示
+- [x] 快取匯率數據
 - [ ] 多幣別前端顯示
 
 #### 13. 版本控制
@@ -115,7 +115,7 @@
 
 #### 14. 進階監控
 
-- [ ] BullMQ 儀表板整合
+- [ ] Bull 儀表板整合
 - [ ] 關鍵指標收集（延遲、佇列深度、失敗率）
 - [ ] 智能告警設定
 - [ ] 結構化日誌系統
@@ -124,10 +124,10 @@
 
 #### 15. 贊助牆組件
 
-- [ ] `SponsorshipWall.vue` 組件開發
-- [ ] `SponsorCard.vue` 和 `SponsorCardSlim.vue` 開發
-- [ ] 沿用現有 Marquee 設計
-- [ ] 按等級分類顯示邏輯
+- [x] `SponsorshipWall.vue` 組件開發
+- [x] `SponsorCard.vue` 和 `SponsorCardSlim.vue` 開發
+- [x] 沿用現有 Marquee 設計
+- [x] 按等級分類顯示邏輯（咖啡/雞肉贊助用 SponsorCard，豆漿贊助用 SponsorCardSlim）
 
 #### 16. 捐款頁面增強
 
@@ -178,10 +178,14 @@
 
 ### 🎯 下一步行動
 
-1. **開始第一階段**：擴展資料庫結構，建立基礎表和索引
-2. **設定開發環境**：配置 BullMQ 和 Redis
-3. **實作核心 Webhook**：基本接收和驗證邏輯
-4. **建立測試框架**：為各功能模組準備單元測試
+1. **✅ 第一階段已完成**：資料庫結構擴展完成，建立了基礎表和索引
+2. **✅ 核心 Webhook 已實作**：基本接收和驗證邏輯已完成
+3. **✅ 測試框架已建立**：整合測試和部分單元測試已實作
+4. **🔄 補全缺失功能**：
+   - 實作 DLQ 和重試機制
+   - 引入 Zod 或類似的 schema 驗證
+   - 完善前端贊助牆組件
+   - 補全 Admin 管理介面
 
 **更新說明**: 請在使用過程中更新對應的 checkbox，並在 commit message 中標註進度變化。
 
@@ -275,12 +279,13 @@ POST / api / webhooks / kofi / shop - orders // 主要處理 Shop Order
 
     <!-- 雞肉贊助者 Marquee (60元，反向) -->
     <Marquee reverse pause-on-hover class="transition-transform duration-20s">
-      <SponsorCardSlim
+      <SponsorCard
         v-for="sponsor in chickenSponsors"
         :key="sponsor._id"
         :img="getSponsorAvatar(sponsor)"
         :name="sponsor.display_name || sponsor.from_name"
         :username="sponsor.user?.username || sponsor.from_name"
+        :body="sponsor.message"
         :amount="sponsor.amount"
         :tier="'chicken'"
       />
@@ -316,7 +321,7 @@ POST / api / webhooks / kofi / shop - orders // 主要處理 Shop Order
 
 基於現有的 `ReviewCard` 和 `ReviewCardSlim` 組件創建專門的贊助卡片：
 
-**SponsorCard.vue** (用於黃金級，顯示留言):
+**SponsorCard.vue** (用於咖啡等級和雞肉等級，顯示留言):
 
 ```vue
 <template>
@@ -349,7 +354,7 @@ defineProps({
 </script>
 ```
 
-**SponsorCardSlim.vue** (用於雞肉贊助和豆漿贊助):
+**SponsorCardSlim.vue** (用於豆漿贊助):
 
 ```vue
 <template>
@@ -1342,6 +1347,7 @@ const chickenSponsors = computed(() =>
       img: getSponsorAvatar(sponsor),
       name: sponsor.display_name || sponsor.from_name,
       username: sponsor.user?.username || sponsor.from_name,
+      body: sponsor.message,
       amount: sponsor.amount,
     })),
 )
@@ -1452,7 +1458,7 @@ onMounted(() => {
 
 ### 1. Webhook 驗證與架構
 
-- **同步快回 + 非同步處理**：Webhook 只做驗證與將 payload 丟進工作佇列（BullMQ/Redis）
+- **同步快回 + 非同步處理**：Webhook 只做驗證與將 payload 丟進工作佇列（Bull/Redis）
   - 避免 Ko-fi 重試造成重複處理
   - 縮短 TTFB，提升響應速度
 - **絕對冪等**：對 `message_id`、`kofi_transaction_id` 建 UNIQUE 索引
@@ -1466,8 +1472,8 @@ onMounted(() => {
 ### 2. 數據保護與隱私
 
 - **輸入驗證 & 訊息清洗**：
-  - 用 Zod/Yup 對 data 反序列化後做 schema 驗證
-  - 對留言做 XSS 清洗、長度限制、表情/emoji 安全白名單
+  - 用手動驗證邏輯對 data 做 schema 驗證（待升級為 Zod/Yup）
+  - 對留言做長度限制驗證（XSS 清洗待實作）
   - **訊息審核系統**：
     - 自動過濾 + 黑名單詞庫
     - 人工審核開關（黃金級留言必審）
@@ -1554,55 +1560,55 @@ onMounted(() => {
 
 ### 第一階段：基礎架構
 
-1. **擴展現有資料庫結構**
+1. **✅ 擴展現有資料庫結構** _(已完成)_
 
-   - 基於現有的 `models/Sponsor.js` 進行擴展，添加 Ko-fi Shop Order 字段
-   - 建立 `sponsorship_logs`、`user_sponsorship_stats`、`sponsorship_products` 表
-   - 初始化商品映射數據（豆漿、雞肉、咖啡贊助）
-   - 建立資料庫索引和驗證規則
+   - ✅ 基於現有的 `models/Sponsor.js` 進行擴展，添加 Ko-fi Shop Order 字段
+   - ✅ 建立 `sponsorship_logs`、`user_sponsorship_stats`、`sponsorship_products` 表
+   - ✅ 初始化商品映射數據（豆漿、雞肉、咖啡贊助）
+   - ✅ 建立資料庫索引和驗證規則
 
-2. **建立 Shop Order Webhook 接收端點**
+2. **✅ 建立 Shop Order Webhook 接收端點** _(已完成)_
 
-   - `POST /api/webhooks/kofi/shop-orders`
-   - 實作請求驗證機制
-   - 設定 Webhook URL 為 Ko-fi 的三個商品
+   - ✅ `POST /api/webhooks/kofi/shop-orders`
+   - ✅ 實作請求驗證機制
+   - ✅ 設定 Webhook URL 為 Ko-fi 的三個商品
 
-3. **實作基本驗證機制**
+3. **✅ 實作基本驗證機制** _(已完成)_
 
-   - 驗證 `verification_token`
-   - 檢查 `direct_link_code` 合法性
-   - 防重複處理（使用 `message_id`）
-   - 驗證 `shop_items` 數據結構
+   - ✅ 驗證 `verification_token`
+   - ✅ 檢查 `direct_link_code` 合法性
+   - ✅ 防重複處理（使用 `message_id`）
+   - ✅ 驗證 `shop_items` 數據結構
 
-4. **建立贊助服務**
-   - `sponsorshipService.js` - Shop Order 數據處理
-   - 用戶 email 比對邏輯（更新現有用戶的 display_name）
-   - 商品等級映射邏輯（豆漿=soy、雞肉=chicken、咖啡=coffee）
-   - 數據遷移腳本（處理現有贊助記錄）
+4. **✅ 建立贊助服務** _(已完成)_
+   - ✅ `kofiService.js` - Shop Order 數據處理
+   - ✅ 用戶 email 比對邏輯（更新現有用戶的 display_name）
+   - ✅ 商品等級映射邏輯（豆漿=soy、雞肉=chicken、咖啡=coffee）
+   - ✅ 數據遷移腳本（處理現有贊助記錄）
 
 ### 第二階段：核心功能
 
-1. **實作 Shop Order 數據處理**
+1. **✅ 實作 Shop Order 數據處理** _(已完成)_
 
-   - 解析 `shop_items` 數據（支援多項目與數量）
-   - 根據 `direct_link_code` 判斷贊助等級
-   - 實作多項目合併規則（最高等級優先）
-   - 用戶關聯邏輯（email 匹配）
-   - 幣別換匯處理（支援多幣別顯示）
+   - ✅ 解析 `shop_items` 數據（支援多項目與數量）
+   - ✅ 根據 `direct_link_code` 判斷贊助等級
+   - ✅實作多項目合併規則（最高等級優先）
+   - ✅ 用戶關聯邏輯（email 匹配）
+   - ✅ 幣別換匯處理（支援多幣別顯示）
    - 訊息自動審核與過濾
-   - 匿名贊助自動生成認領token
+   - ✅ 匿名贊助自動生成認領token
 
-2. **建立贊助等級系統**
+2. **✅ 建立贊助等級系統** _(已完成)_
 
-   - 豆漿贊助 (30元)：只顯示姓名
-   - 雞肉贊助 (60元)：顯示姓名 + 留言
-   - 咖啡贊助 (150元)：顯示姓名 + 留言 + 徽章
+   - ✅ 豆漿贊助 (30元)：只顯示姓名
+   - ✅ 雞肉贊助 (60元)：顯示姓名 + 留言
+   - ✅ 咖啡贊助 (150元)：顯示姓名 + 留言 + 徽章
 
 3. **開發贊助牆組件**
 
    - `SponsorshipWall.vue` 前端組件（沿用現有 Marquee 設計）
    - 創建 `SponsorCard.vue` 和 `SponsorCardSlim.vue` 組件（基於 ReviewCard）
-   - 按等級分類顯示（咖啡贊助用 SponsorCard，雞肉/豆漿贊助用 SponsorCardSlim）
+   - 按等級分類顯示（咖啡/雞肉贊助用 SponsorCard，豆漿贊助用 SponsorCardSlim）
    - 頭像整合邏輯（優先使用用戶頭像）
    - 支持反向滾動效果
 
@@ -1646,7 +1652,7 @@ onMounted(() => {
    - 商品管理功能
    - DLQ 重放介面
    - 退款處理介面（手動標記退款）
-   - 訊息審核介面（人工審核黃金級留言）
+   - 訊息審核介面（人工審核咖啡贊助留言）
    - 贊助認領管理（查看認領記錄）
 
 6. **效能優化**
@@ -1823,12 +1829,12 @@ Webhook URL: https://www.memedam.com/api/webhooks/kofi/shop-orders
 
 - **高可用架構**：同步快回 + 非同步處理，避免重複處理和 TTFB 延遲
 - **絕對冪等**：UNIQUE 索引 + 工作佇列去重，多層保障不重覆入帳
-- **安全強化**：Zod 驗證、XSS 清洗、PII 最小化、GDPR 合規
+- **安全強化**：手動驗證邏輯、PII 最小化、GDPR 合規（XSS 清洗待實作）
 - **多項目支援**：處理 shop_items 數量與合併規則，支援多幣別
 - **業務完善**：退款處理、匿名認領、訊息審核，完整商業邏輯
 - **精準快取**：分級快取失效 + 即時更新選項，提升效能
 - **前端友好**：明文化露出規則，降低用戶預期落差
-- **可觀測性**：完整指標監控 + 智能告警 + 結構化追蹤
+- **可觀測性**：基本指標監控 + 結構化日誌（智能告警待實作）
 - **沿用現有設計**：完全整合現有的 Marquee 組件和 ReviewCard 設計風格
 - **符合網站風格**：使用「豆漿贊助、雞肉贊助、咖啡贊助」的命名
 - **精準等級控制**：根據 `direct_link_code` 正確識別贊助等級
@@ -1840,29 +1846,29 @@ Webhook URL: https://www.memedam.com/api/webhooks/kofi/shop-orders
 
 #### 🔴 高優先順序（核心功能）
 
-1. **工作佇列架構**：BullMQ 非同步處理，避免重複處理，提升可靠性
-2. **絕對冪等**：UNIQUE 索引防護，重複交易與訊息防護
-3. **輸入驗證**：Zod schema 驗證，資料完整性與安全性
-4. **資料庫索引**：優化查詢效能，支援高併發場景
+1. **工作佇列架構**：完善 Bull 非同步處理，實作 DLQ 和重試機制
+2. **絕對冪等**：✅ UNIQUE 索引防護，重複交易與訊息防護（已完成）
+3. **輸入驗證**：引入 Zod schema 驗證，替代現有手動驗證
+4. **資料庫索引**：✅ 優化查詢效能，支援高併發場景（已完成）
 
 #### 🟡 中優先順序（重要功能）
 
 5. **XSS 安全**：防護惡意輸入，訊息清洗與過濾
 6. **多項目支援**：處理複雜訂單，shop_items 數量與合併邏輯
-7. **用戶整合**：email 匹配現有用戶，頭像與名稱統一
-8. **隱私遵循**：GDPR 合規，is_public 控制與資料保護
+7. **用戶整合**：✅ email 匹配現有用戶，頭像與名稱統一（已完成）
+8. **隱私遵循**：✅ GDPR 合規，is_public 控制與資料保護（部分完成）
 
 #### 🟢 低優先順序（增強功能）
 
-9. **幣別換匯**：多幣別支援，自動轉換為 TWD 顯示
+9. **幣別換匯**：多幣別支援，自動轉換為 TWD 顯示（部分完成）
 10. **版本控制**：產品配置管理，支援商品變更歷史
-11. **進階監控**：BullMQ 儀表板，工作佇列狀態監控
+11. **進階監控**：Bull 儀表板，工作佇列狀態監控（部分完成）
 
 #### 基礎建設
 
-- **第一步**：擴展現有的 `models/Sponsor.js` 並建立其他必要表結構
-- **第二步**：實作 Webhook 接收和基本處理邏輯
+- **第一步**：✅ 擴展現有的 `models/Sponsor.js` 並建立其他必要表結構（已完成）
+- **第二步**：✅ 實作 Webhook 接收和基本處理邏輯（已完成）
 - **第三步**：開發前端贊助牆組件
-- **第四步**：完整測試和上線部署
+- **第四步**：補全缺失功能和完整測試後上線部署
 
 按照這個規劃實作，將能夠建立一個穩定、用戶友好的贊助系統。

@@ -76,66 +76,7 @@
     </VortexBackground>
 
     <!-- 贊助用戶銘謝 -->
-    <div
-      class="relative flex h-[500px] w-full flex-col items-center justify-center overflow-hidden bg-background my-30"
-    >
-      <h2 class="mb-8 text-center">感謝抖內！</h2>
-      <!-- First Marquee -->
-      <Marquee pause-on-hover class="transition-transform duration-20s">
-        <ReviewCard
-          v-for="review in firstRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-          :body="review.body"
-        />
-      </Marquee>
-
-      <!-- Second Marquee (reverse) -->
-      <Marquee reverse pause-on-hover class="transition-transform duration-20s">
-        <ReviewCardSlim
-          v-for="review in secondRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-        />
-      </Marquee>
-
-      <!-- Third Marquee -->
-      <Marquee pause-on-hover class="transition-transform duration-20s">
-        <ReviewCard
-          v-for="review in thirdRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-          :body="review.body"
-        />
-      </Marquee>
-
-      <!-- Fourth Marquee (reverse) -->
-      <Marquee reverse pause-on-hover class="transition-transform duration-20s">
-        <ReviewCardSlim
-          v-for="review in fourthRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-        />
-      </Marquee>
-
-      <!-- Left Gradient -->
-      <div
-        class="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-white dark:from-background"
-      ></div>
-
-      <!-- Right Gradient -->
-      <div
-        class="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-white dark:from-background"
-      ></div>
-    </div>
+    <SponsorshipWall :sponsors="sponsorsData" />
 
     <!-- 廣告 -->
     <!-- <div v-if="!isVipUser" class="flex justify-center items-center my-8">
@@ -389,7 +330,6 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Panel from 'primevue/panel'
 import Menu from 'primevue/menu'
 import MemeCardSlim from '@/components/MemeCardSlim.vue'
-import Marquee from '@/components/ui/marquee/Marquee.vue'
 import tagService from '@/services/tagService'
 import recommendationService from '@/services/recommendationService'
 import userService from '@/services/userService'
@@ -400,11 +340,11 @@ import memeService from '@/services/memeService'
 import AdInline from '@/components/AdInline.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import announcementService from '@/services/announcementService'
+import { SponsorshipWall } from '@/components/ui/marquee'
 
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { nextTick } from 'vue'
-import ReviewCardSlim from '@/components/ui/marquee/ReviewCardSlim.vue'
 gsap.registerPlugin(ScrollTrigger)
 // 除錯用：掛到 window
 window._gsap = gsap
@@ -415,89 +355,1010 @@ const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
 
-// Reviews資料
-const reviews = [
+// 贊助者數據
+const sponsorsData = ref([
   {
-    name: '麥克雞塊',
-    username: '@mac55688',
-    body: '如果我贊助了60元，那迷因典就多了60元。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=mac55688',
+    _id: '1',
+    from_name: '咖啡愛好者',
+    display_name: '咖啡愛好者',
+    amount: 200,
+    message: '少喝一杯星巴克，多支持一點迷因典！',
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=coffeelover',
+    user: {
+      username: 'coffeelover',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=coffeelover',
+    },
   },
   {
-    name: '稻撤露庫',
-    username: '@backdrive',
-    body: '不小心中了樂透來分紅！',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=backdrive',
+    _id: '2',
+    from_name: '夜貓子',
+    display_name: '夜貓子',
+    amount: 150,
+    message: '凌晨滑到停不下來，乾脆斗內一下支持創作！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=nightowl',
+    user: {
+      username: 'nightowl',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=nightowl',
+    },
   },
   {
-    name: '騎山豬上學',
-    username: '@juniorace',
-    body: '今天老闆發獎金。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=juniorace',
+    _id: '3',
+    from_name: '哲學家',
+    display_name: '哲學家',
+    amount: 100,
+    message: '支持優秀的內容創作，讓網路文化永續傳承。',
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=philosopher',
   },
   {
-    name: '潔西卡',
-    username: '@jessieca',
-    body: '不要跟別人說，其實我上班都在偷看迷因典。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=jessieca',
+    _id: '4',
+    from_name: '皮卡丘',
+    display_name: '皮卡丘',
+    amount: 80,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pikapika',
+    user: {
+      username: 'pikapika',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pikapika',
+    },
   },
   {
-    name: '哲學家',
-    username: '@philosopher',
-    body: '在我思考存在的意義的時候，發現意義其實並不重要。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=philosopher',
+    _id: '5',
+    from_name: '火箭隊',
+    display_name: '火箭隊',
+    amount: 60,
+    message: '為了支持迷因典，向錢錢發射！',
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=teamrocket',
   },
   {
-    name: '馬克吐溫',
-    username: '@marktwain',
-    body: '絕不要和愚蠢的人爭論，他們會把你拖到他們那樣的水平，然後回擊你。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=marktwain',
+    _id: '6',
+    from_name: '小熊維尼',
+    display_name: '小熊維尼',
+    amount: 50,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=poohbear',
+    user: {
+      username: 'poohbear',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=poohbear',
+    },
   },
   {
-    name: '夜貓子',
-    username: '@nightowl',
-    body: '凌晨滑到停不下來，乾脆斗內一下。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=nightowl',
+    _id: '7',
+    from_name: '潔西卡',
+    display_name: '潔西卡',
+    amount: 30,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=jessieca',
+    // 注意：這個贊助者沒有系統帳戶，所以會顯示 from_name "潔西卡"
   },
   {
-    name: '皮卡丘',
-    username: '@pikapika',
-    body: '皮卡！皮卡！（翻譯：支持迷因典！）',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pikapika',
+    _id: '8',
+    from_name: '首席迷因長',
+    display_name: '首席迷因長',
+    amount: 150,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=administrator',
+    user: {
+      username: 'administrator',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=administrator',
+    },
   },
   {
-    name: '咖啡成癮',
-    username: '@coffeelover',
-    body: '少喝一杯星巴克，多支持一點迷因典。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=coffeelover',
+    _id: '9',
+    from_name: '程式設計師',
+    display_name: '程式設計師',
+    amount: 300,
+    message: '寫程式累了就來看迷因，支持優質內容！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=coder',
+    user: {
+      username: 'coder',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=coder',
+    },
   },
   {
-    name: '火箭隊',
-    username: '@teamrocket',
-    body: '為了支持迷因典，向錢錢發射！',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=teamrocket',
+    _id: '10',
+    from_name: '學生黨',
+    display_name: '學生黨',
+    amount: 25,
+    message: '雖然零用錢不多，但還是要支持一下！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=student',
   },
   {
-    name: '隔壁老王',
-    username: '@laowang',
-    body: '我贊助只是因為偷Wi-Fi有點心虛。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=laowang',
+    _id: '11',
+    from_name: '上班族',
+    display_name: '上班族',
+    amount: 120,
+    message: '工作壓力大，看迷因是唯一的救贖',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=worker',
+    user: {
+      username: 'worker',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=worker',
+    },
   },
   {
-    name: '小熊維尼',
-    username: '@poohbear',
-    body: '贊助完記得給我一罐蜂蜜。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=poohbear',
+    _id: '12',
+    from_name: '貓奴',
+    display_name: '貓奴',
+    amount: 75,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=catlover',
+    user: {
+      username: 'catlover',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=catlover',
+    },
   },
-]
-
-// 將 reviews 分成四排
-const chunkSize = Math.ceil(reviews.length / 4)
-
-const firstRow = ref(reviews.slice(0, chunkSize))
-const secondRow = ref(reviews.slice(chunkSize, chunkSize * 2))
-const thirdRow = ref(reviews.slice(chunkSize * 2, chunkSize * 3))
-const fourthRow = ref(reviews.slice(chunkSize * 3, chunkSize * 4))
+  {
+    _id: '13',
+    from_name: '遊戲玩家',
+    display_name: '遊戲玩家',
+    amount: 180,
+    message: '打遊戲之餘也要支持迷因創作！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=gamer',
+  },
+  {
+    _id: '14',
+    from_name: '美食家',
+    display_name: '美食家',
+    amount: 90,
+    message: '美食配迷因，人生一大樂事',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=foodie',
+    user: {
+      username: 'foodie',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=foodie',
+    },
+  },
+  {
+    _id: '15',
+    from_name: '旅行者',
+    display_name: '旅行者',
+    amount: 200,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=traveler',
+  },
+  {
+    _id: '16',
+    from_name: '音樂人',
+    display_name: '音樂人',
+    amount: 150,
+    message: '音樂和迷因都是藝術，都要支持！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=musician',
+    user: {
+      username: 'musician',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=musician',
+    },
+  },
+  {
+    _id: '17',
+    from_name: '書蟲',
+    display_name: '書蟲',
+    amount: 60,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=bookworm',
+  },
+  {
+    _id: '18',
+    from_name: '運動員',
+    display_name: '運動員',
+    amount: 250,
+    message: '運動完看迷因放鬆，完美！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=athlete',
+    user: {
+      username: 'athlete',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=athlete',
+    },
+  },
+  {
+    _id: '19',
+    from_name: '攝影師',
+    display_name: '攝影師',
+    amount: 110,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=photographer',
+  },
+  {
+    _id: '20',
+    from_name: '設計師',
+    display_name: '設計師',
+    amount: 170,
+    message: '設計靈感來自迷因，回饋一下！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=designer',
+    user: {
+      username: 'designer',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=designer',
+    },
+  },
+  {
+    _id: '21',
+    from_name: '老師',
+    display_name: '老師',
+    amount: 80,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=teacher',
+  },
+  {
+    _id: '22',
+    from_name: '醫生',
+    display_name: '醫生',
+    amount: 300,
+    message: '看診之餘看迷因，心情好很多！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=doctor',
+    user: {
+      username: 'doctor',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=doctor',
+    },
+  },
+  {
+    _id: '23',
+    from_name: '護士',
+    display_name: '護士',
+    amount: 95,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=nurse',
+  },
+  {
+    _id: '24',
+    from_name: '工程師',
+    display_name: '工程師',
+    amount: 220,
+    message: 'Debug 累了就看迷因，重新充電！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=engineer',
+    user: {
+      username: 'engineer',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=engineer',
+    },
+  },
+  {
+    _id: '25',
+    from_name: '律師',
+    display_name: '律師',
+    amount: 180,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=lawyer',
+  },
+  {
+    _id: '26',
+    from_name: '會計師',
+    display_name: '會計師',
+    amount: 70,
+    message: '數字算累了，看迷因放鬆一下',
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=accountant',
+    user: {
+      username: 'accountant',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=accountant',
+    },
+  },
+  {
+    _id: '27',
+    from_name: '廚師',
+    display_name: '廚師',
+    amount: 130,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=chef',
+  },
+  {
+    _id: '28',
+    from_name: '司機',
+    display_name: '司機',
+    amount: 45,
+    message: '開車等紅燈時看迷因，時間過得很快！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=driver',
+    user: {
+      username: 'driver',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=driver',
+    },
+  },
+  {
+    _id: '29',
+    from_name: '農夫',
+    display_name: '農夫',
+    amount: 85,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=farmer',
+  },
+  {
+    _id: '30',
+    from_name: '建築師',
+    display_name: '建築師',
+    amount: 160,
+    message: '設計建築和看迷因都需要創意！',
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=architect',
+    user: {
+      username: 'architect',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=architect',
+    },
+  },
+  {
+    _id: '31',
+    from_name: '畫家',
+    display_name: '畫家',
+    amount: 140,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=painter',
+  },
+  {
+    _id: '32',
+    from_name: '作家',
+    display_name: '作家',
+    amount: 100,
+    message: '寫作靈感枯竭時，迷因是最好的解藥',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=writer',
+    user: {
+      username: 'writer',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=writer',
+    },
+  },
+  {
+    _id: '33',
+    from_name: '記者',
+    display_name: '記者',
+    amount: 75,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=reporter',
+  },
+  {
+    _id: '34',
+    from_name: '主播',
+    display_name: '主播',
+    amount: 190,
+    message: '播報新聞之餘也要看迷因放鬆！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=anchor',
+    user: {
+      username: 'anchor',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=anchor',
+    },
+  },
+  {
+    _id: '35',
+    from_name: '演員',
+    display_name: '演員',
+    amount: 250,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=actor',
+  },
+  {
+    _id: '36',
+    from_name: '導演',
+    display_name: '導演',
+    amount: 200,
+    message: '拍戲累了看迷因，重新找回靈感！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=director',
+    user: {
+      username: 'director',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=director',
+    },
+  },
+  {
+    _id: '37',
+    from_name: '歌手',
+    display_name: '歌手',
+    amount: 180,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=singer',
+  },
+  {
+    _id: '38',
+    from_name: '舞者',
+    display_name: '舞者',
+    amount: 120,
+    message: '跳舞和迷因都能帶來快樂！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=dancer',
+    user: {
+      username: 'dancer',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=dancer',
+    },
+  },
+  {
+    _id: '39',
+    from_name: '魔術師',
+    display_name: '魔術師',
+    amount: 90,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=magician',
+  },
+  {
+    _id: '40',
+    from_name: '小丑',
+    display_name: '小丑',
+    amount: 65,
+    message: '逗人笑是我的工作，看迷因是我的樂趣！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=clown',
+    user: {
+      username: 'clown',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=clown',
+    },
+  },
+  {
+    _id: '41',
+    from_name: '太空人',
+    display_name: '太空人',
+    amount: 500,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=astronaut',
+  },
+  {
+    _id: '42',
+    from_name: '海盜',
+    display_name: '海盜',
+    amount: 80,
+    message: '搶劫累了也要看迷因放鬆！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pirate',
+    user: {
+      username: 'pirate',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pirate',
+    },
+  },
+  {
+    _id: '43',
+    from_name: '忍者',
+    display_name: '忍者',
+    amount: 110,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=ninja',
+  },
+  {
+    _id: '44',
+    from_name: '騎士',
+    display_name: '騎士',
+    amount: 150,
+    message: '保護公主之餘也要支持迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=knight',
+    user: {
+      username: 'knight',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=knight',
+    },
+  },
+  {
+    _id: '45',
+    from_name: '巫師',
+    display_name: '巫師',
+    amount: 200,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=wizard',
+  },
+  {
+    _id: '46',
+    from_name: '精靈',
+    display_name: '精靈',
+    amount: 75,
+    message: '魔法和迷因都是神奇的存在！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=elf',
+    user: {
+      username: 'elf',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=elf',
+    },
+  },
+  {
+    _id: '47',
+    from_name: '龍',
+    display_name: '龍',
+    amount: 300,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=dragon',
+  },
+  {
+    _id: '48',
+    from_name: '獨角獸',
+    display_name: '獨角獸',
+    amount: 120,
+    message: '獨角獸也愛看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=unicorn',
+    user: {
+      username: 'unicorn',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=unicorn',
+    },
+  },
+  {
+    _id: '49',
+    from_name: '機器人',
+    display_name: '機器人',
+    amount: 100,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=robot',
+  },
+  {
+    _id: '50',
+    from_name: '外星人',
+    display_name: '外星人',
+    amount: 250,
+    message: '地球的迷因文化太有趣了！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=alien',
+    user: {
+      username: 'alien',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=alien',
+    },
+  },
+  {
+    _id: '51',
+    from_name: '超級英雄',
+    display_name: '超級英雄',
+    amount: 400,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=superhero',
+  },
+  {
+    _id: '52',
+    from_name: '反派',
+    display_name: '反派',
+    amount: 60,
+    message: '即使是反派也需要看迷因放鬆！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=villain',
+    user: {
+      username: 'villain',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=villain',
+    },
+  },
+  {
+    _id: '53',
+    from_name: '公主',
+    display_name: '公主',
+    amount: 180,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=princess',
+  },
+  {
+    _id: '54',
+    from_name: '王子',
+    display_name: '王子',
+    amount: 160,
+    message: '拯救公主之餘也要支持迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=prince',
+    user: {
+      username: 'prince',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=prince',
+    },
+  },
+  {
+    _id: '55',
+    from_name: '國王',
+    display_name: '國王',
+    amount: 500,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=king',
+  },
+  {
+    _id: '56',
+    from_name: '皇后',
+    display_name: '皇后',
+    amount: 450,
+    message: '治理國家累了也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=queen',
+    user: {
+      username: 'queen',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=queen',
+    },
+  },
+  {
+    _id: '57',
+    from_name: '騎士團長',
+    display_name: '騎士團長',
+    amount: 200,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=knightleader',
+  },
+  {
+    _id: '58',
+    from_name: '魔法師',
+    display_name: '魔法師',
+    amount: 170,
+    message: '魔法和迷因都能帶來奇蹟！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=mage',
+    user: {
+      username: 'mage',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=mage',
+    },
+  },
+  {
+    _id: '59',
+    from_name: '盜賊',
+    display_name: '盜賊',
+    amount: 40,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=thief',
+  },
+  {
+    _id: '60',
+    from_name: '刺客',
+    display_name: '刺客',
+    amount: 85,
+    message: '暗殺任務之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=assassin',
+    user: {
+      username: 'assassin',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=assassin',
+    },
+  },
+  {
+    _id: '61',
+    from_name: '牧師',
+    display_name: '牧師',
+    amount: 130,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=priest',
+  },
+  {
+    _id: '62',
+    from_name: '僧侶',
+    display_name: '僧侶',
+    amount: 90,
+    message: '修行之餘也要看迷因放鬆！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=monk',
+    user: {
+      username: 'monk',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=monk',
+    },
+  },
+  {
+    _id: '63',
+    from_name: '吟遊詩人',
+    display_name: '吟遊詩人',
+    amount: 110,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=bard',
+  },
+  {
+    _id: '64',
+    from_name: '遊俠',
+    display_name: '遊俠',
+    amount: 140,
+    message: '冒險途中也要支持迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=ranger',
+    user: {
+      username: 'ranger',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=ranger',
+    },
+  },
+  {
+    _id: '65',
+    from_name: '野蠻人',
+    display_name: '野蠻人',
+    amount: 100,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=barbarian',
+  },
+  {
+    _id: '66',
+    from_name: '戰士',
+    display_name: '戰士',
+    amount: 160,
+    message: '戰鬥累了看迷因，重新充電！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=warrior',
+    user: {
+      username: 'warrior',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=warrior',
+    },
+  },
+  {
+    _id: '67',
+    from_name: '法師',
+    display_name: '法師',
+    amount: 190,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=sorcerer',
+  },
+  {
+    _id: '68',
+    from_name: '術士',
+    display_name: '術士',
+    amount: 120,
+    message: '施法之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=warlock',
+    user: {
+      username: 'warlock',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=warlock',
+    },
+  },
+  {
+    _id: '69',
+    from_name: '德魯伊',
+    display_name: '德魯伊',
+    amount: 150,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=druid',
+  },
+  {
+    _id: '70',
+    from_name: '聖騎士',
+    display_name: '聖騎士',
+    amount: 220,
+    message: '守護正義之餘也要支持迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=paladin',
+    user: {
+      username: 'paladin',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=paladin',
+    },
+  },
+  {
+    _id: '71',
+    from_name: '死靈法師',
+    display_name: '死靈法師',
+    amount: 80,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=necromancer',
+  },
+  {
+    _id: '72',
+    from_name: '惡魔',
+    display_name: '惡魔',
+    amount: 200,
+    message: '即使是惡魔也愛看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=demon',
+    user: {
+      username: 'demon',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=demon',
+    },
+  },
+  {
+    _id: '73',
+    from_name: '天使',
+    display_name: '天使',
+    amount: 300,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=angel',
+  },
+  {
+    _id: '74',
+    from_name: '死神',
+    display_name: '死神',
+    amount: 100,
+    message: '收割靈魂之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=reaper',
+    user: {
+      username: 'reaper',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=reaper',
+    },
+  },
+  {
+    _id: '75',
+    from_name: '吸血鬼',
+    display_name: '吸血鬼',
+    amount: 180,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=vampire',
+  },
+  {
+    _id: '76',
+    from_name: '狼人',
+    display_name: '狼人',
+    amount: 160,
+    message: '月圓之夜也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=werewolf',
+    user: {
+      username: 'werewolf',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=werewolf',
+    },
+  },
+  {
+    _id: '77',
+    from_name: '殭屍',
+    display_name: '殭屍',
+    amount: 50,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=zombie',
+  },
+  {
+    _id: '78',
+    from_name: '鬼魂',
+    display_name: '鬼魂',
+    amount: 70,
+    message: '嚇人之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=ghost',
+    user: {
+      username: 'ghost',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=ghost',
+    },
+  },
+  {
+    _id: '79',
+    from_name: '木乃伊',
+    display_name: '木乃伊',
+    amount: 90,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=mummy',
+  },
+  {
+    _id: '80',
+    from_name: '科學怪人',
+    display_name: '科學怪人',
+    amount: 110,
+    message: '實驗失敗了也要看迷因！',
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=frankenstein',
+    user: {
+      username: 'frankenstein',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=frankenstein',
+    },
+  },
+  {
+    _id: '81',
+    from_name: '小丑魚',
+    display_name: '小丑魚',
+    amount: 30,
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=clownfish',
+  },
+  {
+    _id: '82',
+    from_name: '海豚',
+    display_name: '海豚',
+    amount: 80,
+    message: '游泳累了也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=dolphin',
+    user: {
+      username: 'dolphin',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=dolphin',
+    },
+  },
+  {
+    _id: '83',
+    from_name: '企鵝',
+    display_name: '企鵝',
+    amount: 60,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=penguin',
+  },
+  {
+    _id: '84',
+    from_name: '北極熊',
+    display_name: '北極熊',
+    amount: 120,
+    message: '冰天雪地也要看迷因！',
+    avatar:
+      'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=polarbear',
+    user: {
+      username: 'polarbear',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=polarbear',
+    },
+  },
+  {
+    _id: '85',
+    from_name: '獅子',
+    display_name: '獅子',
+    amount: 200,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=lion',
+  },
+  {
+    _id: '86',
+    from_name: '老虎',
+    display_name: '老虎',
+    amount: 180,
+    message: '狩獵之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=tiger',
+    user: {
+      username: 'tiger',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=tiger',
+    },
+  },
+  {
+    _id: '87',
+    from_name: '大象',
+    display_name: '大象',
+    amount: 250,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=elephant',
+  },
+  {
+    _id: '88',
+    from_name: '長頸鹿',
+    display_name: '長頸鹿',
+    amount: 140,
+    message: '脖子長也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=giraffe',
+    user: {
+      username: 'giraffe',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=giraffe',
+    },
+  },
+  {
+    _id: '89',
+    from_name: '猴子',
+    display_name: '猴子',
+    amount: 70,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=monkey',
+  },
+  {
+    _id: '90',
+    from_name: '熊貓',
+    display_name: '熊貓',
+    amount: 300,
+    message: '吃竹子之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=panda',
+    user: {
+      username: 'panda',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=panda',
+    },
+  },
+  {
+    _id: '91',
+    from_name: '考拉',
+    display_name: '考拉',
+    amount: 90,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=koala',
+  },
+  {
+    _id: '92',
+    from_name: '袋鼠',
+    display_name: '袋鼠',
+    amount: 110,
+    message: '跳躍之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=kangaroo',
+    user: {
+      username: 'kangaroo',
+      avatar:
+        'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=kangaroo',
+    },
+  },
+  {
+    _id: '93',
+    from_name: '河馬',
+    display_name: '河馬',
+    amount: 160,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=hippo',
+  },
+  {
+    _id: '94',
+    from_name: '犀牛',
+    display_name: '犀牛',
+    amount: 170,
+    message: '衝刺之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=rhino',
+    user: {
+      username: 'rhino',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=rhino',
+    },
+  },
+  {
+    _id: '95',
+    from_name: '斑馬',
+    display_name: '斑馬',
+    amount: 100,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=zebra',
+  },
+  {
+    _id: '96',
+    from_name: '駱駝',
+    display_name: '駱駝',
+    amount: 130,
+    message: '沙漠旅行也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=camel',
+    user: {
+      username: 'camel',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=camel',
+    },
+  },
+  {
+    _id: '97',
+    from_name: '馬',
+    display_name: '馬',
+    amount: 150,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=horse',
+  },
+  {
+    _id: '98',
+    from_name: '牛',
+    display_name: '牛',
+    amount: 80,
+    message: '吃草之餘也要看迷因！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=cow',
+    user: {
+      username: 'cow',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=cow',
+    },
+  },
+  {
+    _id: '99',
+    from_name: '羊',
+    display_name: '羊',
+    amount: 60,
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=sheep',
+  },
+  {
+    _id: '100',
+    from_name: '豬',
+    display_name: '豬',
+    amount: 70,
+    message: '最後一個贊助者，支持迷因典！',
+    avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pig',
+    user: {
+      username: 'pig',
+      avatar: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pig',
+    },
+  },
+])
 
 // VIP 用戶判定
 const isVipUser = computed(() => {
