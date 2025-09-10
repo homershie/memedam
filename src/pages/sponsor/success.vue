@@ -32,9 +32,12 @@
             </div>
             <div class="flex justify-between">
               <span class="text-surface-600">贊助金額：</span>
-              <span class="font-bold text-primary-600"
-                >NT$ {{ sponsorInfo.amount }}</span
-              >
+              <span class="font-bold text-primary-600">{{
+                formatCurrency(
+                  sponsorInfo.amount,
+                  sponsorInfo.currency_original,
+                )
+              }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-surface-600">支付方式：</span>
@@ -80,14 +83,14 @@
             <span>顯示在首頁贊助名單</span>
           </div>
           <div
-            v-if="sponsorInfo?.amount >= 60"
+            v-if="shouldShowMessage(sponsorInfo)"
             class="flex items-center space-x-3"
           >
             <i class="pi pi-check-circle text-green-600"></i>
             <span>首頁留言展示</span>
           </div>
           <div
-            v-if="sponsorInfo?.amount >= 150"
+            v-if="shouldShowBadge(sponsorInfo)"
             class="flex items-center space-x-3"
           >
             <i class="pi pi-check-circle text-green-600"></i>
@@ -143,7 +146,16 @@ import Button from 'primevue/button'
 import {
   validateSponsorTransaction,
   SPONSOR_VALIDATION_STATUS,
+  logSponsorPageAccess,
 } from '@/utils/sponsorValidation'
+import {
+  formatCurrency,
+  formatDate,
+  getPaymentMethodName,
+  shouldShowMessage,
+  shouldShowBadge,
+  getErrorHandlingSuggestion,
+} from '@/utils/sponsorErrorHandler'
 
 const router = useRouter()
 const route = useRoute()
@@ -151,28 +163,7 @@ const toast = useToast()
 
 const sponsorInfo = ref(null)
 
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  return new Date(dateString).toLocaleString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-// 取得支付方式名稱
-const getPaymentMethodName = (method) => {
-  const methods = {
-    buy_me_a_coffee: 'Buy Me a Coffee',
-    credit_card: '信用卡',
-    paypal: 'PayPal',
-    linepay: 'LINE Pay',
-  }
-  return methods[method] || method
-}
+// 使用從錯誤處理工具導入的函數
 
 // 導航到首頁
 const goToHome = () => {
@@ -183,6 +174,8 @@ const goToHome = () => {
 const goToMemes = () => {
   router.push('/memes')
 }
+
+// 使用從錯誤處理工具導入的函數
 
 // 載入贊助資訊
 const loadSponsorInfo = async () => {
@@ -198,22 +191,49 @@ const loadSponsorInfo = async () => {
   }
 
   try {
+    // 記錄成功頁面訪問
+    await logSponsorPageAccess('success', transactionId, '用戶訪問贊助成功頁面')
+
     // 使用驗證工具載入贊助資訊
     const validation = await validateSponsorTransaction(transactionId)
 
     if (validation.status === SPONSOR_VALIDATION_STATUS.VALID) {
       sponsorInfo.value = validation.data
+
+      // 顯示成功訊息
+      toast.add({
+        severity: 'success',
+        summary: '贊助驗證成功',
+        detail: '感謝您的贊助！',
+        life: 3000,
+      })
+    } else if (validation.status === SPONSOR_VALIDATION_STATUS.PENDING) {
+      // 處理待處理狀態
+      sponsorInfo.value = validation.data
+      toast.add({
+        severity: 'warn',
+        summary: '贊助處理中',
+        detail: '您的贊助正在處理中，請稍後再查看',
+        life: 5000,
+      })
     } else {
       throw new Error(validation.message || '無法載入贊助資訊')
     }
   } catch (error) {
     console.error('載入贊助資訊失敗:', error)
+
+    // 取得錯誤處理建議
+    const suggestion = getErrorHandlingSuggestion({})
+
     toast.add({
       severity: 'error',
       summary: '載入失敗',
-      detail: '無法載入贊助詳情',
-      life: 3000,
+      detail: suggestion,
+      life: 5000,
     })
+
+    // 記錄錯誤頁面訪問
+    await logSponsorPageAccess('error', transactionId, error.message)
   }
 }
 

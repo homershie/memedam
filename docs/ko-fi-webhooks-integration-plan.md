@@ -1604,13 +1604,13 @@ onMounted(() => {
    - ✅ 雞肉贊助 (60元)：顯示姓名 + 留言
    - ✅ 咖啡贊助 (150元)：顯示姓名 + 留言 + 徽章
 
-3. **開發贊助牆組件**
+3. **開發贊助牆組件**_(已完成)_
 
-   - `SponsorshipWall.vue` 前端組件（沿用現有 Marquee 設計）
-   - 創建 `SponsorCard.vue` 和 `SponsorCardSlim.vue` 組件（基於 ReviewCard）
-   - 按等級分類顯示（咖啡/雞肉贊助用 SponsorCard，豆漿贊助用 SponsorCardSlim）
-   - 頭像整合邏輯（優先使用用戶頭像）
-   - 支持反向滾動效果
+   - ✅ `SponsorshipWall.vue` 前端組件（沿用現有 Marquee 設計）
+   - ✅ 創建 `SponsorCard.vue` 和 `SponsorCardSlim.vue` 組件（基於 ReviewCard）
+   - ✅ 按等級分類顯示（咖啡/雞肉贊助用 SponsorCard，豆漿贊助用 SponsorCardSlim）
+   - ✅ 頭像整合邏輯（優先使用用戶頭像）
+   - ✅ 支持反向滾動效果
 
 4. **整合前後端**
    - API 端點串接
