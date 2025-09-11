@@ -282,7 +282,8 @@ export const getPaymentMethodName = (method) => {
 export const shouldShowMessage = (sponsorData) => {
   if (!sponsorData) return false
 
-  const sponsorLevel = sponsorData.sponsor_level
+  // 支援兩種欄位命名格式
+  const sponsorLevel = sponsorData.sponsor_level || sponsorData.sponsorLevel
   const amount = sponsorData.amount
 
   // 雞肉等級以上或金額 >= 60 顯示留言
@@ -297,9 +298,10 @@ export const shouldShowMessage = (sponsorData) => {
 export const shouldShowBadge = (sponsorData) => {
   if (!sponsorData) return false
 
-  const sponsorLevel = sponsorData.sponsor_level
+  // 支援兩種欄位命名格式
+  const sponsorLevel = sponsorData.sponsor_level || sponsorData.sponsorLevel
   const amount = sponsorData.amount
-  const badgeEarned = sponsorData.badge_earned
+  const badgeEarned = sponsorData.badge_earned || sponsorData.badgeEarned
 
   // 咖啡等級或金額 >= 150 或已獲得徽章
   return sponsorLevel === 'coffee' || amount >= 150 || badgeEarned
