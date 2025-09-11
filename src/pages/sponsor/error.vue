@@ -51,6 +51,14 @@
           </div>
           <div class="space-y-2">
             <h4 class="font-medium text-surface-700 dark:text-surface-300">
+              Q: 為什麼會顯示連線超時錯誤？
+            </h4>
+            <p class="text-surface-600 text-sm">
+              有可能您在Ko-fi的贊助是在5分鐘以前執行，所以迷因典的系統會找不到贊助資料，請和迷因長聯繫。
+            </p>
+          </div>
+          <div class="space-y-2">
+            <h4 class="font-medium text-surface-700 dark:text-surface-300">
               Q: 我需要重新付款嗎？
             </h4>
             <p class="text-surface-600 text-sm">
@@ -128,10 +136,25 @@
           class="flex-1 sm:flex-none"
         />
         <Button
-          label="重新嘗試贊助"
-          icon="pi pi-refresh"
-          severity="warning"
+          label="前往贊助頁面"
+          icon="pi pi-arrow-right"
+          severity="secondary"
           @click="retryDonation"
+          class="flex-1 sm:flex-none"
+        />
+        <Button
+          v-if="!userStore.isLoggedIn && !isLoginWindowOpen"
+          label="開啟登入視窗"
+          icon="pi pi-external-link"
+          @click="goToLogin"
+          class="flex-1 sm:flex-none"
+        />
+        <Button
+          v-if="redirectPath"
+          :label="getBackButtonLabel()"
+          icon="pi pi-refresh"
+          severity="success"
+          @click="goBackToOriginal"
           class="flex-1 sm:flex-none"
         />
       </div>
@@ -140,14 +163,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
 import Button from 'primevue/button'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 const errorMessage = ref('處理贊助時發生錯誤')
+const redirectPath = ref(null)
+const isLoginWindowOpen = ref(false)
+
+// 登入視窗相關變數
+let loginWindow = null
+let loginStatusChecker = null
+let userStatusChecker = null
 
 // 格式化日期
 const formatDate = (date) => {
@@ -175,16 +207,188 @@ const goToHome = () => {
   router.push('/')
 }
 
+// 獲取返回按鈕的標籤
+const getBackButtonLabel = () => {
+  if (!redirectPath.value) {
+    return '返回贊助驗證'
+  }
+
+  // 根據重定向路徑判斷按鈕標籤
+  if (redirectPath.value.includes('/sponsor/success')) {
+    return '返回贊助成功頁面'
+  } else if (redirectPath.value.includes('/sponsor/thanks')) {
+    return '返回贊助驗證頁面'
+  } else if (redirectPath.value.includes('/sponsor/')) {
+    return '返回贊助頁面'
+  } else {
+    return '返回原頁面'
+  }
+}
+
+// 返回贊助驗證頁面
+const goBackToOriginal = () => {
+  // 如果有重定向路徑，使用重定向路徑
+  if (redirectPath.value) {
+    router.push(redirectPath.value)
+  } else {
+    // 檢查錯誤訊息，判斷用戶的意圖
+    if (errorMessage.value.includes('需要登入')) {
+      // 如果是因為未登入被重定向，跳轉到贊助頁面
+      router.push('/donate')
+    } else if (errorMessage.value.includes('尚未進行任何贊助')) {
+      // 如果是因為沒有贊助記錄，跳轉到贊助頁面
+      router.push('/donate')
+    } else {
+      // 其他情況，跳轉到贊助驗證頁面
+      router.push('/sponsor/thanks')
+    }
+  }
+}
+
+// 前往登入頁面
+const goToLogin = () => {
+  // 計算視窗位置，讓小視窗在螢幕中央
+  const width = 500
+  const height = 600
+  const left = (screen.width - width) / 2
+  const top = (screen.height - height) / 2
+
+  // 標記登入視窗已開啟
+  isLoginWindowOpen.value = true
+
+  // 開啟登入小視窗
+  loginWindow = window.open(
+    '/login',
+    'loginWindow',
+    `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no`,
+  )
+
+  // 監聽小視窗關閉事件，檢查登入狀態
+  loginStatusChecker = setInterval(() => {
+    if (loginWindow && loginWindow.closed) {
+      clearInterval(loginStatusChecker)
+      loginStatusChecker = null
+      loginWindow = null
+      isLoginWindowOpen.value = false
+
+      // 小視窗關閉後，檢查用戶是否已登入
+      if (userStore.isLoggedIn) {
+        // 如果已登入，重新嘗試訪問原頁面
+        handleLoginSuccess()
+      }
+    }
+  }, 1000)
+
+  // 額外檢查：定期檢查用戶狀態變化
+  userStatusChecker = setInterval(() => {
+    if (isLoginWindowOpen.value && userStore.isLoggedIn) {
+      console.log('定期檢查發現用戶已登入')
+      handleLoginSuccess()
+    }
+  }, 2000)
+}
+
+// 處理登入成功後的邏輯
+const handleLoginSuccess = () => {
+  if (loginWindow && !loginWindow.closed) {
+    // 用戶已登入，自動關閉登入小視窗
+    loginWindow.close()
+    loginWindow = null
+    isLoginWindowOpen.value = false
+
+    // 清理登入狀態檢查器
+    if (loginStatusChecker) {
+      clearInterval(loginStatusChecker)
+      loginStatusChecker = null
+    }
+  }
+
+  // 登入成功後，嘗試返回原頁面或重新整理
+  if (redirectPath.value) {
+    // 延遲一下讓用戶狀態完全更新
+    setTimeout(() => {
+      router.push(redirectPath.value)
+    }, 1000)
+  } else {
+    // 重新整理頁面以重新檢查贊助狀態
+    window.location.reload()
+  }
+}
+
 // 載入錯誤訊息
 const loadErrorMessage = () => {
   const message = route.query.message
   if (message) {
     errorMessage.value = decodeURIComponent(message)
   }
+
+  const redirect = route.query.redirect
+  if (redirect) {
+    redirectPath.value = decodeURIComponent(redirect)
+  }
+}
+
+// 監聽登入狀態變化
+watch(userStore.isLoggedIn, (isLoggedIn) => {
+  if (isLoggedIn) {
+    handleLoginSuccess()
+  }
+})
+
+// 監聽 storage 事件同步本地儲存
+const onStorageChange = (e) => {
+  if (e.key === 'user') {
+    try {
+      const state = JSON.parse(e.newValue || '{}')
+      console.log('Storage 變化檢測到:', state)
+
+      if (state?.token && state.token.length > 0) {
+        console.log('檢測到登入狀態變化，處理登入成功邏輯')
+        // 同步登入狀態到 userStore（避免必須整頁重整）
+        try {
+          userStore.login(state)
+        } catch (syncErr) {
+          console.error('同步 userStore 失敗:', syncErr)
+        }
+        // 檢測到登入狀態變化，處理登入成功邏輯
+        handleLoginSuccess()
+      }
+    } catch (error) {
+      console.error('解析 storage 狀態失敗:', error)
+    }
+  }
+}
+
+// 清理函數
+const cleanup = () => {
+  if (loginStatusChecker) {
+    clearInterval(loginStatusChecker)
+    loginStatusChecker = null
+  }
+  if (userStatusChecker) {
+    clearInterval(userStatusChecker)
+    userStatusChecker = null
+  }
+  if (loginWindow && !loginWindow.closed) {
+    loginWindow.close()
+    loginWindow = null
+  }
+  isLoginWindowOpen.value = false
 }
 
 onMounted(() => {
+  // 添加 storage 事件監聽器
+  window.addEventListener('storage', onStorageChange)
+
   loadErrorMessage()
+})
+
+onUnmounted(() => {
+  // 移除 storage 事件監聽器
+  window.removeEventListener('storage', onStorageChange)
+
+  // 清理登入視窗相關資源
+  cleanup()
 })
 </script>
 

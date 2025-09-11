@@ -1,8 +1,5 @@
-<!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 overflow-y-auto"
-  >
+  <div class="min-h-screen overflow-y-auto">
     <div class="max-w-md mx-auto text-center space-y-8 p-6">
       <!-- 404 圖示 -->
       <div class="text-8xl mb-6">🤔</div>
@@ -149,7 +146,20 @@ const setup404SEO = () => {
 onMounted(() => {
   currentPath.value = route.fullPath
   setup404SEO()
+
+  // 設定正確的 HTTP 狀態碼（如果可能）
+  if (typeof window !== 'undefined' && window.history) {
+    // 在瀏覽器環境中，我們無法直接設定 HTTP 狀態碼
+    // 但可以記錄這個 404 訪問
+    console.warn('404 Page accessed:', currentPath.value)
+  }
 })
+</script>
+
+<script>
+export default {
+  name: 'NotFoundPage',
+}
 </script>
 
 <route lang="yaml">

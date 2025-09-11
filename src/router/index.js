@@ -8,6 +8,12 @@ import {
   logSponsorPageAccess,
   SPONSOR_VALIDATION_STATUS,
 } from '@/utils/sponsorValidation'
+import {
+  checkUserSponsorStatus,
+  requiresSponsorAccess,
+  getSponsorErrorUrl,
+  logSponsorAccessAttempt,
+} from '@/utils/sponsorAccessControl'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +34,41 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta?.admin === true && !userStore.isAdmin) {
     next('/')
     return
+  }
+
+  // 檢查是否需要贊助權限
+  if (to.meta?.requiresSponsor === true || requiresSponsorAccess(to.path)) {
+    const sponsorCheck = await checkUserSponsorStatus(userStore)
+
+    if (!sponsorCheck.hasSponsor) {
+      // 記錄訪問嘗試
+      await logSponsorAccessAttempt(to.path, sponsorCheck.error, false)
+
+      // 如果用戶未登入，重定向到錯誤頁面並提供登入選項
+      if (!userStore.isLoggedIn) {
+        const errorUrl = getSponsorErrorUrl(sponsorCheck.error, to.fullPath)
+        next(errorUrl)
+        return
+      }
+
+      // 如果用戶已登入但沒有贊助記錄
+      if (sponsorCheck.error.includes('尚未進行任何贊助')) {
+        // 如果是訪問 success 頁面，重定向到錯誤頁面讓用戶知道需要先贊助
+        if (to.path === '/sponsor/success') {
+          const errorUrl = getSponsorErrorUrl(sponsorCheck.error, to.fullPath)
+          next(errorUrl)
+          return
+        }
+        // 其他頁面直接跳轉到贊助頁面
+        next('/donate')
+        return
+      }
+
+      // 其他情況（如贊助過期），重定向到錯誤頁面
+      const errorUrl = getSponsorErrorUrl(sponsorCheck.error, to.fullPath)
+      next(errorUrl)
+      return
+    }
   }
 
   // 贊助成功頁面驗證

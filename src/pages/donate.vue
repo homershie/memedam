@@ -155,7 +155,7 @@
 
           <template #footer>
             <Button
-              label="贊助"
+              label="Ko-fi 贊助"
               class="w-full p-button-primary h-12"
               @click="handleDonate(30)"
             />
@@ -216,7 +216,7 @@
 
           <template #footer>
             <Button
-              label="贊助"
+              label="Ko-fi 贊助"
               class="w-full p-button-primary h-12"
               @click="handleDonate(60)"
             />
@@ -277,12 +277,18 @@
 
           <template #footer>
             <Button
-              label="贊助"
+              label="Ko-fi 贊助"
               class="w-full p-button-primary h-12"
               @click="handleDonate(150)"
             />
           </template>
         </Card>
+      </div>
+
+      <div class="text-center">
+        <p class="text-primary-500! mt-2">
+          *注意事項：贊助時請使用與您帳號相同的 email 以確保贊助記錄正確關聯。
+        </p>
       </div>
     </div>
   </div>
