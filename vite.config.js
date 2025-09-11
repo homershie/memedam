@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      allowedHosts: ['test.memedam.com'],
       proxy: {
         '/api': {
           target: env.VITE_API_URL || 'http://localhost:4000',

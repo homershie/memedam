@@ -200,7 +200,7 @@ export const formatCurrency = (amount, currency = 'TWD') => {
 
   const currencySymbols = {
     TWD: 'NT$',
-    USD: '$',
+    USD: 'US$',
     EUR: '€',
     GBP: '£',
     JPY: '¥',

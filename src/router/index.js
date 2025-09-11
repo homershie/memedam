@@ -38,7 +38,9 @@ router.beforeEach(async (to, from, next) => {
     logSponsorPageAccess('success', transactionId)
 
     if (!transactionId) {
-      next('/donate')
+      next(
+        `/sponsor/error?message=${encodeURIComponent('缺少交易資訊，無法載入贊助詳情')}`,
+      )
       return
     }
 
@@ -57,20 +59,26 @@ router.beforeEach(async (to, from, next) => {
           return
 
         case SPONSOR_VALIDATION_STATUS.INVALID:
-          next('/donate')
+          next(
+            `/sponsor/error?message=${encodeURIComponent(validation.message || '交易驗證失敗')}`,
+          )
           return
 
         case SPONSOR_VALIDATION_STATUS.ERROR:
-          next('/donate')
+          next(
+            `/sponsor/error?message=${encodeURIComponent(validation.message || '驗證過程中發生錯誤')}`,
+          )
           return
 
         default:
-          next('/donate')
+          next(`/sponsor/error?message=${encodeURIComponent('未知的驗證狀態')}`)
           return
       }
     } catch (error) {
       console.error('驗證贊助交易時發生錯誤:', error)
-      next('/donate')
+      next(
+        `/sponsor/error?message=${encodeURIComponent(error.message || '驗證過程中發生錯誤')}`,
+      )
       return
     }
   }

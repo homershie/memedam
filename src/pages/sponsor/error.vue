@@ -2,39 +2,43 @@
   <div class="w-full mx-auto p-4 space-y-12 overflow-y-auto">
     <div class="max-w-2xl mx-auto text-center space-y-8 py-16">
       <!-- 錯誤圖示 -->
-      <div
-        class="w-24 h-24 mx-auto bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center"
-      >
-        <i class="pi pi-exclamation-triangle text-4xl text-red-600"></i>
+      <div class="w-fit h-fit mx-auto flex items-center justify-center">
+        <i class="ri-close-circle-fill text-6xl text-primary-500"></i>
       </div>
 
       <!-- 錯誤標題 -->
       <div class="space-y-4">
-        <h1 class="text-3xl font-bold text-red-600">贊助處理失敗</h1>
+        <h1 class="text-3xl font-bold text-primary-600">贊助處理失敗</h1>
         <p class="text-lg text-surface-600">
           很抱歉，處理您的贊助時發生了問題。請不用擔心，這不會影響您的付款。
         </p>
       </div>
 
       <!-- 錯誤詳情 -->
-      <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 space-y-4">
-        <h3 class="text-xl font-semibold text-red-700 dark:text-red-300">
+      <div class="bg-surface-50 dark:bg-surface-900 rounded-lg p-6 space-y-4">
+        <h3
+          class="text-xl font-semibold text-primary-700 dark:text-primary-300"
+        >
           錯誤詳情
         </h3>
         <div class="text-left space-y-2">
           <div class="flex justify-between">
-            <span class="text-surface-600">錯誤訊息：</span>
-            <span class="text-red-600 font-medium">{{ errorMessage }}</span>
+            <span class="text-surface-600 dark:text-surface-400"
+              >錯誤訊息：</span
+            >
+            <span class="text-primary-600 font-medium">{{ errorMessage }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-surface-600">發生時間：</span>
+            <span class="text-surface-600 dark:text-surface-400"
+              >發生時間：</span
+            >
             <span>{{ formatDate(new Date()) }}</span>
           </div>
         </div>
       </div>
 
       <!-- 常見問題 -->
-      <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-6 space-y-4">
+      <div class="bg-surface-50 dark:bg-surface-900 rounded-lg p-6 space-y-4">
         <h3 class="text-xl font-semibold">常見問題</h3>
         <div class="space-y-4 text-left">
           <div class="space-y-2">
@@ -61,6 +65,14 @@
               您可以稍後重新訪問贊助頁面，或聯繫我們的客服團隊確認贊助狀態。
             </p>
           </div>
+          <div class="space-y-2">
+            <h4 class="font-medium text-surface-700 dark:text-surface-300">
+              Q: 贊助牆沒有顯示我的贊助怎麼辦？
+            </h4>
+            <p class="text-surface-600 text-sm">
+              您可以提供錯誤訊息、電子信箱和發生時間，並使用以下管道聯繫迷因長處理。
+            </p>
+          </div>
         </div>
       </div>
 
@@ -80,14 +92,41 @@
             <span>Email: support@memedam.com</span>
           </div>
           <div class="flex items-center space-x-3">
-            <i class="pi pi-comments text-primary-600"></i>
-            <span>Discord: 迷因典社群</span>
+            <i class="pi pi-envelope text-primary-600"></i>
+            <span
+              >聯絡頁面：<router-link to="/contact" class="text-primary-600"
+                >https://www.memedam.com/contact</router-link
+              ></span
+            >
           </div>
         </div>
       </div>
 
+      <!-- 安慰訊息 -->
+      <div class="p-6">
+        <h6 class="gradient-text mb-2">別擔心，這只是暫時的問題！</h6>
+        <p class="gradient-text">
+          迷因長會繼續努力維護平台，確保每個贊助者都能得到應有的回饋。
+          感謝您的耐心和理解！
+        </p>
+      </div>
+
       <!-- 操作按鈕 -->
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button
+          label="回到首頁"
+          severity="secondary"
+          icon="pi pi-home"
+          @click="goToHome"
+          class="flex-1 sm:flex-none"
+        />
+        <Button
+          label="前往聯絡頁面"
+          icon="pi pi-arrow-right"
+          severity="secondary"
+          @click="goToContact"
+          class="flex-1 sm:flex-none"
+        />
         <Button
           label="重新嘗試贊助"
           icon="pi pi-refresh"
@@ -95,34 +134,6 @@
           @click="retryDonation"
           class="flex-1 sm:flex-none"
         />
-        <Button
-          label="回到贊助頁面"
-          icon="pi pi-arrow-left"
-          severity="secondary"
-          @click="goToDonate"
-          class="flex-1 sm:flex-none"
-        />
-        <Button
-          label="回到首頁"
-          icon="pi pi-home"
-          @click="goToHome"
-          class="flex-1 sm:flex-none"
-        />
-      </div>
-
-      <!-- 安慰訊息 -->
-      <div
-        class="mt-8 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg"
-      >
-        <p
-          class="text-lg font-medium text-orange-700 dark:text-orange-300 mb-2"
-        >
-          別擔心，這只是暫時的問題！
-        </p>
-        <p class="text-surface-600">
-          迷因長會繼續努力維護平台，確保每個贊助者都能得到應有的回饋。
-          感謝您的耐心和理解！
-        </p>
       </div>
     </div>
   </div>
@@ -155,8 +166,8 @@ const retryDonation = () => {
 }
 
 // 回到贊助頁面
-const goToDonate = () => {
-  router.push('/donate')
+const goToContact = () => {
+  router.push('/contact')
 }
 
 // 回到首頁
@@ -183,10 +194,34 @@ export default {
 }
 </script>
 
+<style scoped>
+.gradient-text {
+  background: linear-gradient(45deg, #ff3399, #a259f7, #33ff33);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+</style>
+
 <route lang="yaml">
 meta:
   title: '贊助處理失敗'
   description: '很抱歉，處理您的贊助時發生了問題。請不用擔心，這不會影響您的付款。'
+  layout: 'full'
   login: ''
   admin: false
 </route>

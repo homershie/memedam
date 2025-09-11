@@ -31,6 +31,11 @@ export default {
     return apiService.http.get(`/api/sponsors/transaction/${transactionId}`)
   },
 
+  // 獲取用戶最近一筆成功贊助（需要登入）
+  getLatestSuccessSponsor() {
+    return apiService.httpAuth.get('/api/sponsors/me/latest-success')
+  },
+
   // 記錄贊助頁面訪問（無需認證）
   logPageAccess(data) {
     return apiService.http.post('/api/sponsors/log-access', data)
