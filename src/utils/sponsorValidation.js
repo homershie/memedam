@@ -3,7 +3,12 @@
  * 用於驗證贊助交易的真實性和有效性
  */
 
-import { getApiUrl } from '@/services/apiService'
+import sponsorService from '@/services/sponsorService'
+import {
+  parseSponsorError,
+  formatSponsorData,
+  SPONSOR_ERROR_TYPES,
+} from '@/utils/sponsorErrorHandler'
 
 // 贊助驗證狀態
 const SPONSOR_VALIDATION_STATUS = {
@@ -28,30 +33,24 @@ export const validateSponsorTransaction = async (transactionId) => {
   }
 
   try {
-    // 呼叫 API 驗證交易
-    const response = await fetch(
-      getApiUrl(`/api/sponsors/transaction/${transactionId}`),
-    )
-
-    if (!response.ok) {
-      return {
-        status: SPONSOR_VALIDATION_STATUS.INVALID,
-        message: '交易不存在或驗證失敗',
-        data: null,
-      }
-    }
-
-    const result = await response.json()
+    // 使用服務層呼叫 API 驗證交易
+    const response = await sponsorService.getByTransactionId(transactionId)
+    const result = response.data
 
     if (!result.success || !result.data) {
       return {
         status: SPONSOR_VALIDATION_STATUS.INVALID,
         message: result.error || '交易驗證失敗',
         data: null,
+        error: {
+          type: SPONSOR_ERROR_TYPES.VALIDATION_ERROR,
+          message: result.error || '交易驗證失敗',
+        },
       }
     }
 
-    const sponsorData = result.data
+    // 格式化贊助數據
+    const sponsorData = formatSponsorData(result.data)
 
     // 檢查交易狀態
     if (sponsorData.status !== 'success') {
@@ -83,10 +82,15 @@ export const validateSponsorTransaction = async (transactionId) => {
     }
   } catch (error) {
     console.error('驗證贊助交易時發生錯誤:', error)
+
+    // 解析錯誤資訊
+    const parsedError = parseSponsorError(error)
+
     return {
       status: SPONSOR_VALIDATION_STATUS.ERROR,
-      message: '驗證過程中發生錯誤',
+      message: parsedError.message,
       data: null,
+      error: parsedError,
     }
   }
 }
@@ -130,14 +134,8 @@ export const logSponsorPageAccess = async (
   }
 
   try {
-    // 發送到後端記錄
-    await fetch(getApiUrl('/api/sponsors/log-access'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(logData),
-    })
+    // 使用服務層發送到後端記錄
+    await sponsorService.logPageAccess(logData)
   } catch (error) {
     console.error('記錄贊助頁面訪問失敗:', error)
     // 靜默處理錯誤，不影響主要功能

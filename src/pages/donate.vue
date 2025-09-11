@@ -136,7 +136,7 @@
                 <div
                   class="flex justify-between items-center py-2 border-b border-surface-100 dark:border-surface-700"
                 >
-                  <span class="font-medium">顯示在首頁贊助名單</span>
+                  <span class="font-medium">顯示在首頁贊助名單(1年)</span>
                   <i class="pi pi-check text-green-500 text-lg"></i>
                 </div>
                 <div
@@ -155,7 +155,7 @@
 
           <template #footer>
             <Button
-              label="贊助"
+              label="Ko-fi 贊助"
               class="w-full p-button-primary h-12"
               @click="handleDonate(30)"
             />
@@ -197,7 +197,7 @@
                 <div
                   class="flex justify-between items-center py-2 border-b border-surface-100 dark:border-surface-700"
                 >
-                  <span class="font-medium">顯示在首頁贊助名單</span>
+                  <span class="font-medium">顯示在首頁贊助名單(1年)</span>
                   <i class="pi pi-check text-green-500 text-lg"></i>
                 </div>
                 <div
@@ -216,7 +216,7 @@
 
           <template #footer>
             <Button
-              label="贊助"
+              label="Ko-fi 贊助"
               class="w-full p-button-primary h-12"
               @click="handleDonate(60)"
             />
@@ -258,7 +258,7 @@
                 <div
                   class="flex justify-between items-center py-2 border-b border-surface-100 dark:border-surface-700"
                 >
-                  <span class="font-medium">顯示在首頁贊助名單</span>
+                  <span class="font-medium">顯示在首頁贊助名單(1年)</span>
                   <i class="pi pi-check text-green-500 text-lg"></i>
                 </div>
                 <div
@@ -277,12 +277,18 @@
 
           <template #footer>
             <Button
-              label="贊助"
+              label="Ko-fi 贊助"
               class="w-full p-button-primary h-12"
               @click="handleDonate(150)"
             />
           </template>
         </Card>
+      </div>
+
+      <div class="text-center">
+        <p class="text-primary-500! mt-2">
+          *注意事項：贊助時請使用與您帳號相同的 email 以確保贊助記錄正確關聯。
+        </p>
       </div>
     </div>
   </div>
@@ -297,12 +303,31 @@ const toast = useToast()
 
 // 處理贊助功能
 const handleDonate = (amount) => {
-  // 取得當前用戶ID（如果已登入）
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-  const userId = currentUser._id || 'anonymous'
+  // 根據金額選擇對應的商品代碼
+  const productCodes = {
+    30: 'c4043b71a4', // 豆漿贊助
+    60: 'b7e4575bf6', // 雞肉贊助
+    150: '25678099a7', // 咖啡贊助
+  }
 
-  // 建立 Ko-fi 贊助連結
-  const koFiUrl = `https://ko-fi.com/memedam?amount=${amount}&user_id=${userId}`
+  const productCode = productCodes[amount]
+  if (!productCode) {
+    toast.add({
+      severity: 'error',
+      summary: '贊助錯誤',
+      detail: '不支援的贊助金額',
+      life: 3000,
+    })
+    return
+  }
+
+  // 建立 Ko-fi 贊助連結（移除無效的 user_id 參數）
+  const koFiUrl = `https://ko-fi.com/s/${productCode}`
+
+  // 記錄贊助頁面訪問
+  import('@/utils/sponsorValidation').then(({ logSponsorPageAccess }) => {
+    logSponsorPageAccess('donate', null, `用戶嘗試贊助 ${amount} 元`)
+  })
 
   // 開啟新視窗進行贊助
   window.open(koFiUrl, '_blank', 'width=500,height=600')
@@ -310,8 +335,8 @@ const handleDonate = (amount) => {
   toast.add({
     severity: 'info',
     summary: '贊助功能',
-    detail: `正在開啟 Ko-fi 贊助頁面，金額：${amount} 元。`,
-    life: 3000,
+    detail: `正在開啟 Ko-fi 贊助頁面，金額：${amount} 元。請在 Ko-fi 頁面使用與您帳號相同的 email 以確保贊助記錄正確關聯。`,
+    life: 5000,
   })
 }
 

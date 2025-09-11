@@ -76,66 +76,18 @@
     </VortexBackground>
 
     <!-- 贊助用戶銘謝 -->
-    <div
-      class="relative flex h-[500px] w-full flex-col items-center justify-center overflow-hidden bg-background my-30"
-    >
-      <h2 class="mb-8 text-center">感謝抖內！</h2>
-      <!-- First Marquee -->
-      <Marquee pause-on-hover class="transition-transform duration-20s">
-        <ReviewCard
-          v-for="review in firstRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-          :body="review.body"
-        />
-      </Marquee>
-
-      <!-- Second Marquee (reverse) -->
-      <Marquee reverse pause-on-hover class="transition-transform duration-20s">
-        <ReviewCardSlim
-          v-for="review in secondRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-        />
-      </Marquee>
-
-      <!-- Third Marquee -->
-      <Marquee pause-on-hover class="transition-transform duration-20s">
-        <ReviewCard
-          v-for="review in thirdRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-          :body="review.body"
-        />
-      </Marquee>
-
-      <!-- Fourth Marquee (reverse) -->
-      <Marquee reverse pause-on-hover class="transition-transform duration-20s">
-        <ReviewCardSlim
-          v-for="review in fourthRow"
-          :key="review.username"
-          :img="review.img"
-          :name="review.name"
-          :username="review.username"
-        />
-      </Marquee>
-
-      <!-- Left Gradient -->
-      <div
-        class="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-white dark:from-background"
-      ></div>
-
-      <!-- Right Gradient -->
-      <div
-        class="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-white dark:from-background"
-      ></div>
+    <div v-if="sponsorsLoading" class="flex justify-center items-center py-8">
+      <ProgressSpinner />
+      <span class="ml-2">載入贊助者資料中...</span>
     </div>
+    <div v-else-if="sponsorsError" class="text-center py-8 text-gray-500">
+      <p>載入贊助者資料失敗：{{ sponsorsError }}</p>
+    </div>
+    <SponsorshipWall
+      v-else
+      :sponsors="sponsorsData"
+      @mounted="onSponsorshipWallMounted"
+    />
 
     <!-- 廣告 -->
     <!-- <div v-if="!isVipUser" class="flex justify-center items-center my-8">
@@ -389,7 +341,6 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Panel from 'primevue/panel'
 import Menu from 'primevue/menu'
 import MemeCardSlim from '@/components/MemeCardSlim.vue'
-import Marquee from '@/components/ui/marquee/Marquee.vue'
 import tagService from '@/services/tagService'
 import recommendationService from '@/services/recommendationService'
 import userService from '@/services/userService'
@@ -400,11 +351,12 @@ import memeService from '@/services/memeService'
 import AdInline from '@/components/AdInline.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import announcementService from '@/services/announcementService'
+import { SponsorshipWall } from '@/components/ui/marquee'
+import sponsorService from '@/services/sponsorService'
 
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { nextTick } from 'vue'
-import ReviewCardSlim from '@/components/ui/marquee/ReviewCardSlim.vue'
 gsap.registerPlugin(ScrollTrigger)
 // 除錯用：掛到 window
 window._gsap = gsap
@@ -415,89 +367,10 @@ const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
 
-// Reviews資料
-const reviews = [
-  {
-    name: '麥克雞塊',
-    username: '@mac55688',
-    body: '如果我贊助了60元，那迷因典就多了60元。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=mac55688',
-  },
-  {
-    name: '稻撤露庫',
-    username: '@backdrive',
-    body: '不小心中了樂透來分紅！',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=backdrive',
-  },
-  {
-    name: '騎山豬上學',
-    username: '@juniorace',
-    body: '今天老闆發獎金。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=juniorace',
-  },
-  {
-    name: '潔西卡',
-    username: '@jessieca',
-    body: '不要跟別人說，其實我上班都在偷看迷因典。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=jessieca',
-  },
-  {
-    name: '哲學家',
-    username: '@philosopher',
-    body: '在我思考存在的意義的時候，發現意義其實並不重要。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=philosopher',
-  },
-  {
-    name: '馬克吐溫',
-    username: '@marktwain',
-    body: '絕不要和愚蠢的人爭論，他們會把你拖到他們那樣的水平，然後回擊你。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=marktwain',
-  },
-  {
-    name: '夜貓子',
-    username: '@nightowl',
-    body: '凌晨滑到停不下來，乾脆斗內一下。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=nightowl',
-  },
-  {
-    name: '皮卡丘',
-    username: '@pikapika',
-    body: '皮卡！皮卡！（翻譯：支持迷因典！）',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=pikapika',
-  },
-  {
-    name: '咖啡成癮',
-    username: '@coffeelover',
-    body: '少喝一杯星巴克，多支持一點迷因典。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=coffeelover',
-  },
-  {
-    name: '火箭隊',
-    username: '@teamrocket',
-    body: '為了支持迷因典，向錢錢發射！',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=teamrocket',
-  },
-  {
-    name: '隔壁老王',
-    username: '@laowang',
-    body: '我贊助只是因為偷Wi-Fi有點心虛。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=laowang',
-  },
-  {
-    name: '小熊維尼',
-    username: '@poohbear',
-    body: '贊助完記得給我一罐蜂蜜。',
-    img: 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=poohbear',
-  },
-]
-
-// 將 reviews 分成四排
-const chunkSize = Math.ceil(reviews.length / 4)
-
-const firstRow = ref(reviews.slice(0, chunkSize))
-const secondRow = ref(reviews.slice(chunkSize, chunkSize * 2))
-const thirdRow = ref(reviews.slice(chunkSize * 2, chunkSize * 3))
-const fourthRow = ref(reviews.slice(chunkSize * 3, chunkSize * 4))
+// 贊助者數據
+const sponsorsData = ref([])
+const sponsorsLoading = ref(false)
+const sponsorsError = ref(null)
 
 // VIP 用戶判定
 const isVipUser = computed(() => {
@@ -735,6 +608,37 @@ const loadAnnouncements = async () => {
   } finally {
     announcementsLoading.value = false
   }
+}
+
+// 載入贊助者資料
+const loadSponsors = async () => {
+  try {
+    sponsorsLoading.value = true
+    sponsorsError.value = null
+
+    const response = await sponsorService.getPublicSponsors({
+      sort_by: 'createdAt',
+      sort_dir: 'desc',
+    })
+
+    if (response.data && response.data.success) {
+      sponsorsData.value = response.data.data || []
+    } else {
+      console.warn('⚠️ API回應格式錯誤或失敗:', response.data)
+      sponsorsData.value = []
+    }
+  } catch (error) {
+    console.error('❌ 載入贊助者資料失敗:', error)
+    sponsorsError.value = error.message || '載入贊助者資料失敗'
+    sponsorsData.value = []
+  } finally {
+    sponsorsLoading.value = false
+  }
+}
+
+// 贊助牆組件掛載完成
+const onSponsorshipWallMounted = () => {
+  // 組件已成功掛載
 }
 
 // 載入活躍用戶
@@ -1193,6 +1097,15 @@ const initGSAPAnimations = () => {
   })
 }
 
+// 監聽贊助者資料變化
+watch(
+  () => sponsorsData.value,
+  (_newData, _oldData) => {
+    // 資料已更新
+  },
+  { deep: true },
+)
+
 // 監聽登入狀態變化，重新載入追蹤狀態
 watch(
   () => userStore.isLoggedIn,
@@ -1216,6 +1129,7 @@ onMounted(async () => {
     loadFeaturedMemes(),
     loadActiveUsers(),
     loadAnnouncements(),
+    loadSponsors(),
   ])
 
   // 初始化 GSAP 動畫
