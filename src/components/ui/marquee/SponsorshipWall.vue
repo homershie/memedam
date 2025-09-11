@@ -31,7 +31,7 @@
               :name="sponsor.display_name || sponsor.from_name"
               :username="getUsernameDisplay(sponsor)"
               :body="sponsor.message"
-              :amount="sponsor.amount"
+              :amount="getDisplayAmount(sponsor)"
               :tier="'coffee'"
               @click="handleSponsorClick(sponsor)"
             />
@@ -42,7 +42,7 @@
               :name="sponsor.display_name || sponsor.from_name"
               :username="getUsernameDisplay(sponsor)"
               :body="sponsor.message"
-              :amount="sponsor.amount"
+              :amount="getDisplayAmount(sponsor)"
               :tier="'chicken'"
               @click="handleSponsorClick(sponsor)"
             />
@@ -52,7 +52,7 @@
               :img="getSponsorAvatar(sponsor)"
               :name="sponsor.display_name || sponsor.from_name"
               :username="getUsernameDisplay(sponsor)"
-              :amount="sponsor.amount"
+              :amount="getDisplayAmount(sponsor)"
               :tier="'soy'"
               @click="handleSponsorClick(sponsor)"
             />
@@ -101,18 +101,24 @@ const router = useRouter()
 
 // 計算屬性：按等級分類贊助者
 const coffeeSponsors = computed(() =>
-  props.sponsors.filter((sponsor) => sponsor.amount >= 150),
+  props.sponsors.filter(
+    (sponsor) => sponsor.sponsor_level === 'coffee' || sponsor.amount >= 150,
+  ),
 )
 
 const chickenSponsors = computed(() =>
   props.sponsors.filter(
-    (sponsor) => sponsor.amount >= 60 && sponsor.amount < 150,
+    (sponsor) =>
+      sponsor.sponsor_level === 'chicken' ||
+      (sponsor.amount >= 60 && sponsor.amount < 150),
   ),
 )
 
 const soySponsors = computed(() =>
   props.sponsors.filter(
-    (sponsor) => sponsor.amount >= 30 && sponsor.amount < 60,
+    (sponsor) =>
+      sponsor.sponsor_level === 'soy' ||
+      (sponsor.amount >= 1 && sponsor.amount < 60),
   ),
 )
 
@@ -135,8 +141,10 @@ const getSponsorAvatar = (sponsor) => {
     return sponsor.avatar
   }
 
-  // 默認頭像
-  return '/images/default-avatar.png'
+  // 沒有頭像時，使用 Dicebear API 生成，以 username 或 from_name 作為 seed
+  const seed = sponsor.user?.username || sponsor.from_name || 'default'
+  const encodedSeed = encodeURIComponent(seed.trim())
+  return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${encodedSeed}`
 }
 
 // 用戶名顯示邏輯
@@ -148,6 +156,22 @@ const getUsernameDisplay = (sponsor) => {
 
   // 如果沒有系統帳戶，顯示 ko-fi 的 from_name
   return sponsor.from_name || '匿名用戶'
+}
+
+// 金額顯示邏輯
+const getDisplayAmount = (sponsor) => {
+  // 優先使用台幣金額
+  if (sponsor.amount_twd) {
+    return sponsor.amount_twd
+  }
+
+  // 其次使用美元金額
+  if (sponsor.amount_usd) {
+    return sponsor.amount_usd
+  }
+
+  // 最後使用原始金額
+  return sponsor.amount || 0
 }
 
 // 分頁邏輯：將贊助者分成多行

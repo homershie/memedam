@@ -6,9 +6,9 @@ export default {
     return apiService.httpAuth.post('/api/sponsors', data)
   },
 
-  // 取得所有贊助（管理員功能）
-  getAll(params = {}) {
-    return apiService.httpAuth.get('/api/sponsors', { params })
+  // 取得公開贊助者資料（用於首頁顯示）
+  getPublicSponsors(params = {}) {
+    return apiService.http.get('/api/sponsors', { params })
   },
 
   // 取得指定贊助

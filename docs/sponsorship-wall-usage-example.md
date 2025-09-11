@@ -69,7 +69,7 @@ const sponsorsData = [
 
 1. `sponsor.user.avatar` - 用戶系統頭像
 2. `sponsor.avatar` - Ko-fi 頭像
-3. `/images/default-avatar.png` - 默認頭像
+3. Dicebear API 生成的頭像 - 使用 username 或 from_name 作為 seed
 
 ### 自定義樣式
 

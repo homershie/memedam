@@ -136,7 +136,7 @@
                 <div
                   class="flex justify-between items-center py-2 border-b border-surface-100 dark:border-surface-700"
                 >
-                  <span class="font-medium">顯示在首頁贊助名單</span>
+                  <span class="font-medium">顯示在首頁贊助名單(1年)</span>
                   <i class="pi pi-check text-green-500 text-lg"></i>
                 </div>
                 <div
@@ -197,7 +197,7 @@
                 <div
                   class="flex justify-between items-center py-2 border-b border-surface-100 dark:border-surface-700"
                 >
-                  <span class="font-medium">顯示在首頁贊助名單</span>
+                  <span class="font-medium">顯示在首頁贊助名單(1年)</span>
                   <i class="pi pi-check text-green-500 text-lg"></i>
                 </div>
                 <div
@@ -258,7 +258,7 @@
                 <div
                   class="flex justify-between items-center py-2 border-b border-surface-100 dark:border-surface-700"
                 >
-                  <span class="font-medium">顯示在首頁贊助名單</span>
+                  <span class="font-medium">顯示在首頁贊助名單(1年)</span>
                   <i class="pi pi-check text-green-500 text-lg"></i>
                 </div>
                 <div
