@@ -47,33 +47,31 @@ httpAuth.interceptors.request.use((config) => {
 httpAuth.interceptors.response.use(
   (res) => res,
   async (error) => {
-    // 如果錯誤有回應，沒網路的話不會有回應
+    const user = useUserStore()
+    const msg = error?.response?.data?.message
+    const status = error?.response?.status
+    const isTokenIssue =
+      msg === 'token 已過期' ||
+      msg === '無效的 token' ||
+      msg === 'Token is invalid' ||
+      msg === 'Token expired'
+
+    // 優先針對 401 未授權觸發 refresh，其次相容舊有 400
     if (
-      error.response && // 如果是 400 錯誤，而且請求不是更新
-      error.response.status === 400 &&
-      (error.response.data.message === 'token 已過期' ||
-        error.response.data.message === '無效的 token' ||
-        error.response.data.message === 'Token is invalid' ||
-        error.response.data.message === 'Token expired') &&
+      error.response &&
+      (status === 401 || (status === 400 && isTokenIssue)) &&
       error.config.url !== '/api/users/refresh'
     ) {
-      const user = useUserStore()
       try {
-        // 傳送更新請求
         const { data } = await userService.refresh()
-        // 更新使用者資料
         user.token = data.token
-        // 修改發生錯誤的請求設定，換成新的 token
         error.config.headers.Authorization = `Bearer ${data.token}`
-        // 重新發送原本的請求
         return axios(error.config)
       } catch {
-        // 如果更新失敗，清除 pinia 存的使用者 token 和資料
         user.logout()
       }
     }
-    // 如果沒有回應，或是其他錯誤
-    // 回傳原本的錯誤
+
     throw error
   },
 )
